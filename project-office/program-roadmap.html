@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RITA — Production Refactor Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&family=Epilogue:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+/* ── Design tokens ── */
+:root {
+  /* Surface */
+  --bg:       #F5F3EE;
+  --surface:  #FFFFFF;
+  --surface2: #F9F8F5;
+  --border:   #E4E0D8;
+  --border2:  #D0CBBC;
+
+  /* Text */
+  --text: #1A1814;
+  --t2:   #4A4640;
+  --t3:   #8C877A;
+  --t4:   #B8B2A6;
+
+  /* Sprint theme colours */
+  --sprint0:    #0056B8;   /* Architecture  — blue   */
+  --sprint0-bg: #EDF4FF;
+  --sprint0-bd: #AECBF5;
+
+  --sprint1:    #1A6B3C;   /* Foundation    — green  */
+  --sprint1-bg: #EDF7F2;
+  --sprint1-bd: #B6DEC9;
+
+  --sprint2:    #6B2FA0;   /* API           — purple */
+  --sprint2-bg: #F5EFFE;
+  --sprint2-bd: #CFADF0;
+
+  --sprint3:    #0E7490;   /* Services      — teal   */
+  --sprint3-bg: #ECFEFF;
+  --sprint3-bd: #67E8F9;
+
+  --sprint4:    #92480A;   /* Frontend      — amber  */
+  --sprint4-bg: #FEF4EB;
+  --sprint4-bd: #F5C99A;
+
+  --sprint5:    #9B1C1C;   /* Release       — red    */
+  --sprint5-bg: #FEF2F2;
+  --sprint5-bd: #FCA5A5;
+
+  /* Semantic */
+  --ok:       #1A6B3C;
+  --ok-bg:    #EDF7F2;
+  --ok-bd:    #B6DEC9;
+
+  --active:   #0056B8;
+  --active-bg:#EDF4FF;
+  --active-bd:#AECBF5;
+
+  --warn:     #92480A;
+  --warn-bg:  #FEF4EB;
+  --warn-bd:  #F5C99A;
+
+  --danger:   #9B1C1C;
+  --danger-bg:#FEF2F2;
+  --danger-bd:#FCA5A5;
+
+  /* Typography */
+  --fd: 'Epilogue', sans-serif;
+  --fm: 'IBM Plex Mono', monospace;
+  --fs: 'Instrument Serif', serif;
+
+  /* Misc */
+  --r:   6px;
+  --sh:  0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+  --shm: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.05);
+}
+
+/* ── Base ── */
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fd);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── App shell: sticky topbar + sidebar + scrollable main ── */
+.shell {
+  display: grid;
+  grid-template-columns: 224px 1fr;
+  grid-template-rows: 52px 1fr;
+  min-height: 100vh;
+}
+
+/* ══════════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════════ */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  gap: 0;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 206px;
+}
+.logo-mark {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  width: 22px;
+}
+.logo-mark span {
+  height: 10px;
+  border-radius: 2px;
+}
+.logo-mark span:nth-child(1) { background: var(--sprint0); }
+.logo-mark span:nth-child(2) { background: var(--sprint2); opacity: .7; }
+.logo-mark span:nth-child(3) { background: var(--sprint1); opacity: .5; }
+.logo-mark span:nth-child(4) { background: var(--sprint5); opacity: .4; }
+
+.logo-text {
+  font-family: var(--fd);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.logo-text em { color: var(--sprint0); font-style: normal; }
+
+/* Separator */
+.t-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 16px;
+}
+
+.t-crumb {
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+
+/* Right side */
+.t-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--active-bg);
+  border: 1px solid var(--active-bd);
+  border-radius: 20px;
+  padding: 4px 11px;
+  font-family: var(--fm);
+  font-size: 10px;
+  color: var(--active);
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--active);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity:1 } 50% { opacity:.2 } }
+
+.btn {
+  background: transparent;
+  border: 1.5px solid var(--border2);
+  color: var(--t2);
+  font-family: var(--fm);
+  font-size: 10px;
+  letter-spacing: .05em;
+  padding: 5px 12px;
+  border-radius: var(--r);
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn:hover { border-color: var(--sprint0); color: var(--sprint0); }
+
+.av {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--text);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* ══════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════ */
+.sidebar {
+  background: var(--surface);
+  border-right: 1.5px solid var(--border);
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* Nav labels */
+.ns-lbl {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--t4);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  padding: 14px 18px 5px;
+}
+
+/* Nav item */
+.ni {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--t3);
+  border-left: 2.5px solid transparent;
+  transition: all .12s;
+  user-select: none;
+}
+.ni:hover { color: var(--t2); background: var(--bg); }
+
+/* Active states per sprint */
+.ni.on                { color: var(--text); background: var(--bg); }
+.ni.on.s-overview     { border-left-color: var(--text); color: var(--text); }
+.ni.on.s-sprint0      { border-left-color: var(--sprint0); color: var(--sprint0); }
+.ni.on.s-sprint1      { border-left-color: var(--sprint1); color: var(--sprint1); }
+.ni.on.s-sprint2      { border-left-color: var(--sprint2); color: var(--sprint2); }
+.ni.on.s-sprint3      { border-left-color: var(--sprint3); color: var(--sprint3); }
+.ni.on.s-sprint4      { border-left-color: var(--sprint4); color: var(--sprint4); }
+.ni.on.s-sprint5      { border-left-color: var(--sprint5); color: var(--sprint5); }
+
+.ni-ic {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ni-sub {
+  font-size: 11px;
+  color: var(--t4);
+  margin-left: auto;
+  font-family: var(--fm);
+}
+
+/* Nav group header */
+.ng-hdr {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.ng-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 1.5px;
+  flex-shrink: 0;
+}
+
+/* Sidebar footer — overall progress widget */
+.s-foot { margin-top: auto; padding: 12px; }
+.mc {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 13px;
+}
+.mc-ey {
+  font-family: var(--fm);
+  font-size: 9px;
+  color: var(--t4);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  margin-bottom: 3px;
+}
+.mc-nm { font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+.mc-r {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--t3);
+  margin-bottom: 3px;
+}
+.mc-v { font-family: var(--fm); font-size: 11px; }
+.mc-v.ok     { color: var(--ok); }
+.mc-v.active { color: var(--active); }
+.mc-v.plan   { color: var(--t4); }
+.mc-bar {
+  width: 100%;
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.mc-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--ok), var(--active));
+  transition: width .9s cubic-bezier(.4,0,.2,1);
+}
+
+/* ══════════════════════════════════════════
+   MAIN
+══════════════════════════════════════════ */
+.main {
+  padding: 28px 30px;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+/* ── Sections ── */
+.sec { display: none; animation: fi .22s ease; }
+.sec.on { display: block; }
+@keyframes fi {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page header ── */
+.ph {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding-bottom: 17px;
+  border-bottom: 1.5px solid var(--border);
+  margin-bottom: 20px;
+}
+.ph-badge {
+  font-family: var(--fm);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  padding: 4px 9px;
+  border-radius: 3px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-top: 4px;
+}
+.ph-badge.neutral { background: var(--surface2); color: var(--t2); border: 1px solid var(--border); }
+.ph-badge.active  { background: var(--active-bg); color: var(--active); border: 1px solid var(--active-bd); }
+.ph-t { font-weight: 800; font-size: 20px; line-height: 1.2; margin-bottom: 3px; }
+.ph-g { font-size: 12px; color: var(--t3); font-style: italic; }
+
+/* ── KPI strip ── */
+.kpi-strip {
+  display: grid;
+  gap: 1px;
+  background: var(--border);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.kpi {
+  background: var(--surface);
+  padding: 14px 16px;
+}
+.kpi-ey {
+  font-family: var(--fm);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--t4);
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ey-d { width: 5px; height: 5px; border-radius: 50%; }
+.kpi-val { font-weight: 800; font-size: 22px; line-height: 1; margin-bottom: 2px; }
+.kpi-sub { font-size: 10.5px; color: var(--t3); }
+
+/* ── Grids ── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr;           gap: 13px; margin-bottom: 13px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr;       gap: 13px; margin-bottom: 13px; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr);    gap: 13px; margin-bottom: 13px; }
+.s2 { grid-column: span 2; }
+.s3 { grid-column: span 3; }
+
+/* ── Cards ── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 17px;
+  box-shadow: var(--sh);
+  transition: border-color .15s;
+}
+.card:hover { border-color: var(--border2); }
+.c-ey {
+  font-family: var(--fm);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--t4);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.c-t { font-weight: 700; font-size: 13px; margin-bottom: 10px; }
+
+/* ── Progress bars ── */
+.bar-wrap  { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.bar-r     { display: flex; align-items: center; gap: 9px; }
+.bar-lbl   { font-family: var(--fm); font-size: 10.5px; color: var(--t3); min-width: 100px; }
+.bar-track { flex: 1; height: 7px; background: var(--surface2); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 3px; transition: width .9s cubic-bezier(.4,0,.2,1); }
+.bar-pct   { font-family: var(--fm); font-size: 10.5px; color: var(--t3); min-width: 34px; text-align: right; }
+
+/* ── Status badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--fm);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.badge.done    { background: var(--ok-bg);     color: var(--ok);     border: 1px solid var(--ok-bd); }
+.badge.active  { background: var(--active-bg); color: var(--active); border: 1px solid var(--active-bd); }
+.badge.planned { background: var(--surface2);  color: var(--t3);     border: 1px solid var(--border); }
+.badge.blocked { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger-bd); }
+
+/* ── Sprint wave header ── */
+.wave-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.wave-hdr-title { font-weight: 700; font-size: 14px; color: var(--text); }
+.wave-hdr-sub   { font-size: 11.5px; color: var(--t3); font-style: italic; }
+
+/* ── Sprint group block ── */
+.sprint-group { margin-bottom: 28px; }
+
+/* ── Section title ── */
+.sec-title { font-weight: 700; font-size: 14px; color: var(--text); margin-bottom: 12px; }
+.sec-sub   { font-size: 11.5px; color: var(--t3); margin-bottom: 14px; margin-top: -8px; }
+
+/* ── Alert row ── */
+.al {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 9px 11px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  margin-top: 10px;
+}
+.al.ok { background: var(--ok-bg);     border: 1px solid var(--ok-bd);     color: var(--ok); }
+.al.i  { background: var(--active-bg); border: 1px solid var(--active-bd); color: var(--active); }
+.al.w  { background: var(--warn-bg);   border: 1px solid var(--warn-bd);   color: var(--warn); }
+
+/* ── Activity feed ── */
+.activity { display: flex; flex-direction: column; gap: 0; }
+.act-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.act-row:last-child { border-bottom: none; }
+.act-dot-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 3px; }
+.act-dot      { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.act-line     { width: 1px; flex: 1; background: var(--border); margin-top: 4px; }
+.act-body     { flex: 1; }
+.act-title    { font-size: 12.5px; font-weight: 500; color: var(--text); margin-bottom: 1px; }
+.act-desc     { font-size: 11.5px; color: var(--t3); }
+.act-time     { font-family: var(--fm); font-size: 10px; color: var(--t4); white-space: nowrap; padding-top: 2px; }
+
+/* ── Stat block row ── */
+.sb-row { display: flex; gap: 8px; margin-top: 4px; }
+.sb {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 10px 13px;
+}
+.sb-l { font-family: var(--fm); font-size: 9px; color: var(--t4); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 3px; }
+.sb-v { font-weight: 800; font-size: 20px; }
+
+/* ── Placeholder ── */
+.placeholder {
+  padding: 40px;
+  text-align: center;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  color: var(--t4);
+}
+.placeholder p { font-family: var(--fm); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- ══════════════════════════════════════════
+     TOPBAR
+══════════════════════════════════════════ -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <span class="logo-text">RITA<em>.</em></span>
+  </div>
+  <div class="t-sep"></div>
+  <span class="t-crumb">Production Refactor — Program Roadmap</span>
+  <div class="t-right">
+    <div class="pill"><div class="dot"></div>Sprint 0 Active</div>
+    <button class="btn" onclick="window.print()">Export</button>
+    <div class="av">RA</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════ -->
+<nav class="sidebar">
+
+  <div class="ns-lbl">Program</div>
+
+  <div class="ni s-overview on" data-s="overview" onclick="nav(this,'overview')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".9"/>
+        <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/>
+        <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".4"/>
+        <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".15"/>
+      </svg>
+    </div>
+    Overview
+  </div>
+
+  <div class="ng-hdr" style="margin-top:4px">
+    <div class="ng-dot" style="background:var(--t3)"></div>Sprints
+  </div>
+
+  <div class="ni s-sprint0" data-s="sprint0" onclick="nav(this,'sprint0')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1.5L2 3.5v4c0 3 2.5 5 5 6 2.5-1 5-3 5-6v-4L7 1.5z"
+              stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Sprint 0
+    <span class="ni-sub">Arch</span>
+  </div>
+
+  <div class="ni s-sprint1" data-s="sprint1" onclick="nav(this,'sprint1')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="1" y="9" width="2" height="4" rx="1" fill="currentColor"/>
+        <rect x="4.5" y="6" width="2" height="7" rx="1" fill="currentColor"/>
+        <rect x="8" y="3" width="2" height="10" rx="1" fill="currentColor"/>
+        <rect x="11.5" y="7" width="2" height="6" rx="1" fill="currentColor"/>
+      </svg>
+    </div>
+    Sprint 1
+    <span class="ni-sub">Found</span>
+  </div>
+
+  <div class="ni s-sprint2" data-s="sprint2" onclick="nav(this,'sprint2')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <polyline points="1,11 4,7 6,9 9,4 13,2"
+                  stroke="currentColor" stroke-width="1.3" fill="none"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Sprint 2
+    <span class="ni-sub">API</span>
+  </div>
+
+  <div class="ni s-sprint3" data-s="sprint3" onclick="nav(this,'sprint3')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/>
+        <circle cx="7" cy="7" r="2" fill="currentColor" opacity=".6"/>
+        <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13"
+              stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    Sprint 3
+    <span class="ni-sub">Svc</span>
+  </div>
+
+  <div class="ni s-sprint4" data-s="sprint4" onclick="nav(this,'sprint4')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="1" y="2" width="12" height="9" rx="1.5"
+              stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M4 12h6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        <path d="M7 11v1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    Sprint 4
+    <span class="ni-sub">UI</span>
+  </div>
+
+  <div class="ni s-sprint5" data-s="sprint5" onclick="nav(this,'sprint5')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1l1.8 3.6L13 5.3l-3 2.9.7 4.1L7 10.2 3.3 12.3l.7-4.1L1 5.3l4.2-.7z"
+              stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Sprint 5
+    <span class="ni-sub">Release</span>
+  </div>
+
+  <!-- Sidebar footer: overall program progress -->
+  <div class="s-foot">
+    <div class="mc">
+      <div class="mc-ey">Program Status</div>
+      <div class="mc-nm">RITA v1.0 Refactor</div>
+      <div class="mc-r">
+        <span>Sprint 0</span>
+        <span class="mc-v active" id="s0-status">Active</span>
+      </div>
+      <div class="mc-r">
+        <span>Sprint 1–4</span>
+        <span class="mc-v plan">Planned</span>
+      </div>
+      <div class="mc-r">
+        <span>Sprint 5</span>
+        <span class="mc-v plan">Planned</span>
+      </div>
+      <div class="mc-bar">
+        <div class="mc-bar-fill" id="overall-bar" style="width:3%"></div>
+      </div>
+    </div>
+  </div>
+
+</nav>
+
+<!-- ══════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- ── OVERVIEW SECTION ── -->
+  <section id="sec-overview" class="sec on">
+
+    <!-- Page header -->
+    <div class="ph">
+      <div class="ph-badge active">Live</div>
+      <div>
+        <div class="ph-t">RITA Production Refactor — Roadmap</div>
+        <div class="ph-g">Sprint-based delivery · POC to production-grade release</div>
+      </div>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="kpi-strip" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi">
+        <div class="kpi-ey">Total Sprints</div>
+        <div class="kpi-val">6</div>
+        <div class="kpi-sub">Sprint 0 → Sprint 5</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
+        <div class="kpi-val" id="kpi-done" style="color:var(--ok)">0</div>
+        <div class="kpi-sub" id="kpi-done-sub">None yet</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
+        <div class="kpi-val" id="kpi-active" style="color:var(--active)">1</div>
+        <div class="kpi-sub" id="kpi-active-sub">Sprint 0 · Arch</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
+        <div class="kpi-val" id="kpi-planned" style="color:var(--t3)">5</div>
+        <div class="kpi-sub">Sprints 1 – 5</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey">Overall Progress</div>
+        <div class="kpi-val" id="kpi-pct">3%</div>
+        <div class="kpi-sub">Day 1 of 30</div>
+      </div>
+    </div>
+
+    <!-- Two-col: sprint progress + activity -->
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:18px;align-items:start">
+
+      <!-- Sprint progress bars -->
+      <div class="card">
+        <div class="c-ey"><span class="ey-d" style="background:var(--active)"></span>Sprint Progress</div>
+        <div class="c-t">Delivery by Sprint</div>
+        <div class="bar-wrap">
+
+          <div class="bar-r">
+            <div class="bar-lbl">S0 · Architecture</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-s0" style="width:3%;background:var(--sprint0)"></div>
+            </div>
+            <span class="bar-pct" id="pct-s0">3%</span>
+          </div>
+
+          <div class="bar-r">
+            <div class="bar-lbl">S1 · Foundation</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-s1" style="width:0%;background:var(--sprint1)"></div>
+            </div>
+            <span class="bar-pct" id="pct-s1">—</span>
+          </div>
+
+          <div class="bar-r">
+            <div class="bar-lbl">S2 · API</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-s2" style="width:0%;background:var(--sprint2)"></div>
+            </div>
+            <span class="bar-pct" id="pct-s2">—</span>
+          </div>
+
+          <div class="bar-r">
+            <div class="bar-lbl">S3 · Services</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-s3" style="width:0%;background:var(--sprint3)"></div>
+            </div>
+            <span class="bar-pct" id="pct-s3">—</span>
+          </div>
+
+          <div class="bar-r">
+            <div class="bar-lbl">S4 · Frontend</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-s4" style="width:0%;background:var(--sprint4)"></div>
+            </div>
+            <span class="bar-pct" id="pct-s4">—</span>
+          </div>
+
+          <div class="bar-r">
+            <div class="bar-lbl">S5 · Release</div>
+            <div class="bar-track">
+              <div class="bar-fill" id="bar-s5" style="width:0%;background:var(--sprint5)"></div>
+            </div>
+            <span class="bar-pct" id="pct-s5">—</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right col: metrics + activity -->
+      <div style="display:flex;flex-direction:column;gap:13px">
+
+        <!-- Quick stats -->
+        <div class="card">
+          <div class="c-ey">Quality Gates</div>
+          <div class="sb-row">
+            <div class="sb">
+              <div class="sb-l">Test Coverage</div>
+              <div class="sb-v" id="stat-cov" style="color:var(--t3)">—</div>
+            </div>
+            <div class="sb">
+              <div class="sb-l">CI Green</div>
+              <div class="sb-v" id="stat-ci" style="color:var(--t3)">—</div>
+            </div>
+          </div>
+          <div class="sb-row" style="margin-top:0">
+            <div class="sb">
+              <div class="sb-l">Review Pass</div>
+              <div class="sb-v" id="stat-rev" style="color:var(--t3)">—</div>
+            </div>
+            <div class="sb">
+              <div class="sb-l">Blockers</div>
+              <div class="sb-v" id="stat-blk" style="color:var(--ok)">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="card">
+          <div class="c-ey">Recent Activity</div>
+          <div class="activity" id="activity-feed">
+
+            <div class="act-row">
+              <div class="act-dot-wrap">
+                <div class="act-dot" style="background:var(--active)"></div>
+                <div class="act-line"></div>
+              </div>
+              <div class="act-body">
+                <div class="act-title">Sprint 0 started</div>
+                <div class="act-desc">Architecture &amp; Planning — Days 1–3</div>
+              </div>
+              <div class="act-time">Day 1</div>
+            </div>
+
+            <div class="act-row">
+              <div class="act-dot-wrap">
+                <div class="act-dot" style="background:var(--ok)"></div>
+                <div class="act-line"></div>
+              </div>
+              <div class="act-body">
+                <div class="act-title">Confluence hierarchy live</div>
+                <div class="act-desc">7 sections, 8 pages published</div>
+              </div>
+              <div class="act-time">Day 1</div>
+            </div>
+
+            <div class="act-row">
+              <div class="act-dot-wrap">
+                <div class="act-dot" style="background:var(--ok)"></div>
+              </div>
+              <div class="act-body">
+                <div class="act-title">CLAUDE.md &amp; project-office scaffolded</div>
+                <div class="act-desc">Cowork setup complete</div>
+              </div>
+              <div class="act-time">Day 1</div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /two-col -->
+
+    <!-- Sprint summary table -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="c-ey">All Sprints</div>
+      <div class="c-t">Sprint Summary</div>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px">
+        <thead>
+          <tr style="border-bottom:1.5px solid var(--border)">
+            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px 0">Sprint</th>
+            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Name</th>
+            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Days</th>
+            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Key Goal</th>
+            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Status</th>
+          </tr>
+        </thead>
+        <tbody id="sprint-table-body">
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint0)">S0</td>
+            <td style="padding:9px 8px;font-size:12px">Architecture &amp; Planning</td>
+            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">1–3</td>
+            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">ADRs, schemas, Confluence bootstrapped</td>
+            <td style="padding:9px 8px"><span class="badge active">Active</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint1)">S1</td>
+            <td style="padding:9px 8px;font-size:12px">Foundation</td>
+            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">4–8</td>
+            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Config, repository layer, CI v2</td>
+            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint2)">S2</td>
+            <td style="padding:9px 8px;font-size:12px">API Decomposition</td>
+            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">9–14</td>
+            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Three-tier routers replace monolith</td>
+            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint3)">S3</td>
+            <td style="padding:9px 8px;font-size:12px">Service Layer &amp; Observability</td>
+            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">15–20</td>
+            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Services, structlog, Prometheus metrics</td>
+            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border)">
+            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint4)">S4</td>
+            <td style="padding:9px 8px;font-size:12px">Frontend &amp; Responsive</td>
+            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">21–26</td>
+            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">ES modules, 480/768/1100px breakpoints</td>
+            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+          </tr>
+          <tr>
+            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint5)">S5</td>
+            <td style="padding:9px 8px;font-size:12px">Integration &amp; Release</td>
+            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">27–30</td>
+            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Security audit, k8s, v1.0 tag</td>
+            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Definition of done alert -->
+    <div class="al i">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M7 5v3M7 9.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <span><strong>Definition of Done (v1):</strong> Three-tier API · Repository pattern · Pydantic config · 80% test coverage · Zero print() · Prometheus metrics · Responsive UI · k8s deployable · 14 Confluence pages published · Reviewer sign-off each sprint.</span>
+    </div>
+
+  </section><!-- /#sec-overview -->
+
+  <!-- ══════════════════════════════════════════
+       SPRINT 0 — Architecture & Planning
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint0" class="sec">
+
+    <div class="ph">
+      <div class="ph-badge active">Active</div>
+      <div>
+        <div class="ph-t">Sprint 0 — Architecture &amp; Planning</div>
+        <div class="ph-g">Days 1–3 · Foundation decisions that every future sprint depends on</div>
+      </div>
+    </div>
+
+    <!-- Sprint KPI strip -->
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi">
+        <div class="kpi-ey">Days</div>
+        <div class="kpi-val" style="color:var(--sprint0)">1–3</div>
+        <div class="kpi-sub">3 work days</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey">Deliverables</div>
+        <div class="kpi-val">3</div>
+        <div class="kpi-sub">ADRs · Schemas · Confluence</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey">Token Profile</div>
+        <div class="kpi-val" style="color:var(--ok);font-size:16px">Light</div>
+        <div class="kpi-sub">Reads targeted files only</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey">Status</div>
+        <div class="kpi-val" style="font-size:16px;color:var(--active)">Active</div>
+        <div class="kpi-sub">Day 1 in progress</div>
+      </div>
+    </div>
+
+    <!-- Wave header -->
+    <div class="wave-hdr">
+      <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 0 — Active</span>
+      <span class="wave-hdr-title">Architecture &amp; Planning · Days 1–3</span>
+      <span class="wave-hdr-sub">Design decisions locked here cascade to all future sprints</span>
+    </div>
+
+    <!-- 3 deliverable cards -->
+    <div class="g3" style="margin-bottom:22px">
+
+      <!-- Card 1: ADRs -->
+      <div class="card" style="border-top:3px solid var(--sprint0)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div style="font-weight:700;font-size:13px">Architecture Decision Records</div>
+          <span class="badge active" id="s0-c1-badge">Active</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">
+          Architect agent produces ADR-001 (Three-Tier API) and ADR-002 (Repository Pattern).
+          Design &amp; Code Reviewer approves before any engineer writes code.
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge" style="background:var(--sprint0-bg);color:var(--sprint0);border-color:var(--sprint0-bd)">Architect</span>
+          <span class="badge" style="background:var(--sprint0-bg);color:var(--sprint0);border-color:var(--sprint0-bd)">Day 1</span>
+        </div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">ADR-001 API</div>
+            <div class="bar-track"><div class="bar-fill" id="s0-c1-b1" style="width:0%;background:var(--sprint0)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="s0-c1-l1">Pending</span>
+          </div>
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">ADR-002 Repo</div>
+            <div class="bar-track"><div class="bar-fill" id="s0-c1-b2" style="width:0%;background:var(--sprint0)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="s0-c1-l2">Pending</span>
+          </div>
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">Reviewer ✓</div>
+            <div class="bar-track"><div class="bar-fill" id="s0-c1-b3" style="width:0%;background:var(--sprint0)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="s0-c1-l3">Pending</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Pydantic Schemas -->
+      <div class="card" style="border-top:3px solid var(--sprint0)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div style="font-weight:700;font-size:13px">Pydantic Data Schemas</div>
+          <span class="badge planned" id="s0-c2-badge">Planned</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">
+          Architect agent maps all 15 CSV tables to typed Pydantic models. These become
+          the contracts that repository classes and API routers must honour.
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge" style="background:var(--sprint0-bg);color:var(--sprint0);border-color:var(--sprint0-bd)">Architect</span>
+          <span class="badge" style="background:var(--sprint0-bg);color:var(--sprint0);border-color:var(--sprint0-bd)">Day 2</span>
+        </div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">Portfolio</div>
+            <div class="bar-track"><div class="bar-fill" id="s0-c2-b1" style="width:0%;background:var(--sprint0)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="s0-c2-l1">Pending</span>
+          </div>
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">Workflow</div>
+            <div class="bar-track"><div class="bar-fill" id="s0-c2-b2" style="width:0%;background:var(--sprint0)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="s0-c2-l2">Pending</span>
+          </div>
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">Manoeuvre</div>
+            <div class="bar-track"><div class="bar-fill" id="s0-c2-b3" style="width:0%;background:var(--sprint0)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--t3)" id="s0-c2-l3">Pending</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Confluence Bootstrap -->
+      <div class="card" style="border-top:3px solid var(--sprint0)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div style="font-weight:700;font-size:13px">Confluence &amp; Project Setup</div>
+          <span class="badge done" id="s0-c3-badge">Done</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">
+          Technical Writer bootstraps the Confluence space: 7-section hierarchy, 8 pages published,
+          CLAUDE.md authored, project-office and riia-jun-release folders scaffolded.
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge" style="background:var(--sprint0-bg);color:var(--sprint0);border-color:var(--sprint0-bd)">TechWriter</span>
+          <span class="badge" style="background:var(--sprint0-bg);color:var(--sprint0);border-color:var(--sprint0-bd)">Day 1</span>
+        </div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">Confluence</div>
+            <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span>
+          </div>
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">CLAUDE.md</div>
+            <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span>
+          </div>
+          <div class="bar-r" style="gap:6px">
+            <div class="bar-lbl" style="min-width:72px;font-size:10px">Folders</div>
+            <div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div>
+            <span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /g3 -->
+
+    <!-- Sprint 0 agents & risks -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:18px">
+
+      <!-- Agents involved -->
+      <div class="card">
+        <div class="c-ey">Agents</div>
+        <div class="c-t">Who Works This Sprint</div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-top:6px">
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px">
+            <span style="font-family:var(--fm);font-size:10px;color:var(--t4);min-width:20px">PM</span>
+            <span style="font-size:12px;flex:1">Project Manager</span>
+            <span class="badge active">Active</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px">
+            <span style="font-family:var(--fm);font-size:10px;color:var(--t4);min-width:20px">AR</span>
+            <span style="font-size:12px;flex:1">Architect</span>
+            <span class="badge active">Active</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px">
+            <span style="font-family:var(--fm);font-size:10px;color:var(--t4);min-width:20px">CR</span>
+            <span style="font-size:12px;flex:1">Design &amp; Code Reviewer</span>
+            <span class="badge active">Active</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:5px">
+            <span style="font-family:var(--fm);font-size:10px;color:var(--t4);min-width:20px">TW</span>
+            <span style="font-size:12px;flex:1">Technical Writer</span>
+            <span class="badge done">Done</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risks -->
+      <div class="card">
+        <div class="c-ey">Sprint Risks</div>
+        <div class="c-t">Watch Points</div>
+        <div class="al i" style="margin-top:10px">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0">
+            <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M7 5v3M7 9.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span>ADR decisions must be approved by you before engineers start Sprint 1.</span>
+        </div>
+        <div class="al w" style="margin-top:6px">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0">
+            <path d="M7 2l5.5 10H1.5z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+            <path d="M7 6v3M7 10.5v.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span>Lot size for NIFTY changed to 75 in 2024 — must be captured in schemas, not hardcoded.</span>
+        </div>
+        <div class="al ok" style="margin-top:6px">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="flex-shrink:0">
+            <path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Token profile is light — ADR files are small. No large file reads needed.</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Definition of done for this sprint -->
+    <div class="al ok">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px">
+        <path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span><strong>Sprint 0 Done When:</strong> ADR-001 &amp; ADR-002 approved · All 15 CSV table schemas in <code>riia-jun-release/src/rita/schemas/</code> · Confluence 7-section hierarchy live · CLAUDE.md complete · Reviewer sign-off recorded.</span>
+    </div>
+
+  </section><!-- /#sec-sprint0 -->
+  <!-- ══════════════════════════════════════════
+       SPRINT 1 — Foundation
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint1" class="sec">
+    <div class="ph">
+      <div class="ph-badge neutral">Planned</div>
+      <div>
+        <div class="ph-t">Sprint 1 — Foundation</div>
+        <div class="ph-g">Days 4–8 · The three pillars everything else depends on</div>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi">
+        <div class="kpi-ey">Days</div>
+        <div class="kpi-val" style="color:var(--sprint1)">4–8</div>
+        <div class="kpi-sub">5 work days</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey">Deliverables</div>
+        <div class="kpi-val">3</div>
+        <div class="kpi-sub">Config · Repos · CI/CD</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey">Token Profile</div>
+        <div class="kpi-val" style="color:var(--warn);font-size:16px">Medium</div>
+        <div class="kpi-sub">New files, small reads</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-ey">Status</div>
+        <div class="kpi-val" style="font-size:16px;color:var(--t3)">Planned</div>
+        <div class="kpi-sub">Starts after S0 sign-off</div>
+      </div>
+    </div>
+    <div class="wave-hdr">
+      <span class="badge planned" style="font-size:10px;padding:3px 10px">Sprint 1 — Planned</span>
+      <span class="wave-hdr-title">Foundation · Days 4–8</span>
+      <span class="wave-hdr-sub">Validated config, repository layer, and enforced CI gate</span>
+    </div>
+    <div class="g3" style="margin-bottom:22px">
+
+      <div class="card" style="border-top:3px solid var(--sprint1)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div style="font-weight:700;font-size:13px">Config &amp; Security</div>
+          <span class="badge planned">Planned</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Pydantic Settings with field-level validation, YAML hierarchy (base/dev/staging/prod), JWT auth middleware, rate limiting, hardcoded secrets removed from HTML.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge" style="background:var(--sprint1-bg);color:var(--sprint1);border-color:var(--sprint1-bd)">Engineer A</span>
+          <span class="badge" style="background:var(--sprint1-bg);color:var(--sprint1);border-color:var(--sprint1-bd)">Day 4</span>
+        </div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Pydantic Config</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">JWT + CORS</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Secrets removed</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint1)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div style="font-weight:700;font-size:13px">Repository Layer</div>
+          <span class="badge planned">Planned</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">12 repository classes — one per CSV table. File locking for concurrent writes. Schema validation on every read and write. No direct CSV access anywhere else in the codebase.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge" style="background:var(--sprint1-bg);color:var(--sprint1);border-color:var(--sprint1-bd)">Engineer B</span>
+          <span class="badge" style="background:var(--sprint1-bg);color:var(--sprint1);border-color:var(--sprint1-bd)">Day 5</span>
+        </div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Portfolio repos</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Workflow repos</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">File locking</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint1)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+          <div style="font-weight:700;font-size:13px">Dockerfile &amp; CI v2</div>
+          <span class="badge planned">Planned</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Multi-stage Dockerfile (tests run in builder, minimal runtime image). GitHub Actions v2: lint → type-check → pytest with coverage gate ≥80% → Docker build.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <span class="badge" style="background:var(--sprint1-bg);color:var(--sprint1);border-color:var(--sprint1-bd)">Ops</span>
+          <span class="badge" style="background:var(--sprint1-bg);color:var(--sprint1);border-color:var(--sprint1-bd)">Day 6</span>
+        </div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Dockerfile</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">CI pipeline</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Coverage gate</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint1)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 1 Done When:</strong> Config crashes at boot on missing secrets · 12 repo classes with file locking · CI green with coverage gate · Tests for config edge cases and repo round-trips pass · Confluence Security &amp; Config pages published.</span></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SPRINT 2 — API Decomposition
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint2" class="sec">
+    <div class="ph">
+      <div class="ph-badge neutral">Planned</div>
+      <div>
+        <div class="ph-t">Sprint 2 — API Decomposition</div>
+        <div class="ph-g">Days 9–14 · Replace 1,533-line monolith with three-tier routers</div>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint2)">9–14</div><div class="kpi-sub">6 work days</div></div>
+      <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">System · BP · BFF</div></div>
+      <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--danger);font-size:16px">Heavy</div><div class="kpi-sub">1,533-line file in slices</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--t3)">Planned</div><div class="kpi-sub">Starts after S1 sign-off</div></div>
+    </div>
+    <div class="wave-hdr">
+      <span class="badge planned" style="font-size:10px;padding:3px 10px">Sprint 2 — Planned</span>
+      <span class="wave-hdr-title">API Decomposition · Days 9–14</span>
+      <span class="wave-hdr-sub">rest_api.py read in 400-line slices — one router group per session</span>
+    </div>
+    <div class="g3" style="margin-bottom:22px">
+
+      <div class="card" style="border-top:3px solid var(--sprint2)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">System APIs (CRUD)</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Pure CRUD routers: positions, orders, scenario_levels, snapshots. Each calls only the matching repository class — zero business logic.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer C</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Day 9</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Positions</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Orders</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Snapshots</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint2)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Business Process APIs</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Workflow orchestration routers: train, backtest, evaluate, model_registry. Each delegates to a service class — no direct CSV or core logic calls.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer C</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Day 10</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Workflow</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Backtest</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Training</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint2)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">BFF Layer &amp; Error Handling</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">BFF aggregation endpoints (dashboard, fno, ops). Global exception handler with trace IDs. Structured error responses. NaN safety across all serialisers.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer C</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Days 11–12</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">BFF routers</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Exception handler</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">API tests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 2 Done When:</strong> rest_api.py retired · All endpoints in three-tier routers · Global exception handler live · Every endpoint has a contract test · Confluence API Reference published.</span></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SPRINT 3 — Service Layer & Observability
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint3" class="sec">
+    <div class="ph">
+      <div class="ph-badge neutral">Planned</div>
+      <div>
+        <div class="ph-t">Sprint 3 — Service Layer &amp; Observability</div>
+        <div class="ph-g">Days 15–20 · Business logic in services, structured logs, live metrics</div>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint3)">15–20</div><div class="kpi-sub">6 work days</div></div>
+      <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">Services · Logs · Metrics</div></div>
+      <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--warn);font-size:16px">Medium</div><div class="kpi-sub">New files from contracts</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--t3)">Planned</div><div class="kpi-sub">Starts after S2 sign-off</div></div>
+    </div>
+    <div class="wave-hdr">
+      <span class="badge planned" style="font-size:10px;padding:3px 10px">Sprint 3 — Planned</span>
+      <span class="wave-hdr-title">Service Layer &amp; Observability · Days 15–20</span>
+      <span class="wave-hdr-sub">Zero print() statements remaining after this sprint closes</span>
+    </div>
+    <div class="g3" style="margin-bottom:22px">
+
+      <div class="card" style="border-top:3px solid var(--sprint3)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Workflow &amp; Backtest Services</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">WorkflowService and BacktestService extracted from route handlers. 8-step pipeline logic, session state, and backtest daily results all live in services — not in routers.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Engineer D</span><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Days 15–16</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">WorkflowService</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">BacktestService</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Integration tests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint3)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Manoeuvre &amp; Portfolio Services</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">ManoeuvreService and PortfolioService extracted. Greeks calculations remain in core/ but are called only through services. QA writes Black-Scholes reference tests before any core/ change.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Engineer D</span><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Days 15–16</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">ManoeuvreService</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">PortfolioService</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Greeks tests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint3)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Logging &amp; Metrics</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">All print() replaced with structlog JSON. Prometheus metrics at /metrics (request latency, snapshot counter, training events). /health and /readyz endpoints with dependency probes.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Engineer E</span><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Days 17–18</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">structlog</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Prometheus</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">/health /readyz</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 3 Done When:</strong> Zero print() in codebase · All business logic in service classes · Prometheus /metrics live · Greeks reference tests pass · Coverage 60%+ · Confluence Observability Runbook published.</span></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SPRINT 4 — Frontend & Responsive
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint4" class="sec">
+    <div class="ph">
+      <div class="ph-badge neutral">Planned</div>
+      <div>
+        <div class="ph-t">Sprint 4 — Frontend &amp; Responsive Design</div>
+        <div class="ph-g">Days 21–26 · Decompose monolithic HTML, add mobile support</div>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint4)">21–26</div><div class="kpi-sub">6 work days</div></div>
+      <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">RITA · FnO · Responsive</div></div>
+      <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--danger);font-size:16px">Heavy</div><div class="kpi-sub">4,000-line HTML in slices</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--t3)">Planned</div><div class="kpi-sub">Starts after S3 sign-off</div></div>
+    </div>
+    <div class="wave-hdr">
+      <span class="badge planned" style="font-size:10px;padding:3px 10px">Sprint 4 — Planned</span>
+      <span class="wave-hdr-title">Frontend &amp; Responsive · Days 21–26</span>
+      <span class="wave-hdr-sub">HTML read in 500-line windows — 2 sessions per file</span>
+    </div>
+    <div class="g3" style="margin-bottom:22px">
+
+      <div class="card" style="border-top:3px solid var(--sprint4)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">RITA Dashboard Modules</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">rita.html (4,000 lines) decomposed into ES modules under dashboard/js/rita/. One file per section. No global state. API base URL injected via window.RITA_API_BASE.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint4-bg);color:var(--sprint4);border-color:var(--sprint4-bd)">Engineer F</span><span class="badge" style="background:var(--sprint4-bg);color:var(--sprint4);border-color:var(--sprint4-bd)">Days 21–22</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">RL section</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Backtest section</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Chat section</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint4)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">FnO &amp; Ops Modules</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">fno.html (3,500 lines) → dashboard/js/fno/ modules. ops.html (75 KB) → dashboard/js/ops/ modules. fno-manoeuvre.js reviewed and split.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint4-bg);color:var(--sprint4);border-color:var(--sprint4-bd)">Engineer F</span><span class="badge" style="background:var(--sprint4-bg);color:var(--sprint4);border-color:var(--sprint4-bd)">Days 22–23</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">FnO modules</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Ops modules</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Manoeuvre JS</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint4)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Responsive CSS &amp; URL Cleanup</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Breakpoints at 480px / 768px / 1100px. Sidebar overlay and bottom tab bar for mobile. All localhost:8000 references replaced with window.RITA_API_BASE. Playwright e2e tests at all 3 breakpoints.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint4-bg);color:var(--sprint4);border-color:var(--sprint4-bd)">Engineer F</span><span class="badge" style="background:var(--sprint4-bg);color:var(--sprint4);border-color:var(--sprint4-bd)">Days 23–25</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">responsive.css</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">URL cleanup</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Playwright tests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint4)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 4 Done When:</strong> No monolithic HTML files remain · Responsive at all 3 breakpoints · Zero localhost:8000 references · Playwright tests green · Confluence Frontend Architecture published.</span></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SPRINT 5 — Integration, Security & Release
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint5" class="sec">
+    <div class="ph">
+      <div class="ph-badge neutral">Planned</div>
+      <div>
+        <div class="ph-t">Sprint 5 — Integration, Security &amp; Release</div>
+        <div class="ph-g">Days 27–30 · Full regression, security audit, production deployment, v1.0 tag</div>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint5)">27–30</div><div class="kpi-sub">4 work days</div></div>
+      <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">QA · Security · Release</div></div>
+      <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--warn);font-size:16px">Medium</div><div class="kpi-sub">Targeted fixes only</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--t3)">Planned</div><div class="kpi-sub">Starts after S4 sign-off</div></div>
+    </div>
+    <div class="wave-hdr">
+      <span class="badge planned" style="font-size:10px;padding:3px 10px">Sprint 5 — Planned</span>
+      <span class="wave-hdr-title">Integration, Security &amp; Release · Days 27–30</span>
+      <span class="wave-hdr-sub">Coverage ≥80% gate · Security audit passed · RITA v1.0 tagged</span>
+    </div>
+    <div class="g3" style="margin-bottom:22px">
+
+      <div class="card" style="border-top:3px solid var(--sprint5)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Full Regression &amp; Security</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">End-to-end workflow test: data load → train → backtest → FnO positions → manoeuvre snapshot. Coverage report ≥80%. CORS lockdown, JWT refresh, rate limiting audit, input validation sweep.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">QA</span><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">Days 27–28</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">E2E workflow</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Coverage 80%+</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Security audit</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint5)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Kubernetes &amp; Production Ops</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">k8s manifests: Deployment, Service, Ingress, HPA, PVC. Non-root SecurityContext. AlertManager rules (high error rate, missed snapshot, pod restart). Canary rollout strategy in CI.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">Ops</span><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">Day 29</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">k8s manifests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">AlertManager</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Canary rollout</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint5)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">RITA v1.0 Release</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">CHANGELOG.md authored. Git tag v1.0. All 14 Confluence pages final and reviewed. Operations Manual published. PM retrospective report for the full 30-day program.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">PM + TechWriter</span><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">Day 30</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">CHANGELOG</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Git tag v1.0</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">14 Confluence pages</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 5 Done When:</strong> Coverage ≥80% enforced in CI · Security audit passed · k8s manifests deployable · Git tag v1.0 created · All 14 Confluence pages published &amp; reviewed · PM retrospective complete.</span></div>
+  </section>
+
+</main>
+
+</div><!-- /.shell -->
+
+<script>
+function nav(el, section) {
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('on'));
+  el.classList.add('on');
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
+  const target = document.getElementById('sec-' + section);
+  if (target) target.classList.add('on');
+}
+</script>
+
+</body>
+</html>

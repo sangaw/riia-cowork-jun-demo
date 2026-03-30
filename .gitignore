@@ -1,0 +1,91 @@
+# ── Secrets and credentials ──────────────────────────────────────────────────
+confluence-api-key.txt
+*.key
+*.pem
+*.pfx
+.env
+.env.*
+!.env.example
+
+# ── Local config overrides (may contain personal paths or secrets) ────────────
+riia-jun-release/config/production.yaml
+riia-jun-release/config/staging.yaml
+
+# ── API keys and tokens ───────────────────────────────────────────────────────
+*api-key*
+*api_key*
+*secret*
+*token*
+!*token_budget*
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.virtualenv/
+
+# ── Test and coverage ─────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# ── IDE and OS ────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Data files (read-only source data — not committed) ───────────────────────
+rita_input/
+*.csv
+*.zip
+*.pkl
+*.joblib
+
+# ── Model files ───────────────────────────────────────────────────────────────
+rita_output/
+*.sb3
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Node (if any frontend tooling) ───────────────────────────────────────────
+node_modules/
+dist/
+.npm/
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Claude memory (local only, contains personal context) ────────────────────
+.claude/
+
+# ── Temporary files ───────────────────────────────────────────────────────────
+*.tmp
+*.bak
+*.swp
+~$*
