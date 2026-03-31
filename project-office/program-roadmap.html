@@ -716,7 +716,7 @@ body {
     </div>
 
     <!-- ── ROW 1: Key Metrics + Progress ── -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;align-items:stretch">
 
       <!-- Col 1: KPI numbers -->
       <div class="card">
@@ -749,9 +749,9 @@ body {
             <div style="font-size:10.5px;color:var(--t3)">Sprints 2 – 5</div>
           </div>
           <div>
-            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px">Blockers</div>
-            <div style="font-weight:800;font-size:22px;line-height:1;color:var(--ok)" id="stat-blk">0</div>
-            <div style="font-size:10.5px;color:var(--t3)">On track</div>
+            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px">Days Done</div>
+            <div style="font-weight:800;font-size:22px;line-height:1;color:var(--ok)">6</div>
+            <div style="font-size:10.5px;color:var(--t3)">of 30 total</div>
           </div>
         </div>
       </div>
@@ -798,20 +798,18 @@ body {
       <div class="card">
         <div class="c-ey">Quality Gates</div>
         <div class="c-t">Sprint 1 Status</div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
           <div class="sb"><div class="sb-l">Test Coverage</div><div class="sb-v" id="stat-cov" style="color:var(--t3)">—</div></div>
           <div class="sb"><div class="sb-l">CI Pipeline</div><div class="sb-v" id="stat-ci" style="color:var(--ok)">Wired ✓</div></div>
           <div class="sb"><div class="sb-l">Reviewer Pass</div><div class="sb-v" id="stat-rev" style="color:var(--ok)">Sprint 0 ✓</div></div>
-          <div class="sb"><div class="sb-l">Secrets in YAML</div><div class="sb-v" style="color:var(--ok)">None ✓</div></div>
-          <div class="sb"><div class="sb-l">Repo Layer</div><div class="sb-v" style="color:var(--ok)">15 classes ✓</div></div>
-          <div class="sb"><div class="sb-l">File Locking</div><div class="sb-v" style="color:var(--ok)">All tables ✓</div></div>
+          <div class="sb"><div class="sb-l">Blockers</div><div class="sb-v" id="stat-blk" style="color:var(--ok)">0</div></div>
         </div>
       </div>
 
     </div><!-- /row 1 -->
 
     <!-- ── ROW 2: Recent Activity + Sprint Summary ── -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;align-items:stretch">
 
       <!-- Recent activity -->
       <div class="card">
