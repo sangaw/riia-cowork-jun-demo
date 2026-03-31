@@ -41,22 +41,22 @@ BODY = """
       <td>Day 10</td>
       <td>Engineer C</td>
       <td>Business Process API routers</td>
-      <td>Pending</td>
-      <td></td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>3 workflow routers under <code>api/v1/workflow/</code>: train, backtest, evaluate. WorkflowService + BacktestService persist jobs as <code>status=pending</code>. ML dispatch wired in Sprint 3.</td>
     </tr>
     <tr>
       <td>Day 11</td>
       <td>Engineer C</td>
-      <td>BFF layer</td>
-      <td>Pending</td>
-      <td></td>
+      <td>Experience Layer (BFF)</td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>3 read-only aggregation routers under <code>api/experience/</code>: DashboardPayload (positions + model state + alerts), FnoPayload (snapshots + portfolio + manoeuvres), OpsPayload (training runs + backtest runs + audit).</td>
     </tr>
     <tr>
       <td>Day 12</td>
       <td>Engineer C</td>
       <td>Global exception handler, trace IDs</td>
-      <td>Pending</td>
-      <td></td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>TraceIDMiddleware attaches <code>X-Request-ID</code> to every request/response via <code>ContextVar</code>. 4 exception handlers return <code>{"detail": ..., "trace_id": "..."}</code>: HTTPException, RequestValidationError, RepositoryValidationError, unhandled Exception (500).</td>
     </tr>
     <tr>
       <td>Day 13</td>
@@ -105,12 +105,66 @@ Each router is restricted to calling <strong>one repository only</strong>; no se
 </ul>
 <p>Repository injected via FastAPI <code>Depends()</code> &mdash; never instantiated inline.</p>
 
+<h2>Day 10 Deliverables &mdash; Business Process Routers</h2>
+
+<h3>Architecture (ADR-001 compliance)</h3>
+<p>Workflow routers live under <code>api/v1/workflow/</code> — the Business Process tier per ADR-001.
+Each router calls <strong>services only</strong> — never repositories directly, never Experience Layer routers.</p>
+
+<h3>Routers and Services Created</h3>
+<table>
+  <thead><tr><th>Router</th><th>Prefix</th><th>Service</th><th>Endpoints</th></tr></thead>
+  <tbody>
+    <tr><td><code>train.py</code></td><td>/api/v1/workflow/train</td><td>WorkflowService</td><td>POST /(202), GET /, GET /{id}, GET /{id}/metrics</td></tr>
+    <tr><td><code>backtest.py</code></td><td>/api/v1/workflow/backtest</td><td>BacktestService</td><td>POST /(202), GET /, GET /{id}, GET /{id}/results</td></tr>
+    <tr><td><code>evaluate.py</code></td><td>/api/v1/workflow/evaluate</td><td>BacktestService</td><td>POST /(202), GET /, GET /{id}, GET /{id}/results</td></tr>
+  </tbody>
+</table>
+<p>Job submission returns <code>202 Accepted</code> with <code>status=pending</code>. Actual ML dispatch wired in Sprint 3.</p>
+
+<h2>Day 11 Deliverables &mdash; Experience Layer</h2>
+
+<h3>Architecture (ADR-001 compliance)</h3>
+<p>Experience Layer routers live under <code>api/experience/</code> — Tier 3 per ADR-001.
+Read-only composition only — no writes, no side effects. One endpoint per UI view.</p>
+
+<h3>Routers and Payloads Created</h3>
+<table>
+  <thead><tr><th>Router</th><th>Prefix</th><th>Payload</th><th>Sources</th></tr></thead>
+  <tbody>
+    <tr><td><code>dashboard.py</code></td><td>/api/experience/dashboard</td><td>DashboardPayload</td><td>positions + latest training run + recent alerts</td></tr>
+    <tr><td><code>fno.py</code></td><td>/api/experience/fno</td><td>FnoPayload</td><td>snapshots + portfolio + recent manoeuvres</td></tr>
+    <tr><td><code>ops.py</code></td><td>/api/experience/ops</td><td>OpsPayload</td><td>training runs + backtest runs + recent audit log</td></tr>
+  </tbody>
+</table>
+
+<h2>Day 12 Deliverables &mdash; Middleware &amp; Exception Handlers</h2>
+
+<h3>TraceIDMiddleware (<code>middleware.py</code>)</h3>
+<ul>
+  <li>Reads <code>X-Request-ID</code> from incoming request headers or generates a new UUID4.</li>
+  <li>Stores trace ID in a <code>ContextVar</code> — safe for concurrent async requests.</li>
+  <li>Echoes <code>X-Request-ID</code> on every response header.</li>
+</ul>
+
+<h3>Exception Handlers (<code>exception_handlers.py</code>)</h3>
+<table>
+  <thead><tr><th>Handler</th><th>Status</th><th>Triggered by</th></tr></thead>
+  <tbody>
+    <tr><td>http_exception_handler</td><td>passthrough</td><td>HTTPException (404, 409, etc.)</td></tr>
+    <tr><td>validation_exception_handler</td><td>422</td><td>Bad request body or query params</td></tr>
+    <tr><td>repository_validation_handler</td><td>422</td><td>CSV row fails Pydantic schema</td></tr>
+    <tr><td>unhandled_exception_handler</td><td>500</td><td>Any uncaught runtime exception</td></tr>
+  </tbody>
+</table>
+<p>All handlers return: <code>{"detail": "...", "trace_id": "&lt;uuid&gt;"}</code></p>
+
 <h2>Sprint 2 Definition of Done</h2>
 <ul>
   <li>&#10003; 8 System CRUD routers wired and responding (Day 9)</li>
-  <li>&#9744; Business Process routers for train, backtest, evaluate, manoeuvre (Day 10)</li>
-  <li>&#9744; Experience Layer aggregation endpoints (Day 11)</li>
-  <li>&#9744; Global exception handler + request trace IDs (Day 12)</li>
+  <li>&#10003; Business Process routers for train, backtest, evaluate (Day 10)</li>
+  <li>&#10003; Experience Layer aggregation endpoints (Day 11)</li>
+  <li>&#10003; Global exception handler + request trace IDs (Day 12)</li>
   <li>&#9744; API contract tests via FastAPI TestClient (Day 13)</li>
   <li>&#9744; Confluence API Reference published (Day 14)</li>
 </ul>

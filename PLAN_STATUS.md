@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-03-31 (Day 9)
+**Last updated:** 2026-03-31 (Day 12)
 
 ---
 
 ## Current Sprint: SPRINT 1 — Foundation
-**Current Day: Day 9 complete — Sprint 2 underway.**
+**Current Day: Day 12 complete — Sprint 2 in progress.**
 
 ---
 
@@ -31,9 +31,9 @@
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
 | Day 9 | Engineer C | System APIs (CRUD routers) | `[x]` | 8 CRUD routers (positions, orders, snapshots, trades, alerts, audit, market_data, config_overrides); wired into main.py |
-| Day 10 | Engineer C | Business Process API routers | `[ ]` | |
-| Day 11 | Engineer C | BFF layer | `[ ]` | |
-| Day 12 | Engineer C | Global exception handler, trace IDs | `[ ]` | |
+| Day 10 | Engineer C | Business Process API routers | `[x]` | WorkflowService (train) + BacktestService (backtest/evaluate); 3 routers wired into main.py; services create status=pending records; ML dispatch is Sprint 3 |
+| Day 11 | Engineer C | BFF layer | `[x]` | 3 Experience Layer routers: DashboardPayload (positions+model state+alerts), FnoPayload (snapshots+portfolio+manoeuvres), OpsPayload (training+backtest runs+audit); wired into main.py |
+| Day 12 | Engineer C | Global exception handler, trace IDs | `[x]` | TraceIDMiddleware (X-Request-ID header, ContextVar); 4 exception handlers (HTTPException, RequestValidationError, RepositoryValidationError, Exception→500); consistent {detail, trace_id} JSON shape |
 | Day 13 | QA | API contract tests | `[ ]` | |
 | Day 14 | TechWriter | Confluence: API Reference | `[ ]` | |
 

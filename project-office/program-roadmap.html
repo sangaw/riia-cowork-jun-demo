@@ -730,8 +730,8 @@ body {
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Overall Progress</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">30%</div>
-            <div style="font-size:8.5px;color:var(--t3)">Day 9 of 30</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">40%</div>
+            <div style="font-size:8.5px;color:var(--t3)">Day 12 of 30</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
@@ -750,7 +750,7 @@ body {
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Days Done</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">9</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">12</div>
             <div style="font-size:8.5px;color:var(--t3)">of 30 total</div>
           </div>
         </div>
@@ -773,8 +773,8 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S2 · API</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s2" style="width:17%;height:100%;background:var(--sprint2);border-radius:3px"></div></div>
-            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s2">17%</span>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s2" style="width:67%;height:100%;background:var(--sprint2);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s2">67%</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S3 · Services</div>
@@ -828,6 +828,33 @@ body {
         <div class="c-ey">Recent Activity</div>
         <div class="c-t">Latest Deliverables</div>
         <div class="activity" id="activity-feed" style="margin-top:10px">
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">TraceIDMiddleware + global exception handlers</div>
+              <div class="act-desc">X-Request-ID on every request/response · 4 handlers: HTTPException, 422, RepositoryValidationError, 500</div>
+            </div>
+            <div class="act-time">Day 12</div>
+          </div>
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">3 Experience Layer routers · api/experience/</div>
+              <div class="act-desc">DashboardPayload · FnoPayload · OpsPayload — read-only, one call per view</div>
+            </div>
+            <div class="act-time">Day 11</div>
+          </div>
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">3 Workflow routers · api/v1/workflow/</div>
+              <div class="act-desc">train, backtest, evaluate — WorkflowService + BacktestService; jobs persisted as status=pending</div>
+            </div>
+            <div class="act-time">Day 10</div>
+          </div>
 
           <div class="act-row">
             <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
@@ -1318,9 +1345,9 @@ body {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer C</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Day 9</span></div>
         <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Positions</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Orders</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Snapshots</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Positions</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Orders</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Snapshots</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
         </div>
       </div>
 
@@ -1330,9 +1357,9 @@ body {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer C</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Day 10</span></div>
         <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Workflow</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Backtest</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Training</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Workflow</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Backtest</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Training</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
         </div>
       </div>
 
@@ -1342,8 +1369,8 @@ body {
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer C</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Days 11–12</span></div>
         <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Experience routers</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Exception handler</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Experience routers</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Exception handler</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
           <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">API tests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
         </div>
       </div>
