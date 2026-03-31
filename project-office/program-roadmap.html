@@ -676,10 +676,14 @@ body {
       <div class="mc-nm">RITA v1.0 Refactor</div>
       <div class="mc-r">
         <span>Sprint 0</span>
-        <span class="mc-v active" id="s0-status">Active</span>
+        <span class="mc-v ok" id="s0-status">Done</span>
       </div>
       <div class="mc-r">
-        <span>Sprint 1–4</span>
+        <span>Sprint 1</span>
+        <span class="mc-v active">In Progress</span>
+      </div>
+      <div class="mc-r">
+        <span>Sprint 2–5</span>
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-r">
@@ -687,7 +691,7 @@ body {
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:3%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:20%"></div>
       </div>
     </div>
   </div>
@@ -711,229 +715,213 @@ body {
       </div>
     </div>
 
-    <!-- KPI strip -->
-    <div class="kpi-strip" style="grid-template-columns:repeat(5,1fr)">
-      <div class="kpi">
-        <div class="kpi-ey">Total Sprints</div>
-        <div class="kpi-val">6</div>
-        <div class="kpi-sub">Sprint 0 → Sprint 5</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-ey"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
-        <div class="kpi-val" id="kpi-done" style="color:var(--ok)">0</div>
-        <div class="kpi-sub" id="kpi-done-sub">None yet</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-ey"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
-        <div class="kpi-val" id="kpi-active" style="color:var(--active)">1</div>
-        <div class="kpi-sub" id="kpi-active-sub">Sprint 0 · Arch</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-ey"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
-        <div class="kpi-val" id="kpi-planned" style="color:var(--t3)">5</div>
-        <div class="kpi-sub">Sprints 1 – 5</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-ey">Overall Progress</div>
-        <div class="kpi-val" id="kpi-pct">3%</div>
-        <div class="kpi-sub">Day 1 of 30</div>
-      </div>
-    </div>
+    <!-- ── ROW 1: Key Metrics + Progress ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;align-items:start">
 
-    <!-- Two-col: sprint progress + activity -->
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:18px;align-items:start">
+      <!-- Col 1: KPI numbers -->
+      <div class="card">
+        <div class="c-ey">Program Metrics</div>
+        <div class="c-t">At a Glance</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px">Total Sprints</div>
+            <div style="font-weight:800;font-size:22px;line-height:1">6</div>
+            <div style="font-size:10.5px;color:var(--t3)">Sprint 0 → Sprint 5</div>
+          </div>
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px">Overall Progress</div>
+            <div style="font-weight:800;font-size:22px;line-height:1;color:var(--ok)" id="kpi-pct">20%</div>
+            <div style="font-size:10.5px;color:var(--t3)">Day 6 of 30</div>
+          </div>
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
+            <div style="font-weight:800;font-size:22px;line-height:1;color:var(--ok)" id="kpi-done">1</div>
+            <div style="font-size:10.5px;color:var(--t3)" id="kpi-done-sub">Sprint 0 · Architecture</div>
+          </div>
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
+            <div style="font-weight:800;font-size:22px;line-height:1;color:var(--active)" id="kpi-active">1</div>
+            <div style="font-size:10.5px;color:var(--t3)" id="kpi-active-sub">Sprint 1 · Foundation</div>
+          </div>
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
+            <div style="font-weight:800;font-size:22px;line-height:1;color:var(--t3)" id="kpi-planned">4</div>
+            <div style="font-size:10.5px;color:var(--t3)">Sprints 2 – 5</div>
+          </div>
+          <div>
+            <div style="font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:3px">Blockers</div>
+            <div style="font-weight:800;font-size:22px;line-height:1;color:var(--ok)" id="stat-blk">0</div>
+            <div style="font-size:10.5px;color:var(--t3)">On track</div>
+          </div>
+        </div>
+      </div>
 
-      <!-- Sprint progress bars -->
+      <!-- Col 2: Sprint progress bars -->
       <div class="card">
         <div class="c-ey"><span class="ey-d" style="background:var(--active)"></span>Sprint Progress</div>
         <div class="c-t">Delivery by Sprint</div>
         <div class="bar-wrap">
-
           <div class="bar-r">
             <div class="bar-lbl">S0 · Architecture</div>
-            <div class="bar-track">
-              <div class="bar-fill" id="bar-s0" style="width:3%;background:var(--sprint0)"></div>
-            </div>
-            <span class="bar-pct" id="pct-s0">3%</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-s0" style="width:100%;background:var(--ok)"></div></div>
+            <span class="bar-pct" id="pct-s0">100%</span>
           </div>
-
           <div class="bar-r">
             <div class="bar-lbl">S1 · Foundation</div>
-            <div class="bar-track">
-              <div class="bar-fill" id="bar-s1" style="width:0%;background:var(--sprint1)"></div>
-            </div>
-            <span class="bar-pct" id="pct-s1">—</span>
+            <div class="bar-track"><div class="bar-fill" id="bar-s1" style="width:60%;background:var(--sprint1)"></div></div>
+            <span class="bar-pct" id="pct-s1">60%</span>
           </div>
-
           <div class="bar-r">
             <div class="bar-lbl">S2 · API</div>
-            <div class="bar-track">
-              <div class="bar-fill" id="bar-s2" style="width:0%;background:var(--sprint2)"></div>
-            </div>
+            <div class="bar-track"><div class="bar-fill" id="bar-s2" style="width:0%;background:var(--sprint2)"></div></div>
             <span class="bar-pct" id="pct-s2">—</span>
           </div>
-
           <div class="bar-r">
             <div class="bar-lbl">S3 · Services</div>
-            <div class="bar-track">
-              <div class="bar-fill" id="bar-s3" style="width:0%;background:var(--sprint3)"></div>
-            </div>
+            <div class="bar-track"><div class="bar-fill" id="bar-s3" style="width:0%;background:var(--sprint3)"></div></div>
             <span class="bar-pct" id="pct-s3">—</span>
           </div>
-
           <div class="bar-r">
             <div class="bar-lbl">S4 · Frontend</div>
-            <div class="bar-track">
-              <div class="bar-fill" id="bar-s4" style="width:0%;background:var(--sprint4)"></div>
-            </div>
+            <div class="bar-track"><div class="bar-fill" id="bar-s4" style="width:0%;background:var(--sprint4)"></div></div>
             <span class="bar-pct" id="pct-s4">—</span>
           </div>
-
           <div class="bar-r">
             <div class="bar-lbl">S5 · Release</div>
-            <div class="bar-track">
-              <div class="bar-fill" id="bar-s5" style="width:0%;background:var(--sprint5)"></div>
-            </div>
+            <div class="bar-track"><div class="bar-fill" id="bar-s5" style="width:0%;background:var(--sprint5)"></div></div>
             <span class="bar-pct" id="pct-s5">—</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Col 3: Quality gates -->
+      <div class="card">
+        <div class="c-ey">Quality Gates</div>
+        <div class="c-t">Sprint 1 Status</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+          <div class="sb"><div class="sb-l">Test Coverage</div><div class="sb-v" id="stat-cov" style="color:var(--t3)">—</div></div>
+          <div class="sb"><div class="sb-l">CI Pipeline</div><div class="sb-v" id="stat-ci" style="color:var(--ok)">Wired ✓</div></div>
+          <div class="sb"><div class="sb-l">Reviewer Pass</div><div class="sb-v" id="stat-rev" style="color:var(--ok)">Sprint 0 ✓</div></div>
+          <div class="sb"><div class="sb-l">Secrets in YAML</div><div class="sb-v" style="color:var(--ok)">None ✓</div></div>
+          <div class="sb"><div class="sb-l">Repo Layer</div><div class="sb-v" style="color:var(--ok)">15 classes ✓</div></div>
+          <div class="sb"><div class="sb-l">File Locking</div><div class="sb-v" style="color:var(--ok)">All tables ✓</div></div>
+        </div>
+      </div>
+
+    </div><!-- /row 1 -->
+
+    <!-- ── ROW 2: Recent Activity + Sprint Summary ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;align-items:start">
+
+      <!-- Recent activity -->
+      <div class="card">
+        <div class="c-ey">Recent Activity</div>
+        <div class="c-t">Latest Deliverables</div>
+        <div class="activity" id="activity-feed" style="margin-top:10px">
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Dockerfile &amp; CI pipeline live</div>
+              <div class="act-desc">Multi-stage build · lint→test→docker-build</div>
+            </div>
+            <div class="act-time">Day 6</div>
+          </div>
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Repository layer complete</div>
+              <div class="act-desc">15 CSV repos · file locking · Pydantic validation</div>
+            </div>
+            <div class="act-time">Day 5</div>
+          </div>
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Pydantic Settings &amp; secrets hardened</div>
+              <div class="act-desc">YAML hierarchy · JWT from env var only</div>
+            </div>
+            <div class="act-time">Day 4</div>
+          </div>
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Sprint 0 complete · Reviewer approved</div>
+              <div class="act-desc">ADR-001, ADR-002, 16 schemas, Confluence live</div>
+            </div>
+            <div class="act-time">Day 3</div>
+          </div>
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div></div>
+            <div class="act-body">
+              <div class="act-title">Sprint 0 started — architecture &amp; planning</div>
+              <div class="act-desc">Folder structure · ADRs · Confluence hierarchy</div>
+            </div>
+            <div class="act-time">Day 1</div>
+          </div>
 
         </div>
       </div>
 
-      <!-- Right col: metrics + activity -->
-      <div style="display:flex;flex-direction:column;gap:13px">
-
-        <!-- Quick stats -->
-        <div class="card">
-          <div class="c-ey">Quality Gates</div>
-          <div class="sb-row">
-            <div class="sb">
-              <div class="sb-l">Test Coverage</div>
-              <div class="sb-v" id="stat-cov" style="color:var(--t3)">—</div>
-            </div>
-            <div class="sb">
-              <div class="sb-l">CI Green</div>
-              <div class="sb-v" id="stat-ci" style="color:var(--t3)">—</div>
-            </div>
-          </div>
-          <div class="sb-row" style="margin-top:0">
-            <div class="sb">
-              <div class="sb-l">Review Pass</div>
-              <div class="sb-v" id="stat-rev" style="color:var(--t3)">—</div>
-            </div>
-            <div class="sb">
-              <div class="sb-l">Blockers</div>
-              <div class="sb-v" id="stat-blk" style="color:var(--ok)">0</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent activity -->
-        <div class="card">
-          <div class="c-ey">Recent Activity</div>
-          <div class="activity" id="activity-feed">
-
-            <div class="act-row">
-              <div class="act-dot-wrap">
-                <div class="act-dot" style="background:var(--active)"></div>
-                <div class="act-line"></div>
-              </div>
-              <div class="act-body">
-                <div class="act-title">Sprint 0 started</div>
-                <div class="act-desc">Architecture &amp; Planning — Days 1–3</div>
-              </div>
-              <div class="act-time">Day 1</div>
-            </div>
-
-            <div class="act-row">
-              <div class="act-dot-wrap">
-                <div class="act-dot" style="background:var(--ok)"></div>
-                <div class="act-line"></div>
-              </div>
-              <div class="act-body">
-                <div class="act-title">Confluence hierarchy live</div>
-                <div class="act-desc">7 sections, 8 pages published</div>
-              </div>
-              <div class="act-time">Day 1</div>
-            </div>
-
-            <div class="act-row">
-              <div class="act-dot-wrap">
-                <div class="act-dot" style="background:var(--ok)"></div>
-              </div>
-              <div class="act-body">
-                <div class="act-title">CLAUDE.md &amp; project-office scaffolded</div>
-                <div class="act-desc">Cowork setup complete</div>
-              </div>
-              <div class="act-time">Day 1</div>
-            </div>
-
-          </div>
-        </div>
-
+      <!-- Sprint summary table -->
+      <div class="card">
+        <div class="c-ey">All Sprints</div>
+        <div class="c-t">Sprint Summary</div>
+        <table style="width:100%;border-collapse:collapse;margin-top:8px">
+          <thead>
+            <tr style="border-bottom:1.5px solid var(--border)">
+              <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px 0">Sprint</th>
+              <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Name</th>
+              <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Days</th>
+              <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Status</th>
+            </tr>
+          </thead>
+          <tbody id="sprint-table-body">
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint0)">S0</td>
+              <td style="padding:9px 8px;font-size:12px">Architecture &amp; Planning</td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">1–3</td>
+              <td style="padding:9px 8px"><span class="badge done">Done</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint1)">S1</td>
+              <td style="padding:9px 8px;font-size:12px">Foundation</td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">4–8</td>
+              <td style="padding:9px 8px"><span class="badge active">In Progress</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint2)">S2</td>
+              <td style="padding:9px 8px;font-size:12px">API Decomposition</td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">9–14</td>
+              <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint3)">S3</td>
+              <td style="padding:9px 8px;font-size:12px">Service Layer &amp; Observability</td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">15–20</td>
+              <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--border)">
+              <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint4)">S4</td>
+              <td style="padding:9px 8px;font-size:12px">Frontend &amp; Responsive</td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">21–26</td>
+              <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+            </tr>
+            <tr>
+              <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint5)">S5</td>
+              <td style="padding:9px 8px;font-size:12px">Integration &amp; Release</td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">27–30</td>
+              <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div><!-- /two-col -->
 
-    <!-- Sprint summary table -->
-    <div class="card" style="margin-bottom:18px">
-      <div class="c-ey">All Sprints</div>
-      <div class="c-t">Sprint Summary</div>
-      <table style="width:100%;border-collapse:collapse;margin-top:8px">
-        <thead>
-          <tr style="border-bottom:1.5px solid var(--border)">
-            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px 0">Sprint</th>
-            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Name</th>
-            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Days</th>
-            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Key Goal</th>
-            <th style="text-align:left;font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px 8px">Status</th>
-          </tr>
-        </thead>
-        <tbody id="sprint-table-body">
-          <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint0)">S0</td>
-            <td style="padding:9px 8px;font-size:12px">Architecture &amp; Planning</td>
-            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">1–3</td>
-            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">ADRs, schemas, Confluence bootstrapped</td>
-            <td style="padding:9px 8px"><span class="badge active">Active</span></td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint1)">S1</td>
-            <td style="padding:9px 8px;font-size:12px">Foundation</td>
-            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">4–8</td>
-            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Config, repository layer, CI v2</td>
-            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint2)">S2</td>
-            <td style="padding:9px 8px;font-size:12px">API Decomposition</td>
-            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">9–14</td>
-            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Three-tier routers replace monolith</td>
-            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint3)">S3</td>
-            <td style="padding:9px 8px;font-size:12px">Service Layer &amp; Observability</td>
-            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">15–20</td>
-            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Services, structlog, Prometheus metrics</td>
-            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
-          </tr>
-          <tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint4)">S4</td>
-            <td style="padding:9px 8px;font-size:12px">Frontend &amp; Responsive</td>
-            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">21–26</td>
-            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">ES modules, 480/768/1100px breakpoints</td>
-            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
-          </tr>
-          <tr>
-            <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint5)">S5</td>
-            <td style="padding:9px 8px;font-size:12px">Integration &amp; Release</td>
-            <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">27–30</td>
-            <td style="padding:9px 8px;font-size:11.5px;color:var(--t2)">Security audit, k8s, v1.0 tag</td>
-            <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    </div><!-- /row 2 -->
 
     <!-- Definition of done alert -->
     <div class="al i">
