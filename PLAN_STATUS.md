@@ -22,7 +22,7 @@
 |---|---|---|---|---|
 | Day 4 | Engineer A | Pydantic Settings, config YAML hierarchy, remove hardcoded secrets | `[x]` | config.py, pyproject.toml, .env.example written; jwt_secret removed from YAML |
 | Day 5 | Engineer B | Repository layer — CSV tables, file locking, schema validation | `[x]` | CsvRepository base + 15 concrete classes; per-instance lock; validation on read+write |
-| Day 6 | Ops | Multi-stage Dockerfile, CI v2 pipeline | `[ ]` | |
+| Day 6 | Ops | Multi-stage Dockerfile, CI v2 pipeline | `[x]` | Multi-stage Dockerfile (builder lints+tests, runtime non-root); CI: lint→test→docker-build |
 | Day 7 | QA | Config + repository tests | `[ ]` | |
 | Day 8 | TechWriter | Confluence: Security & Config pages | `[ ]` | |
 

@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install "ruff>=0.4"
+
+      - name: Lint
+        run: ruff check riia-jun-release/src/
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    env:
+      RITA_ENV: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install package with dev deps
+        run: pip install -e "riia-jun-release/[dev]"
+
+      - name: Run tests
+        run: >
+          pytest riia-jun-release/tests/
+          --tb=short -q
+          --cov=rita
+          --cov-report=term-missing
+          --cov-fail-under=0
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: .coverage
+
+  docker-build:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -f riia-jun-release/Dockerfile riia-jun-release/
