@@ -56,7 +56,7 @@ riia-cowork-jun/                    ← project workspace root (this repo)
     ├── src/rita/
     │   ├── api/v1/system/          ← pure CRUD routers
     │   ├── api/v1/workflow/        ← business process routers
-    │   ├── api/bff/                ← BFF aggregation routers
+    │   ├── api/experience/                ← Experience Layer routers
     │   ├── services/               ← business logic
     │   ├── repositories/           ← CSV access layer (one class per table)
     │   ├── schemas/                ← Pydantic data contracts
@@ -75,7 +75,7 @@ riia-cowork-jun/                    ← project workspace root (this repo)
 
 ## Key Design Decisions (ADRs)
 
-- **ADR-001:** Three-tier API (BFF / Business Process / System). All routes split accordingly.
+- **ADR-001:** Three-tier API (Experience Layer / Business Process / System). All routes split accordingly.
 - **ADR-002:** Repository pattern for all CSV access. No direct file I/O in routes or services.
 - **v1 target:** CSV-backed, cloud-native, stateless API, JWT-secured.
 - **v2 future:** PostgreSQL replaces CSV (mechanical migration — same schemas).
@@ -112,7 +112,7 @@ SECTION = {
 | User says | What to do |
 |---|---|
 | `Start Day N` | Read PLAN_STATUS.md → confirm tasks → launch agents |
-| `End day` | Update PLAN_STATUS.md → git commit → publish Confluence |
+| `End day` | 1. Update PLAN_STATUS.md (mark day done) → 2. Update `project-office/program-roadmap.html` (progress bars + badges) → 3. Run `publish_sprint{N}_board.py` to update Confluence sprint board → 4. git commit |
 | `What's next?` | Read PLAN_STATUS.md → report current day and tasks |
 | `Show blockers` | Read PLAN_STATUS.md → list blocked items |
 

@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-03-30
+**Last updated:** 2026-03-31
 
 ---
 
 ## Current Sprint: SPRINT 0 — Architecture & Planning
-**Current Day: Day 1** (not started)
+**Current Day: Day 4** (Sprint 1 begins)
 
 ---
 
@@ -12,15 +12,15 @@
 
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
-| Day 1 | PM + Architect | Target folder structure; ADR-001, ADR-002 | `[ ]` | |
-| Day 2 | Architect | Pydantic schemas for all 15 CSV tables | `[ ]` | |
-| Day 3 | TechWriter | Bootstrap Confluence: Home, Architecture, Sprint board | `[ ]` | |
+| Day 1 | PM + Architect | Target folder structure; ADR-001, ADR-002 | `[x]` | Structure created, ADRs written to docs/ |
+| Day 2 | Architect | Pydantic schemas for all 15 CSV tables | `[x]` | 16 schema files written to src/rita/schemas/ — derived from actual POC CSV headers |
+| Day 3 | TechWriter | Bootstrap Confluence: Architecture section, ADR pages, Sprint board | `[x]` | ADR-001 [65568776] and ADR-002 [65536002] published to Architecture section |
 
 ## Sprint 1 Tasks
 
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
-| Day 4 | Engineer A | Pydantic Settings, config YAML hierarchy, remove hardcoded secrets | `[ ]` | |
+| Day 4 | Engineer A | Pydantic Settings, config YAML hierarchy, remove hardcoded secrets | `[x]` | config.py, pyproject.toml, .env.example written; jwt_secret removed from YAML |
 | Day 5 | Engineer B | Repository layer — CSV tables, file locking, schema validation | `[ ]` | |
 | Day 6 | Ops | Multi-stage Dockerfile, CI v2 pipeline | `[ ]` | |
 | Day 7 | QA | Config + repository tests | `[ ]` | |
@@ -77,3 +77,4 @@ _None_
 ## Notes / Decisions
 
 - 2026-03-30: Plan created. Master plan at RITA_PRODUCTION_PLAN.md.
+- 2026-03-30: Sprint 0 complete (Days 1-3). ADR-001, ADR-002, 16 Pydantic schemas, full folder structure. ADR pages live on Confluence under Architecture section. Folder structure created under riia-jun-release/. ADR-001 (three-tier API) and ADR-002 (repository pattern) written to docs/. Config YAML hierarchy (base/dev/staging/prod) created. Git repo initialised, .gitignore set, remote pointed to github.com/sangaw/riia-cowork-jun-demo.git — not yet pushed.

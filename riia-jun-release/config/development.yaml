@@ -1,0 +1,6 @@
+server:
+  reload: true
+  log_level: "debug"
+
+security:
+  cors_origins: ["http://localhost:3000", "http://localhost:8000"]
