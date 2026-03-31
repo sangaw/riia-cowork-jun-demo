@@ -55,8 +55,8 @@ BODY = """
       <td>Day 7</td>
       <td>QA</td>
       <td>Config + repository tests</td>
-      <td>Pending</td>
-      <td></td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>19 unit tests: 8 config tests (<code>test_config.py</code>) + 11 repository tests (<code>test_repository.py</code>) including 10-thread concurrency test. Coverage threshold raised to 80% in Dockerfile and CI.</td>
     </tr>
     <tr>
       <td>Day 8</td>
@@ -118,7 +118,7 @@ BODY = """
   <li>&#10003; Config crashes at boot on missing secrets in staging/production</li>
   <li>&#10003; 15 repository classes with file locking and schema validation</li>
   <li>&#10003; CI pipeline wired: lint &rarr; test &rarr; docker-build</li>
-  <li>&#9744; Tests for config edge cases and repo round-trips pass (Day 7)</li>
+  <li>&#10003; Tests for config edge cases and repo round-trips pass — 19 tests, 80% coverage gate</li>
   <li>&#9744; Confluence Security &amp; Config pages published (Day 8)</li>
 </ul>
 
@@ -139,6 +139,42 @@ BODY = """
 <h3>App entry point (<code>src/rita/main.py</code>)</h3>
 <ul>
   <li>Minimal FastAPI app with <code>GET /health</code> &mdash; title and version from <code>get_settings()</code></li>
+</ul>
+
+<h2>Day 7 Deliverables &mdash; Config &amp; Repository Tests</h2>
+
+<h3>Config Tests (<code>tests/unit/test_config.py</code>) &mdash; 8 tests</h3>
+<ul>
+  <li><code>test_defaults_loaded</code> — base.yaml values surface in Settings after construction</li>
+  <li><code>test_env_override_merges</code> — env YAML overrides one value without losing siblings</li>
+  <li><code>test_jwt_secret_from_env_var</code> — <code>RITA_JWT_SECRET</code> env var accessible via <code>settings.security.jwt_secret</code></li>
+  <li><code>test_jwt_secret_not_in_yaml</code> — yaml secret is stripped; dev default used instead</li>
+  <li><code>test_staging_requires_secret</code> — staging env with no secret raises <code>ValidationError</code></li>
+  <li><code>test_staging_requires_secret_min_length</code> — staging env with short secret (&lt;32 chars) raises</li>
+  <li><code>test_unknown_env_falls_back_gracefully</code> — non-existent env file loads base without crash</li>
+  <li><code>test_deep_merge_does_not_clobber_siblings</code> — overriding one server key keeps all siblings</li>
+</ul>
+<p><strong>Fixture pattern:</strong> <code>make_config_dir</code> patches <code>rita.config._CONFIG_DIR</code> to <code>tmp_path</code>; imports inside test functions to avoid singleton side effects.</p>
+
+<h3>Repository Tests (<code>tests/unit/test_repository.py</code>) &mdash; 11 tests</h3>
+<ul>
+  <li><code>test_read_all_empty_when_no_file</code> — missing CSV returns <code>[]</code></li>
+  <li><code>test_write_and_read_round_trip</code> — 3 records survive CSV serialisation</li>
+  <li><code>test_upsert_inserts_new_record</code> — upsert into empty store produces one record</li>
+  <li><code>test_upsert_replaces_existing</code> — upsert with same id overwrites previous value</li>
+  <li><code>test_delete_removes_record</code> — delete removes target, leaves siblings intact</li>
+  <li><code>test_delete_returns_false_when_not_found</code> — delete of unknown id returns <code>False</code></li>
+  <li><code>test_find_by_id_returns_correct</code> — correct record returned from 5-record store</li>
+  <li><code>test_find_by_id_returns_none_when_missing</code> — unknown id returns <code>None</code></li>
+  <li><code>test_validation_error_on_bad_row</code> — CSV with missing column raises <code>RepositoryValidationError</code></li>
+  <li><code>test_write_empty_list_creates_header_file</code> — <code>write_all([])</code> creates header-only CSV</li>
+  <li><code>test_concurrent_upserts_no_corruption</code> — 10 threads with <code>threading.Barrier</code> produce exactly 10 records, no duplicates</li>
+</ul>
+
+<h3>Coverage Gate</h3>
+<ul>
+  <li>Coverage threshold raised from 0 to <strong>80%</strong> in both <code>Dockerfile</code> (builder stage) and <code>.github/workflows/ci.yml</code></li>
+  <li><code>pytest-cov&gt;=5</code> added to <code>pyproject.toml</code> dev dependencies</li>
 </ul>
 """
 

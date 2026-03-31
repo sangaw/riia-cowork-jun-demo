@@ -110,7 +110,7 @@ END OF DAY
 |---|---|---|---|
 | **Day 9** | Engineer C | Extract System APIs (pure CRUD): positions, orders, scenario_levels, snapshots | `src/rita/api/v1/system/` routers |
 | **Day 10** | Engineer C | Extract Business Process APIs: workflow, backtest, training, model_registry | `src/rita/api/v1/workflow/` routers |
-| **Day 11** | Engineer C | Build BFF layer: dashboard_bff, fno_bff, ops_bff aggregation endpoints | `src/rita/api/bff/` routers |
+| **Day 11** | Engineer C | Build Experience Layer: dashboard, fno, ops aggregation endpoints | `src/rita/api/experience/` routers |
 | **Day 12** | Engineer C | Global exception handler, trace IDs, structured error responses, NaN safety | `src/rita/api/middleware.py` |
 | **Day 13** | QA | API contract tests for all tiers using `httpx.AsyncClient` | `tests/api/` |
 | **Day 14** | TechWriter | Document: API reference (all endpoints), error codes, trace ID guide | Confluence: API Reference pages |
@@ -182,12 +182,12 @@ Fields per task: `[ ]` todo / `[~]` in-progress / `[x]` done / `[!]` blocked
 |---|---|---|---|
 | **Home / Overview** | S0 | TechWriter | Project goal, team, links to all pages |
 | **Architecture Overview** | S0 | TechWriter | Three-tier diagram, ADR summaries |
-| **ADR-001: API Tiers** | S0 | TechWriter | Decision record: BFF/BP/System design |
+| **ADR-001: API Tiers** | S0 | TechWriter | Decision record: Experience Layer/BP/System design |
 | **ADR-002: Repository Pattern** | S0 | TechWriter | Decision record: CSV v1 / DB v2 strategy |
 | **Data Schema Reference** | S0 | TechWriter | All 15 CSV table schemas with field types |
 | **Security & Config Guide** | S1 | TechWriter | JWT setup, Pydantic Settings, secrets |
 | **Repository Contracts** | S1 | TechWriter | Repository API, file locking, validation |
-| **API Reference** | S2 | TechWriter | All endpoints (System / BP / BFF), errors |
+| **API Reference** | S2 | TechWriter | All endpoints (System / BP / Experience Layer), errors |
 | **Service Layer Guide** | S3 | TechWriter | Services, dependency injection, flow |
 | **Observability Runbook** | S3 | TechWriter | Logs, metrics, alerts, dashboards |
 | **Frontend Architecture** | S4 | TechWriter | Module map, responsive breakpoints |

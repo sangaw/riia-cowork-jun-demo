@@ -20,7 +20,7 @@ RUN ruff check src/
 
 # Test gate — run tests with coverage; threshold is 0 for now (raised in a later commit)
 COPY tests/ tests/
-RUN pytest tests/ --tb=short -q --cov=rita --cov-report=term-missing --cov-fail-under=0
+RUN pytest tests/ --tb=short -q --cov=rita --cov-report=term-missing --cov-fail-under=80
 
 
 # ── Stage 2: runtime ────────────────────────────────────────────────────────

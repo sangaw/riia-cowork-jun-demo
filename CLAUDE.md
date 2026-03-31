@@ -1,4 +1,4 @@
-# RITA Production Refactor — Project Guide for Claude
+ok# RITA Production Refactor — Project Guide for Claude
 
 This file is automatically loaded at the start of every Claude Code session.
 It gives all agents the essential context they need without re-reading the codebase.

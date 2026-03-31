@@ -11,7 +11,7 @@ riia-jun-release/
 │   ├── api/
 │   │   ├── v1/system/      # Pure CRUD routers (positions, orders, snapshots)
 │   │   ├── v1/workflow/    # Business process routers (train, backtest, evaluate)
-│   │   └── bff/            # BFF aggregation routers (dashboard, fno, ops)
+│   │   └── experience/     # Experience Layer routers (dashboard, fno, ops)
 │   ├── services/           # Business logic (WorkflowService, ManoeuvreService, etc.)
 │   ├── repositories/       # CSV access layer (one class per table, file locking)
 │   ├── schemas/            # Pydantic models for all data contracts
