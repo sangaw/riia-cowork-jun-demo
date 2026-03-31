@@ -41,8 +41,8 @@ BODY = """
       <td>Day 5</td>
       <td>Engineer B</td>
       <td>Repository layer — CSV tables, file locking, schema validation</td>
-      <td>Pending</td>
-      <td></td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td><code>CsvRepository[T]</code> base with per-instance <code>threading.Lock</code>; Pydantic validation on every read and write; <code>upsert</code> and <code>delete</code> atomic under single lock acquisition. 15 concrete classes covering all CSV tables.</td>
     </tr>
     <tr>
       <td>Day 6</td>
@@ -91,10 +91,32 @@ BODY = """
   <li><code>riia-jun-release/.env.example</code> — documents <code>RITA_ENV</code>, <code>RITA_JWT_SECRET</code>, optional port override</li>
 </ul>
 
+<h2>Day 5 Deliverables &mdash; Repository Layer</h2>
+
+<h3><code>CsvRepository[T]</code> — Base Implementation</h3>
+<ul>
+  <li>Per-instance <code>threading.Lock</code> — all CSV reads and writes are lock-protected</li>
+  <li><code>upsert</code> and <code>delete</code> each operate under a single lock acquisition using internal <code>_read_unlocked</code> / <code>_write_unlocked</code> helpers — no re-entrant locking</li>
+  <li>Reads with <code>dtype=str</code> then validates every row via <code>model_validate()</code> — raises <code>RepositoryValidationError</code> on any bad row</li>
+  <li>Writes re-validate before committing; creates parent directories if absent; writes empty CSV with headers when record list is empty</li>
+  <li>Missing CSV file returns <code>[]</code> (not an error) — safe for first-run bootstrap</li>
+</ul>
+
+<h3>15 Concrete Repository Classes</h3>
+<ul>
+  <li><code>PositionsRepository</code>, <code>OrdersRepository</code>, <code>SnapshotsRepository</code>, <code>TradesRepository</code></li>
+  <li><code>PortfolioRepository</code>, <code>ManoeuvresRepository</code></li>
+  <li><code>BacktestRunsRepository</code>, <code>BacktestResultsRepository</code></li>
+  <li><code>TrainingRunsRepository</code>, <code>TrainingMetricsRepository</code></li>
+  <li><code>ModelRegistryRepository</code>, <code>AlertsRepository</code>, <code>AuditLogRepository</code></li>
+  <li><code>MarketDataCacheRepository</code>, <code>ConfigOverridesRepository</code></li>
+</ul>
+<p>Each accepts an optional <code>data_dir: Path | None</code> for testability; defaults to <code>settings.data.output_dir</code>.</p>
+
 <h2>Sprint 1 Definition of Done</h2>
 <ul>
   <li>&#10003; Config crashes at boot on missing secrets in staging/production</li>
-  <li>&#9744; 12+ repository classes with file locking (Day 5)</li>
+  <li>&#10003; 15 repository classes with file locking and schema validation</li>
   <li>&#9744; CI green with coverage gate &ge;80% (Day 6)</li>
   <li>&#9744; Tests for config edge cases and repo round-trips pass (Day 7)</li>
   <li>&#9744; Confluence Security &amp; Config pages published (Day 8)</li>
