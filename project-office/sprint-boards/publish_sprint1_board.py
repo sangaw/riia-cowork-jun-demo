@@ -62,8 +62,8 @@ BODY = """
       <td>Day 8</td>
       <td>TechWriter</td>
       <td>Confluence: Security &amp; Config pages</td>
-      <td>Pending</td>
-      <td></td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td><a href="https://ravionics.atlassian.net/wiki/spaces/RIIAProjec/pages/65863699">Config Guide</a> [65863699] and <a href="https://ravionics.atlassian.net/wiki/spaces/RIIAProjec/pages/65994769">Security — JWT &amp; Secret Handling</a> [65994769] published under Engineering Documentation.</td>
     </tr>
   </tbody>
 </table>
@@ -119,7 +119,7 @@ BODY = """
   <li>&#10003; 15 repository classes with file locking and schema validation</li>
   <li>&#10003; CI pipeline wired: lint &rarr; test &rarr; docker-build</li>
   <li>&#10003; Tests for config edge cases and repo round-trips pass — 19 tests, 80% coverage gate</li>
-  <li>&#9744; Confluence Security &amp; Config pages published (Day 8)</li>
+  <li>&#10003; Confluence Security &amp; Config pages published &mdash; Config Guide [65863699] + Security [65994769]</li>
 </ul>
 
 <h2>Day 6 Deliverables &mdash; Dockerfile &amp; CI v2</h2>
@@ -176,6 +176,42 @@ BODY = """
   <li>Coverage threshold raised from 0 to <strong>80%</strong> in both <code>Dockerfile</code> (builder stage) and <code>.github/workflows/ci.yml</code></li>
   <li><code>pytest-cov&gt;=5</code> added to <code>pyproject.toml</code> dev dependencies</li>
 </ul>
+
+<h2>Day 8 Deliverables &mdash; Confluence Engineering Docs</h2>
+
+<h3>Sprint 1: Configuration Guide (<a href="https://ravionics.atlassian.net/wiki/spaces/RIIAProjec/pages/65863699">page 65863699</a>)</h3>
+<ul>
+  <li>Pydantic Settings v2 overview &mdash; nested models, YAML deep-merge sequence</li>
+  <li>All six config models documented: <code>AppSettings</code>, <code>ServerSettings</code>, <code>DataSettings</code>, <code>ModelSettings</code>, <code>InstrumentsSettings</code>, <code>SecuritySettings</code></li>
+  <li>Instrument lot-size table: NIFTY=75, BANKNIFTY=30 &mdash; config-driven, never hardcoded</li>
+  <li>Environment variables reference: <code>RITA_ENV</code>, <code>RITA_JWT_SECRET</code>, <code>RITA_SERVER__PORT</code></li>
+  <li>Step-by-step guide for adding new config keys</li>
+  <li>Module-level singleton + <code>@lru_cache</code> dependency injection pattern documented</li>
+</ul>
+
+<h3>Sprint 1: Security &mdash; JWT &amp; Secret Handling (<a href="https://ravionics.atlassian.net/wiki/spaces/RIIAProjec/pages/65994769">page 65994769</a>)</h3>
+<ul>
+  <li>Single-source-of-truth rule: <code>RITA_JWT_SECRET</code> from env var only &mdash; never from YAML</li>
+  <li>Development default (<code>dev-secret-change-in-prod</code>) and why it is intentionally weak</li>
+  <li>Startup validator: raises <code>ValueError</code> in staging/production for absent, default, or short (&lt;32 chars) secrets</li>
+  <li><code>SecretStr</code> redaction guarantees &mdash; value never logged or serialised</li>
+  <li>3-row environment requirements table (development / staging / production)</li>
+  <li>Secret generation commands + deployment injection guide (shell, Docker Compose, k8s, CI/CD)</li>
+  <li>&ldquo;What NOT to Do&rdquo; checklist</li>
+</ul>
+
+<h2>Sprint 1 &mdash; Complete</h2>
+<p>All five days delivered. Sprint 1 Definition of Done fully met.</p>
+<table>
+  <thead><tr><th>Check</th><th>Evidence</th></tr></thead>
+  <tbody>
+    <tr><td>&#10003; Config crashes at boot on missing secrets in staging/prod</td><td><code>config.py</code> startup validator, <code>test_staging_requires_secret</code></td></tr>
+    <tr><td>&#10003; 15 repository classes with file locking and schema validation</td><td><code>repositories/</code> — CsvRepository[T] + 15 concrete classes</td></tr>
+    <tr><td>&#10003; CI pipeline: lint &rarr; test &rarr; docker-build</td><td><code>.github/workflows/ci.yml</code></td></tr>
+    <tr><td>&#10003; 19 tests pass, 80% coverage gate enforced</td><td><code>test_config.py</code>, <code>test_repository.py</code></td></tr>
+    <tr><td>&#10003; Confluence Security &amp; Config pages published</td><td>Engineering Documentation section — pages 65863699, 65994769</td></tr>
+  </tbody>
+</table>
 """
 
 

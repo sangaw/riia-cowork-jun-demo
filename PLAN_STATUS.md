@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-03-31
+**Last updated:** 2026-03-31 (Day 8)
 
 ---
 
-## Current Sprint: SPRINT 0 — Architecture & Planning
-**Current Day: Day 4** (Sprint 1 begins)
+## Current Sprint: SPRINT 1 — Foundation
+**Current Day: Day 8 complete — Sprint 1 DONE. Sprint 2 begins next.**
 
 ---
 
@@ -24,7 +24,7 @@
 | Day 5 | Engineer B | Repository layer — CSV tables, file locking, schema validation | `[x]` | CsvRepository base + 15 concrete classes; per-instance lock; validation on read+write |
 | Day 6 | Ops | Multi-stage Dockerfile, CI v2 pipeline | `[x]` | Multi-stage Dockerfile (builder lints+tests, runtime non-root); CI: lint→test→docker-build |
 | Day 7 | QA | Config + repository tests | `[x]` | 8 config tests + 11 repo tests (incl. concurrency); coverage threshold raised to 80% |
-| Day 8 | TechWriter | Confluence: Security & Config pages | `[ ]` | |
+| Day 8 | TechWriter | Confluence: Security & Config pages | `[x]` | Config Guide [65863699] + Security page [65994769] published under Engineering section |
 
 ## Sprint 2 Tasks
 

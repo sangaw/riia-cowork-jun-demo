@@ -680,7 +680,7 @@ body {
       </div>
       <div class="mc-r">
         <span>Sprint 1</span>
-        <span class="mc-v active">In Progress</span>
+        <span class="mc-v ok">Done</span>
       </div>
       <div class="mc-r">
         <span>Sprint 2–5</span>
@@ -691,7 +691,7 @@ body {
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:23%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:27%"></div>
       </div>
     </div>
   </div>
@@ -730,18 +730,18 @@ body {
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Overall Progress</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">23%</div>
-            <div style="font-size:8.5px;color:var(--t3)">Day 7 of 30</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">27%</div>
+            <div style="font-size:8.5px;color:var(--t3)">Day 8 of 30</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">1</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">Sprint 0 · Architecture</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">2</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--active)" id="kpi-active">1</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 1 · Foundation</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--active)" id="kpi-active">0</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 2 starts next</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
@@ -750,7 +750,7 @@ body {
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Days Done</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">7</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">8</div>
             <div style="font-size:8.5px;color:var(--t3)">of 30 total</div>
           </div>
         </div>
@@ -768,8 +768,8 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S1 · Foundation</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s1" style="width:80%;height:100%;background:var(--sprint1);border-radius:3px"></div></div>
-            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s1">80%</span>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s1" style="width:100%;height:100%;background:var(--sprint1);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s1">100%</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S2 · API</div>
@@ -828,6 +828,15 @@ body {
         <div class="c-ey">Recent Activity</div>
         <div class="c-t">Latest Deliverables</div>
         <div class="activity" id="activity-feed" style="margin-top:10px">
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Confluence: Config Guide + Security pages</div>
+              <div class="act-desc">Sprint 1 Engineering docs published · Sprint 1 complete ✓</div>
+            </div>
+            <div class="act-time">Day 8</div>
+          </div>
 
           <div class="act-row">
             <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div><div class="act-line"></div></div>
@@ -910,7 +919,7 @@ body {
               <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint1)">S1</td>
               <td style="padding:9px 8px;font-size:12px">Foundation</td>
               <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">4–8</td>
-              <td style="padding:9px 8px"><span class="badge active">In Progress</span></td>
+              <td style="padding:9px 8px"><span class="badge ok">Done</span></td>
             </tr>
             <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint2)">S2</td>
@@ -1201,8 +1210,8 @@ body {
       </div>
       <div class="kpi">
         <div class="kpi-ey">Status</div>
-        <div class="kpi-val" style="font-size:16px;color:var(--ok)">In Progress</div>
-        <div class="kpi-sub">Days 4–7 complete · Day 8 next</div>
+        <div class="kpi-val" style="font-size:16px;color:var(--ok)">Done ✓</div>
+        <div class="kpi-sub">All 5 days complete · Sprint 2 next</div>
       </div>
     </div>
     <div class="wave-hdr">
