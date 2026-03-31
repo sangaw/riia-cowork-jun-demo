@@ -26,6 +26,8 @@ It gives all agents the essential context they need without re-reading the codeb
 | Ops Engineer | `general-purpose` | Reads pyproject.toml + existing config; writes Dockerfile, CI, k8s/ |
 | Technical Writer | `general-purpose` | Reads sprint artifacts; publishes to Confluence via `publish_confluence.py` |
 
+**Full agent rules (guardrails, inputs, outputs, ADR references):** `project-office/agents/` — one card per role.
+
 ## Token Efficiency Rules (ALL agents must follow)
 
 1. **Never read `production_ready.md` in full.** Pass only the relevant section as an excerpt.
