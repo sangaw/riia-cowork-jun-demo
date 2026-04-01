@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-03-31 (Day 12)
+**Last updated:** 2026-04-01 (Day 13)
 
 ---
 
 ## Current Sprint: SPRINT 1 — Foundation
-**Current Day: Day 12 complete — Sprint 2 in progress.**
+**Current Day: Day 13 complete — Sprint 2 in progress.**
 
 ---
 
@@ -34,7 +34,7 @@
 | Day 10 | Engineer C | Business Process API routers | `[x]` | WorkflowService (train) + BacktestService (backtest/evaluate); 3 routers wired into main.py; services create status=pending records; ML dispatch is Sprint 3 |
 | Day 11 | Engineer C | BFF layer | `[x]` | 3 Experience Layer routers: DashboardPayload (positions+model state+alerts), FnoPayload (snapshots+portfolio+manoeuvres), OpsPayload (training+backtest runs+audit); wired into main.py |
 | Day 12 | Engineer C | Global exception handler, trace IDs | `[x]` | TraceIDMiddleware (X-Request-ID header, ContextVar); 4 exception handlers (HTTPException, RequestValidationError, RepositoryValidationError, Exception→500); consistent {detail, trace_id} JSON shape |
-| Day 13 | QA | API contract tests | `[ ]` | |
+| Day 13 | QA | API contract tests | `[x]` | 78 tests: 30 system CRUD, 18 workflow, 15 experience, 15 middleware; 100% pass; 1 pre-existing config test failure flagged |
 | Day 14 | TechWriter | Confluence: API Reference | `[ ]` | |
 
 ## Sprint 3 Tasks
@@ -65,7 +65,7 @@
 |---|---|---|---|---|
 | Day 27 | QA | Full end-to-end regression + coverage report | `[ ]` | |
 | Day 28 | Security | CORS, JWT, rate limiting, input validation | `[ ]` | |
-| Day 29 | Ops | k8s manifests, AlertManager, canary rollout | `[ ]` | |
+| Day 29 | Ops | Terraform: k8s manifests, AlertManager, cloud provider swap | `[ ]` | Local Docker deployment scaffolded (terraform/ dir, kreuzwerker/docker provider); Day 29 extends this to cloud |
 | Day 30 | PM + TechWriter | Release checklist, v1.0 tag, release notes | `[ ]` | |
 
 ---
@@ -78,3 +78,4 @@ _None_
 
 - 2026-03-30: Plan created. Master plan at RITA_PRODUCTION_PLAN.md.
 - 2026-03-30: Sprint 0 complete (Days 1-3). ADR-001, ADR-002, 16 Pydantic schemas, full folder structure. ADR pages live on Confluence under Architecture section. Folder structure created under riia-jun-release/. ADR-001 (three-tier API) and ADR-002 (repository pattern) written to docs/. Config YAML hierarchy (base/dev/staging/prod) created. Git repo initialised, .gitignore set, remote pointed to github.com/sangaw/riia-cowork-jun-demo.git — not yet pushed.
+- 2026-03-31: Terraform deployment scaffolded. Local deployment uses kreuzwerker/docker provider (Docker Desktop). Files in riia-jun-release/terraform/ (providers.tf, variables.tf, main.tf, outputs.tf, terraform.tfvars.example). Bind-mounts rita_input/ (read-only) and rita_output/ (writable). Cloud provider stubs (AWS/GCP) commented in providers.tf — swap when budget allows. Sprint 5 Day 29 scoped to extend this to cloud.
