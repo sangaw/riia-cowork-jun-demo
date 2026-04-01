@@ -62,8 +62,8 @@ BODY = """
       <td>Day 13</td>
       <td>QA</td>
       <td>API contract tests</td>
-      <td>Pending</td>
-      <td></td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>78 tests: 30 system CRUD, 18 workflow, 15 experience, 15 middleware. 100% pass. TestClient + FastAPI DI overrides. conftest.py patches config path for test isolation.</td>
     </tr>
     <tr>
       <td>Day 14</td>
@@ -159,13 +159,37 @@ Read-only composition only — no writes, no side effects. One endpoint per UI v
 </table>
 <p>All handlers return: <code>{"detail": "...", "trace_id": "&lt;uuid&gt;"}</code></p>
 
+<h2>Day 13 Deliverables &mdash; API Contract Tests</h2>
+
+<h3>Test Suite Overview</h3>
+<table>
+  <thead><tr><th>File</th><th>Tests</th><th>Covers</th></tr></thead>
+  <tbody>
+    <tr><td><code>tests/unit/test_api_system.py</code></td><td>30</td><td>8 CRUD routers &mdash; list, create, get-by-id, 422 on bad payload</td></tr>
+    <tr><td><code>tests/unit/test_api_workflow.py</code></td><td>18</td><td>train/backtest/evaluate &mdash; 202 + status=pending, 422 on invalid payload</td></tr>
+    <tr><td><code>tests/unit/test_api_experience.py</code></td><td>15</td><td>dashboard/fno/ops &mdash; 200 + top-level key assertions</td></tr>
+    <tr><td><code>tests/unit/test_middleware.py</code></td><td>15</td><td>TraceIDMiddleware (X-Request-ID), 404/422/500 error shape</td></tr>
+  </tbody>
+</table>
+
+<h3>Testing Approach</h3>
+<ul>
+  <li><strong>FastAPI TestClient</strong> — synchronous HTTP client over ASGI; no server process needed</li>
+  <li><strong>DI overrides</strong> — <code>app.dependency_overrides[repo_dep] = lambda: mock</code> for all repository dependencies; no CSV files needed</li>
+  <li><strong>monkeypatch env vars</strong> — <code>RITA_JWT_SECRET</code>, <code>RITA_ENV</code>, <code>RITA_INPUT_DIR</code>, <code>RITA_OUTPUT_DIR</code> patched per test</li>
+  <li><strong>conftest.py</strong> — rewrites <code>_CONFIG_DIR</code> before Settings initialises for test-path isolation</li>
+</ul>
+
+<h3>Result</h3>
+<p><strong>78 / 78 tests pass</strong>. One pre-existing failure flagged: <code>test_config.py::TestJwtSecretFromEnvVar</code> — pydantic-settings <code>validation_alias</code> resolution issue from Day 4/7; not introduced by Day 13.</p>
+
 <h2>Sprint 2 Definition of Done</h2>
 <ul>
   <li>&#10003; 8 System CRUD routers wired and responding (Day 9)</li>
   <li>&#10003; Business Process routers for train, backtest, evaluate (Day 10)</li>
   <li>&#10003; Experience Layer aggregation endpoints (Day 11)</li>
   <li>&#10003; Global exception handler + request trace IDs (Day 12)</li>
-  <li>&#9744; API contract tests via FastAPI TestClient (Day 13)</li>
+  <li>&#10003; API contract tests via FastAPI TestClient — 78 tests, 100% pass (Day 13)</li>
   <li>&#9744; Confluence API Reference published (Day 14)</li>
 </ul>
 """
