@@ -93,6 +93,12 @@ class InstrumentsSettings(BaseSettings):
     banknifty: InstrumentConfig = InstrumentConfig(lot_size=30)
 
 
+class DatabaseSettings(BaseSettings):
+    model_config = SettingsConfigDict(extra="forbid")
+
+    database_url: str = "sqlite:///./rita_output/rita.db"
+
+
 class SecuritySettings(BaseSettings):
     """
     Security settings.
@@ -131,6 +137,7 @@ class Settings(BaseSettings):
     model: ModelSettings = ModelSettings()
     instruments: InstrumentsSettings = InstrumentsSettings()
     security: SecuritySettings = SecuritySettings()
+    database: DatabaseSettings = DatabaseSettings()
 
     # The active environment name (informational — used during construction).
     env: str = "development"
