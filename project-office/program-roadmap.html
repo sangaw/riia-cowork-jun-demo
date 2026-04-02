@@ -730,28 +730,28 @@ body {
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Overall Progress</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">40%</div>
-            <div style="font-size:8.5px;color:var(--t3)">Day 14 of 30</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">41%</div>
+            <div style="font-size:8.5px;color:var(--t3)">Day 14 of 34</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">2</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">3</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation · S2 API</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
             <div style="font-weight:800;font-size:17px;line-height:1;color:var(--active)" id="kpi-active">1</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 2 · API Decomposition</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 2.5 · Database Layer</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
             <div style="font-weight:800;font-size:17px;line-height:1;color:var(--t3)" id="kpi-planned">4</div>
-            <div style="font-size:8.5px;color:var(--t3)">Sprints 2 – 5</div>
+            <div style="font-size:8.5px;color:var(--t3)">Sprints 3 – 5</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Days Done</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">12</div>
-            <div style="font-size:8.5px;color:var(--t3)">of 30 total</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">14</div>
+            <div style="font-size:8.5px;color:var(--t3)">of 34 total</div>
           </div>
         </div>
       </div>
@@ -775,6 +775,11 @@ body {
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S2 · API</div>
             <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s2" style="width:100%;height:100%;background:var(--sprint2);border-radius:3px"></div></div>
             <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s2">100%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S2.5 · DB</div>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s25" style="width:0%;height:100%;background:var(--sprint2);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s25">—</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S3 · Services</div>
@@ -828,6 +833,15 @@ body {
         <div class="c-ey">Recent Activity</div>
         <div class="c-t">Latest Deliverables</div>
         <div class="activity" id="activity-feed" style="margin-top:10px">
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Sprint 2.5 planned · SQLite + SQLAlchemy 2.x</div>
+              <div class="act-desc">ADR-003 written · 4-day DB sprint (Days 15-18) · repository swap only · PostgreSQL upgrade path via database_url</div>
+            </div>
+            <div class="act-time">Day 14</div>
+          </div>
 
           <div class="act-row">
             <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>

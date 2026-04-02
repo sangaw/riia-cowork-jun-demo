@@ -3,8 +3,8 @@
 
 ---
 
-## Current Sprint: SPRINT 1 — Foundation
-**Current Day: Day 13 complete — Sprint 2 in progress.**
+## Current Sprint: SPRINT 2.5 — Database Layer
+**Current Day: Day 14 complete — Sprint 2.5 Day 15 next.**
 
 ---
 
@@ -35,38 +35,51 @@
 | Day 11 | Engineer C | BFF layer | `[x]` | 3 Experience Layer routers: DashboardPayload (positions+model state+alerts), FnoPayload (snapshots+portfolio+manoeuvres), OpsPayload (training+backtest runs+audit); wired into main.py |
 | Day 12 | Engineer C | Global exception handler, trace IDs | `[x]` | TraceIDMiddleware (X-Request-ID header, ContextVar); 4 exception handlers (HTTPException, RequestValidationError, RepositoryValidationError, Exception→500); consistent {detail, trace_id} JSON shape |
 | Day 13 | QA | API contract tests | `[x]` | 78 tests: 30 system CRUD, 18 workflow, 15 experience, 15 middleware; 100% pass; 1 pre-existing config test failure flagged |
-| Day 14 | TechWriter | Confluence: API Reference | `[x]` | Sprint 2 API Reference published to Confluence under Engineering section; covers all 3 tiers (8 system CRUD + 3 workflow + 3 experience routers) |
+| Day 14 | TechWriter | Confluence: API Reference | `[x]` | Sprint 2 API Reference [66650113] + Master Plan overview updated; all 3 tiers documented |
 
-## Sprint 3 Tasks
+## Sprint 2.5 Tasks — Database Layer (SQLite + SQLAlchemy)
 
-| Day | Role | Task | Status | Notes |
-|---|---|---|---|---|
-| Day 15 | Engineer D | WorkflowService, BacktestService | `[ ]` | |
-| Day 16 | Engineer D | ManoeuvreService, PortfolioService | `[ ]` | |
-| Day 17 | Engineer E | structlog JSON logging throughout | `[ ]` | |
-| Day 18 | Engineer E | Prometheus metrics, /health, /readyz | `[ ]` | |
-| Day 19 | QA | Greeks tests, manoeuvre tests, workflow integration | `[ ]` | |
-| Day 20 | TechWriter | Confluence: Observability & Runbook | `[ ]` | |
-
-## Sprint 4 Tasks
+> **Decision (2026-04-02):** Replace CSV backend with SQLite via SQLAlchemy 2.x ORM.
+> ADR-003 written. Zero changes to routers, services, or schemas — repository layer only.
+> PostgreSQL upgrade in v2: change one `database_url` config value.
 
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
-| Day 21 | Engineer F | Decompose rita.html → ES modules | `[ ]` | |
-| Day 22 | Engineer F | Decompose fno.html, ops.html → ES modules | `[ ]` | |
-| Day 23 | Engineer F | Responsive CSS (480/768/1100px) | `[ ]` | |
-| Day 24 | Engineer F | Remove localhost:8000 hardcoding | `[ ]` | |
-| Day 25 | QA | Playwright e2e tests | `[ ]` | |
-| Day 26 | TechWriter | Confluence: Frontend Architecture | `[ ]` | |
+| Day 15 | Engineer D | SQLAlchemy setup: database.py, 15 ORM models, config.py DB settings, ADR-003 to Confluence | `[ ]` | Add sqlalchemy>=2.0, alembic>=1.13 to pyproject.toml; create src/rita/database.py + src/rita/models/ |
+| Day 16 | Engineer D | Repository migration: rewrite base.py (SqlRepository), update all 15 concrete repos, update main.py lifespan | `[ ]` | Replace CsvRepository + threading.Lock with SQLAlchemy session DI; get_db() dependency |
+| Day 17 | Ops | Alembic setup + CI update | `[ ]` | alembic init; env.py pointed at RITA Base; initial migration (15 CREATE TABLE); CI: alembic upgrade head before tests; Dockerfile updated |
+| Day 18 | QA | Test suite migration | `[ ]` | conftest.py: sqlite:///:memory: engine + session fixture + DI override; fix repo tests; verify 78 API contract tests still pass |
 
-## Sprint 5 Tasks
+## Sprint 3 Tasks — Service Layer & Observability
 
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
-| Day 27 | QA | Full end-to-end regression + coverage report | `[ ]` | |
-| Day 28 | Security | CORS, JWT, rate limiting, input validation | `[ ]` | |
-| Day 29 | Ops | Terraform: k8s manifests, AlertManager, cloud provider swap | `[ ]` | Local Docker deployment scaffolded (terraform/ dir, kreuzwerker/docker provider); Day 29 extends this to cloud |
-| Day 30 | PM + TechWriter | Release checklist, v1.0 tag, release notes | `[ ]` | |
+| Day 19 | Engineer D | WorkflowService, BacktestService (real ML dispatch stubs) | `[ ]` | |
+| Day 20 | Engineer D | ManoeuvreService, PortfolioService | `[ ]` | |
+| Day 21 | Engineer E | structlog JSON logging throughout | `[ ]` | |
+| Day 22 | Engineer E | Prometheus metrics, /health, /readyz | `[ ]` | |
+| Day 23 | QA | Greeks tests, manoeuvre tests, workflow integration | `[ ]` | |
+| Day 24 | TechWriter | Confluence: Observability & Runbook | `[ ]` | |
+
+## Sprint 4 Tasks — Frontend & Responsive Design
+
+| Day | Role | Task | Status | Notes |
+|---|---|---|---|---|
+| Day 25 | Engineer F | Decompose rita.html → ES modules | `[ ]` | |
+| Day 26 | Engineer F | Decompose fno.html, ops.html → ES modules | `[ ]` | |
+| Day 27 | Engineer F | Responsive CSS (480/768/1100px) | `[ ]` | |
+| Day 28 | Engineer F | Remove localhost:8000 hardcoding | `[ ]` | |
+| Day 29 | QA | Playwright e2e tests | `[ ]` | |
+| Day 30 | TechWriter | Confluence: Frontend Architecture | `[ ]` | |
+
+## Sprint 5 Tasks — Integration, Security & Release
+
+| Day | Role | Task | Status | Notes |
+|---|---|---|---|---|
+| Day 31 | QA | Full end-to-end regression + coverage report | `[ ]` | |
+| Day 32 | Security | CORS, JWT, rate limiting, input validation | `[ ]` | |
+| Day 33 | Ops | Terraform: k8s manifests, AlertManager, cloud provider swap | `[ ]` | Local Docker deployment scaffolded (terraform/ dir); Day 33 extends to cloud |
+| Day 34 | PM + TechWriter | Release checklist, v1.0 tag, release notes | `[ ]` | |
 
 ---
 
@@ -76,6 +89,7 @@ _None_
 
 ## Notes / Decisions
 
-- 2026-03-30: Plan created. Master plan at RITA_PRODUCTION_PLAN.md.
-- 2026-03-30: Sprint 0 complete (Days 1-3). ADR-001, ADR-002, 16 Pydantic schemas, full folder structure. ADR pages live on Confluence under Architecture section. Folder structure created under riia-jun-release/. ADR-001 (three-tier API) and ADR-002 (repository pattern) written to docs/. Config YAML hierarchy (base/dev/staging/prod) created. Git repo initialised, .gitignore set, remote pointed to github.com/sangaw/riia-cowork-jun-demo.git — not yet pushed.
-- 2026-03-31: Terraform deployment scaffolded. Local deployment uses kreuzwerker/docker provider (Docker Desktop). Files in riia-jun-release/terraform/ (providers.tf, variables.tf, main.tf, outputs.tf, terraform.tfvars.example). Bind-mounts rita_input/ (read-only) and rita_output/ (writable). Cloud provider stubs (AWS/GCP) commented in providers.tf — swap when budget allows. Sprint 5 Day 29 scoped to extend this to cloud.
+- 2026-03-30: Plan created.
+- 2026-03-30: Sprint 0 complete (Days 1-3). ADR-001, ADR-002, 16 Pydantic schemas, full folder structure. ADR pages live on Confluence. Config YAML hierarchy created. Git repo initialised, remote pointed to github.com/sangaw/riia-cowork-jun-demo.git — not yet pushed.
+- 2026-03-31: Terraform deployment scaffolded. Local deployment uses kreuzwerker/docker provider. Files in riia-jun-release/terraform/. rita_input/ read-only, rita_output/ writable. Sprint 5 Day 33 scoped for cloud.
+- 2026-04-02: Sprint 2.5 added — SQLite via SQLAlchemy 2.x replaces CSV backend. ADR-003 written to docs/. Repository interface unchanged; zero impact on routers/services/schemas. Project extends to 34 days total. PostgreSQL upgrade path: change database_url in v2.
