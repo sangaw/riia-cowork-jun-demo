@@ -69,8 +69,8 @@ BODY = """
       <td>Day 14</td>
       <td>TechWriter</td>
       <td>Confluence: API Reference</td>
-      <td>Pending</td>
-      <td></td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>Sprint 2 API Reference published to Confluence (page 66650113) under Engineering section. Covers all 3 tiers: 8 system CRUD routers, 3 workflow routers, 3 experience routers. Includes trace ID and error response patterns.</td>
     </tr>
   </tbody>
 </table>
@@ -183,6 +183,25 @@ Read-only composition only — no writes, no side effects. One endpoint per UI v
 <h3>Result</h3>
 <p><strong>78 / 78 tests pass</strong>. One pre-existing failure flagged: <code>test_config.py::TestJwtSecretFromEnvVar</code> — pydantic-settings <code>validation_alias</code> resolution issue from Day 4/7; not introduced by Day 13.</p>
 
+<h2>Day 14 Deliverables &mdash; Confluence API Reference</h2>
+
+<p>
+  Sprint 2 API Reference published to <strong>Confluence Engineering section</strong>
+  (page ID <code>66650113</code>).
+</p>
+
+<h3>Coverage</h3>
+<table>
+  <thead><tr><th>Tier</th><th>Prefix</th><th>Endpoints documented</th></tr></thead>
+  <tbody>
+    <tr><td>1 &mdash; System</td><td>/api/v1/system/</td><td>8 routers &times; 4 endpoints = 32 endpoints</td></tr>
+    <tr><td>2 &mdash; Workflow</td><td>/api/v1/workflow/</td><td>train (4), backtest (3), evaluate (3) = 10 endpoints</td></tr>
+    <tr><td>3 &mdash; Experience</td><td>/api/experience/</td><td>dashboard, fno, ops = 3 aggregation endpoints</td></tr>
+  </tbody>
+</table>
+
+<p>Documented: request/response schemas, query parameters, HTTP status codes, trace ID header, and error response shape.</p>
+
 <h2>Sprint 2 Definition of Done</h2>
 <ul>
   <li>&#10003; 8 System CRUD routers wired and responding (Day 9)</li>
@@ -190,7 +209,7 @@ Read-only composition only — no writes, no side effects. One endpoint per UI v
   <li>&#10003; Experience Layer aggregation endpoints (Day 11)</li>
   <li>&#10003; Global exception handler + request trace IDs (Day 12)</li>
   <li>&#10003; API contract tests via FastAPI TestClient — 78 tests, 100% pass (Day 13)</li>
-  <li>&#9744; Confluence API Reference published (Day 14)</li>
+  <li>&#10003; Confluence API Reference published (Day 14)</li>
 </ul>
 """
 

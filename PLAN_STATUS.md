@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-01 (Day 13)
+**Last updated:** 2026-04-02 (Day 14)
 
 ---
 
@@ -35,7 +35,7 @@
 | Day 11 | Engineer C | BFF layer | `[x]` | 3 Experience Layer routers: DashboardPayload (positions+model state+alerts), FnoPayload (snapshots+portfolio+manoeuvres), OpsPayload (training+backtest runs+audit); wired into main.py |
 | Day 12 | Engineer C | Global exception handler, trace IDs | `[x]` | TraceIDMiddleware (X-Request-ID header, ContextVar); 4 exception handlers (HTTPException, RequestValidationError, RepositoryValidationError, Exception→500); consistent {detail, trace_id} JSON shape |
 | Day 13 | QA | API contract tests | `[x]` | 78 tests: 30 system CRUD, 18 workflow, 15 experience, 15 middleware; 100% pass; 1 pre-existing config test failure flagged |
-| Day 14 | TechWriter | Confluence: API Reference | `[ ]` | |
+| Day 14 | TechWriter | Confluence: API Reference | `[x]` | Sprint 2 API Reference published to Confluence under Engineering section; covers all 3 tiers (8 system CRUD + 3 workflow + 3 experience routers) |
 
 ## Sprint 3 Tasks
 
