@@ -632,6 +632,17 @@ body {
     <span class="ni-sub">API</span>
   </div>
 
+  <div class="ni s-sprint25" data-s="sprint25" onclick="nav(this,'sprint25')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <ellipse cx="7" cy="7" rx="5.5" ry="5.5" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M7 4v3l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Sprint 2.5
+    <span class="ni-sub">DB</span>
+  </div>
+
   <div class="ni s-sprint3" data-s="sprint3" onclick="nav(this,'sprint3')">
     <div class="ni-ic">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -1427,6 +1438,70 @@ body {
 
     </div>
     <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 2 Done When:</strong> rest_api.py retired · All endpoints in three-tier routers · Global exception handler live · Every endpoint has a contract test · Confluence API Reference published.</span></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SPRINT 2.5 — Database Layer
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint25" class="sec">
+    <div class="ph">
+      <div class="ph-badge active">In Progress</div>
+      <div>
+        <div class="ph-t">Sprint 2.5 — Database Layer</div>
+        <div class="ph-g">Days 15–18 · Replace CSV backend with SQLite via SQLAlchemy 2.x — zero router/schema changes</div>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint2)">15–18</div><div class="kpi-sub">4 work days</div></div>
+      <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">4</div><div class="kpi-sub">Models · Repos · Alembic · Tests</div></div>
+      <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--ok);font-size:16px">Light</div><div class="kpi-sub">ADR files are small</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--active)">2 / 4</div><div class="kpi-sub">Day 16 complete · Day 17 next</div></div>
+    </div>
+    <div class="wave-hdr">
+      <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 2.5 — In Progress</span>
+      <span class="wave-hdr-title">Database Layer · Days 15–18</span>
+      <span class="wave-hdr-sub">Repository interface unchanged — routers, services, schemas untouched</span>
+    </div>
+    <div class="g3" style="margin-bottom:22px">
+
+      <div class="card" style="border-top:3px solid var(--sprint2)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">SQLAlchemy Foundation</div><span class="badge done">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">database.py: engine, SessionLocal, Base (DeclarativeBase), get_db() FastAPI dependency. 15 model files (17 ORM classes). DatabaseSettings in config.py. ADR-003 published.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer D</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Day 15</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">database.py</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">17 ORM models</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">ADR-003</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint2)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Repository Migration</div><span class="badge done">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">SqlRepository[T,M] base class. 16 concrete repos + new risk.py. Services accept db: Session. All 14 routers inject get_db(). main.py lifespan creates tables on startup. 78/78 API tests pass.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Engineer D</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Day 16</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">SqlRepository</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">16 concrete repos</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">14 routers wired</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint2)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Alembic + CI &amp; Test Migration</div><span class="badge planned">Planned</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Alembic init + initial migration (15 CREATE TABLE). CI runs alembic upgrade head before tests. Dockerfile updated. conftest.py migrated to sqlite:///memory: — 78 API contract tests verified against SQLAlchemy layer.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Ops + QA</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Days 17–18</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Alembic init</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">CI update</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Test migration</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 2.5 Done When:</strong> All 16 repos use SQLAlchemy sessions · Alembic migration generates 15 tables · CI runs alembic upgrade head · 78 API contract tests pass against in-memory SQLite · CsvRepository removed.</span></div>
   </section>
 
   <!-- ══════════════════════════════════════════
