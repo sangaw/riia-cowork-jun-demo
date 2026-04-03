@@ -48,8 +48,8 @@ BODY = """
       <td>Day 17</td>
       <td>Ops</td>
       <td>Alembic setup + CI update</td>
-      <td><strong style="color:#b45309">&#9711; Planned</strong></td>
-      <td>alembic init; env.py pointed at RITA Base; initial migration (15 CREATE TABLE); CI: alembic upgrade head before tests; Dockerfile updated.</td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>alembic init. env.py imports Base + all 17 ORM models; resolves sqlite:///./rita_output/rita.db to absolute path so upgrade works from any CWD. Migration file: 16 CREATE TABLE statements. alembic upgrade head + downgrade base verified. CI: alembic upgrade head step added before pytest. Dockerfile: runtime stage copies alembic/; CMD runs migrations before uvicorn.</td>
     </tr>
     <tr>
       <td>Day 18</td>
@@ -123,7 +123,7 @@ PostgreSQL upgrade path in v2: change one <code>database_url</code> config value
   <li>&#10003; ADR-003 published to Confluence (Day 15)</li>
   <li>&#10003; SqlRepository[T,M] base class added to base.py (Day 16)</li>
   <li>&#10003; 16 concrete repos migrated to SQLAlchemy sessions; services + 14 routers wired (Day 16)</li>
-  <li>&#9711; Alembic migration: 15 CREATE TABLE statements (Day 17)</li>
+  <li>&#10003; Alembic init + 16-table migration; CI + Dockerfile updated (Day 17)</li>
   <li>&#9711; 78 API contract tests pass against in-memory SQLite (Day 18)</li>
 </ul>
 """

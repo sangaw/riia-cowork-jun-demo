@@ -702,7 +702,7 @@ body {
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:47%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:50%"></div>
       </div>
     </div>
   </div>
@@ -789,8 +789,8 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S2.5 · DB</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s25" style="width:50%;height:100%;background:var(--sprint2);border-radius:3px"></div></div>
-            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s25">50%</span>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s25" style="width:75%;height:100%;background:var(--sprint2);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s25">75%</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S3 · Services</div>
@@ -844,6 +844,15 @@ body {
         <div class="c-ey">Recent Activity</div>
         <div class="c-t">Latest Deliverables</div>
         <div class="activity" id="activity-feed" style="margin-top:10px">
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Alembic setup · 16-table migration + CI/Dockerfile updated</div>
+              <div class="act-desc">alembic init · env.py imports all 17 ORM models · 16 CREATE TABLE migration generated · upgrade head + downgrade base verified · CI adds alembic upgrade head before pytest · Dockerfile runs migrations before uvicorn</div>
+            </div>
+            <div class="act-time">Day 17</div>
+          </div>
 
           <div class="act-row">
             <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
@@ -1455,7 +1464,7 @@ body {
       <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint2)">15–18</div><div class="kpi-sub">4 work days</div></div>
       <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">4</div><div class="kpi-sub">Models · Repos · Alembic · Tests</div></div>
       <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--ok);font-size:16px">Light</div><div class="kpi-sub">ADR files are small</div></div>
-      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--active)">2 / 4</div><div class="kpi-sub">Day 16 complete · Day 17 next</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--active)">3 / 4</div><div class="kpi-sub">Day 17 complete · Day 18 next</div></div>
     </div>
     <div class="wave-hdr">
       <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 2.5 — In Progress</span>
@@ -1489,14 +1498,14 @@ body {
       </div>
 
       <div class="card" style="border-top:3px solid var(--sprint2)">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Alembic + CI &amp; Test Migration</div><span class="badge planned">Planned</span></div>
-        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Alembic init + initial migration (15 CREATE TABLE). CI runs alembic upgrade head before tests. Dockerfile updated. conftest.py migrated to sqlite:///memory: — 78 API contract tests verified against SQLAlchemy layer.</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Ops + QA</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Days 17–18</span></div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Alembic + CI</div><span class="badge done">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">alembic init. env.py imports all 17 ORM models, resolves SQLite path to absolute. 16-table migration generated and verified. CI adds alembic upgrade head before pytest. Dockerfile runs migrations before uvicorn.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Ops</span><span class="badge" style="background:var(--sprint2-bg);color:var(--sprint2);border-color:var(--sprint2-bd)">Day 17</span></div>
         <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Alembic init</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">CI update</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Test migration</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Alembic init</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">CI update</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Test migration</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Day 18</span></div>
         </div>
       </div>
 
