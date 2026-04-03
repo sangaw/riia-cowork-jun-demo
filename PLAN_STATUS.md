@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-02 (Day 14)
+**Last updated:** 2026-04-03 (Day 15)
 
 ---
 
 ## Current Sprint: SPRINT 2.5 — Database Layer
-**Current Day: Day 14 complete — Sprint 2.5 Day 15 next.**
+**Current Day: Day 15 complete — Sprint 2.5 Day 16 next.**
 
 ---
 
@@ -45,7 +45,7 @@
 
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
-| Day 15 | Engineer D | SQLAlchemy setup: database.py, 15 ORM models, config.py DB settings, ADR-003 to Confluence | `[ ]` | Add sqlalchemy>=2.0, alembic>=1.13 to pyproject.toml; create src/rita/database.py + src/rita/models/ |
+| Day 15 | Engineer D | SQLAlchemy setup: database.py, 15 ORM models, config.py DB settings, ADR-003 to Confluence | `[x]` | pyproject.toml: sqlalchemy>=2.0, alembic>=1.13; database.py: engine + SessionLocal + Base + get_db(); 15 model files (17 classes); DatabaseSettings in config.py; ADR-003 published [66650129] |
 | Day 16 | Engineer D | Repository migration: rewrite base.py (SqlRepository), update all 15 concrete repos, update main.py lifespan | `[ ]` | Replace CsvRepository + threading.Lock with SQLAlchemy session DI; get_db() dependency |
 | Day 17 | Ops | Alembic setup + CI update | `[ ]` | alembic init; env.py pointed at RITA Base; initial migration (15 CREATE TABLE); CI: alembic upgrade head before tests; Dockerfile updated |
 | Day 18 | QA | Test suite migration | `[ ]` | conftest.py: sqlite:///:memory: engine + session fixture + DI override; fix repo tests; verify 78 API contract tests still pass |

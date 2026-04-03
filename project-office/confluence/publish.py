@@ -20,13 +20,23 @@ def _load_token() -> str:
     # 2. Local key file (Sprint 0 only — move to env var in Sprint 1)
     key_file = Path(__file__).parent.parent.parent / "confluence-api-key.txt"
     if key_file.exists():
-        return key_file.read_text().strip()
+        return key_file.read_text().splitlines()[0].strip()
     raise RuntimeError(
         "Confluence API token not found. Set CONFLUENCE_API_TOKEN env var "
         "or place token in project root confluence-api-key.txt"
     )
 
-EMAIL     = os.environ.get("CONFLUENCE_EMAIL", "")
+def _load_email() -> str:
+    if os.environ.get("CONFLUENCE_EMAIL"):
+        return os.environ["CONFLUENCE_EMAIL"]
+    key_file = Path(__file__).parent.parent.parent / "confluence-api-key.txt"
+    if key_file.exists():
+        lines = [l.strip() for l in key_file.read_text().splitlines() if l.strip()]
+        if len(lines) >= 2:
+            return lines[1]
+    return ""
+
+EMAIL     = _load_email()
 BASE_URL  = os.environ.get("CONFLUENCE_BASE_URL", "https://ravionics.atlassian.net/wiki/rest/api")
 SPACE_KEY = os.environ.get("CONFLUENCE_SPACE_KEY", "RIIAProjec")
 HOMEPAGE_ID = "65110332"
