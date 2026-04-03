@@ -41,8 +41,8 @@ BODY = """
       <td>Day 16</td>
       <td>Engineer D</td>
       <td>Repository migration: rewrite base.py (SqlRepository), update all 15 concrete repos, update main.py lifespan</td>
-      <td><strong style="color:#b45309">&#9711; Planned</strong></td>
-      <td>Replace CsvRepository + threading.Lock with SQLAlchemy session DI; get_db() dependency injection throughout.</td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>SqlRepository[T,M] added to base.py (CsvRepository retained for Day 18 cleanup). 16 concrete repos migrated (incl. new risk.py). WorkflowService + BacktestService now accept db: Session. All 14 routers (8 system + 3 workflow + 3 experience) inject get_db(). main.py lifespan calls Base.metadata.create_all(engine). 78/78 API contract tests pass.</td>
     </tr>
     <tr>
       <td>Day 17</td>
@@ -121,8 +121,8 @@ PostgreSQL upgrade path in v2: change one <code>database_url</code> config value
   <li>&#10003; 17 ORM models mapping all 15 CSV tables (Day 15)</li>
   <li>&#10003; DatabaseSettings in config.py; sqlalchemy + alembic in pyproject.toml (Day 15)</li>
   <li>&#10003; ADR-003 published to Confluence (Day 15)</li>
-  <li>&#9711; SqlRepository base class replacing CsvRepository (Day 16)</li>
-  <li>&#9711; All 15 concrete repos migrated to SQLAlchemy sessions (Day 16)</li>
+  <li>&#10003; SqlRepository[T,M] base class added to base.py (Day 16)</li>
+  <li>&#10003; 16 concrete repos migrated to SQLAlchemy sessions; services + 14 routers wired (Day 16)</li>
   <li>&#9711; Alembic migration: 15 CREATE TABLE statements (Day 17)</li>
   <li>&#9711; 78 API contract tests pass against in-memory SQLite (Day 18)</li>
 </ul>
