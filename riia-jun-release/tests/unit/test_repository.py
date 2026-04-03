@@ -1,15 +1,13 @@
-"""Unit tests for CsvRepository via PositionsRepository.
+"""Unit tests for SqlRepository via PositionsRepository.
 
-All tests are isolated via tmp_path — no shared file state between tests.
+All tests use the ``db_session`` fixture from conftest.py which provides an
+isolated in-memory SQLite database per test function.  No CSV files are
+created or read by these tests.
 """
 
 from __future__ import annotations
 
-import threading
 from datetime import datetime, timezone
-from pathlib import Path
-
-import pytest
 
 
 # ---------------------------------------------------------------------------
@@ -32,28 +30,28 @@ def make_position(n: int):
     )
 
 
-def make_repo(data_dir: Path):
-    """Construct a PositionsRepository scoped to data_dir."""
+def make_repo(session):
+    """Construct a PositionsRepository backed by the given SQLAlchemy session."""
     from rita.repositories.positions import PositionsRepository
 
-    return PositionsRepository(data_dir=data_dir)
+    return PositionsRepository(session)
 
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 
-class TestReadAllEmptyWhenNoFile:
-    def test_read_all_empty_when_no_file(self, tmp_path: Path):
-        """Repository returns [] when the CSV file does not exist."""
-        repo = make_repo(tmp_path)
+class TestReadAllEmptyTable:
+    def test_read_all_empty_table(self, db_session):
+        """A freshly created session with no rows returns an empty list."""
+        repo = make_repo(db_session)
         assert repo.read_all() == []
 
 
 class TestWriteAndReadRoundTrip:
-    def test_write_and_read_round_trip(self, tmp_path: Path):
-        """Write a list of Position records, read them back, assert equal."""
-        repo = make_repo(tmp_path)
+    def test_write_and_read_round_trip(self, db_session):
+        """write_all then read_all returns the same records."""
+        repo = make_repo(db_session)
         records = [make_position(i) for i in range(3)]
 
         repo.write_all(records)
@@ -63,7 +61,7 @@ class TestWriteAndReadRoundTrip:
         result_ids = {r.position_id for r in result}
         assert result_ids == {"pos-0", "pos-1", "pos-2"}
 
-        # Spot-check a field that survives CSV serialisation
+        # Spot-check fields that survive ORM round-trip
         for original in records:
             match = next(r for r in result if r.position_id == original.position_id)
             assert match.quantity == original.quantity
@@ -71,9 +69,9 @@ class TestWriteAndReadRoundTrip:
 
 
 class TestUpsertInsertsNewRecord:
-    def test_upsert_inserts_new_record(self, tmp_path: Path):
-        """Upsert a record not yet in the file; read_all contains it."""
-        repo = make_repo(tmp_path)
+    def test_upsert_inserts_new_record(self, db_session):
+        """Upsert a record not yet in the table; read_all contains it."""
+        repo = make_repo(db_session)
         pos = make_position(1)
 
         repo.upsert(pos)
@@ -84,14 +82,13 @@ class TestUpsertInsertsNewRecord:
 
 
 class TestUpsertReplacesExisting:
-    def test_upsert_replaces_existing(self, tmp_path: Path):
+    def test_upsert_replaces_existing(self, db_session):
         """Upsert a record with the same id; old value is replaced."""
-        repo = make_repo(tmp_path)
+        repo = make_repo(db_session)
         original = make_position(1)
         repo.upsert(original)
 
         updated = make_position(1)
-        # Mutate one field so we can tell them apart
         updated = updated.model_copy(update={"avg_price": 200.0})
         repo.upsert(updated)
 
@@ -101,9 +98,9 @@ class TestUpsertReplacesExisting:
 
 
 class TestDeleteRemovesRecord:
-    def test_delete_removes_record(self, tmp_path: Path):
+    def test_delete_removes_record(self, db_session):
         """Delete by id; record is gone from read_all."""
-        repo = make_repo(tmp_path)
+        repo = make_repo(db_session)
         for i in range(3):
             repo.upsert(make_position(i))
 
@@ -117,9 +114,9 @@ class TestDeleteRemovesRecord:
 
 
 class TestDeleteReturnsFalseWhenNotFound:
-    def test_delete_returns_false_when_not_found(self, tmp_path: Path):
+    def test_delete_returns_false_when_not_found(self, db_session):
         """Delete a non-existent id returns False."""
-        repo = make_repo(tmp_path)
+        repo = make_repo(db_session)
         repo.upsert(make_position(1))
 
         result = repo.delete("pos-999")
@@ -129,9 +126,9 @@ class TestDeleteReturnsFalseWhenNotFound:
 
 
 class TestFindByIdReturnsCorrect:
-    def test_find_by_id_returns_correct(self, tmp_path: Path):
+    def test_find_by_id_returns_correct(self, db_session):
         """find_by_id returns the right record."""
-        repo = make_repo(tmp_path)
+        repo = make_repo(db_session)
         for i in range(5):
             repo.upsert(make_position(i))
 
@@ -143,9 +140,9 @@ class TestFindByIdReturnsCorrect:
 
 
 class TestFindByIdReturnsNoneWhenMissing:
-    def test_find_by_id_returns_none_when_missing(self, tmp_path: Path):
+    def test_find_by_id_returns_none_when_missing(self, db_session):
         """find_by_id returns None for an unknown id."""
-        repo = make_repo(tmp_path)
+        repo = make_repo(db_session)
         repo.upsert(make_position(1))
 
         result = repo.find_by_id("pos-999")
@@ -153,74 +150,46 @@ class TestFindByIdReturnsNoneWhenMissing:
         assert result is None
 
 
-class TestValidationErrorOnBadRow:
-    def test_validation_error_on_bad_row(self, tmp_path: Path):
-        """
-        A CSV with a deliberately missing required column triggers
-        RepositoryValidationError on read_all.
-        """
-        from rita.repositories.base import RepositoryValidationError
+class TestWriteAllThenReadAll:
+    def test_write_all_then_read_all(self, db_session):
+        """write_all N records then read_all returns exactly N records."""
+        repo = make_repo(db_session)
+        n = 5
+        records = [make_position(i) for i in range(n)]
 
-        csv_path = tmp_path / "positions.csv"
-        # Write a CSV that is missing the required 'underlying' column
-        csv_path.write_text(
-            "position_id,instrument,quantity,avg_price,last_traded_price,pnl,recorded_at\n"
-            "pos-bad,NIFTY1CE,75,100.0,105.0,375.0,2026-03-31T09:00:00+00:00\n",
-            encoding="utf-8",
-        )
+        repo.write_all(records)
+        result = repo.read_all()
 
-        repo = make_repo(tmp_path)
-
-        with pytest.raises(RepositoryValidationError):
-            repo.read_all()
+        assert len(result) == n
+        result_ids = {r.position_id for r in result}
+        expected_ids = {f"pos-{i}" for i in range(n)}
+        assert result_ids == expected_ids
 
 
-class TestWriteEmptyListCreatesHeaderFile:
-    def test_write_empty_list_creates_header_file(self, tmp_path: Path):
-        """write_all([]) creates a CSV with headers but no data rows."""
-        repo = make_repo(tmp_path)
+class TestWriteAllEmptyList:
+    def test_write_all_empty_list(self, db_session):
+        """write_all([]) then read_all() returns an empty list."""
+        repo = make_repo(db_session)
+
+        # Pre-populate so write_all([]) has something to clear
+        repo.upsert(make_position(1))
+        assert len(repo.read_all()) == 1
+
         repo.write_all([])
-
-        csv_path = tmp_path / "positions.csv"
-        assert csv_path.exists()
-
-        lines = csv_path.read_text(encoding="utf-8").splitlines()
-        # Should have exactly the header line
-        assert len(lines) == 1
-        header_fields = lines[0].split(",")
-        assert "position_id" in header_fields
-        assert "instrument" in header_fields
+        assert repo.read_all() == []
 
 
-class TestConcurrentUpsertsNoCorruption:
-    def test_concurrent_upserts_no_corruption(self, tmp_path: Path):
-        """
-        10 threads each upsert a distinct record simultaneously.
-        After all threads finish, read_all returns exactly 10 records
-        with no duplicates or missing entries.
-        """
-        repo = make_repo(tmp_path)
-        n_threads = 10
-        barrier = threading.Barrier(n_threads)
-        errors: list[Exception] = []
+class TestUpsertManyRecords:
+    def test_upsert_many_records(self, db_session):
+        """Upsert 10 records sequentially; read_all returns exactly 10."""
+        repo = make_repo(db_session)
+        n = 10
 
-        def worker(n: int) -> None:
-            try:
-                barrier.wait()  # synchronise all threads to start at once
-                repo.upsert(make_position(n))
-            except Exception as exc:  # noqa: BLE001
-                errors.append(exc)
-
-        threads = [threading.Thread(target=worker, args=(i,)) for i in range(n_threads)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join()
-
-        assert errors == [], f"Thread errors: {errors}"
+        for i in range(n):
+            repo.upsert(make_position(i))
 
         result = repo.read_all()
         ids = {r.position_id for r in result}
 
-        assert len(result) == n_threads, f"Expected {n_threads} records, got {len(result)}"
-        assert ids == {f"pos-{i}" for i in range(n_threads)}
+        assert len(result) == n, f"Expected {n} records, got {len(result)}"
+        assert ids == {f"pos-{i}" for i in range(n)}
