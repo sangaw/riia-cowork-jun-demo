@@ -1,14 +1,16 @@
-"""System CRUD router for the config_overrides table."""
+"""System CRUD router for the config overrides table."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.config_overrides import ConfigOverridesRepository
 from rita.schemas.config_overrides import ConfigOverride, ConfigOverrideCreate
 
 router = APIRouter(prefix="/api/v1/system/config_overrides", tags=["system:config_overrides"])
 
 
-def get_repo() -> ConfigOverridesRepository:
-    return ConfigOverridesRepository()
+def get_repo(db: Session = Depends(get_db)) -> ConfigOverridesRepository:
+    return ConfigOverridesRepository(db)
 
 
 @router.get("/", response_model=list[ConfigOverride])

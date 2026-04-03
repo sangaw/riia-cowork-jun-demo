@@ -1,7 +1,9 @@
-"""Base repository abstractions for the RITA CSV data layer.
+"""Base repository abstractions for the RITA data layer.
 
-ADR-002: Every CSV table has exactly one repository class inheriting from
-CsvRepository[T].  No other code may read or write CSV files directly.
+ADR-002: Every table has exactly one repository class inheriting from
+SqlRepository[T, M].  No other code may access the database directly.
+CsvRepository is retained for backwards-compat with existing QA tests;
+it will be removed in Day 18.
 """
 
 from __future__ import annotations
@@ -9,12 +11,14 @@ from __future__ import annotations
 import threading
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Generic, Optional, TypeVar
+from typing import Generic, Optional, Type, TypeVar
 
 import pandas as pd
 from pydantic import ValidationError
+from sqlalchemy.orm import Session
 
 T = TypeVar("T")
+M = TypeVar("M")  # ORM model type
 
 
 class RepositoryValidationError(Exception):
@@ -131,3 +135,58 @@ class CsvRepository(BaseRepository[T], Generic[T]):
             fields = list(self._schema.model_fields.keys())
             df = pd.DataFrame(columns=fields)
         df.to_csv(self._csv_path, index=False)
+
+
+class SqlRepository(BaseRepository[T], Generic[T, M]):
+    """SQLAlchemy-backed repository. Replaces CsvRepository for all production tables."""
+
+    def __init__(
+        self,
+        db: Session,
+        model_class: Type[M],
+        schema_class: Type[T],
+        id_field: str,
+    ) -> None:
+        self._db = db
+        self._model_class = model_class
+        self._schema_class = schema_class
+        self._id_field = id_field
+
+    def _to_schema(self, row: M) -> T:
+        data = {k: v for k, v in row.__dict__.items() if not k.startswith("_")}
+        return self._schema_class.model_validate(data)
+
+    def read_all(self) -> list[T]:
+        return [self._to_schema(r) for r in self._db.query(self._model_class).all()]
+
+    def find_by_id(self, id: str) -> Optional[T]:
+        row = self._db.get(self._model_class, id)
+        return self._to_schema(row) if row is not None else None
+
+    def upsert(self, record: T) -> T:
+        data = record.model_dump()
+        pk = data[self._id_field]
+        existing = self._db.get(self._model_class, pk)
+        if existing:
+            for k, v in data.items():
+                setattr(existing, k, v)
+        else:
+            existing = self._model_class(**data)
+            self._db.add(existing)
+        self._db.commit()
+        self._db.refresh(existing)
+        return self._to_schema(existing)
+
+    def delete(self, id: str) -> bool:
+        row = self._db.get(self._model_class, id)
+        if row is None:
+            return False
+        self._db.delete(row)
+        self._db.commit()
+        return True
+
+    def write_all(self, records: list[T]) -> None:
+        self._db.query(self._model_class).delete()
+        for record in records:
+            self._db.add(self._model_class(**record.model_dump()))
+        self._db.commit()

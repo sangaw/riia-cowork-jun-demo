@@ -1,14 +1,16 @@
 """System CRUD router for the trades table."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.trades import TradesRepository
 from rita.schemas.trades import Trade, TradeCreate
 
 router = APIRouter(prefix="/api/v1/system/trades", tags=["system:trades"])
 
 
-def get_repo() -> TradesRepository:
-    return TradesRepository()
+def get_repo(db: Session = Depends(get_db)) -> TradesRepository:
+    return TradesRepository(db)
 
 
 @router.get("/", response_model=list[Trade])

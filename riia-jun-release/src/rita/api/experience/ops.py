@@ -1,4 +1,4 @@
-"""Experience Layer — Ops view aggregation router.
+"""Experience Layer -- Ops view aggregation router.
 
 ADR-001: Tier 3 (Experience Layer). Read-only composition. No writes, no side effects.
 Composes: training run history + backtest run history + recent audit log.
@@ -6,7 +6,9 @@ Composes: training run history + backtest run history + recent audit log.
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.audit import AuditLogRepository
 from rita.schemas.audit import AuditLog
 from rita.schemas.backtest import BacktestRun
@@ -23,16 +25,16 @@ class OpsPayload(BaseModel):
     recent_audit: list[AuditLog]
 
 
-def get_workflow_svc() -> WorkflowService:
-    return WorkflowService()
+def get_workflow_svc(db: Session = Depends(get_db)) -> WorkflowService:
+    return WorkflowService(db)
 
 
-def get_backtest_svc() -> BacktestService:
-    return BacktestService()
+def get_backtest_svc(db: Session = Depends(get_db)) -> BacktestService:
+    return BacktestService(db)
 
 
-def get_audit_repo() -> AuditLogRepository:
-    return AuditLogRepository()
+def get_audit_repo(db: Session = Depends(get_db)) -> AuditLogRepository:
+    return AuditLogRepository(db)
 
 
 @router.get("/", response_model=OpsPayload)

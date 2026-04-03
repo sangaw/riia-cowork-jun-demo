@@ -12,18 +12,16 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy.orm import Session
+
 from rita.repositories.training import TrainingMetricsRepository, TrainingRunsRepository
 from rita.schemas.training import TrainingMetric, TrainingRun, TrainingRunCreate
 
 
 class WorkflowService:
-    def __init__(
-        self,
-        runs_repo: TrainingRunsRepository | None = None,
-        metrics_repo: TrainingMetricsRepository | None = None,
-    ) -> None:
-        self._runs = runs_repo or TrainingRunsRepository()
-        self._metrics = metrics_repo or TrainingMetricsRepository()
+    def __init__(self, db: Session) -> None:
+        self._runs = TrainingRunsRepository(db)
+        self._metrics = TrainingMetricsRepository(db)
 
     # ── Training jobs ─────────────────────────────────────────────────────────
 

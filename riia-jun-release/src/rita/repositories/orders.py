@@ -1,17 +1,12 @@
 """Repository for the orders table (broker order log)."""
 
-from pathlib import Path
+from sqlalchemy.orm import Session
 
-from rita.config import get_settings
-from rita.repositories.base import CsvRepository
+from rita.models.orders import OrderModel
+from rita.repositories.base import SqlRepository
 from rita.schemas.orders import Order
 
 
-class OrdersRepository(CsvRepository[Order]):
-    def __init__(self, data_dir: Path | None = None) -> None:
-        base = data_dir or Path(get_settings().data.output_dir)
-        super().__init__(
-            csv_path=base / "orders.csv",
-            schema=Order,
-            id_field="order_id",
-        )
+class OrdersRepository(SqlRepository[Order, OrderModel]):
+    def __init__(self, db: Session) -> None:
+        super().__init__(db, OrderModel, Order, "order_id")

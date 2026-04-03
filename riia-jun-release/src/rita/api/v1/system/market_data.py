@@ -1,14 +1,16 @@
-"""System CRUD router for the market_data_cache table."""
+"""System CRUD router for the market data table."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.market_data import MarketDataCacheRepository
 from rita.schemas.market_data import MarketDataCache, MarketDataCacheCreate
 
 router = APIRouter(prefix="/api/v1/system/market_data", tags=["system:market_data"])
 
 
-def get_repo() -> MarketDataCacheRepository:
-    return MarketDataCacheRepository()
+def get_repo(db: Session = Depends(get_db)) -> MarketDataCacheRepository:
+    return MarketDataCacheRepository(db)
 
 
 @router.get("/", response_model=list[MarketDataCache])

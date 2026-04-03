@@ -1,17 +1,12 @@
 """Repository for the alerts table."""
 
-from pathlib import Path
+from sqlalchemy.orm import Session
 
-from rita.config import get_settings
-from rita.repositories.base import CsvRepository
+from rita.models.alerts import AlertModel
+from rita.repositories.base import SqlRepository
 from rita.schemas.alerts import Alert
 
 
-class AlertsRepository(CsvRepository[Alert]):
-    def __init__(self, data_dir: Path | None = None) -> None:
-        base = data_dir or Path(get_settings().data.output_dir)
-        super().__init__(
-            csv_path=base / "alerts.csv",
-            schema=Alert,
-            id_field="alert_id",
-        )
+class AlertsRepository(SqlRepository[Alert, AlertModel]):
+    def __init__(self, db: Session) -> None:
+        super().__init__(db, AlertModel, Alert, "alert_id")

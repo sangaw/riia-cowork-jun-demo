@@ -1,14 +1,16 @@
-"""System CRUD router for the audit_log table."""
+"""System CRUD router for the audit table."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.audit import AuditLogRepository
 from rita.schemas.audit import AuditLog, AuditLogCreate
 
 router = APIRouter(prefix="/api/v1/system/audit", tags=["system:audit"])
 
 
-def get_repo() -> AuditLogRepository:
-    return AuditLogRepository()
+def get_repo(db: Session = Depends(get_db)) -> AuditLogRepository:
+    return AuditLogRepository(db)
 
 
 @router.get("/", response_model=list[AuditLog])

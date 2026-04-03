@@ -1,19 +1,21 @@
-"""Workflow router — backtest jobs.
+"""Workflow router -- backtest jobs.
 
 ADR-001: Tier 2 (Business Process). Calls BacktestService only.
 ADR-001: Never calls repositories directly or Experience Layer routers.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.schemas.backtest import BacktestResult, BacktestRun, BacktestRunCreate
 from rita.services.backtest_service import BacktestService
 
 router = APIRouter(prefix="/api/v1/workflow/backtest", tags=["workflow:backtest"])
 
 
-def get_service() -> BacktestService:
-    return BacktestService()
+def get_service(db: Session = Depends(get_db)) -> BacktestService:
+    return BacktestService(db)
 
 
 @router.post("/", response_model=BacktestRun, status_code=202)

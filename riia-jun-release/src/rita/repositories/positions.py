@@ -1,17 +1,12 @@
 """Repository for the positions table (live open positions from broker)."""
 
-from pathlib import Path
+from sqlalchemy.orm import Session
 
-from rita.config import get_settings
-from rita.repositories.base import CsvRepository
+from rita.models.positions import PositionModel
+from rita.repositories.base import SqlRepository
 from rita.schemas.positions import Position
 
 
-class PositionsRepository(CsvRepository[Position]):
-    def __init__(self, data_dir: Path | None = None) -> None:
-        base = data_dir or Path(get_settings().data.output_dir)
-        super().__init__(
-            csv_path=base / "positions.csv",
-            schema=Position,
-            id_field="position_id",
-        )
+class PositionsRepository(SqlRepository[Position, PositionModel]):
+    def __init__(self, db: Session) -> None:
+        super().__init__(db, PositionModel, Position, "position_id")

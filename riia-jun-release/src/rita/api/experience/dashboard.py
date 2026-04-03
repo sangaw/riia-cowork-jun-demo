@@ -1,16 +1,18 @@
-"""Experience Layer — Dashboard aggregation router.
+"""Experience Layer -- Dashboard aggregation router.
 
 ADR-001: Tier 3 (Experience Layer). Read-only composition. No writes, no side effects.
 Composes: live positions + latest model state (training run) + recent alerts.
 
-One GET per view — the UI makes a single call to get everything it needs.
+One GET per view -- the UI makes a single call to get everything it needs.
 """
 
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.alerts import AlertsRepository
 from rita.repositories.positions import PositionsRepository
 from rita.schemas.alerts import Alert
@@ -27,16 +29,16 @@ class DashboardPayload(BaseModel):
     recent_alerts: list[Alert]
 
 
-def get_positions_repo() -> PositionsRepository:
-    return PositionsRepository()
+def get_positions_repo(db: Session = Depends(get_db)) -> PositionsRepository:
+    return PositionsRepository(db)
 
 
-def get_alerts_repo() -> AlertsRepository:
-    return AlertsRepository()
+def get_alerts_repo(db: Session = Depends(get_db)) -> AlertsRepository:
+    return AlertsRepository(db)
 
 
-def get_workflow_svc() -> WorkflowService:
-    return WorkflowService()
+def get_workflow_svc(db: Session = Depends(get_db)) -> WorkflowService:
+    return WorkflowService(db)
 
 
 @router.get("/", response_model=DashboardPayload)

@@ -1,4 +1,4 @@
-"""Experience Layer — FnO view aggregation router.
+"""Experience Layer -- FnO view aggregation router.
 
 ADR-001: Tier 3 (Experience Layer). Read-only composition. No writes, no side effects.
 Composes: option position snapshots + daily portfolio P&L + recent manoeuvres.
@@ -9,7 +9,9 @@ once Sprint 3 services are in place. For now the snapshots include per-leg P&L.
 
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.manoeuvres import ManoeuvresRepository
 from rita.repositories.portfolio import PortfolioRepository
 from rita.repositories.snapshots import SnapshotsRepository
@@ -26,16 +28,16 @@ class FnoPayload(BaseModel):
     recent_manoeuvres: list[Manoeuvre]
 
 
-def get_snapshots_repo() -> SnapshotsRepository:
-    return SnapshotsRepository()
+def get_snapshots_repo(db: Session = Depends(get_db)) -> SnapshotsRepository:
+    return SnapshotsRepository(db)
 
 
-def get_portfolio_repo() -> PortfolioRepository:
-    return PortfolioRepository()
+def get_portfolio_repo(db: Session = Depends(get_db)) -> PortfolioRepository:
+    return PortfolioRepository(db)
 
 
-def get_manoeuvres_repo() -> ManoeuvresRepository:
-    return ManoeuvresRepository()
+def get_manoeuvres_repo(db: Session = Depends(get_db)) -> ManoeuvresRepository:
+    return ManoeuvresRepository(db)
 
 
 @router.get("/", response_model=FnoPayload)

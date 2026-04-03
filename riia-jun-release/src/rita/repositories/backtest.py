@@ -1,27 +1,17 @@
 """Repositories for backtest_runs and backtest_results tables."""
 
-from pathlib import Path
+from sqlalchemy.orm import Session
 
-from rita.config import get_settings
-from rita.repositories.base import CsvRepository
-from rita.schemas.backtest import BacktestRun, BacktestResult
-
-
-class BacktestRunsRepository(CsvRepository[BacktestRun]):
-    def __init__(self, data_dir: Path | None = None) -> None:
-        base = data_dir or Path(get_settings().data.output_dir)
-        super().__init__(
-            csv_path=base / "backtest_runs.csv",
-            schema=BacktestRun,
-            id_field="run_id",
-        )
+from rita.models.backtest import BacktestResultModel, BacktestRunModel
+from rita.repositories.base import SqlRepository
+from rita.schemas.backtest import BacktestResult, BacktestRun
 
 
-class BacktestResultsRepository(CsvRepository[BacktestResult]):
-    def __init__(self, data_dir: Path | None = None) -> None:
-        base = data_dir or Path(get_settings().data.output_dir)
-        super().__init__(
-            csv_path=base / "backtest_results.csv",
-            schema=BacktestResult,
-            id_field="result_id",
-        )
+class BacktestRunsRepository(SqlRepository[BacktestRun, BacktestRunModel]):
+    def __init__(self, db: Session) -> None:
+        super().__init__(db, BacktestRunModel, BacktestRun, "run_id")
+
+
+class BacktestResultsRepository(SqlRepository[BacktestResult, BacktestResultModel]):
+    def __init__(self, db: Session) -> None:
+        super().__init__(db, BacktestResultModel, BacktestResult, "result_id")

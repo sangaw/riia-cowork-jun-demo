@@ -1,14 +1,16 @@
 """System CRUD router for the positions table."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.positions import PositionsRepository
 from rita.schemas.positions import Position, PositionCreate
 
 router = APIRouter(prefix="/api/v1/system/positions", tags=["system:positions"])
 
 
-def get_repo() -> PositionsRepository:
-    return PositionsRepository()
+def get_repo(db: Session = Depends(get_db)) -> PositionsRepository:
+    return PositionsRepository(db)
 
 
 @router.get("/", response_model=list[Position])

@@ -1,14 +1,16 @@
 """System CRUD router for the orders table."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.orders import OrdersRepository
 from rita.schemas.orders import Order, OrderCreate
 
 router = APIRouter(prefix="/api/v1/system/orders", tags=["system:orders"])
 
 
-def get_repo() -> OrdersRepository:
-    return OrdersRepository()
+def get_repo(db: Session = Depends(get_db)) -> OrdersRepository:
+    return OrdersRepository(db)
 
 
 @router.get("/", response_model=list[Order])

@@ -12,18 +12,16 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy.orm import Session
+
 from rita.repositories.backtest import BacktestResultsRepository, BacktestRunsRepository
 from rita.schemas.backtest import BacktestResult, BacktestRun, BacktestRunCreate
 
 
 class BacktestService:
-    def __init__(
-        self,
-        runs_repo: BacktestRunsRepository | None = None,
-        results_repo: BacktestResultsRepository | None = None,
-    ) -> None:
-        self._runs = runs_repo or BacktestRunsRepository()
-        self._results = results_repo or BacktestResultsRepository()
+    def __init__(self, db: Session) -> None:
+        self._runs = BacktestRunsRepository(db)
+        self._results = BacktestResultsRepository(db)
 
     # ── Backtest jobs ─────────────────────────────────────────────────────────
 

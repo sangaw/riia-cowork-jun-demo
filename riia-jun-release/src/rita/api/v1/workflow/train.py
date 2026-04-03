@@ -1,19 +1,21 @@
-"""Workflow router — DQN training jobs.
+"""Workflow router -- DQN training jobs.
 
 ADR-001: Tier 2 (Business Process). Calls WorkflowService only.
 ADR-001: Never calls repositories directly or Experience Layer routers.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.schemas.training import TrainingMetric, TrainingRun, TrainingRunCreate
 from rita.services.workflow_service import WorkflowService
 
 router = APIRouter(prefix="/api/v1/workflow/train", tags=["workflow:train"])
 
 
-def get_service() -> WorkflowService:
-    return WorkflowService()
+def get_service(db: Session = Depends(get_db)) -> WorkflowService:
+    return WorkflowService(db)
 
 
 @router.post("/", response_model=TrainingRun, status_code=202)

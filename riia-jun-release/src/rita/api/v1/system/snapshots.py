@@ -1,14 +1,16 @@
 """System CRUD router for the snapshots table."""
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
+from rita.database import get_db
 from rita.repositories.snapshots import SnapshotsRepository
 from rita.schemas.snapshots import Snapshot, SnapshotCreate
 
 router = APIRouter(prefix="/api/v1/system/snapshots", tags=["system:snapshots"])
 
 
-def get_repo() -> SnapshotsRepository:
-    return SnapshotsRepository()
+def get_repo(db: Session = Depends(get_db)) -> SnapshotsRepository:
+    return SnapshotsRepository(db)
 
 
 @router.get("/", response_model=list[Snapshot])
