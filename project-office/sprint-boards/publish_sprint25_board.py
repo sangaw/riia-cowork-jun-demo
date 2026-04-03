@@ -55,8 +55,8 @@ BODY = """
       <td>Day 18</td>
       <td>QA</td>
       <td>Test suite migration</td>
-      <td><strong style="color:#b45309">&#9711; Planned</strong></td>
-      <td>conftest.py: sqlite:///:memory: engine + session fixture + DI override; fix repo tests; verify 78 API contract tests still pass.</td>
+      <td><strong style="color:#1a6b3c">&#10003; Done</strong></td>
+      <td>conftest.py: db_session fixture (sqlite:///:memory:, function-scoped, creates/drops tables per test) + client fixture overriding get_db. test_repository.py rewritten for SqlRepository via PositionsRepository(db_session). CSV-specific tests replaced. 96/97 tests pass (1 pre-existing TestJwtSecretFromEnvVar failure). 78 API contract tests confirmed passing. Sprint 2.5 complete.</td>
     </tr>
   </tbody>
 </table>
@@ -124,7 +124,7 @@ PostgreSQL upgrade path in v2: change one <code>database_url</code> config value
   <li>&#10003; SqlRepository[T,M] base class added to base.py (Day 16)</li>
   <li>&#10003; 16 concrete repos migrated to SQLAlchemy sessions; services + 14 routers wired (Day 16)</li>
   <li>&#10003; Alembic init + 16-table migration; CI + Dockerfile updated (Day 17)</li>
-  <li>&#9711; 78 API contract tests pass against in-memory SQLite (Day 18)</li>
+  <li>&#10003; 78 API contract tests pass against in-memory SQLite; 96/97 total tests pass (Day 18)</li>
 </ul>
 """
 

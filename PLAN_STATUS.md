@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-03 (Day 17)
+**Last updated:** 2026-04-03 (Day 18)
 
 ---
 
-## Current Sprint: SPRINT 2.5 — Database Layer
-**Current Day: Day 17 complete — Sprint 2.5 Day 18 next.**
+## Current Sprint: SPRINT 3 — Service Layer & Observability
+**Current Day: Day 18 complete — Sprint 2.5 DONE · Sprint 3 Day 19 next.**
 
 ---
 
@@ -48,7 +48,7 @@
 | Day 15 | Engineer D | SQLAlchemy setup: database.py, 15 ORM models, config.py DB settings, ADR-003 to Confluence | `[x]` | pyproject.toml: sqlalchemy>=2.0, alembic>=1.13; database.py: engine + SessionLocal + Base + get_db(); 15 model files (17 classes); DatabaseSettings in config.py; ADR-003 published [66650129] |
 | Day 16 | Engineer D | Repository migration: rewrite base.py (SqlRepository), update all 15 concrete repos, update main.py lifespan | `[x]` | SqlRepository[T,M] added to base.py; 15 repos + new risk.py migrate to SQLAlchemy; services (workflow, backtest) take db: Session; all 14 routers inject get_db(); main.py lifespan creates tables on startup; 78/78 API tests pass |
 | Day 17 | Ops | Alembic setup + CI update | `[x]` | alembic init; env.py imports Base + all 17 models, resolves SQLite path to absolute; 16 CREATE TABLE migration verified (upgrade head + downgrade base); CI: alembic upgrade head step added before pytest; Dockerfile: copies alembic/, CMD runs migrations before uvicorn |
-| Day 18 | QA | Test suite migration | `[ ]` | conftest.py: sqlite:///:memory: engine + session fixture + DI override; fix repo tests; verify 78 API contract tests still pass |
+| Day 18 | QA | Test suite migration | `[x]` | conftest.py: db_session fixture (sqlite:///:memory:, function-scoped) + client fixture overriding get_db; test_repository.py rewritten for SqlRepository; 96/97 tests pass (1 pre-existing TestJwtSecretFromEnvVar failure); 78 API contract tests confirmed passing |
 
 ## Sprint 3 Tasks — Service Layer & Observability
 

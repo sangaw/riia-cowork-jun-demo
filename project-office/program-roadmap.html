@@ -702,7 +702,7 @@ body {
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:50%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:53%"></div>
       </div>
     </div>
   </div>
@@ -747,12 +747,12 @@ body {
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
             <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">3</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation · S2 API</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation · S2 API · S2.5 DB</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
             <div style="font-weight:800;font-size:17px;line-height:1;color:var(--active)" id="kpi-active">1</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 2.5 · Database Layer</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 3 · Service Layer &amp; Observability</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
@@ -789,8 +789,8 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S2.5 · DB</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s25" style="width:75%;height:100%;background:var(--sprint2);border-radius:3px"></div></div>
-            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s25">75%</span>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s25" style="width:100%;height:100%;background:var(--ok);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--ok);min-width:28px;text-align:right" id="pct-s25">100%</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S3 · Services</div>
@@ -844,6 +844,15 @@ body {
         <div class="c-ey">Recent Activity</div>
         <div class="c-t">Latest Deliverables</div>
         <div class="activity" id="activity-feed" style="margin-top:10px">
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--ok)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Sprint 2.5 complete · test suite migrated to SQLAlchemy</div>
+              <div class="act-desc">conftest.py: db_session fixture (sqlite:///:memory:) + client fixture · test_repository.py rewritten for SqlRepository · 96/97 tests pass · 78 API contract tests confirmed · CSV backend fully replaced</div>
+            </div>
+            <div class="act-time">Day 18</div>
+          </div>
 
           <div class="act-row">
             <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint2)"></div><div class="act-line"></div></div>
@@ -1454,7 +1463,7 @@ body {
   ══════════════════════════════════════════ -->
   <section id="sec-sprint25" class="sec">
     <div class="ph">
-      <div class="ph-badge active">In Progress</div>
+      <div class="ph-badge neutral">Done</div>
       <div>
         <div class="ph-t">Sprint 2.5 — Database Layer</div>
         <div class="ph-g">Days 15–18 · Replace CSV backend with SQLite via SQLAlchemy 2.x — zero router/schema changes</div>
@@ -1464,10 +1473,10 @@ body {
       <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint2)">15–18</div><div class="kpi-sub">4 work days</div></div>
       <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">4</div><div class="kpi-sub">Models · Repos · Alembic · Tests</div></div>
       <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--ok);font-size:16px">Light</div><div class="kpi-sub">ADR files are small</div></div>
-      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--active)">3 / 4</div><div class="kpi-sub">Day 17 complete · Day 18 next</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--ok)">4 / 4</div><div class="kpi-sub">Day 18 complete · Sprint 2.5 done</div></div>
     </div>
     <div class="wave-hdr">
-      <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 2.5 — In Progress</span>
+      <span class="badge done" style="font-size:10px;padding:3px 10px">Sprint 2.5 — Done</span>
       <span class="wave-hdr-title">Database Layer · Days 15–18</span>
       <span class="wave-hdr-sub">Repository interface unchanged — routers, services, schemas untouched</span>
     </div>
@@ -1505,7 +1514,7 @@ body {
         <div style="display:flex;flex-direction:column;gap:5px">
           <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Alembic init</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
           <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">CI update</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Test migration</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint2)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Day 18</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Test migration</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
         </div>
       </div>
 
