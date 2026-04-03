@@ -83,9 +83,17 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Override sqlalchemy.url from app settings
+# Override sqlalchemy.url from app settings.
+# Resolve relative SQLite paths (sqlite:///./...) to absolute so alembic
+# can create the db file regardless of the caller's working directory.
 _settings = get_settings()
-config.set_main_option("sqlalchemy.url", _settings.database.database_url)
+_db_url = _settings.database.database_url
+if _db_url.startswith("sqlite:///./"):
+    _rel = _db_url[len("sqlite:///./"):]
+    _abs = (_RELEASE_DIR / _rel).resolve()
+    _abs.parent.mkdir(parents=True, exist_ok=True)
+    _db_url = f"sqlite:///{_abs}"
+config.set_main_option("sqlalchemy.url", _db_url)
 
 target_metadata = Base.metadata
 
