@@ -34,6 +34,8 @@ COPY --from=builder /build/venv /app/venv
 # Copy application source and config
 COPY src/ /app/src/
 COPY config/ /app/config/
+COPY alembic/ /app/alembic/
+COPY alembic.ini /app/alembic.ini
 
 ENV PATH="/app/venv/bin:$PATH"
 ENV PYTHONPATH="/app/src"
@@ -44,4 +46,4 @@ USER rita
 
 EXPOSE 8000
 
-CMD ["uvicorn", "rita.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && uvicorn rita.main:app --host 0.0.0.0 --port 8000"]

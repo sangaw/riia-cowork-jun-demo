@@ -37,6 +37,10 @@ jobs:
       - name: Install package with dev deps
         run: pip install -e "riia-jun-release/[dev]"
 
+      - name: Run database migrations
+        working-directory: riia-jun-release
+        run: alembic upgrade head
+
       - name: Run tests
         run: >
           pytest riia-jun-release/tests/
