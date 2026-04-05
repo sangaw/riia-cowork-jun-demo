@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-03 (Day 18)
+**Last updated:** 2026-04-05 (Day 19)
 
 ---
 
 ## Current Sprint: SPRINT 3 — Service Layer & Observability
-**Current Day: Day 18 complete — Sprint 2.5 DONE · Sprint 3 Day 19 next.**
+**Current Day: Day 19 complete — Sprint 3 Day 20 next.**
 
 ---
 
@@ -54,7 +54,7 @@
 
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
-| Day 19 | Engineer D | WorkflowService, BacktestService (real ML dispatch stubs) | `[ ]` | |
+| Day 19 | Engineer D | WorkflowService, BacktestService (real ML dispatch stubs) | `[x]` | core/ml_dispatch.py + core/backtest_dispatch.py; daemon threads via SessionLocal; pending→running→complete/failed; 96/97 tests pass |
 | Day 20 | Engineer D | ManoeuvreService, PortfolioService | `[ ]` | |
 | Day 21 | Engineer E | structlog JSON logging throughout | `[ ]` | |
 | Day 22 | Engineer E | Prometheus metrics, /health, /readyz | `[ ]` | |

@@ -702,7 +702,7 @@ body {
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:53%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:56%"></div>
       </div>
     </div>
   </div>
@@ -794,8 +794,8 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S3 · Services</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s3" style="width:0%;height:100%;background:var(--sprint3);border-radius:3px"></div></div>
-            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s3">—</span>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s3" style="width:17%;height:100%;background:var(--sprint3);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s3">17%</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S4 · Frontend</div>
@@ -1527,7 +1527,7 @@ body {
   ══════════════════════════════════════════ -->
   <section id="sec-sprint3" class="sec">
     <div class="ph">
-      <div class="ph-badge neutral">Planned</div>
+      <div class="ph-badge active">In Progress</div>
       <div>
         <div class="ph-t">Sprint 3 — Service Layer &amp; Observability</div>
         <div class="ph-g">Days 15–20 · Business logic in services, structured logs, live metrics</div>
@@ -1537,24 +1537,24 @@ body {
       <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint3)">15–20</div><div class="kpi-sub">6 work days</div></div>
       <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">Services · Logs · Metrics</div></div>
       <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--warn);font-size:16px">Medium</div><div class="kpi-sub">New files from contracts</div></div>
-      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--t3)">Planned</div><div class="kpi-sub">Starts after S2 sign-off</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--sprint3)">1 / 6</div><div class="kpi-sub">Day 19 complete · Day 20 next</div></div>
     </div>
     <div class="wave-hdr">
-      <span class="badge planned" style="font-size:10px;padding:3px 10px">Sprint 3 — Planned</span>
-      <span class="wave-hdr-title">Service Layer &amp; Observability · Days 15–20</span>
+      <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 3 — In Progress</span>
+      <span class="wave-hdr-title">Service Layer &amp; Observability · Days 19–24</span>
       <span class="wave-hdr-sub">Zero print() statements remaining after this sprint closes</span>
     </div>
     <div class="g3" style="margin-bottom:22px">
 
       <div class="card" style="border-top:3px solid var(--sprint3)">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Workflow &amp; Backtest Services</div><span class="badge planned">Planned</span></div>
-        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">WorkflowService and BacktestService extracted from route handlers. 8-step pipeline logic, session state, and backtest daily results all live in services — not in routers.</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Engineer D</span><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Days 15–16</span></div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Workflow &amp; Backtest Services</div><span class="badge ok">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">ML dispatch stubs wired in. WorkflowService + BacktestService spawn daemon threads via SessionLocal; transitions pending→running→complete/failed; episode metrics + daily backtest results persisted. core/ml_dispatch.py + core/backtest_dispatch.py created.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Engineer D</span><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Day 19</span></div>
         <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">WorkflowService</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">BacktestService</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Integration tests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">WorkflowService</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">BacktestService</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Integration tests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Day 23</span></div>
         </div>
       </div>
 
