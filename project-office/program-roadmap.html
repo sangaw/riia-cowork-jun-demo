@@ -702,7 +702,7 @@ body {
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:68%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:71%"></div>
       </div>
     </div>
   </div>
@@ -746,22 +746,22 @@ body {
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">3</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation · S2 API · S2.5 DB</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">4</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation · S2 API · S2.5 DB · S3 Services</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
             <div style="font-weight:800;font-size:17px;line-height:1;color:var(--active)" id="kpi-active">1</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 3 · Service Layer &amp; Observability</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 4 · Frontend &amp; Responsive Design</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--t3)" id="kpi-planned">4</div>
-            <div style="font-size:8.5px;color:var(--t3)">Sprints 3 – 5</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--t3)" id="kpi-planned">3</div>
+            <div style="font-size:8.5px;color:var(--t3)">Sprints 4 – 5</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Days Done</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">14</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">24</div>
             <div style="font-size:8.5px;color:var(--t3)">of 34 total</div>
           </div>
         </div>
@@ -794,7 +794,7 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S3 · Services</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s3" style="width:83%;height:100%;background:var(--sprint3);border-radius:3px"></div></div>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s3" style="width:100%;height:100%;background:var(--ok);border-radius:3px"></div></div>
             <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s3">50%</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
@@ -844,6 +844,15 @@ body {
         <div class="c-ey">Recent Activity</div>
         <div class="c-t">Latest Deliverables</div>
         <div class="activity" id="activity-feed" style="margin-top:10px">
+
+          <div class="act-row">
+            <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint3)"></div><div class="act-line"></div></div>
+            <div class="act-body">
+              <div class="act-title">Sprint 3 complete · Observability &amp; Runbook published</div>
+              <div class="act-desc">Observability &amp; Runbook published to operations section [67895297] · structlog JSON format + trace_id mechanics · /health + /readyz probe table · Prometheus metrics guide · 4 runbook scenarios · k8s probe YAML · Sprint 3 all 6 days done</div>
+            </div>
+            <div class="act-time">Day 24</div>
+          </div>
 
           <div class="act-row">
             <div class="act-dot-wrap"><div class="act-dot" style="background:var(--sprint3)"></div><div class="act-line"></div></div>
@@ -1545,7 +1554,7 @@ body {
   ══════════════════════════════════════════ -->
   <section id="sec-sprint3" class="sec">
     <div class="ph">
-      <div class="ph-badge active">In Progress</div>
+      <div class="ph-badge done">Done</div>
       <div>
         <div class="ph-t">Sprint 3 — Service Layer &amp; Observability</div>
         <div class="ph-g">Days 15–20 · Business logic in services, structured logs, live metrics</div>
@@ -1555,10 +1564,10 @@ body {
       <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint3)">15–20</div><div class="kpi-sub">6 work days</div></div>
       <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">Services · Logs · Metrics</div></div>
       <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--warn);font-size:16px">Medium</div><div class="kpi-sub">New files from contracts</div></div>
-      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--sprint3)">5 / 6</div><div class="kpi-sub">Day 23 complete · Day 24 next</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--ok)">6 / 6</div><div class="kpi-sub">Sprint 3 complete</div></div>
     </div>
     <div class="wave-hdr">
-      <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 3 — In Progress</span>
+      <span class="badge done" style="font-size:10px;padding:3px 10px">Sprint 3 — Done</span>
       <span class="wave-hdr-title">Service Layer &amp; Observability · Days 19–24</span>
       <span class="wave-hdr-sub">Zero print() statements remaining after this sprint closes</span>
     </div>
@@ -1609,20 +1618,20 @@ body {
   ══════════════════════════════════════════ -->
   <section id="sec-sprint4" class="sec">
     <div class="ph">
-      <div class="ph-badge neutral">Planned</div>
+      <div class="ph-badge active">In Progress</div>
       <div>
         <div class="ph-t">Sprint 4 — Frontend &amp; Responsive Design</div>
-        <div class="ph-g">Days 21–26 · Decompose monolithic HTML, add mobile support</div>
+        <div class="ph-g">Days 25–30 · Decompose monolithic HTML, add mobile support</div>
       </div>
     </div>
     <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
-      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint4)">21–26</div><div class="kpi-sub">6 work days</div></div>
+      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint4)">25–30</div><div class="kpi-sub">6 work days</div></div>
       <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">RITA · FnO · Responsive</div></div>
       <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--danger);font-size:16px">Heavy</div><div class="kpi-sub">4,000-line HTML in slices</div></div>
-      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--t3)">Planned</div><div class="kpi-sub">Starts after S3 sign-off</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--sprint4)">0 / 6</div><div class="kpi-sub">Day 25 next</div></div>
     </div>
     <div class="wave-hdr">
-      <span class="badge planned" style="font-size:10px;padding:3px 10px">Sprint 4 — Planned</span>
+      <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 4 — In Progress</span>
       <span class="wave-hdr-title">Frontend &amp; Responsive · Days 21–26</span>
       <span class="wave-hdr-sub">HTML read in 500-line windows — 2 sessions per file</span>
     </div>

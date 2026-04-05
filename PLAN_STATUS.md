@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-05 (Day 23)
+**Last updated:** 2026-04-05 (Day 24)
 
 ---
 
 ## Current Sprint: SPRINT 3 — Service Layer & Observability
-**Current Day: Day 23 complete — Sprint 3 Day 24 next.**
+**Current Day: Day 24 complete — SPRINT 3 DONE. Sprint 4 Day 25 next.**
 
 ---
 
@@ -59,7 +59,7 @@
 | Day 21 | Engineer E | structlog JSON logging throughout | `[x]` | logging_config.py; middleware binds trace_id; exception handlers log errors; WorkflowService + BacktestService log job transitions; 96/97 tests pass |
 | Day 22 | Engineer E | Prometheus metrics, /health, /readyz | `[x]` | prometheus-fastapi-instrumentator>=6.1; metrics.py with instrument_app(); /health liveness (no DB); /readyz readiness (SELECT 1, 503 on failure); 11 pre-existing ruff warnings fixed; 96/97 tests pass |
 | Day 23 | QA | Greeks tests, manoeuvre tests, workflow integration | `[x]` | test_greeks.py (8 B-S reference tests, math only); test_services.py (6 manoeuvre + 4 portfolio); test_workflow_integration.py (6 incl. daemon thread e2e); 120/121 pass |
-| Day 24 | TechWriter | Confluence: Observability & Runbook | `[ ]` | |
+| Day 24 | TechWriter | Confluence: Observability & Runbook | `[x]` | Observability & Runbook published to operations section [67895297]; structlog format, health probes table, Prometheus metrics, 4 runbook scenarios, k8s probe YAML |
 
 ## Sprint 4 Tasks — Frontend & Responsive Design
 
