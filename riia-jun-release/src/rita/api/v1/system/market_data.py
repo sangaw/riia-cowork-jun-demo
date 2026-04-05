@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.market_data import MarketDataCacheRepository
-from rita.schemas.market_data import MarketDataCache, MarketDataCacheCreate
+from rita.schemas.market_data import MarketDataCache
 
 router = APIRouter(prefix="/api/v1/system/market_data", tags=["system:market_data"])
 

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.audit import AuditLogRepository
-from rita.schemas.audit import AuditLog, AuditLogCreate
+from rita.schemas.audit import AuditLog
 
 router = APIRouter(prefix="/api/v1/system/audit", tags=["system:audit"])
 

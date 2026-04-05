@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.alerts import AlertsRepository
-from rita.schemas.alerts import Alert, AlertCreate
+from rita.schemas.alerts import Alert
 
 router = APIRouter(prefix="/api/v1/system/alerts", tags=["system:alerts"])
 

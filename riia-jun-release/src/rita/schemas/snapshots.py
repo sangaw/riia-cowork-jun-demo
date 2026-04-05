@@ -1,6 +1,6 @@
 """Pydantic schemas for the snapshots table (manoeuvre position snapshot)."""
 from datetime import date, datetime
-from typing import Optional, Literal
+from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 

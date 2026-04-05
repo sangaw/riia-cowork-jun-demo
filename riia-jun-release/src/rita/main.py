@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 import rita.models  # noqa: F401 -- registers all ORM models with Base.metadata
@@ -17,6 +19,7 @@ from rita.exception_handlers import (
     validation_exception_handler,
 )
 from rita.logging_config import configure_logging
+from rita.metrics import instrument_app
 from rita.middleware import TraceIDMiddleware
 from rita.repositories.base import RepositoryValidationError
 from rita.api.v1.system.positions import router as positions_router
@@ -78,7 +81,34 @@ app.include_router(dashboard_router)
 app.include_router(fno_router)
 app.include_router(ops_router)
 
+# -- Prometheus metrics (must come after all routers are registered) -----------
+instrument_app(app)
 
-@app.get("/health")
-def health():
+
+@app.get("/health", tags=["observability"])
+def health() -> dict:
+    """Liveness probe.
+
+    Returns HTTP 200 as long as the process is running.  No data-layer check
+    is performed — liveness must not fail due to storage issues.
+    """
     return {"status": "ok", "version": settings.app.version}
+
+
+@app.get("/readyz", tags=["observability"])
+def readyz() -> JSONResponse:
+    """Readiness probe.
+
+    Checks DB connectivity via SELECT 1.  Returns HTTP 200 when the database
+    is reachable, HTTP 503 otherwise.
+    """
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as exc:  # noqa: BLE001
+        log.warning("readyz_check_failed", error=str(exc))
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unavailable", "detail": str(exc)},
+        )
+    return JSONResponse(status_code=200, content={"status": "ready"})

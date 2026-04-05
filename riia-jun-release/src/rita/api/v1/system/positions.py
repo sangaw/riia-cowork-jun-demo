@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.positions import PositionsRepository
-from rita.schemas.positions import Position, PositionCreate
+from rita.schemas.positions import Position
 
 router = APIRouter(prefix="/api/v1/system/positions", tags=["system:positions"])
 

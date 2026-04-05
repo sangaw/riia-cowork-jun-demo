@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.snapshots import SnapshotsRepository
-from rita.schemas.snapshots import Snapshot, SnapshotCreate
+from rita.schemas.snapshots import Snapshot
 
 router = APIRouter(prefix="/api/v1/system/snapshots", tags=["system:snapshots"])
 

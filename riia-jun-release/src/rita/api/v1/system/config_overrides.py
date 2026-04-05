@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.config_overrides import ConfigOverridesRepository
-from rita.schemas.config_overrides import ConfigOverride, ConfigOverrideCreate
+from rita.schemas.config_overrides import ConfigOverride
 
 router = APIRouter(prefix="/api/v1/system/config_overrides", tags=["system:config_overrides"])
 

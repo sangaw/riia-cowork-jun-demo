@@ -1,6 +1,6 @@
 """Pydantic schemas for the orders table (broker order log)."""
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 

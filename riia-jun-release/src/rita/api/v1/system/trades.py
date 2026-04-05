@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.trades import TradesRepository
-from rita.schemas.trades import Trade, TradeCreate
+from rita.schemas.trades import Trade
 
 router = APIRouter(prefix="/api/v1/system/trades", tags=["system:trades"])
 

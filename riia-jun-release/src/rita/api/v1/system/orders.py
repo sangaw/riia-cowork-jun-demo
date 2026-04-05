@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.orders import OrdersRepository
-from rita.schemas.orders import Order, OrderCreate
+from rita.schemas.orders import Order
 
 router = APIRouter(prefix="/api/v1/system/orders", tags=["system:orders"])
 
