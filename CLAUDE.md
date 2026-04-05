@@ -75,12 +75,64 @@ riia-cowork-jun/                    ← project workspace root (this repo)
 **Rule for Engineer agents:** All application code goes in `riia-jun-release/`.
 **Rule for TechWriter/PM/Ops agents:** All management scripts go in `project-office/`.
 
+## Sprint 2.5+ Codebase Constraints (read before writing any service or router code)
+
+> These facts are NOT obvious from the folder structure. Agents that miss them produce broken code.
+
+**1. All repositories require `db: Session` — no default constructor exists.**
+```python
+# CORRECT
+from rita.database import SessionLocal, get_db
+repo = TrainingRunsRepository(db)          # db is a sqlalchemy Session
+
+# WRONG — will raise TypeError at runtime
+repo = TrainingRunsRepository()
+```
+Every concrete repo class (`TrainingRunsRepository`, `ManoeuvresRepository`, `PortfolioRepository`, `BacktestRunsRepository`, etc.) inherits from `SqlRepository[T, M]` and has `def __init__(self, db: Session)`.
+
+**2. Service classes must accept `db: Session`, not optional repos.**
+```python
+# CORRECT
+class MyService:
+    def __init__(self, db: Session) -> None:
+        self._repo = MyRepository(db)
+
+# WRONG
+class MyService:
+    def __init__(self, repo: MyRepository | None = None) -> None:
+        self._repo = repo or MyRepository()   # MyRepository() won't work
+```
+
+**3. FastAPI dependency injection pattern (all routers since Day 16).**
+```python
+from rita.database import get_db
+
+def get_my_service(db: Session = Depends(get_db)) -> MyService:
+    return MyService(db)
+```
+
+**4. Background threads must open their own session.**
+```python
+from rita.database import SessionLocal
+
+def _background_worker(run_id: str) -> None:
+    db = SessionLocal()
+    try:
+        repo = MyRepository(db)
+        # ... do work ...
+    finally:
+        db.close()
+```
+Never pass a request-scoped `db` into a thread — sessions are not thread-safe.
+
+**5. `SqlRepository.upsert()` already calls `db.commit()` — do not commit again.**
+
 ## Key Design Decisions (ADRs)
 
 - **ADR-001:** Three-tier API (Experience Layer / Business Process / System). All routes split accordingly.
-- **ADR-002:** Repository pattern for all CSV access. No direct file I/O in routes or services.
-- **v1 target:** CSV-backed, cloud-native, stateless API, JWT-secured.
-- **v2 future:** PostgreSQL replaces CSV (mechanical migration — same schemas).
+- **ADR-002:** Repository pattern for all data access. No direct DB/file I/O in routes or services — repos only.
+- **v1 target:** SQLite via SQLAlchemy 2.x ORM, cloud-native, stateless API, JWT-secured.
+- **v2 future:** PostgreSQL replaces SQLite (change one `database_url` config value — zero code changes).
 
 ## Confluence Publishing
 
