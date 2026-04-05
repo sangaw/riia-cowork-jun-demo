@@ -702,7 +702,7 @@ body {
         <span class="mc-v plan">Planned</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:59%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:62%"></div>
       </div>
     </div>
   </div>
@@ -794,8 +794,8 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S3 · Services</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s3" style="width:33%;height:100%;background:var(--sprint3);border-radius:3px"></div></div>
-            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s3">33%</span>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s3" style="width:50%;height:100%;background:var(--sprint3);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:28px;text-align:right" id="pct-s3">50%</span>
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S4 · Frontend</div>
@@ -1537,7 +1537,7 @@ body {
       <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint3)">15–20</div><div class="kpi-sub">6 work days</div></div>
       <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">3</div><div class="kpi-sub">Services · Logs · Metrics</div></div>
       <div class="kpi"><div class="kpi-ey">Token Profile</div><div class="kpi-val" style="color:var(--warn);font-size:16px">Medium</div><div class="kpi-sub">New files from contracts</div></div>
-      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--sprint3)">2 / 6</div><div class="kpi-sub">Day 20 complete · Day 21 next</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--sprint3)">3 / 6</div><div class="kpi-sub">Day 21 complete · Day 22 next</div></div>
     </div>
     <div class="wave-hdr">
       <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 3 — In Progress</span>
@@ -1571,14 +1571,14 @@ body {
       </div>
 
       <div class="card" style="border-top:3px solid var(--sprint3)">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Logging &amp; Metrics</div><span class="badge planned">Planned</span></div>
-        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">All print() replaced with structlog JSON. Prometheus metrics at /metrics (request latency, snapshot counter, training events). /health and /readyz endpoints with dependency probes.</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Engineer E</span><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Days 19–20</span></div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Logging &amp; Metrics</div><span class="badge active">In Progress</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">structlog JSON logging wired in (Day 21). Prometheus metrics at /metrics + /health + /readyz endpoints next (Day 22).</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Engineer E</span><span class="badge" style="background:var(--sprint3-bg);color:var(--sprint3);border-color:var(--sprint3-bd)">Days 21–22</span></div>
         <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">structlog</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Prometheus</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">/health /readyz</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">structlog</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Prometheus</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Day 22</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">/health /readyz</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint3)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Day 22</span></div>
         </div>
       </div>
 
