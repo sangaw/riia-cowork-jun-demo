@@ -278,19 +278,19 @@ class TestDashboardRouter:
 class TestFnoRouter:
     def _setup(self, app, snaps_return, portfolio_return, man_return):
         from rita.api.experience.fno import (
-            get_snapshots_repo, get_portfolio_repo, get_manoeuvres_repo
+            get_snapshots_repo, get_portfolio_service, get_manoeuvre_service
         )
         mock_snap_repo = MagicMock()
         mock_snap_repo.read_all.return_value = snaps_return
-        mock_portfolio_repo = MagicMock()
-        mock_portfolio_repo.read_all.return_value = portfolio_return
-        mock_man_repo = MagicMock()
-        mock_man_repo.read_all.return_value = man_return
+        mock_portfolio_svc = MagicMock()
+        mock_portfolio_svc.list_all.return_value = portfolio_return
+        mock_man_svc = MagicMock()
+        mock_man_svc.list_recent.return_value = man_return
 
         _override(app, get_snapshots_repo, mock_snap_repo)
-        _override(app, get_portfolio_repo, mock_portfolio_repo)
-        _override(app, get_manoeuvres_repo, mock_man_repo)
-        return get_snapshots_repo, get_portfolio_repo, get_manoeuvres_repo
+        _override(app, get_portfolio_service, mock_portfolio_svc)
+        _override(app, get_manoeuvre_service, mock_man_svc)
+        return get_snapshots_repo, get_portfolio_service, get_manoeuvre_service
 
     def test_get_fno_returns_200(self):
         """GET /api/experience/fno/ returns 200."""
