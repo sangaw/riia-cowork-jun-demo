@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
 
+import structlog
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -13,6 +16,7 @@ from rita.exception_handlers import (
     unhandled_exception_handler,
     validation_exception_handler,
 )
+from rita.logging_config import configure_logging
 from rita.middleware import TraceIDMiddleware
 from rita.repositories.base import RepositoryValidationError
 from rita.api.v1.system.positions import router as positions_router
@@ -31,12 +35,16 @@ from rita.api.experience.fno import router as fno_router
 from rita.api.experience.ops import router as ops_router
 
 settings = get_settings()
+log = structlog.get_logger()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    configure_logging()
+    log.info("app.startup", name=settings.app.name, version=settings.app.version)
     Base.metadata.create_all(bind=engine)
     yield
+    log.info("app.shutdown")
 
 
 app = FastAPI(title=settings.app.name, version=settings.app.version, lifespan=lifespan)

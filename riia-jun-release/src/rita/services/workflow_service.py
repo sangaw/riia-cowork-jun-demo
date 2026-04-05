@@ -14,12 +14,15 @@ import threading
 import uuid
 from datetime import datetime, timezone
 
+import structlog
 from sqlalchemy.orm import Session
 
 from rita.core.ml_dispatch import TrainingConfig, train
 from rita.database import SessionLocal
 from rita.repositories.training import TrainingMetricsRepository, TrainingRunsRepository
 from rita.schemas.training import TrainingMetric, TrainingRun, TrainingRunCreate
+
+log = structlog.get_logger()
 
 
 # ---------------------------------------------------------------------------
@@ -28,42 +31,31 @@ from rita.schemas.training import TrainingMetric, TrainingRun, TrainingRunCreate
 
 
 def _run_training_job(config: TrainingConfig) -> None:
-    """Background thread: run training and persist all results.
-
-    Opens its own DB session via SessionLocal so the calling request thread
-    is not blocked and the request-scoped session is not shared across threads.
-    """
+    """Background thread: run training and persist all results."""
     db = SessionLocal()
     try:
         runs_repo = TrainingRunsRepository(db)
         metrics_repo = TrainingMetricsRepository(db)
 
-        # Mark as running
         run = runs_repo.find_by_id(config.run_id)
         if run is None:
             return
 
         run = TrainingRun(
-            **{
-                **run.model_dump(),
-                "status": "running",
-                "started_at": datetime.now(timezone.utc),
-            }
+            **{**run.model_dump(), "status": "running", "started_at": datetime.now(timezone.utc)}
         )
         runs_repo.upsert(run)
+        log.info("training.running", run_id=config.run_id)
 
         try:
             outcome = train(config)
         except Exception:
+            log.error("training.failed", run_id=config.run_id, exc_info=True)
             run = runs_repo.find_by_id(config.run_id)
             if run is not None:
                 runs_repo.upsert(
                     TrainingRun(
-                        **{
-                            **run.model_dump(),
-                            "status": "failed",
-                            "ended_at": datetime.now(timezone.utc),
-                        }
+                        **{**run.model_dump(), "status": "failed", "ended_at": datetime.now(timezone.utc)}
                     )
                 )
             return
@@ -86,6 +78,7 @@ def _run_training_job(config: TrainingConfig) -> None:
                 }
             )
         )
+        log.info("training.complete", run_id=config.run_id, model_path=outcome.model_path)
 
         for ep in outcome.episode_metrics:
             metrics_repo.upsert(
@@ -114,14 +107,8 @@ class WorkflowService:
         self._runs = TrainingRunsRepository(db)
         self._metrics = TrainingMetricsRepository(db)
 
-    # ── Training jobs ─────────────────────────────────────────────────────────
-
     def start_training(self, body: TrainingRunCreate) -> TrainingRun:
-        """Create a training run record with status=pending and dispatch.
-
-        Returns immediately with status=pending; a daemon thread performs the
-        actual DoubleDQN training and updates the run to complete/failed.
-        """
+        """Create a training run record with status=pending and dispatch."""
         now = datetime.now(timezone.utc)
         run_id = str(uuid.uuid4())
         run = TrainingRun(
@@ -133,6 +120,7 @@ class WorkflowService:
             recorded_at=now,
         )
         self._runs.upsert(run)
+        log.info("training.submitted", run_id=run_id)
 
         settings = body.model_dump()
         config = TrainingConfig(
@@ -146,9 +134,7 @@ class WorkflowService:
             exploration_pct=settings["exploration_pct"],
             output_dir="rita_output/models",
         )
-
         threading.Thread(target=_run_training_job, args=(config,), daemon=True).start()
-
         return run
 
     def get_run(self, run_id: str) -> TrainingRun | None:

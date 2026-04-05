@@ -14,12 +14,15 @@ import threading
 import uuid
 from datetime import datetime, timezone
 
+import structlog
 from sqlalchemy.orm import Session
 
 from rita.core.backtest_dispatch import BacktestConfig, run_backtest
 from rita.database import SessionLocal
 from rita.repositories.backtest import BacktestResultsRepository, BacktestRunsRepository
 from rita.schemas.backtest import BacktestResult, BacktestRun, BacktestRunCreate
+
+log = structlog.get_logger()
 
 
 # ---------------------------------------------------------------------------
@@ -28,27 +31,24 @@ from rita.schemas.backtest import BacktestResult, BacktestRun, BacktestRunCreate
 
 
 def _run_backtest_job(run_id: str, config: BacktestConfig) -> None:
-    """Background thread: run backtest and persist all results.
-
-    Opens its own DB session via SessionLocal so the calling request thread
-    is not blocked and the request-scoped session is not shared across threads.
-    """
+    """Background thread: run backtest and persist all results."""
     db = SessionLocal()
     try:
         runs_repo = BacktestRunsRepository(db)
         results_repo = BacktestResultsRepository(db)
 
-        # Mark as running
         run = runs_repo.find_by_id(run_id)
         if run is None:
             return
 
         run = BacktestRun(**{**run.model_dump(), "status": "running", "started_at": datetime.now(timezone.utc)})
         runs_repo.upsert(run)
+        log.info("backtest.running", run_id=run_id)
 
         try:
             outcome = run_backtest(config)
         except Exception:
+            log.error("backtest.failed", run_id=run_id, exc_info=True)
             run = runs_repo.find_by_id(run_id)
             if run is not None:
                 runs_repo.upsert(
@@ -62,6 +62,7 @@ def _run_backtest_job(run_id: str, config: BacktestConfig) -> None:
             return
 
         runs_repo.upsert(BacktestRun(**{**run.model_dump(), "status": "complete", "ended_at": ended_at}))
+        log.info("backtest.complete", run_id=run_id)
 
         for daily in outcome.daily_results:
             results_repo.upsert(
@@ -93,22 +94,12 @@ class BacktestService:
         self._runs = BacktestRunsRepository(db)
         self._results = BacktestResultsRepository(db)
 
-    # ── Backtest jobs ─────────────────────────────────────────────────────────
-
     def start_backtest(self, body: BacktestRunCreate) -> BacktestRun:
-        """Create a backtest run record with status=pending and dispatch.
-
-        Returns immediately; a daemon thread performs the backtest and
-        updates the run to complete/failed.
-        """
+        """Create a backtest run record with status=pending and dispatch."""
         return self._create_run(body, triggered_by=body.triggered_by or "api")
 
     def start_evaluation(self, body: BacktestRunCreate) -> BacktestRun:
-        """Create an evaluation run record with status=pending and dispatch.
-
-        Evaluation reuses the BacktestRun schema; distinguished by
-        triggered_by='evaluate'.  Returns immediately; daemon thread executes.
-        """
+        """Create an evaluation run record with status=pending and dispatch."""
         return self._create_run(body, triggered_by="evaluate")
 
     def get_run(self, run_id: str) -> BacktestRun | None:
@@ -123,8 +114,6 @@ class BacktestService:
     def list_results(self, run_id: str) -> list[BacktestResult]:
         return [r for r in self._results.read_all() if r.run_id == run_id]
 
-    # ── Internal ──────────────────────────────────────────────────────────────
-
     def _create_run(self, body: BacktestRunCreate, triggered_by: str) -> BacktestRun:
         now = datetime.now(timezone.utc)
         run_id = str(uuid.uuid4())
@@ -137,6 +126,7 @@ class BacktestService:
             recorded_at=now,
         )
         self._runs.upsert(run)
+        log.info("backtest.submitted", run_id=run_id)
 
         data = body.model_dump()
         config = BacktestConfig(
@@ -146,7 +136,5 @@ class BacktestService:
             model_version=data["model_version"],
             strategy_params=data.get("strategy_params"),
         )
-
         threading.Thread(target=_run_backtest_job, args=(run_id, config), daemon=True).start()
-
         return run

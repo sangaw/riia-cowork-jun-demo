@@ -16,6 +16,7 @@ Registration order in main.py matters:
 
 from __future__ import annotations
 
+import structlog
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -23,6 +24,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from rita.middleware import trace_id_var
 from rita.repositories.base import RepositoryValidationError
+
+log = structlog.get_logger()
 
 
 def _tid() -> str:
@@ -51,6 +54,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 async def repository_validation_handler(request: Request, exc: RepositoryValidationError) -> JSONResponse:
+    log.warning("repository_validation_error", trace_id=_tid())
     return JSONResponse(
         status_code=422,
         content={"detail": f"Data integrity error: {exc.errors!r}", "trace_id": _tid()},
@@ -59,6 +63,7 @@ async def repository_validation_handler(request: Request, exc: RepositoryValidat
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    log.error("unhandled_exception", exc_info=exc, trace_id=_tid())
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error", "trace_id": _tid()},
