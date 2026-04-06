@@ -4,7 +4,7 @@
 ---
 
 ## Current Sprint: SPRINT 3 — Service Layer & Observability
-**Current Day: Day 25 complete — Sprint 4 underway. Day 26 next.**
+**Current Day: Day 26 complete. Day 27 next.**
 
 ---
 
@@ -66,7 +66,7 @@
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
 | Day 25 | Engineer F | Decompose rita.html → ES modules | `[x]` | 21 ES modules in dashboard/js/rita/; rita.html entry point; window.* bindings for all onclick handlers |
-| Day 26 | Engineer F | Decompose fno.html, ops.html → ES modules | `[ ]` | |
+| Day 26 | Engineer F | Decompose fno.html, ops.html → ES modules | `[x]` | fno: 14 ES modules (state.js + 13 feature modules); ops: 12 ES modules; both entry-point HTML files written |
 | Day 27 | Engineer F | Responsive CSS (480/768/1100px) | `[ ]` | |
 | Day 28 | Engineer F | Remove localhost:8000 hardcoding | `[ ]` | |
 | Day 29 | QA | Playwright e2e tests | `[ ]` | |
