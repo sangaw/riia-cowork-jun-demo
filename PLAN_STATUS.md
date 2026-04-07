@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-07 (Day 27)
+**Last updated:** 2026-04-07 (Day 28)
 
 ---
 
 ## Current Sprint: SPRINT 3 — Service Layer & Observability
-**Current Day: Day 27 complete. Day 28 next.**
+**Current Day: Day 28 complete. Day 29 next.**
 
 ---
 
@@ -68,7 +68,7 @@
 | Day 25 | Engineer F | Decompose rita.html → ES modules | `[x]` | 21 ES modules in dashboard/js/rita/; rita.html entry point; window.* bindings for all onclick handlers |
 | Day 26 | Engineer F | Decompose fno.html, ops.html → ES modules | `[x]` | fno: 14 ES modules (state.js + 13 feature modules); ops: 12 ES modules; both entry-point HTML files written |
 | Day 27 | Engineer F | Responsive CSS (480/768/1100px) | `[x]` | dashboard/css/responsive.css; hamburger toggle in all 3 HTML files; 3 breakpoints: 1100/768/480px |
-| Day 28 | Engineer F | Remove localhost:8000 hardcoding | `[ ]` | |
+| Day 28 | Engineer F | Remove localhost:8000 hardcoding | `[x]` | window.RITA_API_BASE in all 3 api.js; apiBase() exported; all direct fetch() calls prefixed; ops.html display text reads from window.location.origin |
 | Day 29 | QA | Playwright e2e tests | `[ ]` | |
 | Day 30 | TechWriter | Confluence: Frontend Architecture | `[ ]` | |
 

@@ -1,4 +1,5 @@
 // ── Chat ───────────────────────────────────────────────────
+import { api } from './api.js';
 let _chatConfs = [], _chatLats = [];
 
 // Wire up textarea: auto-resize + Enter to send
@@ -39,13 +40,7 @@ export async function sendChatMsg() {
 
   const t0 = Date.now();
   try {
-    const resp = await fetch('/api/v1/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, portfolio_inr: 1000000 })
-    });
-    if (!resp.ok) throw new Error('API error ' + resp.status);
-    const data = await resp.json();
+    const data = await api('/api/v1/chat', 'POST', { query, portfolio_inr: 1000000 });
     removeTyping(tid);
     appendRitaMsg(data, Date.now() - t0);
     updateChatStats(data.confidence, data.latency_ms ?? (Date.now() - t0));

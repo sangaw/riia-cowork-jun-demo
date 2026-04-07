@@ -1,5 +1,5 @@
 // ── Daily Ops ─────────────────────────────────────────────────────────────────
-import { apiFetch } from './api.js';
+import { apiFetch, apiBase } from './api.js';
 
 export async function loadDailyOps() {
   const d = await apiFetch('/api/v1/portfolio/man-daily-status');
@@ -101,7 +101,7 @@ export async function triggerSnapshot(month) {
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Running…';
   try {
-    const res = await fetch('/api/v1/portfolio/man-daily-snapshot', {
+    const res = await fetch(apiBase() + '/api/v1/portfolio/man-daily-snapshot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ month }),

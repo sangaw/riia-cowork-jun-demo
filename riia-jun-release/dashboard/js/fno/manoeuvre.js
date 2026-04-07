@@ -3,6 +3,7 @@
 // Globals replaced with state imports.
 import { state } from './state.js';
 import { fmtPnl, pnlClass } from './utils.js';
+import { apiBase } from './api.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const MAN_STORE_PFX = 'rita_man_v7_';   // + und_month key e.g. rita_man_v7_NIFTY_APR
@@ -84,7 +85,7 @@ function manSave(month) {
     localStorage.setItem(manStoreKey(und, month),
       JSON.stringify({ groupState: manGroupState, assign: manAssign }));
   } catch(e) {}
-  fetch('/api/v1/portfolio/man-groups', {
+  fetch(apiBase() + '/api/v1/portfolio/man-groups', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ month, und, groupState: manGroupState, assign: manAssign }),
@@ -94,7 +95,7 @@ function manSave(month) {
 async function manLoad(month) {
   const und = manSelectedUnd;
   try {
-    const res = await fetch(`/api/v1/portfolio/man-groups?month=${month}&und=${und}`);
+    const res = await fetch(apiBase() + `/api/v1/portfolio/man-groups?month=${month}&und=${und}`);
     if (res.ok) {
       const d = await res.json();
       manGroupState = d.groupState || {};
@@ -533,7 +534,7 @@ export async function manSaveSnapshot() {
     const btn = document.getElementById('man-snapshot-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
-    const res = await fetch('/api/v1/portfolio/man-snapshot', {
+    const res = await fetch(apiBase() + '/api/v1/portfolio/man-snapshot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -564,7 +565,7 @@ export async function manSaveSnapshot() {
 
 async function manLoadHistory(month) {
   try {
-    const data = await fetch(`/api/v1/portfolio/man-pnl-history?month=${month}&und=${manSelectedUnd}`).then(r => r.json());
+    const data = await fetch(apiBase() + `/api/v1/portfolio/man-pnl-history?month=${month}&und=${manSelectedUnd}`).then(r => r.json());
     manPnlHistory = (data.days || []).slice(-30);
   } catch(e) {
     manPnlHistory = [];
@@ -573,7 +574,7 @@ async function manLoadHistory(month) {
 
 // ── Action Logger ─────────────────────────────────────────────────────────────
 function manLogAction(action, lotKey, fromGroup, toGroup) {
-  fetch('/api/v1/portfolio/man-action', {
+  fetch(apiBase() + '/api/v1/portfolio/man-action', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

@@ -19,13 +19,17 @@ import { saveToday, syncPriceHistory, renderScenarios } from './rr.js';
 import { renderHedgeRadar } from './hedge.js';
 import { initManoeuvre } from './manoeuvre.js';
 
+// window.RITA_API_BASE can be set by the host page to point at a non-origin
+// API server (e.g. staging). Defaults to '' = same origin.
+export const apiBase = () => (window.RITA_API_BASE || '').replace(/\/$/, '');
+
 // API key — set to match PORTFOLIO_API_KEY env var if configured.
 // Leave empty string for local dev where the env var is not set.
 export const RITA_API_KEY = '';
 
 export async function initApp() {
   try {
-    const resp = await fetch('/api/v1/portfolio/summary',
+    const resp = await fetch(apiBase() + '/api/v1/portfolio/summary',
       RITA_API_KEY ? { headers: { 'X-API-Key': RITA_API_KEY } } : {});
     if (!resp.ok) throw new Error(`API ${resp.status}`);
     const d = await resp.json();
@@ -81,7 +85,7 @@ export async function initApp() {
 
 export async function checkStatus() {
   try {
-    const r = await fetch('/health');
+    const r = await fetch(apiBase() + '/health');
     const d = await r.json();
     document.getElementById('sdot').className = d.status === 'ok' ? 'status-dot ok' : 'status-dot';
     document.getElementById('stxt').textContent = d.status === 'ok' ? 'API online' : 'API error';

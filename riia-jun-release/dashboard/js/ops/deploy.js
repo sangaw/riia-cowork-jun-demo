@@ -11,6 +11,8 @@ export async function loadDeploy() {
   if (health) {
     document.getElementById('svc-api-badge').textContent = health.status === 'ok' ? 'online' : 'error';
     document.getElementById('svc-api-badge').className = 'badge ' + (health.status === 'ok' ? 'ok' : 'danger');
+    const epEl = document.getElementById('svc-api-endpoint');
+    if (epEl) epEl.textContent = window.RITA_API_BASE || window.location.origin;
     document.getElementById('svc-model-loaded').textContent = health.model_exists ? 'Yes' : 'No';
     document.getElementById('svc-model-age').textContent = health.model_age_days != null ? health.model_age_days + ' days' : '—';
     document.getElementById('svc-last-run').textContent = health.last_pipeline_run

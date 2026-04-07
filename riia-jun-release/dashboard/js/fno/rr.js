@@ -1,6 +1,7 @@
 // ── Risk-Reward section ───────────────────────────────────────────────────────
 import { state } from './state.js';
 import { fmtPnl, pnlClass } from './utils.js';
+import { apiBase } from './api.js';
 
 // Bull = FUT Long, CE Long, PE Short  |  Bear = FUT Short, CE Short, PE Long
 export function getBullBear(p) {
@@ -33,7 +34,7 @@ export function saveToday() {
 
 export async function syncPriceHistory() {
   try {
-    const serverDays = await fetch('/api/v1/portfolio/price-history').then(r => r.json());
+    const serverDays = await fetch(apiBase() + '/api/v1/portfolio/price-history').then(r => r.json());
     if (!Array.isArray(serverDays) || !serverDays.length) return;
     const history = loadHistory();
     let changed = false;
