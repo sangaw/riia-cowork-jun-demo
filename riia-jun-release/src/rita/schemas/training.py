@@ -1,20 +1,20 @@
 """Pydantic schemas for training_runs and training_metrics tables."""
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── Training Runs ─────────────────────────────────────────────────────────────
 
 class TrainingRunBase(BaseModel):
-    model_version: str                      # e.g. v1.0, v1.1
-    algorithm: str = "DoubleDQN"
-    timesteps: int                          # e.g. 200000
-    learning_rate: float                    # e.g. 1e-4
-    buffer_size: int                        # e.g. 50000
-    net_arch: str                           # e.g. [128, 128]
-    exploration_pct: float                  # e.g. 0.1
-    notes: Optional[str] = None
+    model_version: str = Field(max_length=64)   # e.g. v1.0, v1.1
+    algorithm: str = Field(default="DoubleDQN", max_length=64)
+    timesteps: int = Field(ge=0)                # e.g. 200000
+    learning_rate: float = Field(ge=0)          # e.g. 1e-4
+    buffer_size: int = Field(ge=0)              # e.g. 50000
+    net_arch: str = Field(max_length=128)       # e.g. [128, 128]
+    exploration_pct: float                      # e.g. 0.1
+    notes: Optional[str] = Field(default=None, max_length=512)
 
 
 class TrainingRunCreate(TrainingRunBase):

@@ -1,7 +1,7 @@
 """Pydantic schemas for backtest_runs and backtest_results tables."""
 from datetime import date, datetime
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── Backtest Runs ─────────────────────────────────────────────────────────────
@@ -9,9 +9,9 @@ from pydantic import BaseModel, ConfigDict
 class BacktestRunBase(BaseModel):
     start_date: date
     end_date: date
-    model_version: str
-    strategy_params: Optional[str] = None   # JSON string of params
-    triggered_by: Optional[str] = None      # agent or user
+    model_version: str = Field(max_length=64)
+    strategy_params: Optional[str] = Field(default=None, max_length=512)  # JSON string of params
+    triggered_by: Optional[str] = Field(default=None, max_length=64)      # agent or user
 
 
 class BacktestRunCreate(BacktestRunBase):
