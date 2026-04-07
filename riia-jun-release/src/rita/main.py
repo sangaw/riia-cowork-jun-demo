@@ -3,9 +3,12 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 import structlog
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -83,6 +86,11 @@ app.include_router(ops_router)
 
 # -- Prometheus metrics (must come after all routers are registered) -----------
 instrument_app(app)
+
+# -- Static files: dashboard UI (must be last — catch-all) --------------------
+_dashboard_dir = Path(__file__).parent.parent.parent / "dashboard"
+if _dashboard_dir.exists():
+    app.mount("/dashboard", StaticFiles(directory=_dashboard_dir, html=True), name="dashboard")
 
 
 @app.get("/health", tags=["observability"])

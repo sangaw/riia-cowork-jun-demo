@@ -11,13 +11,12 @@ from alembic import context
 # Make rita importable and patch _CONFIG_DIR to the correct location.
 #
 # Background: rita.config computes _CONFIG_DIR as:
-#   Path(__file__).parent.parent.parent.parent / "config"
+#   Path(__file__).parent.parent.parent / "config"
 # When alembic loads env.py from riia-jun-release/alembic/, Python imports
 # rita.config via the unresolved path "alembic/../src/rita/config.py".
-# The 4-level .parent ascent on that unresolved path lands in the wrong
-# directory.  We must pre-register a patched rita.config module (with the
-# correct _CONFIG_DIR) before any other rita import triggers the broken
-# module-level code.
+# The 3-level .parent ascent may land in the wrong directory depending on CWD.
+# We pre-register a patched rita.config module (with the correct absolute
+# _CONFIG_DIR) before any other rita import triggers the module-level code.
 # ---------------------------------------------------------------------------
 
 # alembic/env.py  →  alembic/  →  riia-jun-release/
@@ -44,7 +43,7 @@ def _load_rita_config_with_correct_path() -> None:
 
     correct_dir = str(_CONFIG_DIR).replace("\\", "/")
     original_line = (
-        '_CONFIG_DIR: Path = Path(__file__).parent.parent.parent.parent / "config"'
+        '_CONFIG_DIR: Path = Path(__file__).parent.parent.parent / "config"'
     )
     replacement_line = f'_CONFIG_DIR: Path = Path(r"{correct_dir}")'
     patched_source = source.replace(original_line, replacement_line, 1)

@@ -28,8 +28,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Config directory resolution
 # ---------------------------------------------------------------------------
 # __file__ = riia-jun-release/src/rita/config.py
-# .parent.parent.parent.parent = riia-jun-release/
-_CONFIG_DIR: Path = Path(__file__).parent.parent.parent.parent / "config"
+# .parent = rita/  .parent = src/  .parent = riia-jun-release/
+_CONFIG_DIR: Path = Path(__file__).parent.parent.parent / "config"
 
 
 # ---------------------------------------------------------------------------
