@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-07 (Day 29)
+**Last updated:** 2026-04-07 (Day 30)
 
 ---
 
-## Current Sprint: SPRINT 3 — Service Layer & Observability
-**Current Day: Day 29 complete. Day 30 next.**
+## Current Sprint: SPRINT 4 — Frontend & Responsive Design
+**Current Day: Day 30 complete. Sprint 4 complete. Day 31 next (Sprint 5).**
 
 ---
 
@@ -70,7 +70,7 @@
 | Day 27 | Engineer F | Responsive CSS (480/768/1100px) | `[x]` | dashboard/css/responsive.css; hamburger toggle in all 3 HTML files; 3 breakpoints: 1100/768/480px |
 | Day 28 | Engineer F | Remove localhost:8000 hardcoding | `[x]` | window.RITA_API_BASE in all 3 api.js; apiBase() exported; all direct fetch() calls prefixed; ops.html display text reads from window.location.origin |
 | Day 29 | QA | Playwright e2e tests | `[x]` | tests/e2e/: conftest.py (real uvicorn on :8765), test_smoke.py (7 HTTP checks), test_responsive.py (30 Playwright tests, 3 dashboards × 3 viewports); CI e2e job added; docker-build now gates on both test + e2e |
-| Day 30 | TechWriter | Confluence: Frontend Architecture | `[ ]` | |
+| Day 30 | TechWriter | Confluence: Frontend Architecture | `[x]` | Frontend Architecture page [68616193] published to Engineering section; 4 observability endpoints (/metrics/summary, /step-log, /drift, /mcp-calls) added to power ops.html monitoring |
 
 ## Sprint 5 Tasks — Integration, Security & Release
 

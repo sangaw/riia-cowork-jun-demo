@@ -139,9 +139,10 @@ BODY = """
   <li>&#10003; rita.html decomposed into 21 ES modules (Day 25)</li>
   <li>&#10003; fno.html &rarr; 14 ES modules, ops.html &rarr; 12 ES modules (Day 26)</li>
   <li>&#10003; Responsive CSS at 480 / 768 / 1100px with hamburger sidebar toggle (Day 27)</li>
-  <li>&#9675; Remove localhost:8000 hardcoding &mdash; window.RITA_API_BASE (Day 28)</li>
-  <li>&#9675; Playwright e2e tests at all 3 breakpoints (Day 29)</li>
-  <li>&#9675; Confluence Frontend Architecture page (Day 30)</li>
+  <li>&#10003; Remove localhost:8000 hardcoding &mdash; window.RITA_API_BASE in all 3 api.js (Day 28)</li>
+  <li>&#10003; Playwright e2e: 7 smoke + 30 responsive tests (3 dashboards &times; 3 viewports); CI e2e job added; docker-build gates on both (Day 29)</li>
+  <li>&#10003; 4 observability endpoints (/api/v1/metrics/summary, /step-log, /drift, /mcp-calls) wire ops.html monitoring to live data</li>
+  <li>&#10003; Confluence Frontend Architecture page published [68616193] (Day 30)</li>
 </ul>
 """
 

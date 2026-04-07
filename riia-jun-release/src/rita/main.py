@@ -39,6 +39,7 @@ from rita.api.v1.workflow.evaluate import router as evaluate_router
 from rita.api.experience.dashboard import router as dashboard_router
 from rita.api.experience.fno import router as fno_router
 from rita.api.experience.ops import router as ops_router
+from rita.api.v1.observability import router as observability_router
 
 settings = get_settings()
 log = structlog.get_logger()
@@ -83,6 +84,9 @@ app.include_router(evaluate_router)
 app.include_router(dashboard_router)
 app.include_router(fno_router)
 app.include_router(ops_router)
+
+# -- Observability -- structured JSON for Ops dashboard -----------------------
+app.include_router(observability_router)
 
 # -- Prometheus metrics (must come after all routers are registered) -----------
 instrument_app(app)
