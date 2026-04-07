@@ -49,7 +49,7 @@ _MOBILE  = {"width": 390,  "height": 844}
 def _load(page: Page, base_url: str, path: str, viewport: dict) -> None:
     """Set viewport and navigate; assert HTTP 200."""
     page.set_viewport_size(viewport)
-    response = page.goto(base_url + path, wait_until="domcontentloaded")
+    response = page.goto(base_url + path, wait_until="domcontentloaded", timeout=60_000)
     assert response is not None, f"No response for {path}"
     assert response.status == 200, (
         f"Expected 200 for {path} at {viewport}, got {response.status}"

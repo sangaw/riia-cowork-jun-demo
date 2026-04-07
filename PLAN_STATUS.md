@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-07 (Day 30)
+**Last updated:** 2026-04-07 (Day 31)
 
 ---
 
-## Current Sprint: SPRINT 4 — Frontend & Responsive Design
-**Current Day: Day 30 complete. Sprint 4 complete. Day 31 next (Sprint 5).**
+## Current Sprint: SPRINT 5 — Integration, Security & Release
+**Current Day: Day 31 in progress. Day 32 next.**
 
 ---
 
@@ -76,7 +76,7 @@
 
 | Day | Role | Task | Status | Notes |
 |---|---|---|---|---|
-| Day 31 | QA | Full end-to-end regression + coverage report | `[ ]` | |
+| Day 31 | QA | Full end-to-end regression + coverage report | `[~]` | Functional scenario tests created for RITA/FnO/Ops (48 tests total); RITA suite run (3/20 pass — 9 missing endpoints, 8 timeouts); TEST menu added to ops.html; /api/v1/test-results endpoint reads JUnit XML; nav.js fixed to include 'test' section; suite cards show passed-only, defects table shows failures; FnO + Ops suites pending |
 | Day 32 | Security | CORS, JWT, rate limiting, input validation | `[ ]` | |
 | Day 33 | Ops | Terraform: k8s manifests, AlertManager, cloud provider swap | `[ ]` | Local Docker deployment scaffolded (terraform/ dir); Day 33 extends to cloud |
 | Day 34 | PM + TechWriter | Release checklist, v1.0 tag, release notes | `[ ]` | |

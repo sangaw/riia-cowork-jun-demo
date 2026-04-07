@@ -32,6 +32,7 @@ dev = [
     "ruff>=0.4",
     "pytest-playwright>=0.5",
     "requests>=2.31",
+    "pytest-html>=4.1",
 ]
 
 [tool.setuptools.packages.find]

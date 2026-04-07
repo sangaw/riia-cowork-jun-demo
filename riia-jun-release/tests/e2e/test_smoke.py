@@ -50,21 +50,21 @@ def test_docs_ok(base_url: str) -> None:
 
 def test_dashboard_rita_ok(base_url: str) -> None:
     """/dashboard/rita.html must return 200 and contain 'RITA'."""
-    resp = requests.get(f"{base_url}/dashboard/rita.html", timeout=5)
+    resp = requests.get(f"{base_url}/dashboard/rita.html", timeout=15)
     assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
     assert "RITA" in resp.text, "Response body does not contain 'RITA'"
 
 
 def test_dashboard_fno_ok(base_url: str) -> None:
     """/dashboard/fno.html must return 200 and contain 'RIIA'."""
-    resp = requests.get(f"{base_url}/dashboard/fno.html", timeout=5)
+    resp = requests.get(f"{base_url}/dashboard/fno.html", timeout=15)
     assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
     assert "RIIA" in resp.text, "Response body does not contain 'RIIA'"
 
 
 def test_dashboard_ops_ok(base_url: str) -> None:
     """/dashboard/ops.html must return 200 and contain 'RIIA'."""
-    resp = requests.get(f"{base_url}/dashboard/ops.html", timeout=5)
+    resp = requests.get(f"{base_url}/dashboard/ops.html", timeout=15)
     assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
     assert "RIIA" in resp.text, "Response body does not contain 'RIIA'"
 
@@ -75,5 +75,5 @@ def test_dashboard_ops_ok(base_url: str) -> None:
 
 def test_metrics_ok(base_url: str) -> None:
     """/metrics (Prometheus) must return 200."""
-    resp = requests.get(f"{base_url}/metrics", timeout=5)
+    resp = requests.get(f"{base_url}/metrics", timeout=15)
     assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"

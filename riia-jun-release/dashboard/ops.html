@@ -69,6 +69,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .ni.on.n-monitoring{border-left-color:var(--sense);color:var(--sense);}
 .ni.on.n-cicd{border-left-color:var(--accelerate);color:var(--accelerate);}
 .ni.on.n-deploy{border-left-color:var(--optimize);color:var(--optimize);}
+.ni.on.n-test{border-left-color:var(--ok);color:var(--ok);}
 .ni.on.n-obs{border-left-color:var(--data);color:var(--data);}
 .ni.on.n-chat{border-left-color:var(--chat);color:var(--chat);}
 .ni-ic{width:15px;height:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
@@ -304,6 +305,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       </svg>
     </div>
     CI / CD Pipeline
+  </div>
+
+  <div class="ng-hdr" style="margin-top:4px">
+    <div class="ng-dot" style="background:var(--ok)"></div>Test
+  </div>
+
+  <div class="ni n-test" onclick="nav(this,'test')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M2 3h10M2 7h7M2 11h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <circle cx="11" cy="10" r="2.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M10.3 10l.5.5.9-.9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Test Results
   </div>
 
   <div class="ng-hdr" style="margin-top:4px">
@@ -616,6 +632,47 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       <div class="tbl-wrap" id="cicd-steplog">
         <div class="loading">Loading…</div>
       </div>
+    </div>
+  </section>
+
+  <!-- ══ TEST RESULTS ══ -->
+  <section class="sec" id="sec-test">
+    <div class="ph">
+      <div class="ph-badge" style="background:var(--ok-bg);color:var(--ok);border-color:var(--ok)">Test</div>
+      <div>
+        <div class="ph-t">Scenario Test Results</div>
+        <div class="ph-g">Latest functional e2e scenario run — RITA, FnO, Ops dashboards</div>
+      </div>
+    </div>
+
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px" id="test-kpis">
+      <div class="kpi"><div class="kpi-ey">Total</div><div class="kpi-val" id="test-total">—</div><div class="kpi-sub">scenarios</div></div>
+      <div class="kpi"><div class="kpi-ey">Passed</div><div class="kpi-val" style="color:var(--ok)" id="test-passed">—</div><div class="kpi-sub">green</div></div>
+      <div class="kpi"><div class="kpi-ey">Failed</div><div class="kpi-val" style="color:var(--danger)" id="test-failed">—</div><div class="kpi-sub">defects</div></div>
+      <div class="kpi"><div class="kpi-ey">Pass Rate</div><div class="kpi-val" id="test-rate">—</div><div class="kpi-sub">%</div></div>
+    </div>
+
+    <div class="g3" style="margin-bottom:16px">
+      <div class="card">
+        <div class="c-ey"><div class="ey-d" style="background:var(--build)"></div>RITA Dashboard</div>
+        <div class="c-t" id="rita-summary">Loading…</div>
+        <div id="rita-results" style="margin-top:10px;max-height:132px;overflow-y:auto"></div>
+      </div>
+      <div class="card">
+        <div class="c-ey"><div class="ey-d" style="background:var(--p02)"></div>FnO Dashboard</div>
+        <div class="c-t" id="fno-summary">Loading…</div>
+        <div id="fno-results" style="margin-top:10px;max-height:132px;overflow-y:auto"></div>
+      </div>
+      <div class="card">
+        <div class="c-ey"><div class="ey-d" style="background:var(--ok)"></div>Ops Dashboard</div>
+        <div class="c-t" id="ops-summary">Loading…</div>
+        <div id="ops-results" style="margin-top:10px;max-height:132px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="c-ey"><div class="ey-d" style="background:var(--danger)"></div>Defects — Failed Scenarios</div>
+      <div class="tbl-wrap" id="test-defects"><div class="loading">Loading…</div></div>
     </div>
   </section>
 

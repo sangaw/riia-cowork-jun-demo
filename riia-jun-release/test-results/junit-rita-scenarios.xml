@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="17" skipped="0" tests="20" time="159.821" timestamp="2026-04-07T14:47:33.761249+02:00" hostname="DESKTOP-2OUI3G2"><testcase classname="tests.e2e.test_rita_scenarios" name="test_overview_health" time="3.837" /><testcase classname="tests.e2e.test_rita_scenarios" name="test_overview_readiness" time="1.012" /><testcase classname="tests.e2e.test_rita_scenarios" name="test_overview_metrics" time="1.033" /><testcase classname="tests.e2e.test_rita_scenarios" name="test_financial_goal_performance_summary" time="1.033"><failure message="AssertionError: performance-summary missing — Financial Goal section will be empty: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: performance-summary missing — Financial Goal section will be empty: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_market_signals" time="5.026"><failure message="AssertionError: market-signals missing — Market Signals section will be empty: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: market-signals missing — Market Signals section will be empty: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_scenarios_load_data" time="1.032"><failure message="AssertionError: backtest-daily missing — Scenarios section will be empty: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: backtest-daily missing — Scenarios section will be empty: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_scenarios_submit_backtest" time="1.024"><failure message="AssertionError: backtest submission failed: 404&#10;assert 404 in (200, 201, 202)&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: backtest submission failed: 404
+    assert 404 in (200, 201, 202)
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_performance_summary" time="1.038"><failure message="AssertionError: performance-summary missing: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: performance-summary missing: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_performance_backtest_daily" time="5.020"><failure message="AssertionError: backtest-daily missing: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: backtest-daily missing: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_trade_journal" time="1.016"><failure message="AssertionError: risk-timeline missing — Trade Journal will be empty: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: risk-timeline missing — Trade Journal will be empty: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_trade_diagnostics_daily" time="1.010"><failure message="AssertionError: backtest-daily missing: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: backtest-daily missing: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_explainability_shap" time="1.026"><failure message="AssertionError: shap missing — Explainability section will be empty: 404&#10;assert 404 == 200&#10; +  where 404 = &lt;Response [404]&gt;.status_code">E   AssertionError: shap missing — Explainability section will be empty: 404
+    assert 404 == 200
+     +  where 404 = &lt;Response [404]&gt;.status_code</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_risk_timeline" time="20.042"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_training_history" time="16.043"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_training_submit" time="16.039"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_observability_drift" time="16.035"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_observability_step_log" time="20.047"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_mcp_calls" time="16.035"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_audit_training_history" time="16.016"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase><testcase classname="tests.e2e.test_rita_scenarios" name="test_audit_step_log" time="16.060"><failure message="requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)">E   TimeoutError: timed out
+
+The above exception was the direct cause of the following exception:
+E   urllib3.exceptions.ReadTimeoutError: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)
+
+During handling of the above exception, another exception occurred:
+E   requests.exceptions.ReadTimeout: HTTPConnectionPool(host='127.0.0.1', port=8765): Read timed out. (read timeout=15)</failure></testcase></testsuite></testsuites>

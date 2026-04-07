@@ -9,8 +9,10 @@ Provides structured JSON summaries of:
 
 from __future__ import annotations
 
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 from datetime import date, datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import structlog
@@ -322,3 +324,78 @@ def mcp_calls() -> list[dict[str, Any]]:
     correctly (empty-state message) instead of showing a network error.
     """
     return []
+
+
+# ── GET /api/v1/test-results ───────────────────────────────────────────────
+
+_JUNIT_FILES = {
+    "rita": "test-results/junit-rita-scenarios.xml",
+    "fno":  "test-results/junit-fno-scenarios.xml",
+    "ops":  "test-results/junit-ops-scenarios.xml",
+}
+
+_RELEASE_ROOT = Path(__file__).parent.parent.parent.parent.parent
+
+
+def _parse_junit(path: Path) -> dict[str, Any]:
+    """Parse a JUnit XML file and return a summary dict."""
+    if not path.exists():
+        return {"total": 0, "passed": 0, "failed": 0, "cases": [], "run_at": None}
+
+    tree = ET.parse(path)
+    root = tree.getroot()
+    suite = root if root.tag == "testsuite" else root.find("testsuite")
+    if suite is None:
+        return {"total": 0, "passed": 0, "failed": 0, "cases": [], "run_at": None}
+
+    total   = int(suite.get("tests", 0))
+    failures = int(suite.get("failures", 0))
+    errors   = int(suite.get("errors", 0))
+    failed  = failures + errors
+    passed  = total - failed
+
+    cases = []
+    for tc in suite.findall("testcase"):
+        name = tc.get("name", "")
+        failure = tc.find("failure")
+        status = "passed" if failure is None else "failed"
+        message = ""
+        if failure is not None:
+            # Extract just the assertion line, not the full traceback
+            raw = failure.get("message", "") or (failure.text or "")
+            message = raw.split("\n")[0][:80]
+        cases.append({"name": name, "status": status, "message": message})
+
+    return {
+        "total": total,
+        "passed": passed,
+        "failed": failed,
+        "cases": cases,
+        "run_at": suite.get("timestamp"),
+    }
+
+
+@router.get("/test-results", summary="Latest scenario test results")
+def test_results() -> dict[str, Any]:
+    """Return structured results from the latest scenario test JUnit XML files.
+
+    Consumed by the Test Results section in ops.html.
+    Returns results for RITA, FnO, and Ops scenario suites.
+    """
+    suites = []
+    for name, rel_path in _JUNIT_FILES.items():
+        data = _parse_junit(_RELEASE_ROOT / rel_path)
+        data["name"] = name
+        suites.append(data)
+
+    total  = sum(s["total"]  for s in suites)
+    passed = sum(s["passed"] for s in suites)
+    failed = sum(s["failed"] for s in suites)
+
+    return {
+        "total": total,
+        "passed": passed,
+        "failed": failed,
+        "pass_rate": round(passed / total * 100, 1) if total > 0 else 0,
+        "suites": suites,
+    }

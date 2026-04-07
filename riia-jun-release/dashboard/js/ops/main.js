@@ -8,11 +8,13 @@ import { loadObservability } from './observability.js';
 import { loadChat } from './chat.js';
 import { loadDailyOps, triggerSnapshot } from './daily-ops.js';
 import { refreshSidebar } from './sidebar.js';
+import { loadTestResults } from './test-results.js';
 
 // ── Populate section loader registry ─────────────────────────────────────────
 sectionLoaders['overview']      = loadOverview;
 sectionLoaders['monitoring']    = loadMonitoring;
 sectionLoaders['cicd']          = loadCICD;
+sectionLoaders['test']          = loadTestResults;
 sectionLoaders['deploy']        = loadDeploy;
 sectionLoaders['observability'] = loadObservability;
 sectionLoaders['chat']          = loadChat;
