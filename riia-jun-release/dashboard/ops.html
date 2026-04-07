@@ -236,12 +236,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .drift-cell-status.unknown{color:var(--t3);}
 .drift-cell-msg{font-size:10px;color:var(--t3);line-height:1.4;}
 </style>
+<link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 <div class="shell">
 
 <!-- ── Topbar ── -->
 <header class="topbar">
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/>
+    </svg>
+  </button>
   <a class="logo" href="/dashboard/">
     <div class="logo-icon">
       <svg width="15" height="15" viewBox="0 0 16 16"><path d="M8 1L1 5v6l7 4 7-4V5L8 1zm0 1.8L13.5 6 8 9.2 2.5 6 8 2.8zM2 7.1l5.5 3.2v3.9L2 11V7.1zm7.5 7.1v-3.9L15 7.1V11l-5.5 3.2z"/></svg>
@@ -808,6 +814,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 </main>
 </div>
 
+
+<!-- ── Responsive nav toggle ───────────────────────────────── -->
+<script>
+(function(){
+  var btn=document.getElementById('nav-toggle');
+  var sidebar=document.querySelector('.sidebar');
+  if(!btn||!sidebar)return;
+  btn.addEventListener('click',function(e){e.stopPropagation();sidebar.classList.toggle('open');document.body.classList.toggle('nav-open');});
+  document.addEventListener('click',function(e){if(document.body.classList.contains('nav-open')&&!sidebar.contains(e.target)&&e.target!==btn){sidebar.classList.remove('open');document.body.classList.remove('nav-open');}});
+})();
+</script>
 
 <script type="module" src="./js/ops/main.js"></script>
 </body>
