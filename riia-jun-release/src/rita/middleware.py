@@ -32,6 +32,7 @@ class TraceIDMiddleware(BaseHTTPMiddleware):
         trace_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
         token = trace_id_var.set(trace_id)
         structlog.contextvars.bind_contextvars(trace_id=trace_id)
+        response = None
         try:
             response = await call_next(request)
         finally:
@@ -39,7 +40,7 @@ class TraceIDMiddleware(BaseHTTPMiddleware):
                 "http.request",
                 method=request.method,
                 path=request.url.path,
-                status_code=response.status_code,
+                status_code=response.status_code if response is not None else None,
             )
             structlog.contextvars.clear_contextvars()
             trace_id_var.reset(token)

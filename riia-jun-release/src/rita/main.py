@@ -5,15 +5,20 @@ from contextlib import asynccontextmanager
 import structlog
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 import rita.models  # noqa: F401 -- registers all ORM models with Base.metadata
+from rita.auth import get_current_user
 from rita.config import get_settings
+from rita.limiter import limiter
 from rita.database import Base, engine
 from rita.exception_handlers import (
     http_exception_handler,
@@ -25,6 +30,7 @@ from rita.logging_config import configure_logging
 from rita.metrics import instrument_app
 from rita.middleware import TraceIDMiddleware
 from rita.repositories.base import RepositoryValidationError
+from rita.api.v1.auth import router as auth_router
 from rita.api.v1.system.positions import router as positions_router
 from rita.api.v1.system.orders import router as orders_router
 from rita.api.v1.system.snapshots import router as snapshots_router
@@ -56,14 +62,27 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.app.name, version=settings.app.version, lifespan=lifespan)
 
-# -- Middleware ----------------------------------------------------------------
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# -- Middleware (registration order: last-added executes outermost/first) ------
 app.add_middleware(TraceIDMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.security.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # -- Exception handlers (most-specific first) ---------------------------------
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(RepositoryValidationError, repository_validation_handler)
 app.add_exception_handler(Exception, unhandled_exception_handler)
+
+# -- Auth router (no auth required on /auth/token itself) ---------------------
+app.include_router(auth_router)
 
 # -- System tier -- pure CRUD routers (one per table) -------------------------
 app.include_router(positions_router)
@@ -75,10 +94,10 @@ app.include_router(audit_router)
 app.include_router(market_data_router)
 app.include_router(config_overrides_router)
 
-# -- Workflow tier -- business process routers (job submission + status) -------
-app.include_router(train_router)
-app.include_router(backtest_router)
-app.include_router(evaluate_router)
+# -- Workflow tier -- JWT-protected business process routers ------------------
+app.include_router(train_router, dependencies=[Depends(get_current_user)])
+app.include_router(backtest_router, dependencies=[Depends(get_current_user)])
+app.include_router(evaluate_router, dependencies=[Depends(get_current_user)])
 
 # -- Experience Layer -- UI-shaped aggregation routers (read-only) -------------
 app.include_router(dashboard_router)

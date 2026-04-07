@@ -82,11 +82,16 @@ _VALID_BACKTEST_PAYLOAD = {
 
 
 def _override(app, dep, mock_value):
+    from rita.auth import get_current_user
     app.dependency_overrides[dep] = lambda: mock_value
+    # Bypass JWT auth so workflow tests don't need real tokens
+    app.dependency_overrides[get_current_user] = lambda: "test-user"
 
 
 def _clear(app, dep):
+    from rita.auth import get_current_user
     app.dependency_overrides.pop(dep, None)
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 # ---------------------------------------------------------------------------

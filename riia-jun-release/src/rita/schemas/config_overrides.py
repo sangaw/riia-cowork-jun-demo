@@ -1,14 +1,14 @@
 """Pydantic schemas for the config_overrides table (runtime config and session state)."""
 from datetime import datetime
 from typing import Optional, Literal
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ConfigOverrideBase(BaseModel):
-    key: str                                # e.g. simulation_period, target_return_pct
-    value: str                              # stored as string/JSON
+    key: str = Field(max_length=64)         # e.g. simulation_period, target_return_pct
+    value: str = Field(max_length=512)      # stored as string/JSON
     stage: Optional[Literal["original", "revised", "active"]] = "active"
-    description: Optional[str] = None
+    description: Optional[str] = Field(default=None, max_length=512)
 
 
 class ConfigOverrideCreate(ConfigOverrideBase):

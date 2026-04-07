@@ -22,11 +22,16 @@ _NOW = datetime(2026, 4, 1, 12, 0, 0, tzinfo=timezone.utc)
 
 
 def _override(app, dep, mock_value):
+    from rita.auth import get_current_user
     app.dependency_overrides[dep] = lambda: mock_value
+    # Bypass JWT auth for workflow endpoint tests
+    app.dependency_overrides[get_current_user] = lambda: "test-user"
 
 
 def _clear(app, dep):
+    from rita.auth import get_current_user
     app.dependency_overrides.pop(dep, None)
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 # ---------------------------------------------------------------------------

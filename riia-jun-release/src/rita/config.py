@@ -114,6 +114,8 @@ class SecuritySettings(BaseSettings):
         default=SecretStr("dev-secret-change-in-prod"),
         validation_alias="RITA_JWT_SECRET",
     )
+    jwt_algorithm: str = "HS256"
+    jwt_expiry_minutes: int = 60
     cors_origins: list[str] = ["http://localhost:8000"]
 
 
