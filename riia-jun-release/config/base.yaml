@@ -7,11 +7,12 @@ server:
   port: 8000
 
 data:
-  input_dir: "rita_input"
-  output_dir: "rita_output"
+  raw_dir: "data/raw"        # Source CSVs as downloaded — read-only
+  input_dir: "data/input"    # Processed/merged CSVs ready for model
+  output_dir: "data/output"  # Backtest results, risk timeline, trade events
 
 model:
-  path: "rita_output/models"
+  path: "models"             # Trained model ZIPs; instrument subfolder added at runtime
 
 # Financial constants — config-driven, never hardcoded in application code
 instruments:

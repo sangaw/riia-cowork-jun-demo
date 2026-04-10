@@ -70,14 +70,15 @@ class ServerSettings(BaseSettings):
 class DataSettings(BaseSettings):
     model_config = SettingsConfigDict(extra="forbid")
 
-    input_dir: str = "rita_input"
-    output_dir: str = "rita_output"
+    raw_dir: str = "data/raw"        # Source CSVs as downloaded — read-only
+    input_dir: str = "data/input"    # Processed/merged CSVs ready for model
+    output_dir: str = "data/output"  # Backtest results, risk timeline, trade events
 
 
 class ModelSettings(BaseSettings):
     model_config = SettingsConfigDict(extra="forbid")
 
-    path: str = "rita_output/models"
+    path: str = "models"  # Trained model ZIPs; instrument subfolder added at runtime
 
 
 class InstrumentConfig(BaseSettings):
@@ -163,6 +164,20 @@ class Settings(BaseSettings):
         # Strip jwt_secret from YAML if it accidentally appears — secrets come
         # from env vars only.
         merged.get("security", {}).pop("jwt_secret", None)
+
+        # ── Data / model path env-var overrides ───────────────────────────────
+        # RITA_DATA_INPUT_DIR, RITA_DATA_OUTPUT_DIR, RITA_MODEL_PATH take
+        # precedence over both base.yaml and the environment YAML.  Set them
+        # in start.py (or your shell) to point at the real data directories
+        # without touching any YAML file.
+        if (v := os.environ.get("RITA_DATA_RAW_DIR")):
+            merged.setdefault("data", {})["raw_dir"] = v
+        if (v := os.environ.get("RITA_DATA_INPUT_DIR")):
+            merged.setdefault("data", {})["input_dir"] = v
+        if (v := os.environ.get("RITA_DATA_OUTPUT_DIR")):
+            merged.setdefault("data", {})["output_dir"] = v
+        if (v := os.environ.get("RITA_MODEL_PATH")):
+            merged.setdefault("model", {})["path"] = v
 
         merged["env"] = rita_env
         return merged
