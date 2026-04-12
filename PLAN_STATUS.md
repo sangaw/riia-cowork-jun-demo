@@ -1,10 +1,10 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-07 (Day 32)
+**Last updated:** 2026-04-12 (Day 38)
 
 ---
 
-## Current Sprint: SPRINT 5 — Integration, Security & Release
-**Current Day: Day 32 complete. Day 33 next.**
+## Current Sprint: SPRINT 6 — Model Building, Logging & Performance Metrics
+**Current Day: Day 38 complete. Day 39 (Ops/TechWriter) next.**
 
 ---
 
@@ -80,6 +80,18 @@
 | Day 32 | Security | CORS, JWT, rate limiting, input validation | `[x]` | CORSMiddleware from settings.security.cors_origins; POST /auth/token (python-jose JWT); get_current_user dependency on workflow routers (train/backtest/evaluate); slowapi 60/min default + 10/min on /auth/token; Field constraints (max_length, ge=0, pattern) on 9 schemas; 8/8 new tests pass; 128/129 total (1 pre-existing config test failure) |
 | Day 33 | Ops | Terraform: k8s manifests, AlertManager, cloud provider swap | `[ ]` | Local Docker deployment scaffolded (terraform/ dir); Day 33 extends to cloud |
 | Day 34 | PM + TechWriter | Release checklist, v1.0 tag, release notes | `[ ]` | |
+
+## Sprint 6 Tasks — Model Building, Logging & Performance Metrics
+
+> **Decision (2026-04-12):** Port remaining model-building, training tracker, backtest engine (real impl),
+> performance analytics, and drift detection from POC. Backtest dispatch was still a stub.
+
+| Day | Role | Task | Status | Notes |
+|---|---|---|---|---|
+| Day 35 | Engineer | `train_best_of_n` + real backtest_dispatch + ml_dispatch n_seeds | `[x]` | train_best_of_n added to trading_env.py; backtest_dispatch replaced with real run_episode() engine; ml_dispatch has n_seeds support + structlog events |
+| Day 36 | Engineer | TrainingTracker + structlog step events in ml_dispatch | `[x]` | core/training_tracker.py created; wired into workflow_service (try/except safe); structlog step events in ml_dispatch |
+| Day 37 | Engineer | Performance analytics (portfolio comparison, feedback, stress) + 2 new API endpoints | `[x]` | build_portfolio_comparison, build_performance_feedback, simulate_stress_scenarios added to core/performance.py; /performance-feedback + /portfolio-comparison + /stress-scenarios added to observability.py |
+| Day 38 | Engineer | DriftDetector rebased on DB + /api/v1/drift upgrade | `[x]` | core/drift_detector.py created (5 checks, DB-backed); /drift endpoint now uses DriftDetector; 121/122 tests pass (1 pre-existing config failure) |
 
 ---
 

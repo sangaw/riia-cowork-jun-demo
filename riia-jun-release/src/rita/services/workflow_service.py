@@ -65,20 +65,48 @@ def _run_training_job(config: TrainingConfig) -> None:
         if run is None:
             return
 
-        runs_repo.upsert(
-            TrainingRun(
-                **{
-                    **run.model_dump(),
-                    "status": "complete",
-                    "ended_at": ended_at,
-                    "model_path": outcome.model_path,
-                    "backtest_sharpe": outcome.sharpe,
-                    "backtest_mdd": outcome.max_drawdown,
-                    "backtest_return": outcome.total_return,
-                }
-            )
+        complete_run = TrainingRun(
+            **{
+                **run.model_dump(),
+                "status": "complete",
+                "ended_at": ended_at,
+                "model_path": outcome.model_path,
+                "backtest_sharpe": outcome.sharpe,
+                "backtest_mdd": outcome.max_drawdown,
+                "backtest_return": outcome.total_return,
+            }
         )
+        runs_repo.upsert(complete_run)
         log.info("training.complete", run_id=config.run_id, model_path=outcome.model_path)
+
+        try:
+            from rita.core.training_tracker import TrainingTracker
+            tracker = TrainingTracker(config.output_dir)
+            tracker.record_round(
+                training_metrics={
+                    "timesteps_trained": config.timesteps,
+                    "source": "trained",
+                    "seed": 42,
+                },
+                val_metrics={
+                    "sharpe_ratio": outcome.sharpe,
+                    "max_drawdown_pct": outcome.max_drawdown * 100,
+                    "portfolio_cagr_pct": 0.0,
+                    "constraints_met": outcome.sharpe >= 1.0 and abs(outcome.max_drawdown * 100) < 10,
+                },
+                backtest_metrics={
+                    "sharpe_ratio": outcome.sharpe,
+                    "max_drawdown_pct": outcome.max_drawdown * 100,
+                    "portfolio_total_return_pct": outcome.total_return * 100,
+                    "portfolio_cagr_pct": outcome.total_return * 100,
+                    "total_trades": 0,
+                    "constraints_met": outcome.sharpe >= 1.0 and abs(outcome.max_drawdown * 100) < 10,
+                },
+                notes=f"run_id={config.run_id[:8]}",
+            )
+            log.info("training.round_recorded", run_id=config.run_id)
+        except Exception:
+            log.warning("training.tracker_failed", run_id=config.run_id, exc_info=True)
 
         for ep in outcome.episode_metrics:
             metrics_repo.upsert(
@@ -122,9 +150,12 @@ class WorkflowService:
         self._runs.upsert(run)
         log.info("training.submitted", run_id=run_id)
 
+        from rita.core.data_loader import model_dir
         settings = body.model_dump()
+        instrument = settings.get("instrument", "NIFTY")
         config = TrainingConfig(
             run_id=run_id,
+            instrument=instrument,
             model_version=settings["model_version"],
             algorithm=settings.get("algorithm", "DoubleDQN"),
             timesteps=settings["timesteps"],
@@ -132,7 +163,7 @@ class WorkflowService:
             buffer_size=settings["buffer_size"],
             net_arch=settings["net_arch"],
             exploration_pct=settings["exploration_pct"],
-            output_dir="rita_output/models",
+            output_dir=str(model_dir(instrument)),
         )
         threading.Thread(target=_run_training_job, args=(config,), daemon=True).start()
         return run

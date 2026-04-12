@@ -1,25 +1,22 @@
-"""Backtest dispatch stub for historical strategy evaluation.
+"""Backtest dispatch — historical strategy evaluation using a trained DDQN model.
 
-Replace the ``run_backtest`` function body with a real backtesting engine
-(e.g. vectorbt, backtrader, or a custom loop reading from ``rita_input/``
-CSV files).
+Pipeline:
+  1. Locate the trained model zip from config.model_version + instrument.
+  2. Load OHLCV data and compute technical indicators.
+  3. Filter to the requested date range.
+  4. Load the model and run a deterministic episode.
+  5. Build BacktestOutcome with per-day DailyResult entries.
 
-Production replacement notes:
-  - Load Nifty 50 OHLCV data from ``rita_input/`` for the date range in
-    ``config.start_date`` to ``config.end_date``.
-  - Load the trained model from disk using ``config.model_version``.
-  - Parse ``config.strategy_params`` (JSON string) for any overrides.
-  - Step through each trading day, apply the model policy, track
-    portfolio_value and benchmark_value (buy-and-hold normalised to 1.0).
-  - Compute Sharpe ratio and max drawdown from the daily series.
-  - Return a ``BacktestOutcome`` with all daily results.
+Raises ValueError (not silently falls back to fake data) if:
+  - No model file is found for the given model_version + instrument.
+  - The date-filtered DataFrame has fewer than 30 rows.
 """
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date
+from pathlib import Path
 
 
 # ---------------------------------------------------------------------------
@@ -34,6 +31,7 @@ class BacktestConfig:
     end_date: date
     model_version: str
     strategy_params: str | None
+    instrument: str = "NIFTY"
 
 
 @dataclass
@@ -54,54 +52,104 @@ class BacktestOutcome:
 
 
 # ---------------------------------------------------------------------------
-# Stub implementation
+# Real backtest implementation
 # ---------------------------------------------------------------------------
+
+_MIN_ROWS = 30
 
 
 def run_backtest(config: BacktestConfig) -> BacktestOutcome:
-    """Run historical backtest and return outcome metrics.
+    """Run a historical backtest using the saved DDQN model.
 
-    **Stub** — replace this body with a real backtesting engine.
-    See module-level docstring for migration notes.
+    Steps:
+        1. Locate model zip: models/{INSTRUMENT}/{model_version}*.zip
+        2. Load OHLCV CSV and compute indicators.
+        3. Filter by config.start_date .. config.end_date.
+        4. Load model, run deterministic episode.
+        5. Build and return BacktestOutcome.
 
-    The stub:
-    - Sleeps 0.02 seconds.
-    - Iterates over every calendar day from start_date to end_date.
-    - portfolio_value compounds at 0.03 % per day; benchmark_value at 0.02 %
-      per day.
-    - close_price = 22000.0 + day_index * 10; allocation = 0.6 (constant).
-    - Returns total_return=round(final_portfolio_value - 1.0, 4),
-      sharpe_ratio=1.35, max_drawdown=-0.08.
+    Raises:
+        ValueError: if no model file is found or the date range yields < 30 rows.
     """
-    time.sleep(0.02)
+    from rita.core.data_loader import load_nifty_csv, model_dir
+    from rita.core.data_understanding import find_instrument_csv
+    from rita.core.technical_analyzer import calculate_indicators
+    from rita.core import trading_env
+
+    instrument = config.instrument.upper()
+
+    # ── 1. Locate model file ─────────────────────────────────────────────────
+    mdir = model_dir(instrument)
+    # Try exact name first, then prefix search
+    candidates: list[Path] = []
+    exact = mdir / f"{config.model_version}.zip"
+    if exact.exists():
+        candidates = [exact]
+    else:
+        candidates = sorted(mdir.glob(f"{config.model_version}*.zip"))
+
+    if not candidates:
+        raise ValueError(
+            f"No model file found for model_version='{config.model_version}' "
+            f"in {mdir}. Train a model first."
+        )
+    model_path = str(candidates[0])
+
+    # ── 2. Load OHLCV + indicators ───────────────────────────────────────────
+    csv_path = find_instrument_csv(instrument)
+    df = load_nifty_csv(str(csv_path))
+    df = calculate_indicators(df)
+
+    # ── 3. Filter to date range ──────────────────────────────────────────────
+    start_ts = str(config.start_date)
+    end_ts = str(config.end_date)
+    filtered = df.loc[start_ts:end_ts]
+
+    if len(filtered) < _MIN_ROWS:
+        raise ValueError(
+            f"Date range {config.start_date} – {config.end_date} yields only "
+            f"{len(filtered)} rows for {instrument} (minimum {_MIN_ROWS}). "
+            "Widen the date range or verify the data."
+        )
+
+    # ── 4. Load model + run episode ──────────────────────────────────────────
+    model = trading_env.load_agent(model_path)
+    episode = trading_env.run_episode(model, filtered)
+
+    perf = episode["performance"]
+    total_return = perf["portfolio_total_return_pct"] / 100.0
+    sharpe_ratio = perf["sharpe_ratio"]
+    max_drawdown = perf["max_drawdown_pct"] / 100.0
+
+    # ── 5. Build DailyResult list ────────────────────────────────────────────
+    portfolio_values: list[float] = episode["portfolio_values"]
+    benchmark_values: list[float] = episode["benchmark_values"]
+    allocations: list[float] = episode["allocations"]
+    close_prices: list[float] = episode["close_prices"]
+    dates = episode["dates"]
+
+    # allocations has one entry per transition (len = len-1 of values arrays),
+    # pad the first day with 0.0 so all lists align.
+    alloc_padded = [0.0] + list(allocations)
 
     daily_results: list[DailyResult] = []
-    portfolio_value = 1.0
-    benchmark_value = 1.0
-
-    current = config.start_date
-    day_index = 0
-    while current <= config.end_date:
-        portfolio_value *= 1.0003
-        benchmark_value *= 1.0002
+    n = len(portfolio_values)
+    for i in range(n):
+        ts = dates[i]
+        day_date: date = ts.date() if hasattr(ts, "date") else ts
         daily_results.append(
             DailyResult(
-                date=current,
-                portfolio_value=round(portfolio_value, 6),
-                benchmark_value=round(benchmark_value, 6),
-                allocation=0.6,
-                close_price=22000.0 + day_index * 10,
+                date=day_date,
+                portfolio_value=round(portfolio_values[i], 6),
+                benchmark_value=round(benchmark_values[i], 6),
+                allocation=alloc_padded[i] if i < len(alloc_padded) else 0.0,
+                close_price=round(close_prices[i], 2),
             )
         )
-        current += timedelta(days=1)
-        day_index += 1
-
-    final_pv = daily_results[-1].portfolio_value if daily_results else 1.0
-    total_return = round(final_pv - 1.0, 4)
 
     return BacktestOutcome(
-        total_return=total_return,
-        sharpe_ratio=1.35,
-        max_drawdown=-0.08,
+        total_return=round(total_return, 6),
+        sharpe_ratio=round(sharpe_ratio, 6),
+        max_drawdown=round(max_drawdown, 6),
         daily_results=daily_results,
     )

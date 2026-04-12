@@ -119,42 +119,62 @@ def test_background_thread_completes() -> None:
     Uses SessionLocal (real on-disk engine) so the thread's writes are visible
     to the querying session.  Ensures all tables exist before the test, then
     cleans up the test run on teardown.
+
+    The real train() function invokes stable-baselines3 which takes too long
+    for a unit test, so we patch it with a fast stub that returns a valid
+    TrainingOutcome immediately.
     """
+    from unittest.mock import patch, MagicMock
     from rita.database import Base, SessionLocal, engine
     from rita.services.workflow_service import WorkflowService
     from rita.schemas.training import TrainingRunCreate
+    from rita.core.ml_dispatch import TrainingOutcome
     import rita.models  # noqa: F401 — ensure ORM models are registered with Base.metadata
 
     # Ensure the on-disk DB has all tables (idempotent — create_all is safe to re-run)
     Base.metadata.create_all(engine)
 
+    _fast_outcome = TrainingOutcome(
+        model_path="/tmp/v-thread-test_stub.zip",
+        sharpe=1.42,
+        max_drawdown=-0.12,
+        total_return=0.28,
+        episode_metrics=[
+            {"episode": 1, "timestep": 1000, "reward": 0.0, "loss": 0.5,
+             "epsilon": 0.05, "portfolio_value": 1.0}
+        ],
+    )
+
     db = SessionLocal()
     run_id: str | None = None
     try:
-        svc = WorkflowService(db)
-        body = TrainingRunCreate(
-            model_version="v-thread-test",
-            algorithm="DoubleDQN",
-            timesteps=1000,  # stub sleeps ≤ 0.05 s for this value
-            learning_rate=1e-4,
-            buffer_size=10000,
-            net_arch="[64, 64]",
-            exploration_pct=0.1,
-        )
-        run = svc.start_training(body)
-        run_id = run.run_id
-        assert run.status == "pending"
+        # Patch train() for the duration of both start + polling so the
+        # background thread (which runs concurrently) also uses the fast stub.
+        with patch("rita.services.workflow_service.train", return_value=_fast_outcome):
+            svc = WorkflowService(db)
+            body = TrainingRunCreate(
+                model_version="v-thread-test",
+                algorithm="DoubleDQN",
+                timesteps=1000,
+                learning_rate=1e-4,
+                buffer_size=10000,
+                net_arch="[64, 64]",
+                exploration_pct=0.1,
+            )
+            run = svc.start_training(body)
+            run_id = run.run_id
+            assert run.status == "pending"
 
-        # Poll until status != "pending" or timeout after 2 s
-        deadline = time.monotonic() + 2.0
-        final_status = "pending"
-        while time.monotonic() < deadline:
-            time.sleep(0.1)
-            db.expire_all()  # refresh from DB
-            found = svc.get_run(run_id)
-            if found and found.status != "pending":
-                final_status = found.status
-                break
+            # Poll until status != "pending" or timeout after 2 s
+            deadline = time.monotonic() + 2.0
+            final_status = "pending"
+            while time.monotonic() < deadline:
+                time.sleep(0.1)
+                db.expire_all()  # refresh from DB
+                found = svc.get_run(run_id)
+                if found and found.status != "pending":
+                    final_status = found.status
+                    break
 
         assert final_status == "complete", (
             f"Expected status='complete' within 2 s, got '{final_status}'"
