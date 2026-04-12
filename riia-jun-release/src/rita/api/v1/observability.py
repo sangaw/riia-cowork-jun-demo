@@ -28,6 +28,7 @@ from sqlalchemy.orm import Session
 
 from rita.config import get_settings
 from rita.database import get_db, SessionLocal
+from rita.services.workflow_service import get_live_progress
 from rita.repositories.instrument import InstrumentRepository
 from rita.repositories.market_data import MarketDataCacheRepository
 from rita.repositories.training import TrainingRunsRepository
@@ -152,6 +153,22 @@ def metrics_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
         "pipeline": pipeline,
         "training": training,
     }
+
+
+# ── GET /api/v1/training-progress ─────────────────────────────────────────────
+
+@router.get("/training-progress", summary="Live training progress for the current run")
+def training_progress(run_id: Optional[str] = None) -> list[dict[str, Any]]:
+    """Return live progress records for an in-progress (or recently completed) training run.
+
+    Polled every 2 seconds by ds.html Step 4 to show:
+      - current timestep vs total (progress bar)
+      - latest loss and ep_rew_mean (live chart)
+
+    Each record: { "timestep": int, "loss": float, "ep_rew_mean": float }
+    Returns [] when no run is active or run_id is not found.
+    """
+    return get_live_progress(run_id)
 
 
 # ── GET /api/v1/step-log ───────────────────────────────────────────────────────
@@ -739,6 +756,7 @@ def _run_pipeline_job(
             start_date=start_date,
             end_date=end_date,
             model_version=train_body.model_version,
+            strategy_params=None,
         )
         _run_backtest_job(backtest_run_id, bt_config)
     except Exception:  # noqa: BLE001

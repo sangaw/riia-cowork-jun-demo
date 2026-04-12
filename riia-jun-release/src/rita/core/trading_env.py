@@ -41,21 +41,30 @@ class TrainingProgressCallback(BaseCallback):
 
     Attributes:
         records: list of dicts with keys: timestep, loss, ep_rew_mean
+        progress_fn: optional callable(record) called on every append — use to
+                     push live progress to an in-memory store for polling.
     """
 
-    def __init__(self, log_interval: int = 1_000):
+    def __init__(self, log_interval: int = 1_000, progress_fn=None):
         super().__init__(verbose=0)
         self.log_interval = log_interval
         self.records: list[dict] = []
+        self._progress_fn = progress_fn
 
     def _on_step(self) -> bool:
         if self.n_calls % self.log_interval == 0:
             vals = self.model.logger.name_to_value
-            self.records.append({
+            record = {
                 "timestep":    self.num_timesteps,
                 "loss":        vals.get("train/loss", float("nan")),
                 "ep_rew_mean": vals.get("rollout/ep_rew_mean", float("nan")),
-            })
+            }
+            self.records.append(record)
+            if self._progress_fn is not None:
+                try:
+                    self._progress_fn(record)
+                except Exception:
+                    pass
         return True
 
 
@@ -186,8 +195,13 @@ def train_agent(
     exploration_fraction: float = 0.5,
     seed: int = 42,
     model_name: str = "rita_ddqn_model",
+    progress_fn=None,
 ) -> Tuple[DQN, TrainingProgressCallback]:
     """Train a Double-DQN agent and save the model.
+
+    Args:
+        progress_fn: optional callable(record) invoked every log_interval steps
+                     with {timestep, loss, ep_rew_mean} — used for live polling.
 
     Returns:
         model: trained DQN model
@@ -217,7 +231,7 @@ def train_agent(
         verbose=0,
     )
 
-    progress_cb = TrainingProgressCallback(log_interval=1_000)
+    progress_cb = TrainingProgressCallback(log_interval=1_000, progress_fn=progress_fn)
     model.learn(total_timesteps=timesteps, callback=progress_cb)
     model.save(model_path)
 

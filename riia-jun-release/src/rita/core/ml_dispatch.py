@@ -60,7 +60,13 @@ class TrainingOutcome:
 # Training entry point
 # ---------------------------------------------------------------------------
 
-def train(config: TrainingConfig) -> TrainingOutcome:
+def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
+    """Load data, train Double-DQN, validate, save model, return real metrics.
+
+    Args:
+        progress_fn: optional callable(record) forwarded to TrainingProgressCallback.
+                     Called every 1000 timesteps with {timestep, loss, ep_rew_mean}.
+    """  # noqa: D401
     """Load data, train Double-DQN, validate, save model, return real metrics."""
     import numpy as np
 
@@ -101,6 +107,7 @@ def train(config: TrainingConfig) -> TrainingOutcome:
             buffer_size=config.buffer_size,
             exploration_fraction=config.exploration_pct,
             model_name=model_name,
+            progress_fn=progress_fn,
         )
     else:
         # Single-seed: standard training path
@@ -113,6 +120,7 @@ def train(config: TrainingConfig) -> TrainingOutcome:
             exploration_fraction=config.exploration_pct,
             seed=42,
             model_name=model_name,
+            progress_fn=progress_fn,
         )
 
     model_path = str(Path(config.output_dir) / (model_name + ".zip"))

@@ -24,6 +24,23 @@ from rita.schemas.training import TrainingMetric, TrainingRun, TrainingRunCreate
 
 log = structlog.get_logger()
 
+# ---------------------------------------------------------------------------
+# Live training progress — in-memory, per run_id
+# Keyed by run_id; value is list of {timestep, loss, ep_rew_mean} records.
+# Cleared when a new run starts; retained after completion for the last read.
+# ---------------------------------------------------------------------------
+_live_progress: dict[str, list[dict]] = {}
+_current_run_id: str | None = None
+
+
+def get_live_progress(run_id: str | None = None) -> list[dict]:
+    """Return live progress records for run_id, or the most recent run."""
+    if run_id and run_id in _live_progress:
+        return _live_progress[run_id]
+    if _current_run_id and _current_run_id in _live_progress:
+        return _live_progress[_current_run_id]
+    return []
+
 
 # ---------------------------------------------------------------------------
 # Module-level background worker
@@ -47,8 +64,16 @@ def _run_training_job(config: TrainingConfig) -> None:
         runs_repo.upsert(run)
         log.info("training.running", run_id=config.run_id)
 
+        # Set up live progress tracking
+        global _current_run_id
+        _current_run_id = config.run_id
+        _live_progress[config.run_id] = []
+
+        def _push_progress(record: dict) -> None:
+            _live_progress[config.run_id].append(record)
+
         try:
-            outcome = train(config)
+            outcome = train(config, progress_fn=_push_progress)
         except Exception:
             log.error("training.failed", run_id=config.run_id, exc_info=True)
             run = runs_repo.find_by_id(config.run_id)
