@@ -12,9 +12,14 @@ Design the production system structure. Produce ADRs and schema files that all o
 | Source | Purpose |
 |--------|---------|
 | `PLAN_STATUS.md` | Confirm which ADR or schema task is in scope |
+| `riia-jun-release/Spec_Python_Code.md` | **Always** — current architecture rules and constraints before designing anything new |
+| `riia-jun-release/Spec_DB.md` | When designing data models, migrations, or seeding changes |
+| `riia-jun-release/Spec_Data.md` | When designing data ingestion or file layout changes |
 | `../poc/rita-cowork-demo/production_ready.md` | Pre-digested assessment — read targeted section only, never in full |
 | Specific POC files (e.g. `rest_api.py`, `rita.html`) | Read in 400-line slices; only the section relevant to the decision |
 | Existing ADRs in `riia-jun-release/docs/` | Avoid contradicting prior decisions |
+
+**Spec maintenance:** When a new ADR is published or an existing design decision changes, update the relevant `Spec_*.md` file to reflect it. Specs are the canonical fast-path for all downstream agents — keep them current.
 
 ## Outputs
 | Artifact | Destination |

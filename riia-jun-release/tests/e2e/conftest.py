@@ -64,6 +64,22 @@ def base_url(server) -> str:  # noqa: ARG001 — depends on server to ensure ord
 
 
 @pytest.fixture(scope="session")
+def auth_token(base_url: str) -> str:
+    """Return a JWT bearer token for authenticated API calls.
+
+    Uses the dev password hard-coded in auth.py (``rita-dev``).
+    Session-scoped so the token is requested once per test run.
+    """
+    r = requests.post(
+        f"{base_url}/auth/token",
+        json={"username": "test", "password": "rita-dev"},
+        timeout=10,
+    )
+    assert r.status_code == 200, f"Auth token request failed: {r.status_code} — {r.text}"
+    return r.json()["access_token"]
+
+
+@pytest.fixture(scope="session")
 def server():
     """Spawn uvicorn in a subprocess and tear it down after the session.
 

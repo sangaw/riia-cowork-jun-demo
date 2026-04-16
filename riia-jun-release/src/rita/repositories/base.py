@@ -185,6 +185,11 @@ class SqlRepository(BaseRepository[T], Generic[T, M]):
         self._db.commit()
         return True
 
+    def bulk_create(self, records: list[T]) -> None:
+        """Insert multiple new records in a single transaction (no upsert check)."""
+        self._db.add_all([self._model_class(**r.model_dump()) for r in records])
+        self._db.commit()
+
     def write_all(self, records: list[T]) -> None:
         self._db.query(self._model_class).delete()
         for record in records:

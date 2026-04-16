@@ -12,7 +12,10 @@ let _tjRows = [];  // cached for snapshot
 
 export async function loadTrades() {
   try {
-    const rows = await api('/api/v1/risk-timeline?phase=all');
+    const [rows, history] = await Promise.all([
+      api('/api/v1/risk-timeline?phase=all'),
+      api('/api/v1/training-history').catch(() => []),
+    ]);
     if (!rows || !rows.length) {
       setEl('trades-table-wrap', '<div class="empty">No data — run pipeline first.</div>');
       return;
@@ -21,33 +24,65 @@ export async function loadTrades() {
     document.getElementById('btn-tj-download').style.display = '';
 
     // ── Phase KPI strip ─────────────────────────────────────────────────────
-    const phases = ['Train', 'Validation', 'Backtest'];
-    const kpiHtml = phases.map(ph => {
-      const ph_rows = rows.filter(r => r.phase === ph);
-      if (!ph_rows.length) return '';
-      const cfg = TJ_PHASE[ph] || {};
-      const days = ph_rows.length;
-      const cashDays = ph_rows.filter(r => parseFloat(r.allocation||0) === 0).length;
-      const halfDays = ph_rows.filter(r => parseFloat(r.allocation||0) === 0.5).length;
-      const fullDays = ph_rows.filter(r => parseFloat(r.allocation||0) === 1.0).length;
-      const maxDD = Math.min(...ph_rows.map(r => parseFloat(r.current_drawdown_pct||0)));
-      return `<div style="border:1px solid ${cfg.color};border-radius:7px;padding:12px 14px;background:${cfg.bg}">
-        <div style="font-weight:700;color:${cfg.color};margin-bottom:8px;font-size:12px">${ph}</div>
+    // Backtest phase: from risk-timeline rows
+    const btRows = rows.filter(r => r.phase === 'Backtest');
+    const kpiCards = [];
+
+    // Train + Validation: synthesised from training-history records
+    const runs = Array.isArray(history) ? history : [];
+    if (runs.length) {
+      // Latest training run for Train summary
+      const latest = runs[0]; // history is newest-first
+      const cfgTr = TJ_PHASE['Train'];
+      const cfgVa = TJ_PHASE['Validation'];
+      const _fv = v => (v != null && !isNaN(parseFloat(v))) ? parseFloat(v).toFixed(2) + '%' : '—';
+      const _fs = v => (v != null && !isNaN(parseFloat(v))) ? parseFloat(v).toFixed(3) : '—';
+      kpiCards.push(`<div style="border:1px solid ${cfgTr.color};border-radius:7px;padding:12px 14px;background:${cfgTr.bg}">
+        <div style="font-weight:700;color:${cfgTr.color};margin-bottom:8px;font-size:12px">Train</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px">
-          <div><span style="color:var(--t3)">Days</span><div style="font-weight:600">${days}</div></div>
+          <div><span style="color:var(--t3)">Rounds</span><div style="font-weight:600">${runs.length}</div></div>
+          <div><span style="color:var(--t3)">Algorithm</span><div style="font-weight:600">${latest.algorithm || 'DDQN'}</div></div>
+          <div><span style="color:var(--t3)">Timesteps</span><div style="font-weight:600">${latest.timesteps ? (latest.timesteps/1000).toFixed(0)+'k' : '—'}</div></div>
+          <div><span style="color:var(--t3)">Model ver</span><div style="font-weight:600">${latest.model_version || '—'}</div></div>
+        </div>
+      </div>`);
+      kpiCards.push(`<div style="border:1px solid ${cfgVa.color};border-radius:7px;padding:12px 14px;background:${cfgVa.bg}">
+        <div style="font-weight:700;color:${cfgVa.color};margin-bottom:8px;font-size:12px">Validation (latest run)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px">
+          <div><span style="color:var(--t3)">Sharpe</span><div style="font-weight:600">${_fs(latest.backtest_sharpe)}</div></div>
+          <div><span style="color:var(--t3)">Max DD</span><div style="font-weight:600">${_fv(latest.backtest_mdd_pct)}</div></div>
+          <div><span style="color:var(--t3)">Return</span><div style="font-weight:600">${_fv(latest.backtest_return_pct)}</div></div>
+          <div><span style="color:var(--t3)">Status</span><div style="font-weight:600">${latest.status || '—'}</div></div>
+        </div>
+      </div>`);
+    }
+
+    // Backtest KPI card from risk-timeline rows
+    if (btRows.length) {
+      const cfg = TJ_PHASE['Backtest'];
+      const cashDays = btRows.filter(r => parseFloat(r.allocation||0) === 0).length;
+      const halfDays = btRows.filter(r => parseFloat(r.allocation||0) === 0.5).length;
+      const fullDays = btRows.filter(r => parseFloat(r.allocation||0) === 1.0).length;
+      const maxDD = Math.min(...btRows.map(r => parseFloat(r.current_drawdown_pct||0)));
+      kpiCards.push(`<div style="border:1px solid ${cfg.color};border-radius:7px;padding:12px 14px;background:${cfg.bg}">
+        <div style="font-weight:700;color:${cfg.color};margin-bottom:8px;font-size:12px">Backtest</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:11px">
+          <div><span style="color:var(--t3)">Days</span><div style="font-weight:600">${btRows.length}</div></div>
           <div><span style="color:var(--t3)">Max DD</span><div style="font-weight:600">${maxDD.toFixed(2)}%</div></div>
           <div><span style="color:var(--t3)">Cash</span><div style="font-weight:600">${cashDays}d</div></div>
           <div><span style="color:var(--t3)">Half / Full</span><div style="font-weight:600">${halfDays}d / ${fullDays}d</div></div>
         </div>
-      </div>`;
-    }).join('');
-    setEl('trades-kpi-strip', kpiHtml);
+      </div>`);
+    }
+
+    setEl('trades-kpi-strip', kpiCards.join(''));
 
     // ── Chart — one dataset per phase, string labels (no time adapter needed) ─
     const allDates = rows.map(r => r.date);
     const phaseByDate = {};
     rows.forEach(r => { phaseByDate[r.date] = r.phase; });
 
+    const phases = Object.keys(TJ_PHASE);
     const datasets = phases.map(ph => {
       const cfg = TJ_PHASE[ph] || {};
       return {

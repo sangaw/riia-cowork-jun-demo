@@ -4,9 +4,9 @@
    Shared across: rita.html, fno.html, ops.html
    ============================================================ */
 
-/* ── Hamburger toggle — hidden by default (desktop) ──────── */
+/* ── Nav toggle — always visible, collapses sidebar on desktop ── */
 .nav-toggle {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 34px;
@@ -79,9 +79,6 @@ body.nav-open::before {
    768px — Tablet
    ============================================================ */
 @media (max-width: 768px) {
-
-  /* Show hamburger */
-  .nav-toggle { display: flex; }
 
   /* Sidebar: off-canvas, slides in when .open */
   .shell { grid-template-columns: 0 1fr; }

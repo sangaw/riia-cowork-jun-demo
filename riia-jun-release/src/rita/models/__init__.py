@@ -13,6 +13,7 @@ from .audit import AuditLogModel
 from .market_data import MarketDataCacheModel
 from .config_overrides import ConfigOverrideModel
 from .risk import RiskTimelineModel
+from .instrument import InstrumentModel
 
 __all__ = [
     "PositionModel",
@@ -31,4 +32,5 @@ __all__ = [
     "MarketDataCacheModel",
     "ConfigOverrideModel",
     "RiskTimelineModel",
+    "InstrumentModel",
 ]

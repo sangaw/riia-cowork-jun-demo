@@ -24,7 +24,9 @@ html{scroll-behavior:smooth}
   --shm:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
 }
 body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px;line-height:1.5;min-height:100vh;}
-.shell{display:grid;grid-template-columns:224px 1fr;grid-template-rows:52px 1fr;min-height:100vh;}
+.shell{display:grid;grid-template-columns:224px 1fr;grid-template-rows:52px 1fr;min-height:100vh;transition:grid-template-columns .22s cubic-bezier(.4,0,.2,1);}
+.shell.nav-collapsed{grid-template-columns:0px 1fr;}
+.shell.nav-collapsed .sidebar{overflow:hidden;border-right:none;}
 
 /* ── Topbar ─────────────────────────────────────────────── */
 .topbar{grid-column:1/-1;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;box-shadow:var(--sh);}
@@ -919,14 +921,29 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 </div><!-- /main -->
 </div><!-- /shell -->
 
-<!-- ── Responsive nav toggle ───────────────────────────────── -->
+<!-- ── Nav toggle (desktop collapse + mobile overlay) ─────── -->
 <script>
 (function(){
+  var KEY='rita_nav_collapsed';
   var btn=document.getElementById('nav-toggle');
+  var shell=document.querySelector('.shell');
   var sidebar=document.querySelector('.sidebar');
-  if(!btn||!sidebar)return;
-  btn.addEventListener('click',function(e){e.stopPropagation();sidebar.classList.toggle('open');document.body.classList.toggle('nav-open');});
-  document.addEventListener('click',function(e){if(document.body.classList.contains('nav-open')&&!sidebar.contains(e.target)&&e.target!==btn){sidebar.classList.remove('open');document.body.classList.remove('nav-open');}});
+  if(!btn||!shell||!sidebar)return;
+  if(window.innerWidth>768&&localStorage.getItem(KEY)==='1')shell.classList.add('nav-collapsed');
+  btn.addEventListener('click',function(){
+    if(window.innerWidth>768){
+      var c=shell.classList.toggle('nav-collapsed');
+      localStorage.setItem(KEY,c?'1':'0');
+    } else {
+      sidebar.classList.toggle('open');
+      document.body.classList.toggle('nav-open');
+    }
+  });
+  document.addEventListener('click',function(e){
+    if(document.body.classList.contains('nav-open')&&!sidebar.contains(e.target)&&e.target!==btn){
+      sidebar.classList.remove('open');document.body.classList.remove('nav-open');
+    }
+  });
 })();
 </script>
 

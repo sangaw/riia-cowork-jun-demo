@@ -26,7 +26,9 @@ html{scroll-behavior:smooth}
   --shm:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
 }
 body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px;line-height:1.5;min-height:100vh;}
-.shell{display:grid;grid-template-columns:224px 1fr;grid-template-rows:52px 1fr;min-height:100vh;}
+.shell{display:grid;grid-template-columns:224px 1fr;grid-template-rows:52px 1fr;min-height:100vh;transition:grid-template-columns .22s cubic-bezier(.4,0,.2,1);}
+.shell.nav-collapsed{grid-template-columns:0px 1fr;}
+.shell.nav-collapsed .sidebar{overflow:hidden;border-right:none;}
 
 /* ── Topbar ──────────────────────────────────────────────── */
 .topbar{grid-column:1/-1;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;box-shadow:var(--sh);}
@@ -453,7 +455,7 @@ tr:hover td{background:var(--surface2);}
 
   <!-- Price + Volume -->
   <div class="chart-wrap" style="margin-bottom:10px">
-    <div class="chart-title">Price &amp; Volume <span style="font-weight:400;color:var(--t3);font-size:11px">— close price · daily volume</span></div>
+    <div class="chart-title">Price &amp; Volume <span style="font-weight:400;color:var(--t3);font-size:11px" id="ms-pv-subtitle">— close price · volume</span></div>
     <div class="chart-box" style="height:165px"><canvas id="chart-ms-pv"></canvas></div>
   </div>
 
@@ -503,6 +505,11 @@ tr:hover td{background:var(--surface2);}
   <div class="card">
     <div class="card-hdr"><span class="card-title">Goal Parameters</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-items:start;margin-bottom:0">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Portfolio Size (₹)</label>
+        <input class="form-input" type="number" id="inp-portfolio" value="1000000" min="10000" step="50000">
+        <span class="form-hint">Used for stress &amp; return scenarios</span>
+      </div>
       <div class="form-group" style="margin:0">
         <label class="form-label">Target Annual Return (%)</label>
         <input class="form-input" type="number" id="inp-target" value="15" min="1" max="100" step="0.5">
@@ -590,8 +597,9 @@ tr:hover td{background:var(--surface2);}
     <div class="mpanel">
       <div class="mpanel-hdr">
         <div class="mpanel-title">Suggested Questions</div>
+        <span id="chip-status" style="font-size:10px;color:var(--t3);font-family:var(--fm)"></span>
       </div>
-      <div class="mpanel-body">
+      <div class="mpanel-body" id="chat-chips">
         <button class="chat-chip" onclick="useChip(this)">Can I invest in Nifty now?</button>
         <button class="chat-chip" onclick="useChip(this)">What's the current market trend?</button>
         <button class="chat-chip" onclick="useChip(this)">Expected returns in 1 year?</button>
@@ -988,14 +996,30 @@ tr:hover td{background:var(--surface2);}
 </main><!-- /main -->
 </div><!-- /shell -->
 
-<!-- ── Responsive nav toggle ───────────────────────────────── -->
+<!-- ── Nav toggle (desktop collapse + mobile overlay) ─────── -->
 <script>
 (function(){
+  var KEY='rita_nav_collapsed';
   var btn=document.getElementById('nav-toggle');
+  var shell=document.querySelector('.shell');
   var sidebar=document.querySelector('.sidebar');
-  if(!btn||!sidebar)return;
-  btn.addEventListener('click',function(e){e.stopPropagation();sidebar.classList.toggle('open');document.body.classList.toggle('nav-open');});
-  document.addEventListener('click',function(e){if(document.body.classList.contains('nav-open')&&!sidebar.contains(e.target)&&e.target!==btn){sidebar.classList.remove('open');document.body.classList.remove('nav-open');}});
+  if(!btn||!shell||!sidebar)return;
+  // Restore desktop collapse state
+  if(window.innerWidth>768&&localStorage.getItem(KEY)==='1')shell.classList.add('nav-collapsed');
+  btn.addEventListener('click',function(){
+    if(window.innerWidth>768){
+      var c=shell.classList.toggle('nav-collapsed');
+      localStorage.setItem(KEY,c?'1':'0');
+    } else {
+      sidebar.classList.toggle('open');
+      document.body.classList.toggle('nav-open');
+    }
+  });
+  document.addEventListener('click',function(e){
+    if(document.body.classList.contains('nav-open')&&!sidebar.contains(e.target)&&e.target!==btn){
+      sidebar.classList.remove('open');document.body.classList.remove('nav-open');
+    }
+  });
 })();
 </script>
 

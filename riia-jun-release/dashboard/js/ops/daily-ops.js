@@ -1,6 +1,91 @@
 // ── Daily Ops ─────────────────────────────────────────────────────────────────
 import { apiFetch, apiBase } from './api.js';
 
+// ── Instrument availability ────────────────────────────────────────────────────
+
+let _instruments = [];       // current state from DB
+let _pendingChanges = {};    // instrument_id -> bool (toggled but not yet saved)
+
+export async function loadInstruments() {
+  const data = await apiFetch('/api/v1/instruments');
+  const wrap = document.getElementById('dops-instruments');
+  if (!data || !data.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--t3);">No instruments found.</div>';
+    return;
+  }
+  _instruments = data;
+  _pendingChanges = {};
+  renderInstruments();
+}
+
+function renderInstruments() {
+  const wrap = document.getElementById('dops-instruments');
+  wrap.innerHTML = _instruments.map(inst => {
+    const pending  = _pendingChanges.hasOwnProperty(inst.id);
+    const isOn     = pending ? _pendingChanges[inst.id] : inst.data_ready;
+    const changed  = pending && isOn !== inst.data_ready;
+    return `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;
+                  background:${isOn ? 'var(--build-bg,#e8f5e9)' : 'var(--bg2,#f5f5f5)'};
+                  border:1.5px solid ${changed ? 'var(--warn,#e6a817)' : isOn ? 'var(--build,#1a6b3c)' : 'var(--bdr,#ddd)'};
+                  cursor:pointer;"
+           onclick="toggleInstrument('${inst.id}')"
+           title="${isOn ? 'Click to disable' : 'Click to enable'}">
+        <div style="width:10px;height:10px;border-radius:50%;background:${isOn ? 'var(--build,#1a6b3c)' : 'var(--t3,#aaa)'};flex-shrink:0;"></div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--t1);">${inst.name || inst.id}</div>
+          <div style="font-size:10px;color:var(--t3);">${inst.exchange || ''} · ${inst.id}</div>
+        </div>
+        ${changed ? '<span style="font-size:9px;font-family:var(--fm);color:var(--warn);margin-left:4px;">unsaved</span>' : ''}
+      </div>`;
+  }).join('');
+}
+
+export function toggleInstrument(instrumentId) {
+  const inst = _instruments.find(i => i.id === instrumentId);
+  if (!inst) return;
+  const currentState = _pendingChanges.hasOwnProperty(instrumentId)
+    ? _pendingChanges[instrumentId]
+    : inst.data_ready;
+  _pendingChanges[instrumentId] = !currentState;
+
+  const hasChanges = Object.keys(_pendingChanges).some(
+    id => _pendingChanges[id] !== (_instruments.find(i => i.id === id) || {}).data_ready
+  );
+  document.getElementById('btn-save-instruments').style.display = hasChanges ? '' : 'none';
+  renderInstruments();
+}
+
+export async function saveInstruments() {
+  const btn = document.getElementById('btn-save-instruments');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const toSave = Object.entries(_pendingChanges).filter(
+    ([id, val]) => val !== (_instruments.find(i => i.id === id) || {}).data_ready
+  );
+
+  let allOk = true;
+  for (const [id, isAvailable] of toSave) {
+    try {
+      const r = await fetch(
+        `${apiBase()}/api/v1/instruments/${id}/availability?is_available=${isAvailable}`,
+        { method: 'PATCH', headers: { 'Content-Type': 'application/json' } }
+      );
+      if (!r.ok) { allOk = false; }
+    } catch { allOk = false; }
+  }
+
+  if (allOk) {
+    btn.textContent = '✓ Saved';
+    setTimeout(() => { btn.style.display = 'none'; btn.textContent = 'Save Changes'; btn.disabled = false; }, 1500);
+    await loadInstruments();   // refresh from DB
+  } else {
+    btn.textContent = 'Error — retry';
+    btn.disabled = false;
+  }
+}
+
 export async function loadDailyOps() {
   const d = await apiFetch('/api/v1/portfolio/man-daily-status');
   if (!d) {

@@ -169,8 +169,8 @@ def test_training_history(base_url):
     assert isinstance(r.json(), list)
 
 
-def test_training_submit(base_url):
-    """workflow: POST /api/v1/workflow/train — user triggers a training run."""
+def test_training_submit(base_url, auth_token):
+    """workflow: POST /api/v1/workflow/train — user triggers a training run (JWT required)."""
     payload = {
         "model_version": "v1.0-test",
         "algorithm": "DoubleDQN",
@@ -180,7 +180,8 @@ def test_training_submit(base_url):
         "net_arch": "[64, 64]",
         "exploration_pct": 0.1,
     }
-    r = requests.post(f"{base_url}/api/v1/workflow/train", json=payload, timeout=TIMEOUT)
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    r = requests.post(f"{base_url}/api/v1/workflow/train", json=payload, headers=headers, timeout=TIMEOUT)
     assert r.status_code in (200, 201, 202), f"train submission failed: {r.status_code}"
     body = r.json()
     assert "run_id" in body or "status" in body
@@ -195,8 +196,9 @@ def test_observability_drift(base_url):
     r = requests.get(f"{base_url}/api/v1/drift", timeout=TIMEOUT)
     assert r.status_code == 200
     body = r.json()
-    assert "health" in body
-    assert "report" in body
+    # Endpoint shape: { "summary": { "overall": "ok"|"warn"|"alert" }, "checks": {...} }
+    assert "summary" in body, f"Expected 'summary' key in drift response, got: {list(body.keys())}"
+    assert "checks" in body, f"Expected 'checks' key in drift response, got: {list(body.keys())}"
 
 
 def test_observability_step_log(base_url):

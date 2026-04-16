@@ -64,22 +64,22 @@ def _run_backtest_job(run_id: str, config: BacktestConfig) -> None:
         runs_repo.upsert(BacktestRun(**{**run.model_dump(), "status": "complete", "ended_at": ended_at}))
         log.info("backtest.complete", run_id=run_id)
 
-        for daily in outcome.daily_results:
-            results_repo.upsert(
-                BacktestResult(
-                    result_id=str(uuid.uuid4()),
-                    run_id=run_id,
-                    date=daily.date,
-                    portfolio_value=daily.portfolio_value,
-                    benchmark_value=daily.benchmark_value,
-                    allocation=daily.allocation,
-                    close_price=daily.close_price,
-                    total_return=outcome.total_return,
-                    sharpe_ratio=outcome.sharpe_ratio,
-                    max_drawdown=outcome.max_drawdown,
-                    recorded_at=ended_at,
-                )
+        results_repo.bulk_create([
+            BacktestResult(
+                result_id=str(uuid.uuid4()),
+                run_id=run_id,
+                date=daily.date,
+                portfolio_value=daily.portfolio_value,
+                benchmark_value=daily.benchmark_value,
+                allocation=daily.allocation,
+                close_price=daily.close_price,
+                total_return=outcome.total_return,
+                sharpe_ratio=outcome.sharpe_ratio,
+                max_drawdown=outcome.max_drawdown,
+                recorded_at=ended_at,
             )
+            for daily in outcome.daily_results
+        ])
     finally:
         db.close()
 

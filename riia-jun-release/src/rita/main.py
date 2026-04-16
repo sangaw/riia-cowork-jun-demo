@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import date, datetime, timezone
 
 import structlog
 from pathlib import Path
+from typing import Any, Optional
 
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -13,13 +15,14 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 import rita.models  # noqa: F401 -- registers all ORM models with Base.metadata
 from rita.auth import get_current_user
 from rita.config import get_settings
 from rita.limiter import limiter
-from rita.database import Base, engine
+from rita.database import Base, engine, get_db
 from rita.exception_handlers import (
     http_exception_handler,
     repository_validation_handler,
@@ -46,6 +49,8 @@ from rita.api.experience.dashboard import router as dashboard_router
 from rita.api.experience.fno import router as fno_router
 from rita.api.experience.ops import router as ops_router
 from rita.api.v1.observability import router as observability_router
+from rita.api.v1.workflow.chat import router as chat_router
+from rita.api.v1.portfolio import router as portfolio_router
 
 settings = get_settings()
 log = structlog.get_logger()
@@ -56,6 +61,104 @@ async def lifespan(app: FastAPI):
     configure_logging()
     log.info("app.startup", name=settings.app.name, version=settings.app.version)
     Base.metadata.create_all(bind=engine)
+
+    # ── Seed instruments table (one-time, skipped if rows already exist) ─────
+    try:
+        import datetime as _dt
+        from rita.repositories.instrument import InstrumentRepository
+        from rita.schemas.instrument import Instrument as _Instrument
+        from rita.database import SessionLocal
+
+        _SEED_INSTRUMENTS = [
+            _Instrument(instrument_id="NIFTY",     name="Nifty 50",  exchange="NSE",    country_code="IN", lot_size=75,   is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="BANKNIFTY", name="Bank Nifty", exchange="NSE",    country_code="IN", lot_size=30,   is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="NVIDIA",    name="Nvidia",     exchange="NASDAQ", country_code="US", lot_size=None, is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="ASML",      name="ASML",       exchange="AMS",    country_code="NL", lot_size=None, is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
+        ]
+
+        _db = SessionLocal()
+        try:
+            _repo = InstrumentRepository(_db)
+            existing = _repo.read_all()
+            existing_ids = {i.instrument_id for i in existing}
+
+            # One-time rename: NVDA → NVIDIA (directory is named NVIDIA)
+            if "NVDA" in existing_ids and "NVIDIA" not in existing_ids:
+                from sqlalchemy import text as _text
+                _db.execute(_text("UPDATE instruments SET instrument_id='NVIDIA' WHERE instrument_id='NVDA'"))
+                _db.commit()
+                log.info("instruments.renamed", old="NVDA", new="NVIDIA")
+                existing_ids = {("NVIDIA" if i == "NVDA" else i) for i in existing_ids}
+
+            if not existing_ids:
+                for inst in _SEED_INSTRUMENTS:
+                    _repo.upsert(inst)
+                log.info("instruments.seeded", count=len(_SEED_INSTRUMENTS))
+        finally:
+            _db.close()
+    except Exception as _exc:
+        log.warning("instruments.seed_failed", error=str(_exc))
+
+    # ── Seed market data from CSV if DB is empty ─────────────────────────────
+    try:
+        import uuid as _uuid
+        import datetime as _dt
+        from rita.core.data_loader import load_nifty_csv
+        from rita.repositories.market_data import MarketDataCacheRepository
+        from rita.schemas.market_data import MarketDataCache as _MarketDataCache
+        from rita.database import SessionLocal
+
+        # Raw historical file (2025); nifty_manual.csv provides 2026 data
+        csv_path = Path("data/raw/NIFTY/merged.csv")
+
+        db = SessionLocal()
+        try:
+            repo = MarketDataCacheRepository(db)
+            if not repo.read_all():   # only ingest if table is empty
+                import pandas as _pd  # noqa: PLC0415
+                from rita.models.market_data import MarketDataCacheModel as _MDModel  # noqa: PLC0415
+
+                # Load 2025 data from the raw historical file
+                frames = []
+                if csv_path.exists():
+                    _df_raw = load_nifty_csv(str(csv_path))
+                    frames.append(_df_raw[_df_raw.index.year == 2025])
+                else:
+                    log.warning("market_data.csv_not_found", path=str(csv_path.resolve()))
+
+                # Also load 2026 data from the manually maintained daily file
+                _manual = Path(settings.data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
+                if _manual.exists() and _manual != csv_path:
+                    _df_manual = load_nifty_csv(str(_manual))
+                    frames.append(_df_manual[_df_manual.index.year == 2026])
+
+                if frames:
+                    df = _pd.concat(frames).sort_index()
+                    df = df[~df.index.duplicated(keep="last")]
+                    now = _dt.datetime.now(_dt.timezone.utc)
+                    records = [
+                        _MDModel(
+                            cache_id=str(_uuid.uuid4()),
+                            date=dt.date(),
+                            underlying="NIFTY",
+                            open=float(row["Open"]),
+                            high=float(row["High"]),
+                            low=float(row["Low"]),
+                            close=float(row["Close"]),
+                            shares_traded=int(row["Volume"]) if "Volume" in row.index and row["Volume"] == row["Volume"] else None,
+                            recorded_at=now,
+                        )
+                        for dt, row in df.iterrows()
+                    ]
+                    db.add_all(records)
+                    db.commit()
+                    log.info("market_data.seeded", rows=len(records))
+        finally:
+            db.close()
+    except Exception as _exc:
+        log.warning("market_data.seed_failed", error=str(_exc))
+
+
     yield
     log.info("app.shutdown")
 
@@ -107,6 +210,12 @@ app.include_router(ops_router)
 # -- Observability -- structured JSON for Ops dashboard -----------------------
 app.include_router(observability_router)
 
+# -- Chat -- local intent classifier + OHLCV dispatch (no external API) -------
+app.include_router(chat_router)
+
+# -- Portfolio -- cross-instrument overview + backtest (read-only, no auth) ----
+app.include_router(portfolio_router)
+
 # -- Prometheus metrics (must come after all routers are registered) -----------
 instrument_app(app)
 
@@ -117,13 +226,176 @@ if _dashboard_dir.exists():
 
 
 @app.get("/health", tags=["observability"])
-def health() -> dict:
-    """Liveness probe.
+def health(db: Session = Depends(get_db)) -> dict:
+    """Liveness probe — enriched with model and data-freshness info for the dashboard.
 
-    Returns HTTP 200 as long as the process is running.  No data-layer check
-    is performed — liveness must not fail due to storage issues.
+    Returns HTTP 200 as long as the process is running.  The DB check for
+    freshness/model data is best-effort: failures are swallowed so the probe
+    never returns 5xx due to a storage issue.
     """
-    return {"status": "ok", "version": settings.app.version}
+    from rita.repositories.market_data import MarketDataCacheRepository
+    from rita.repositories.training import TrainingRunsRepository
+
+    model_exists: bool = False
+    model_age_days: Optional[int] = None
+    csv_loaded: bool = False
+    last_pipeline_run: Optional[str] = None
+    data_freshness: dict[str, Any] = {}
+    sharpe_trend_last5: list[float] = []
+    output_dir: str = settings.data.output_dir
+
+    try:
+        # Model file check — search recursively (models live in instrument subfolders)
+        model_dir = Path(settings.model.path)
+        zips = sorted(model_dir.rglob("*.zip")) if model_dir.exists() else []
+        if zips:
+            model_exists = True
+            latest_model = max(zips, key=lambda p: p.stat().st_mtime)
+            age_secs = (datetime.now(timezone.utc).timestamp() - latest_model.stat().st_mtime)
+            model_age_days = int(age_secs / 86400)
+
+        # CSV / input data check — count rows and find latest date from files
+        input_dir = Path(settings.data.input_dir)
+        csv_files = list(input_dir.rglob("*.csv")) if input_dir.exists() else []
+        csv_loaded = len(csv_files) > 0
+        total_csv_rows = 0
+        csv_latest_dt: date | None = None
+        for _csv in csv_files:
+            try:
+                with open(_csv, encoding="utf-8", errors="ignore") as _f:
+                    _lines = [_l.rstrip() for _l in _f if _l.strip()]
+                if len(_lines) < 2:
+                    continue
+                total_csv_rows += len(_lines) - 1  # subtract header
+                _last_val = _lines[-1].split(",")[0].strip()
+                _parsed: date | None = None
+                for _fmt in ("%d-%b-%Y", "%Y-%m-%d"):
+                    try:
+                        _parsed = datetime.strptime(_last_val[:len(_fmt) + 4], _fmt).date()
+                        break
+                    except ValueError:
+                        pass
+                if _parsed and (csv_latest_dt is None or _parsed > csv_latest_dt):
+                    csv_latest_dt = _parsed
+            except Exception:  # noqa: BLE001
+                pass
+
+        # Data freshness — prefer CSV files (canonical source); DB is a supplementary check
+        mkt_repo = MarketDataCacheRepository(db)
+        records = mkt_repo.read_all()
+        if records:
+            db_latest = max(r.date for r in records)
+            db_days_old = (date.today() - db_latest).days
+            db_status = "ok" if db_days_old < 7 else ("warn" if db_days_old < 30 else "alert")
+            data_freshness = {
+                "latest_date": str(db_latest),
+                "days_since_latest": db_days_old,
+                "status": db_status,
+            }
+        # Override with CSV-derived date when CSV is fresher than DB
+        if csv_latest_dt:
+            csv_days_old = (date.today() - csv_latest_dt).days
+            if not data_freshness or csv_days_old < data_freshness.get("days_since_latest", 9999):
+                csv_status = "ok" if csv_days_old < 7 else ("warn" if csv_days_old < 30 else "alert")
+                data_freshness = {
+                    "latest_date": str(csv_latest_dt),
+                    "days_since_latest": csv_days_old,
+                    "status": csv_status,
+                }
+        data_freshness["total_rows"] = total_csv_rows
+
+        # Last pipeline run + sharpe trend
+        train_repo = TrainingRunsRepository(db)
+        runs = sorted(train_repo.read_all(), key=lambda r: r.recorded_at)
+        if runs:
+            last_run = runs[-1]
+            last_pipeline_run = last_run.ended_at.isoformat() if last_run.ended_at else last_run.recorded_at.isoformat()
+        sharpe_trend_last5 = [
+            r.backtest_sharpe for r in runs[-5:] if r.backtest_sharpe is not None
+        ]
+    except Exception:  # noqa: BLE001
+        pass
+
+    return {
+        "status": "ok",
+        "version": settings.app.version,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "model_exists": model_exists,
+        "model_age_days": model_age_days,
+        "csv_loaded": csv_loaded,
+        "last_pipeline_run": last_pipeline_run,
+        "data_freshness": data_freshness,
+        "sharpe_trend_last5": sharpe_trend_last5,
+        "output_dir": output_dir,
+    }
+
+
+@app.get("/progress", tags=["observability"])
+def progress(db: Session = Depends(get_db)) -> dict:
+    """Return pipeline step statuses for the progress bar in the RITA dashboard.
+
+    Steps match the 8-segment bar in rita.html:
+    Goal → Market → Strategy → Train → Period → Backtest → Results → Update.
+    Statuses are derived from training and backtest run records in the DB.
+    """
+    from rita.repositories.training import TrainingRunsRepository
+    from rita.repositories.backtest import BacktestRunsRepository
+
+    steps = [
+        {"name": "Goal",     "status": "completed"},    # always considered set
+        {"name": "Market",   "status": "completed"},    # static market analysis
+        {"name": "Strategy", "status": "completed"},    # config-driven strategy
+        {"name": "Train",    "status": "pending"},
+        {"name": "Period",   "status": "pending"},      # backtest period selection
+        {"name": "Backtest", "status": "pending"},
+        {"name": "Results",  "status": "pending"},
+        {"name": "Update",   "status": "pending"},
+    ]
+
+    try:
+        train_repo = TrainingRunsRepository(db)
+        bt_repo = BacktestRunsRepository(db)
+
+        train_runs = sorted(train_repo.read_all(), key=lambda r: r.recorded_at)
+        bt_runs = sorted(bt_repo.read_all(), key=lambda r: r.recorded_at)
+
+        if train_runs:
+            latest_train = train_runs[-1]
+            if latest_train.status == "complete":
+                steps[3]["status"] = "completed"
+            elif latest_train.status in ("running", "pending"):
+                steps[3]["status"] = "in_progress"
+            elif latest_train.status == "failed":
+                steps[3]["status"] = "failed"
+
+        if bt_runs:
+            latest_bt = bt_runs[-1]
+            bt_status = "pending"
+            if latest_bt.status == "complete":
+                bt_status = "completed"
+            elif latest_bt.status in ("running", "pending"):
+                bt_status = "in_progress"
+            elif latest_bt.status == "failed":
+                bt_status = "failed"
+
+            # Period is "completed" once a backtest has been submitted (period was chosen)
+            steps[4]["status"] = "completed" if bt_status in ("completed", "in_progress", "failed") else "pending"
+            steps[5]["status"] = bt_status          # Backtest
+            steps[6]["status"] = bt_status          # Results — available once backtest runs
+            steps[7]["status"] = bt_status          # Update — recommendation available after backtest
+    except Exception:  # noqa: BLE001
+        pass
+
+    return {"steps": steps}
+
+
+@app.post("/reset", tags=["observability"])
+def reset() -> dict:
+    """Session reset — stateless API, nothing to clear.
+
+    Returns a simple acknowledgement consumed by the dashboard Reset button.
+    """
+    return {"status": "ok", "message": "Session reset"}
 
 
 @app.get("/readyz", tags=["observability"])

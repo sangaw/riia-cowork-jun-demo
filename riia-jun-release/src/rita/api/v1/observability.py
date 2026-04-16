@@ -6,6 +6,7 @@ Provides structured JSON summaries of:
   - /api/v1/drift                 — System health / drift checks
   - /api/v1/mcp-calls             — MCP tool call log (empty in this deployment)
   - /api/v1/performance-summary   — Latest backtest KPIs for the dashboard
+  - /api/v1/trade-events          — Trade entry/exit events from backtest allocation changes
   - /api/v1/instrument/active     — Currently active instrument info
   - POST /api/v1/pipeline         — Trigger a full train+backtest pipeline run
 """
@@ -175,31 +176,74 @@ def training_progress(run_id: Optional[str] = None) -> list[dict[str, Any]]:
 
 @router.get("/step-log", summary="Pipeline step log")
 def step_log(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
-    """Return training runs formatted as pipeline steps for the monitoring table.
+    """Return the most recent pipeline run's steps for the monitoring table.
 
-    Each training run is one logical pipeline step.
+    A pipeline run = one train + one backtest. Steps are the logical phases:
+      1. Load Data, 2. Compute Indicators, 3. Train/Validate, 4. Backtest
+
+    Only the latest pipeline run is returned (not all historical runs).
     """
-    repo = TrainingRunsRepository(db)
-    runs = repo.read_all()
+    train_repo = TrainingRunsRepository(db)
+    bt_repo = BacktestRunsRepository(db)
 
-    rows: list[dict[str, Any]] = []
-    for i, run in enumerate(sorted(runs, key=lambda r: r.recorded_at), start=1):
-        started = run.started_at.isoformat() if run.started_at else None
-        ended = run.ended_at.isoformat() if run.ended_at else None
-        duration = None
-        if run.started_at and run.ended_at:
-            duration = (run.ended_at - run.started_at).total_seconds()
+    all_trains = sorted(train_repo.read_all(), key=lambda r: r.recorded_at, reverse=True)
+    all_bts = sorted(bt_repo.read_all(), key=lambda r: r.recorded_at, reverse=True)
 
-        rows.append({
-            "step_num": i,
-            "step_name": f"Train {run.model_version}",
-            "status": run.status,
-            "duration_secs": duration,
-            "started_at": started,
-            "ended_at": ended,
-            "run_id": run.run_id,
-        })
+    if not all_trains:
+        return []
 
+    latest = all_trains[0]
+    # Find the backtest that matches (same run time window)
+    latest_bt = all_bts[0] if all_bts else None
+
+    def _iso(dt: Any) -> Optional[str]:
+        return dt.isoformat() if dt else None
+
+    def _dur(start: Any, end: Any) -> Optional[float]:
+        if start and end:
+            return (end - start).total_seconds()
+        return None
+
+    rows = [
+        {
+            "step_num": 1,
+            "step_name": "Load & Prepare Data",
+            "status": "completed",
+            "duration_secs": None,
+            "started_at": _iso(latest.started_at),
+            "ended_at": None,
+            "run_id": latest.run_id,
+        },
+        {
+            "step_num": 2,
+            "step_name": "Compute Indicators",
+            "status": "completed",
+            "duration_secs": None,
+            "started_at": _iso(latest.started_at),
+            "ended_at": None,
+            "run_id": latest.run_id,
+        },
+        {
+            "step_num": 3,
+            "step_name": f"Train Model ({latest.model_version})",
+            "status": latest.status if latest.status in ("complete", "completed", "failed", "running") else latest.status,
+            "duration_secs": _dur(latest.started_at, latest.ended_at),
+            "started_at": _iso(latest.started_at),
+            "ended_at": _iso(latest.ended_at),
+            "run_id": latest.run_id,
+            "sharpe": latest.backtest_sharpe,
+            "mdd": round(latest.backtest_mdd * 100, 2) if latest.backtest_mdd else None,
+        },
+        {
+            "step_num": 4,
+            "step_name": "Backtest",
+            "status": latest_bt.status if latest_bt else "pending",
+            "duration_secs": _dur(latest_bt.started_at, latest_bt.ended_at) if latest_bt else None,
+            "started_at": _iso(latest_bt.started_at) if latest_bt else None,
+            "ended_at": _iso(latest_bt.ended_at) if latest_bt else None,
+            "run_id": latest_bt.run_id if latest_bt else None,
+        },
+    ]
     return rows
 
 
@@ -662,6 +706,9 @@ class PipelineRequest(BaseModel):
     risk_tolerance: str = "moderate"
     timesteps: int = 200_000
     force_retrain: bool = False
+    n_seeds: int = 1
+    sim_start: Optional[str] = None   # ISO date override for backtest start (YYYY-MM-DD)
+    sim_end: Optional[str] = None     # ISO date override for backtest end (YYYY-MM-DD)
 
 
 class PipelineResponse(BaseModel):
@@ -713,6 +760,7 @@ def _run_pipeline_job(
 
         from rita.core.ml_dispatch import TrainingConfig
         from rita.core.data_loader import model_dir
+        mdir = model_dir(req.instrument)
         config = TrainingConfig(
             run_id=train_run_id,
             instrument=req.instrument,
@@ -723,19 +771,56 @@ def _run_pipeline_job(
             buffer_size=train_body.buffer_size,
             net_arch=train_body.net_arch,
             exploration_pct=train_body.exploration_pct,
-            output_dir=str(model_dir(req.instrument)),
+            output_dir=str(mdir),
+            n_seeds=req.n_seeds,
         )
-        # Run training synchronously inside this background thread
-        from rita.services.workflow_service import _run_training_job
-        _run_training_job(config)
+
+        # ── Reuse existing model when force_retrain=False ────────────
+        existing_zips = sorted(mdir.glob("*.zip"))
+        if not req.force_retrain and existing_zips:
+            existing_model_path = existing_zips[-1]          # pick most recent
+            reused_model_version = existing_model_path.stem  # e.g. "v1.0_abc12345"
+            log.info(
+                "pipeline.reuse_model",
+                instrument=req.instrument,
+                model_path=str(existing_model_path),
+            )
+            # Mark the training run record as complete (skipped, reused)
+            runs_repo2 = TrainingRunsRepository(db)
+            reused_run = runs_repo2.find_by_id(train_run_id)
+            if reused_run is not None:
+                runs_repo2.upsert(
+                    TrainingRun(
+                        **{
+                            **reused_run.model_dump(),
+                            "status": "complete",
+                            "started_at": datetime.now(timezone.utc),
+                            "ended_at": datetime.now(timezone.utc),
+                            "model_path": str(existing_model_path),
+                            "notes": (reused_run.notes or "") + " [reused existing model]",
+                        }
+                    )
+                )
+        else:
+            # Run training synchronously inside this background thread
+            from rita.services.workflow_service import _run_training_job
+            _run_training_job(config)
+            reused_model_version = train_body.model_version
 
         # ── Backtest ────────────────────────────────────────────────
-        end_date = date.today()
-        start_date = end_date - timedelta(days=req.time_horizon_days)
+        # Use UI-supplied dates if provided, otherwise fall back to time_horizon_days
+        if req.sim_end:
+            end_date = date.fromisoformat(req.sim_end)
+        else:
+            end_date = date.today()
+        if req.sim_start:
+            start_date = date.fromisoformat(req.sim_start)
+        else:
+            start_date = end_date - timedelta(days=req.time_horizon_days)
         backtest_body = BacktestRunCreate(
             start_date=start_date,
             end_date=end_date,
-            model_version=train_body.model_version,
+            model_version=reused_model_version,
             triggered_by="pipeline",
         )
         from rita.repositories.backtest import BacktestRunsRepository
@@ -755,8 +840,9 @@ def _run_pipeline_job(
             run_id=backtest_run_id,
             start_date=start_date,
             end_date=end_date,
-            model_version=train_body.model_version,
+            model_version=reused_model_version,
             strategy_params=None,
+            instrument=req.instrument,
         )
         _run_backtest_job(backtest_run_id, bt_config)
     except Exception:  # noqa: BLE001
@@ -826,36 +912,50 @@ def set_goal(req: GoalRequest, db: Session = Depends(get_db)) -> dict[str, Any]:
         feasibility_note = "Target is very unlikely without excessive leverage"
         suggested = 20.0
 
-    # Compute yearly returns from cached market data
+    # Compute yearly returns from cached market data (falls back to CSV when DB is empty)
     yearly_returns: list[dict[str, Any]] = []
     last_12m_return_pct: Optional[float] = None
     try:
+        import pandas as _pd  # noqa: PLC0415
+        from datetime import timedelta as _td  # noqa: PLC0415
+
         records = MarketDataCacheRepository(db).read_all()
         nifty_records = [r for r in records if r.underlying == "NIFTY"]
-        if nifty_records:
-            # Group by year — use first and last close per year
-            from collections import defaultdict as _dd
-            by_year: dict[int, list] = _dd(list)
-            for r in nifty_records:
-                by_year[r.date.year].append(r)
-            for yr in sorted(by_year):
-                yr_recs = sorted(by_year[yr], key=lambda r: r.date)
-                start_close = yr_recs[0].close
-                end_close = yr_recs[-1].close
-                if start_close and start_close > 0:
-                    ret_pct = round((end_close - start_close) / start_close * 100, 2)
-                    yearly_returns.append({"year": yr, "return_pct": ret_pct})
 
-            # Last 12 months: find records within last 365 days
-            from datetime import timedelta as _td
-            cutoff = date.today() - _td(days=365)
-            recent = [r for r in nifty_records if r.date >= cutoff]
-            if recent:
-                recent_sorted = sorted(recent, key=lambda r: r.date)
-                s = recent_sorted[0].close
-                e = recent_sorted[-1].close
-                if s and s > 0:
-                    last_12m_return_pct = round((e - s) / s * 100, 2)
+        if nifty_records:
+            # Build a small DataFrame for grouping
+            _df_rows = sorted(nifty_records, key=lambda r: r.date)
+            _dates  = _pd.to_datetime([str(r.date) for r in _df_rows])
+            _closes = [r.close for r in _df_rows]
+        else:
+            # CSV fallback — same path as market_signals
+            from rita.core.data_loader import load_nifty_csv as _load  # noqa: PLC0415
+            _raw_p = Path("data/raw/NIFTY/merged.csv")
+            csv_path = _raw_p if _raw_p.exists() else Path(get_settings().data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
+            if not csv_path.exists():
+                raise FileNotFoundError(csv_path)
+            _csv_df = _load(str(csv_path))
+            _dates  = _csv_df.index
+            _closes = _csv_df["Close"].tolist()
+
+        # Group by year
+        from collections import defaultdict as _dd  # noqa: PLC0415
+        by_year: dict[int, list[tuple]] = _dd(list)
+        for dt, cl in zip(_dates, _closes):
+            by_year[dt.year].append((dt, float(cl)))
+        for yr in sorted(by_year):
+            yr_pts = sorted(by_year[yr], key=lambda x: x[0])
+            s_cl, e_cl = yr_pts[0][1], yr_pts[-1][1]
+            if s_cl > 0:
+                yearly_returns.append({"year": yr, "return_pct": round((e_cl - s_cl) / s_cl * 100, 2)})
+
+        # Last 12 months
+        cutoff_ts = _pd.Timestamp(date.today() - _td(days=365))
+        recent_pairs = [(dt, cl) for dt, cl in zip(_dates, _closes) if dt >= cutoff_ts]
+        if len(recent_pairs) > 1:
+            s_r, e_r = recent_pairs[0][1], recent_pairs[-1][1]
+            if s_r > 0:
+                last_12m_return_pct = round((e_r - s_r) / s_r * 100, 2)
     except Exception:  # noqa: BLE001
         pass
 
@@ -908,42 +1008,69 @@ def analyze_market(db: Session = Depends(get_db)) -> dict[str, Any]:
     }
 
     try:
-        records = MarketDataCacheRepository(db).read_all()
-        nifty_records = [r for r in records if r.underlying == "NIFTY"]
-        if not nifty_records:
+        # Reuse the market_signals computation (full 252-bar history → derive signals from last bar)
+        rows = market_signals(timeframe="daily", periods=252, db=db)
+        if not rows:
             return {"step": 2, "name": "Market Analysis", "result": null_result}
 
-        latest = max(nifty_records, key=lambda r: r.date)
+        last = rows[-1]
+        rsi      = last.get("rsi_14")
+        macd_val = last.get("macd")
+        macd_sig = last.get("macd_signal")
+        bb_pct   = last.get("bb_pct_b")
+        ts       = last.get("trend_score")
+        atr_14   = last.get("atr_14")
+
+        # ATR percentile — rank last ATR against full series
+        atrs = [r["atr_14"] for r in rows if r.get("atr_14") is not None]
+        atr_pct = (
+            round(sum(1 for v in atrs if v <= atr_14) / len(atrs), 3)
+            if atrs and atr_14 is not None else None
+        )
+
+        # Classify signals
+        trend_label = (
+            "uptrend"   if ts is not None and ts >  0.2 else
+            "downtrend" if ts is not None and ts < -0.2 else
+            "sideways"  if ts is not None else "unknown"
+        )
+        rsi_signal = (
+            "overbought" if rsi is not None and rsi > 70 else
+            "oversold"   if rsi is not None and rsi < 30 else "neutral"
+        )
+        macd_signal_label = (
+            "bullish" if macd_val is not None and macd_sig is not None and macd_val > macd_sig
+            else "bearish" if macd_val is not None and macd_sig is not None
+            else "neutral"
+        )
+        bb_position = (
+            "near_upper_band" if bb_pct is not None and bb_pct > 0.8 else
+            "near_lower_band" if bb_pct is not None and bb_pct < 0.2 else "middle"
+        )
+        # Sentiment proxy: tally bull vs bear signals
+        bull = sum([trend_label == "uptrend", rsi_signal == "oversold",   macd_signal_label == "bullish"])
+        bear = sum([trend_label == "downtrend", rsi_signal == "overbought", macd_signal_label == "bearish"])
+        sentiment = "fearful" if bear >= 2 else "complacent" if bull >= 2 else "neutral"
+
         result: dict[str, Any] = {
-            "date": str(latest.date),
-            "close": latest.close,
-            "trend": "unknown",
-            "trend_score": None,
-            "sentiment_proxy": "neutral",
-            "rsi_14": None,
-            "rsi_signal": "neutral",
-            "macd": None,
-            "macd_signal_line": None,
-            "macd_signal": "neutral",
-            "bb_pct_b": None,
-            "bb_position": "middle",
-            "atr_14": None,
-            "atr_percentile": None,
-            "ema_5": None,
-            "ema_13": None,
-            "ema_26": None,
+            "date":             last.get("date"),
+            "close":            last.get("Close"),
+            "trend":            trend_label,
+            "trend_score":      ts,
+            "sentiment_proxy":  sentiment,
+            "rsi_14":           rsi,
+            "rsi_signal":       rsi_signal,
+            "macd":             macd_val,
+            "macd_signal_line": macd_sig,
+            "macd_signal":      macd_signal_label,
+            "bb_pct_b":         bb_pct,
+            "bb_position":      bb_position,
+            "atr_14":           atr_14,
+            "atr_percentile":   atr_pct,
+            "ema_5":            last.get("ema_5"),
+            "ema_13":           last.get("ema_13"),
+            "ema_26":           last.get("ema_26"),
         }
-        # Populate any extra fields that exist on the schema
-        for field in (
-            "trend", "trend_score", "sentiment_proxy",
-            "rsi_14", "rsi_signal",
-            "macd", "macd_signal_line", "macd_signal",
-            "bb_pct_b", "bb_position",
-            "atr_14", "atr_percentile",
-            "ema_5", "ema_13", "ema_26",
-        ):
-            if hasattr(latest, field):
-                result[field] = getattr(latest, field)
         return {"step": 2, "name": "Market Analysis", "result": result}
     except Exception:  # noqa: BLE001
         return {"step": 2, "name": "Market Analysis", "result": null_result}
@@ -971,6 +1098,63 @@ def design_strategy() -> dict[str, Any]:
             "output_dir": cfg.data.output_dir,
         },
     }
+
+
+# ── GET /api/v1/data-prep/status ──────────────────────────────────────────────
+
+@router.get("/data-prep/status", summary="Data preparation pipeline status")
+def data_prep_status() -> dict[str, Any]:
+    """Return the current data preparation status for the Ops Overview dashboard.
+
+    Checks for the presence of the Nifty CSV input files and market data cache.
+    Shape consumed by overview.js loadDataPrepStatus():
+    ```json
+    {
+      "status": "ok" | "warn" | "error",
+      "stages": [
+        {"name": "Raw CSV", "status": "ok", "detail": "merged.csv found (1250 rows)"},
+        ...
+      ]
+    }
+    ```
+    """
+    cfg = get_settings()
+    stages: list[dict[str, Any]] = []
+    overall = "ok"
+
+    # Stage 1: raw merged CSV
+    raw_csv = Path("data/raw/NIFTY/merged.csv")
+    if raw_csv.exists():
+        try:
+            with open(raw_csv, encoding="utf-8", errors="ignore") as f:
+                row_count = sum(1 for _ in f) - 1  # subtract header
+            stages.append({"name": "Raw CSV", "status": "ok", "detail": f"merged.csv found ({row_count} rows)"})
+        except Exception:
+            stages.append({"name": "Raw CSV", "status": "ok", "detail": "merged.csv found"})
+    else:
+        stages.append({"name": "Raw CSV", "status": "warn", "detail": "merged.csv not found — market signals will use nifty_manual.csv"})
+        overall = "warn"
+
+    # Stage 2: manual daily extension
+    manual_csv = Path(cfg.data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
+    if manual_csv.exists():
+        stages.append({"name": "Manual Daily Data", "status": "ok", "detail": "nifty_manual.csv found"})
+    else:
+        stages.append({"name": "Manual Daily Data", "status": "warn", "detail": "nifty_manual.csv not found — 2026 data unavailable"})
+        if overall != "error":
+            overall = "warn"
+
+    # Stage 3: model files
+    model_dir = Path(cfg.model.path)
+    zips = sorted(model_dir.rglob("*.zip")) if model_dir.exists() else []
+    if zips:
+        stages.append({"name": "Model Files", "status": "ok", "detail": f"{len(zips)} model file(s) found"})
+    else:
+        stages.append({"name": "Model Files", "status": "warn", "detail": "No trained model files found — run pipeline to train"})
+        if overall != "error":
+            overall = "warn"
+
+    return {"status": overall, "stages": stages}
 
 
 # ── GET /api/v1/mcp-calls ─────────────────────────────────────────────────────
@@ -1242,17 +1426,34 @@ def market_signals(
     nifty = [r for r in records if r.underlying == "NIFTY"]
 
     if not nifty:
-        return []
+        # DB cache empty — try reading directly from the CSV file
+        from pathlib import Path as _Path  # noqa: PLC0415
+        from rita.core.data_loader import load_nifty_csv  # noqa: PLC0415
+        _raw = _Path("data/raw/NIFTY/merged.csv")
+        csv_path = _raw if _raw.exists() else _Path(get_settings().data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
+        if not csv_path.exists():
+            return []
+        try:
+            _df = load_nifty_csv(str(csv_path))
+            daily_close  = _df["Close"].astype(float)
+            daily_high   = _df["High"].astype(float)
+            daily_low    = _df["Low"].astype(float)
+            daily_volume = (_df["Volume"].astype(float) if "Volume" in _df.columns else pd.Series([0.0] * len(_df)))
+            daily_dates  = _df.index
+            bar_dates    = [str(d.date()) for d in daily_dates]
+        except Exception:  # noqa: BLE001
+            return []
+    else:
+        # Sort ascending by date — required for rolling calculations to be correct
+        nifty.sort(key=lambda r: r.date)
 
-    # Sort ascending by date — required for rolling calculations to be correct
-    nifty.sort(key=lambda r: r.date)
-
-    # Build daily series first — use full history for indicator warm-up
-    daily_close  = pd.Series([r.close for r in nifty], dtype=float)
-    daily_high   = pd.Series([getattr(r, "high",  r.close) for r in nifty], dtype=float)
-    daily_low    = pd.Series([getattr(r, "low",   r.close) for r in nifty], dtype=float)
-    daily_volume = pd.Series([int(getattr(r, "shares_traded", None) or 0) for r in nifty], dtype=float)
-    daily_dates  = pd.to_datetime([str(rec.date) for rec in nifty])
+        # Build daily series first — use full history for indicator warm-up
+        daily_close  = pd.Series([r.close for r in nifty], dtype=float)
+        daily_high   = pd.Series([getattr(r, "high",  r.close) for r in nifty], dtype=float)
+        daily_low    = pd.Series([getattr(r, "low",   r.close) for r in nifty], dtype=float)
+        daily_volume = pd.Series([int(getattr(r, "shares_traded", None) or 0) for r in nifty], dtype=float)
+        daily_dates  = pd.to_datetime([str(rec.date) for rec in nifty])
+        bar_dates    = [str(rec.date) for rec in nifty]
 
     # ── Resample to weekly / monthly when requested ────────────────────────────
     if timeframe in ("weekly", "monthly"):
@@ -1275,7 +1476,8 @@ def market_signals(
         high      = daily_high
         low       = daily_low
         volume    = daily_volume
-        bar_dates = [str(rec.date) for rec in nifty]
+        if nifty:  # bar_dates already set when loaded from CSV fallback
+            bar_dates = [str(rec.date) for rec in nifty]
 
     # ── RSI(14) ────────────────────────────────────────────────────────────────
     delta = close.diff()
@@ -1373,40 +1575,68 @@ def training_history(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     ```json
     [
       {
+        "round": 1,
         "run_id": "abc123",
+        "timestamp": "2026-04-01T10:00:00Z",
         "model_version": "v1.0",
         "algorithm": "DoubleDQN",
         "status": "complete",
         "timesteps": 200000,
-        "started_at": "2026-04-01T10:00:00Z",
-        "ended_at": "2026-04-01T11:00:00Z",
-        "recorded_at": "2026-04-01T10:00:00Z",
+        "source": "trained",
+        "val_sharpe": 1.23,
         "backtest_sharpe": 1.23,
-        "backtest_return": 0.185,
-        "backtest_mdd": -0.085
+        "backtest_mdd_pct": -8.5,
+        "backtest_return_pct": 18.5,
+        "backtest_cagr_pct": 18.5,
+        "backtest_constraints_met": true,
+        "notes": ""
       }
     ]
     ```
     """
     repo = TrainingRunsRepository(db)
-    runs = sorted(repo.read_all(), key=lambda r: r.recorded_at, reverse=True)
-    return [
-        {
+    # sort oldest-first to assign round numbers, then reverse for newest-first output
+    runs = sorted(repo.read_all(), key=lambda r: r.recorded_at)
+    total = len(runs)
+    result = []
+    for i, r in enumerate(runs):
+        mdd_raw = r.backtest_mdd or 0.0
+        sharpe = r.backtest_sharpe or 0.0
+        ret_raw = r.backtest_return or 0.0
+        mdd_pct = round(mdd_raw * 100, 2)
+        ret_pct = round(ret_raw * 100, 2)
+        constraints_met = bool(sharpe >= 1.0 and abs(mdd_pct) < 10) if r.backtest_sharpe is not None else None
+        result.append({
+            "round": i + 1,
             "run_id": r.run_id,
+            "timestamp": r.recorded_at.isoformat(),
             "model_version": r.model_version,
             "algorithm": r.algorithm,
             "status": r.status,
             "timesteps": r.timesteps,
-            "learning_rate": r.learning_rate,
-            "started_at": r.started_at.isoformat() if r.started_at else None,
-            "ended_at": r.ended_at.isoformat() if r.ended_at else None,
-            "recorded_at": r.recorded_at.isoformat(),
-            "backtest_sharpe": r.backtest_sharpe,
-            "backtest_return": r.backtest_return,
-            "backtest_mdd": r.backtest_mdd,
-        }
-        for r in runs
-    ]
+            "source": "trained",
+            "val_sharpe": sharpe,          # best proxy — no separate val_sharpe stored in DB
+            "backtest_sharpe": sharpe,
+            "backtest_mdd_pct": mdd_pct,
+            "backtest_return_pct": ret_pct,
+            "backtest_cagr_pct": ret_pct,  # best proxy — no separate CAGR stored in DB
+            "backtest_constraints_met": constraints_met,
+            "notes": "",
+        })
+    result.reverse()  # newest-first for display
+    return result
+
+
+def _regime(allocation: Any) -> str:
+    """Derive a simple regime label from the model's allocation decision."""
+    if allocation is None:
+        return "Unknown"
+    a = float(allocation)
+    if a >= 0.99:
+        return "Bull"
+    if a >= 0.45:
+        return "Neutral"
+    return "Bear"
 
 
 # ── GET /api/v1/risk-timeline ─────────────────────────────────────────────────
@@ -1482,6 +1712,9 @@ def risk_timeline(
     # phase query param is accepted for forward-compatibility but not used for filtering.
     _ = phase
 
+    # MDD budget limit — 10% as per financial domain rules (CLAUDE.md)
+    _MDD_LIMIT_PCT = 10.0
+
     return [
         {
             "date": str(r.date),
@@ -1491,15 +1724,142 @@ def risk_timeline(
             "allocation": r.allocation,
             "close_price": r.close_price,
             "current_drawdown_pct": drawdowns[i],
+            # Drawdown expressed as % of the 10% MDD budget (0–100+%)
+            # 100% means the portfolio has consumed its full drawdown allowance.
+            "drawdown_budget_pct": round(
+                min(abs(drawdowns[i]) / _MDD_LIMIT_PCT * 100.0, 150.0), 2
+            ),
             "rolling_vol_20d": _rolling_vol(port_rets, i),
             "market_var_95": _var_95(bench_rets, i),
             "portfolio_var_95": _var_95(port_rets, i),
-            "regime": None,                              # placeholder — no regime model in v1
+            "regime": _regime(r.allocation),
+            # Numeric trend proxy: allocation mapped to [-1, +1].
+            # -1 = fully de-risked (bearish), +1 = fully invested (bullish).
+            # Used by the Market Regime chart (parseFloat-safe, unlike regime string).
+            "trend_score": round(
+                ((r.allocation if r.allocation is not None else 0.5) - 0.5) * 2.0, 4
+            ),
             "phase": "Backtest",
             "run_id": r.run_id,
         }
         for i, r in enumerate(results)
     ]
+
+
+# ── GET /api/v1/trade-events ──────────────────────────────────────────────────
+
+@router.get("/trade-events", summary="Trade entry/exit events derived from backtest allocation changes")
+def trade_events(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+    """Derive trade entry/exit events from allocation changes in the latest backtest.
+
+    Scans consecutive rows in backtest_results for the latest completed run and
+    emits an event whenever allocation changes by more than 5%.
+
+    Response fields (per event):
+        date, phase, event_type, trade_type, risk_action,
+        allocation, delta_allocation, price, pnl,
+        portfolio_var_95, delta_var, regime
+    """
+    import math as _math
+    import statistics as _stats
+
+    runs_repo = BacktestRunsRepository(db)
+    results_repo = BacktestResultsRepository(db)
+
+    all_runs = [r for r in runs_repo.read_all() if r.status in ("complete", "completed")]
+    if not all_runs:
+        return []
+
+    latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
+    results = sorted(
+        [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
+        key=lambda r: r.date,
+    )
+    if not results:
+        return []
+
+    # ── Build daily return series for rolling VaR-95 ────────────────────────
+    port_values = [r.portfolio_value if r.portfolio_value is not None else 1.0 for r in results]
+
+    daily_rets: list[Optional[float]] = [None]
+    for i in range(1, len(port_values)):
+        prev = port_values[i - 1]
+        daily_rets.append((port_values[i] - prev) / prev if prev else None)
+
+    def _var_95(i: int, window: int = 20) -> Optional[float]:
+        window_rets = sorted(r for r in daily_rets[max(0, i - window + 1): i + 1] if r is not None)
+        if not window_rets:
+            return None
+        idx = max(0, int(len(window_rets) * 0.05) - 1)
+        return round(window_rets[idx] * 100, 4)
+
+    def _rolling_sharpe(i: int, window: int = 63) -> Optional[float]:
+        window_rets = [r for r in daily_rets[max(0, i - window + 1): i + 1] if r is not None]
+        if len(window_rets) < 2:
+            return None
+        mn = sum(window_rets) / len(window_rets)
+        sd = _math.sqrt(sum((r - mn) ** 2 for r in window_rets) / len(window_rets))
+        return round((mn / sd) * _math.sqrt(252), 3) if sd > 0 else None
+
+    def _regime(alloc: Optional[float]) -> str:
+        if alloc is None:
+            return "unknown"
+        if alloc > 0.6:
+            return "bullish"
+        if alloc < 0.2:
+            return "bearish"
+        return "neutral"
+
+    # ── Scan for allocation change events ───────────────────────────────────
+    ALLOC_THRESHOLD = 0.05   # 5% change triggers an event
+    events: list[dict[str, Any]] = []
+    entry_pv: Optional[float] = None   # portfolio value at last entry
+
+    for i in range(1, len(results)):
+        cur = results[i]
+        prev = results[i - 1]
+        cur_alloc = cur.allocation if cur.allocation is not None else 0.0
+        prev_alloc = prev.allocation if prev.allocation is not None else 0.0
+        delta = round(cur_alloc - prev_alloc, 4)
+
+        if abs(delta) < ALLOC_THRESHOLD:
+            continue
+
+        var95 = _var_95(i)
+        prev_var95 = _var_95(i - 1)
+        delta_var = round((var95 or 0.0) - (prev_var95 or 0.0), 4)
+
+        if delta > 0:
+            risk_action = "Increased"
+            event_type = "entry"
+            entry_pv = port_values[i]
+            pnl = None
+        else:
+            risk_action = "Reduced"
+            event_type = "exit"
+            if entry_pv and entry_pv > 0:
+                pnl = round((port_values[i] - entry_pv) / entry_pv * 100, 4)
+            else:
+                pnl = None
+            entry_pv = None  # reset after exit
+
+        events.append({
+            "date": str(cur.date),
+            "phase": "Backtest",
+            "event_type": event_type,
+            "trade_type": event_type,
+            "risk_action": risk_action,
+            "allocation": round(cur_alloc, 4),
+            "delta_allocation": delta,
+            "price": cur.close_price,
+            "pnl": pnl,
+            "portfolio_var_95": var95,
+            "delta_var": delta_var,
+            "regime": _regime(cur_alloc),
+            "sharpe_at_trade": _rolling_sharpe(i),
+        })
+
+    return events
 
 
 # ── GET /api/v1/shap ──────────────────────────────────────────────────────────

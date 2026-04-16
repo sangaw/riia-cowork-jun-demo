@@ -22,6 +22,9 @@ dependencies = [
     "prometheus-fastapi-instrumentator>=6.1",
     "aiofiles>=23.2",
     "slowapi>=0.1.9",
+    "scikit-learn>=1.4",
+    "ta>=0.10",
+    "sentence-transformers>=2.7",
 ]
 
 [project.optional-dependencies]

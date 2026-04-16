@@ -2,6 +2,21 @@
 import { api } from './api.js';
 let _chatConfs = [], _chatLats = [];
 
+function _readGoalContext() {
+  const portfolio = parseFloat(document.getElementById('inp-portfolio')?.value) || 1_000_000;
+  const target    = parseFloat(document.getElementById('inp-target')?.value)    || null;
+  const horizon   = parseInt(document.getElementById('inp-horizon')?.value)     || null;
+  const riskEl    = document.querySelector('input[name="inp-risk"]:checked');
+  const risk      = riskEl ? riskEl.value : null;
+  return { portfolio_inr: portfolio, target_return_pct: target, time_horizon_days: horizon, risk_tolerance: risk };
+}
+
+function _fmtInr(n) {
+  if (n >= 1_00_00_000) return '₹' + (n / 1_00_00_000).toFixed(1) + 'Cr';
+  if (n >= 1_00_000)    return '₹' + (n / 1_00_000).toFixed(1) + 'L';
+  return '₹' + n.toLocaleString('en-IN');
+}
+
 // Wire up textarea: auto-resize + Enter to send
 (function () {
   const ta = document.getElementById('chat-ta');
@@ -18,7 +33,8 @@ let _chatConfs = [], _chatLats = [];
 export function useChip(btn) {
   const ta = document.getElementById('chat-ta');
   if (!ta) return;
-  ta.value = btn.textContent.trim();
+  // Dynamic chips store the actual query in data-query; static chips use textContent
+  ta.value = (btn.dataset.query || btn.textContent).trim();
   ta.style.height = 'auto';
   ta.style.height = Math.min(ta.scrollHeight, 80) + 'px';
   ta.focus();
@@ -38,9 +54,15 @@ export async function sendChatMsg() {
   appendChatMsg('user', query);
   const tid = appendTyping();
 
+  const ctx = _readGoalContext();
   const t0 = Date.now();
   try {
-    const data = await api('/api/v1/chat', 'POST', { query, portfolio_inr: 1000000 });
+    const data = await api('/api/v1/chat', 'POST', {
+      query,
+      portfolio_inr:      ctx.portfolio_inr,
+      target_return_pct:  ctx.target_return_pct,
+      time_horizon_days:  ctx.time_horizon_days,
+    });
     removeTyping(tid);
     appendRitaMsg(data, Date.now() - t0);
     updateChatStats(data.confidence, data.latency_ms ?? (Date.now() - t0));
@@ -130,9 +152,41 @@ function chatMd(s) {
     .replace(/\n/g, '<br>');
 }
 
+export function showAlerts(alerts) {
+  const box = document.getElementById('chat-messages');
+  if (!box || !alerts || !alerts.length) return;
+  alerts.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'cmsg rita';
+    const isDanger = a.severity === 'danger';
+    div.innerHTML = `<div class="cbubble" style="background:var(--${isDanger ? 'danger' : 'warn'}-bg,#fff7ed);border-color:var(--${isDanger ? 'danger' : 'warn'}-bd,#fed7aa);color:var(--${isDanger ? 'danger' : 'warn'})">⚠ ${chatMd(escChatHtml(a.message))}</div>`;
+    box.appendChild(div);
+  });
+  box.scrollTop = box.scrollHeight;
+}
+
+export function updateChips(chips) {
+  const box = document.getElementById('chat-chips');
+  const status = document.getElementById('chip-status');
+  if (!box || !chips || !chips.length) return;
+  box.innerHTML = chips.map(c =>
+    `<button class="chat-chip" onclick="useChip(this)" data-query="${escChatHtml(c.query)}">${escChatHtml(c.label)}</button>`
+  ).join('');
+  if (status) status.textContent = 'live';
+}
+
 export function clearChat() {
   const box = document.getElementById('chat-messages');
-  box.innerHTML = '<div class="cmsg rita"><div class="cbubble">Hi! Ask me anything about Nifty investment — market sentiment, return estimates, allocation advice, or stress scenarios.</div></div>';
+  const ctx = _readGoalContext();
+  const parts = ['Hi! Ask me anything about Nifty investment.'];
+  if (ctx.portfolio_inr) parts.push(`Portfolio: **${_fmtInr(ctx.portfolio_inr)}**`);
+  if (ctx.risk_tolerance) parts.push(`Risk: **${ctx.risk_tolerance}**`);
+  if (ctx.target_return_pct) parts.push(`Target: **${ctx.target_return_pct}% CAGR**`);
+  if (ctx.time_horizon_days) parts.push(`Horizon: **${Math.round(ctx.time_horizon_days / 30)}m**`);
+  const welcome = parts.length > 1
+    ? parts[0] + ' I\'ve loaded your goal context: ' + parts.slice(1).join(' · ') + '.'
+    : parts[0] + ' Market sentiment, return estimates, allocation advice, or stress scenarios.';
+  box.innerHTML = `<div class="cmsg rita"><div class="cbubble">${chatMd(escChatHtml(welcome))}</div></div>`;
   _chatConfs = []; _chatLats = [];
   const qEl = document.getElementById('cs-count');
   const cEl = document.getElementById('cs-conf');

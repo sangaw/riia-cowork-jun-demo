@@ -6,7 +6,7 @@ import { loadCICD } from './cicd.js';
 import { loadDeploy } from './deploy.js';
 import { loadObservability } from './observability.js';
 import { loadChat } from './chat.js';
-import { loadDailyOps, triggerSnapshot } from './daily-ops.js';
+import { loadDailyOps, triggerSnapshot, loadInstruments, toggleInstrument, saveInstruments } from './daily-ops.js';
 import { refreshSidebar } from './sidebar.js';
 import { loadTestResults } from './test-results.js';
 
@@ -18,13 +18,15 @@ sectionLoaders['test']          = loadTestResults;
 sectionLoaders['deploy']        = loadDeploy;
 sectionLoaders['observability'] = loadObservability;
 sectionLoaders['chat']          = loadChat;
-sectionLoaders['dailyops']      = loadDailyOps;
+sectionLoaders['dailyops']      = () => { loadDailyOps(); loadInstruments(); };
 
 // ── Window bindings for inline onclick= attributes ────────────────────────────
-window.nav              = nav;
-window.triggerSnapshot  = triggerSnapshot;
-window.loadChat         = loadChat;
-window.loadDailyOps     = loadDailyOps;
+window.nav                = nav;
+window.triggerSnapshot    = triggerSnapshot;
+window.loadChat           = loadChat;
+window.loadDailyOps       = loadDailyOps;
+window.toggleInstrument   = toggleInstrument;
+window.saveInstruments    = saveInstruments;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {

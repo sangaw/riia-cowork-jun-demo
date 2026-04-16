@@ -3,11 +3,10 @@ import { apiFetch } from './api.js';
 import { fmt, badge, stepName } from './utils.js';
 
 export async function loadOverview() {
-  const [health, metrics, progress, dataStatus] = await Promise.all([
+  const [health, metrics, progress] = await Promise.all([
     apiFetch('/health'),
-    apiFetch('/metrics'),
+    apiFetch('/api/v1/metrics/summary'),
     apiFetch('/progress'),
-    apiFetch('/api/v1/data-prep/status'),
   ]);
 
   // API status pill
@@ -41,15 +40,20 @@ export async function loadOverview() {
   const mcp = await apiFetch('/api/v1/mcp-calls');
   document.getElementById('kpi-mcp').textContent = mcp ? mcp.length : '—';
 
-  if (progress) {
-    document.getElementById('kpi-pipeline').textContent = progress.steps_completed;
-    document.getElementById('kpi-pipeline-sub').textContent = `of 8 complete (${progress.pct_complete}%)`;
+  if (progress && progress.steps) {
+    const steps = progress.steps;
+    const total = steps.length;
+    const completedCount = steps.filter(s => s.status === 'completed').length;
+    const pctComplete = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+    document.getElementById('kpi-pipeline').textContent = completedCount;
+    document.getElementById('kpi-pipeline-sub').textContent = `of ${total} complete (${pctComplete}%)`;
 
     // Sidebar footer
-    const allDone = progress.steps_completed >= 8;
-    document.getElementById('mc-status-text').textContent = allDone ? 'Pipeline Complete' : `${progress.steps_completed}/8 Steps Done`;
-    document.getElementById('mc-steps').textContent = progress.steps_completed + ' / 8';
-    document.getElementById('mc-bar').style.width = progress.pct_complete + '%';
+    const allDone = completedCount >= total;
+    document.getElementById('mc-status-text').textContent = allDone ? 'Pipeline Complete' : `${completedCount}/${total} Steps Done`;
+    document.getElementById('mc-steps').textContent = `${completedCount} / ${total}`;
+    document.getElementById('mc-bar').style.width = pctComplete + '%';
   }
 
   if (health) {
@@ -81,29 +85,23 @@ export async function loadOverview() {
       ? `${health.model_age_days} days ago` : (health.model_exists ? 'exists' : 'not trained');
   }
 
-  // Dataset card
-  if (dataStatus) {
-    const csv = dataStatus.active_csv || {};
-    const isExtended = dataStatus.prepared_csv_exists;
-    const totalRows = csv.total_rows;
-    const dateFrom = csv.date_from ?? '—';
-    const dateTo = csv.date_to ?? '—';
+  // Dataset card — derived from /health (data_freshness + csv_loaded)
+  if (health) {
+    const fresh = health.data_freshness || {};
+    const daysOld = fresh.days_since_latest;
+    const latestDate = fresh.latest_date ?? '—';
 
-    let daysOld = null;
-    if (csv.date_to) {
-      daysOld = Math.floor((Date.now() - new Date(csv.date_to).getTime()) / 86400000);
-    }
-
-    document.getElementById('ds-rows').textContent = totalRows ?? '—';
+    const totalRows = fresh.total_rows;
+    document.getElementById('ds-rows').textContent = totalRows != null && totalRows > 0 ? totalRows.toLocaleString() : '—';
     document.getElementById('ds-fresh').textContent = daysOld != null ? daysOld + 'd' : '—';
     document.getElementById('ds-fresh').style.color = daysOld != null && daysOld > 7 ? 'var(--warn)' : 'var(--ok)';
-    document.getElementById('ds-range-text').textContent = `${dateFrom} → ${dateTo}`;
+    document.getElementById('ds-range-text').textContent = `— → ${latestDate}`;
 
     const extAl = document.getElementById('ds-extended-al');
-    if (isExtended) {
-      extAl.innerHTML = `<div class="al ok" style="margin-top:0"><svg class="al-ic" width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 7l3 3 5-5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Extended CSV active — using rita_output/nifty_merged.csv</div>`;
+    if (health.csv_loaded) {
+      extAl.innerHTML = `<div class="al ok" style="margin-top:0"><svg class="al-ic" width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2.5 7l3 3 5-5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>CSV data loaded — rita_input/ has source files</div>`;
     } else {
-      extAl.innerHTML = `<div class="al i" style="margin-top:0"><svg class="al-ic" width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3M6.5 9h.01" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Using base CSV — drop NSE CSVs in rita_input/ and run Prepare Data to extend</div>`;
+      extAl.innerHTML = `<div class="al i" style="margin-top:0"><svg class="al-ic" width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3M6.5 9h.01" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>No CSV files found in rita_input/ — add NSE data files to enable</div>`;
     }
   }
 
@@ -122,8 +120,8 @@ export async function loadOverview() {
           ${!isLast ? '<div class="act-line"></div>' : ''}
         </div>
         <div class="act-body">
-          <div class="act-title">Step ${row.step_num ?? '?'}: ${stepName(row.step_num)} ${badge(row.status, isOk ? 'ok' : 'danger')}</div>
-          <div class="act-desc">${row.step_name ?? ''} — ${fmt(row.duration_secs, 1)}s</div>
+          <div class="act-title">Step ${row.step_num ?? '?'}: ${row.step_name ?? stepName(row.step_num)} ${badge(row.status, isOk ? 'ok' : 'danger')}</div>
+          <div class="act-desc">${fmt(row.duration_secs, 1)}s</div>
         </div>
         <div class="act-time">${(row.ended_at || row.started_at || '').slice(0, 16)}</div>
       </div>`;

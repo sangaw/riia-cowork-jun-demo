@@ -12,6 +12,9 @@ Write automated tests for code produced by Engineer agents in the same sprint. D
 | Source | Purpose |
 |--------|---------|
 | `PLAN_STATUS.md` | Confirm which engineer deliverables are in scope this sprint |
+| `riia-jun-release/Spec_Python_Code.md` | **Always** — understand architecture invariants the tests must enforce |
+| `riia-jun-release/Spec_DB.md` | When writing tests for repos, models, or seeding logic |
+| `riia-jun-release/Spec_Data.md` | When writing tests for data loaders or CSV-handling code |
 | New source files from Engineer agents | Read the public API of each module being tested |
 | Existing ADRs | Understand what invariants the tests must enforce |
 | `riia-jun-release/pyproject.toml` | Check available test dependencies |

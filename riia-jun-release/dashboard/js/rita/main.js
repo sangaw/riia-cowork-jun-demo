@@ -2,7 +2,7 @@
 import { api } from './api.js';
 import { show, warmupChat, _sectionLoaders, getCurrentSection } from './nav.js';
 import { loadHealth, loadMetrics, loadPerfSummary, loadDrift, loadProgress } from './health.js';
-import { switchMsTab, loadMarketSignals } from './market-signals.js';
+import { switchMsTab, loadMarketSignals, loadGoalHint } from './market-signals.js';
 import { loadPerformance } from './performance.js';
 import { loadTrades, downloadTradeJournal } from './trades.js';
 import { loadDiagnostics } from './diagnostics.js';
@@ -14,12 +14,13 @@ import { loadMcp } from './mcp.js';
 import { loadExport, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './export.js';
 import { loadScenarios, runScenarioBacktest, setScenarioPeriod } from './scenarios.js';
 import { loadAudit } from './audit.js';
-import { useChip, sendChatMsg, clearChat } from './chat.js';
+import { useChip, sendChatMsg, clearChat, updateChips, showAlerts } from './chat.js';
 import { openChartModal, closeChartModal } from './chart-modal.js';
 
 // ── Populate section loaders map ───────────────────────────
-_sectionLoaders.market            = warmupChat;
+_sectionLoaders.market            = async () => { clearChat(); const data = await warmupChat(); if (data) { updateChips(data.chips); showAlerts(data.alerts); } };
 _sectionLoaders['market-signals'] = loadMarketSignals;
+_sectionLoaders.goal              = loadGoalHint;
 _sectionLoaders.scenarios         = loadScenarios;
 _sectionLoaders.performance       = loadPerformance;
 _sectionLoaders.trades            = loadTrades;
@@ -50,6 +51,7 @@ window.openChartModal     = openChartModal;
 window.closeChartModal    = closeChartModal;
 // Reload buttons for individual sections
 window.loadMarketSignals  = loadMarketSignals;
+window.loadGoalHint       = loadGoalHint;
 window.loadPerformance    = loadPerformance;
 window.loadTrades         = loadTrades;
 window.loadDiagnostics    = loadDiagnostics;

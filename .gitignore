@@ -84,6 +84,19 @@ dist/
 # ── Claude memory (local only, contains personal context) ────────────────────
 .claude/
 
+# ── Terraform ─────────────────────────────────────────────────────────────────
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+terraform.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
 # ── Temporary files ───────────────────────────────────────────────────────────
 *.tmp
 *.bak

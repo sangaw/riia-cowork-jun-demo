@@ -10,11 +10,16 @@ export function setScenarioPeriod(from, to) {
 }
 
 export async function loadScenarios() {
-  // Show last backtest results on page load if available
+  // Show last backtest results on page load only when real data exists
   try {
     const perf  = await api('/api/v1/performance-summary');
     const daily = await api('/api/v1/backtest-daily');
-    if (perf && typeof perf === 'object' && Object.keys(perf).length) renderScenarioResults(perf, daily);
+    // total_days === 0 means no completed backtest — don't render garbage NaN KPIs
+    const hasData = perf && typeof perf === 'object' && perf.total_days > 0;
+    if (hasData) {
+      renderScenarioResults(perf, daily);
+      updateGoalRecommendation(perf);
+    }
   } catch (_) {}
 }
 
@@ -33,14 +38,15 @@ export async function runScenarioBacktest() {
   setEl('scenario-result', '');
 
   try {
-    await api('/api/v1/period',   'POST', { start: from, end: to });
-    await api('/api/v1/backtest', 'POST', {});
+    // Pass the selected date range directly — /api/v1/period does not exist.
+    await api('/api/v1/backtest', 'POST', { start_date: from, end_date: to });
     const [perf, daily] = await Promise.all([
       api('/api/v1/performance-summary'),
       api('/api/v1/backtest-daily'),
     ]);
     badge.className = 'badge ok'; badge.textContent = 'Done';
     renderScenarioResults(perf, daily, from, to);
+    updateGoalRecommendation(perf);
     loadProgress(); loadHealth();
   } catch (e) {
     badge.className = 'badge err'; badge.textContent = 'Error';
@@ -53,20 +59,21 @@ export async function runScenarioBacktest() {
 
 export function renderScenarioResults(perf, daily, from, to) {
   if (!perf || typeof perf !== 'object' || !Object.keys(perf).length) { setEl('scenario-result', '<div class="empty">No results.</div>'); return; }
-  // perf is a flat dict {metric: value} from /api/v1/performance-summary
-  const m = {};
-  Object.entries(perf).forEach(([k, v]) => { m[k] = parseFloat(v); });
+  // perf is a flat dict {metric: value} from /api/v1/performance-summary.
+  // Use null-safe helper: check the raw value before calling parseFloat so we
+  // never produce "NaN" in the UI (parseFloat(null) === NaN, and NaN != null).
+  const _f = v => (v !== null && v !== undefined) ? parseFloat(v) : null;
 
-  const sharpe  = m.sharpe_ratio      != null ? m.sharpe_ratio.toFixed(3)            : '—';
-  const mdd     = m.max_drawdown_pct  != null ? m.max_drawdown_pct.toFixed(2) + '%'  : '—';
-  const ret     = m.portfolio_total_return_pct != null ? m.portfolio_total_return_pct.toFixed(2) + '%' : '—';
-  const bnh     = m.benchmark_total_return_pct != null ? m.benchmark_total_return_pct.toFixed(2) + '%' : '—';
-  const cagr    = m.portfolio_cagr_pct != null ? m.portfolio_cagr_pct.toFixed(2) + '%' : '—';
-  const trades  = m.total_trades      != null ? m.total_trades                       : '—';
-  const wr      = m.win_rate_pct      != null ? m.win_rate_pct.toFixed(1) + '%'      : '—';
-  const days    = m.total_days        != null ? m.total_days                          : '—';
-  const sharpeCls = parseFloat(m.sharpe_ratio) >= 1.0 ? 'pos' : 'neu';
-  const mddCls    = Math.abs(parseFloat(m.max_drawdown_pct)) <= 5 ? 'pos' : 'warn';
+  const sharpe  = _f(perf.sharpe_ratio)               !== null ? _f(perf.sharpe_ratio).toFixed(3)                     : '—';
+  const mdd     = _f(perf.max_drawdown_pct)            !== null ? _f(perf.max_drawdown_pct).toFixed(2) + '%'           : '—';
+  const ret     = _f(perf.portfolio_total_return_pct)  !== null ? _f(perf.portfolio_total_return_pct).toFixed(2) + '%' : '—';
+  const bnh     = _f(perf.benchmark_total_return_pct)  !== null ? _f(perf.benchmark_total_return_pct).toFixed(2) + '%' : '—';
+  const cagr    = _f(perf.portfolio_cagr_pct)          !== null ? _f(perf.portfolio_cagr_pct).toFixed(2) + '%'         : '—';
+  const trades  = perf.total_trades  !== null && perf.total_trades  !== undefined ? perf.total_trades  : '—';
+  const wr      = _f(perf.win_rate_pct) !== null ? _f(perf.win_rate_pct).toFixed(1) + '%' : '—';
+  const days    = perf.total_days    !== null && perf.total_days    !== undefined ? perf.total_days    : '—';
+  const sharpeCls = _f(perf.sharpe_ratio) !== null && _f(perf.sharpe_ratio) >= 1.0 ? 'pos' : 'neu';
+  const mddCls    = _f(perf.max_drawdown_pct) !== null && Math.abs(_f(perf.max_drawdown_pct)) <= 5 ? 'pos' : 'warn';
   const label = (from && to) ? `${from} → ${to}` : 'Last backtest';
 
   let html = `
@@ -101,5 +108,49 @@ export function renderScenarioResults(perf, daily, from, to) {
     });
   } else {
     setEl('scenario-result', html);
+  }
+}
+
+export function updateGoalRecommendation(perf) {
+  const goalResult = document.getElementById('goal-result');
+  if (!goalResult || !perf) return;
+
+  const _f = v => (v !== null && v !== undefined && !isNaN(parseFloat(v))) ? parseFloat(v) : null;
+  const cagr   = _f(perf.portfolio_cagr_pct);
+  const sharpe = _f(perf.sharpe_ratio);
+  const mdd    = _f(perf.max_drawdown_pct);
+  if (cagr === null) return;
+
+  const targetEl = document.getElementById('inp-target');
+  const target   = targetEl ? _f(targetEl.value) : null;
+
+  const onTrack  = target === null || cagr >= target;
+  const statusCls = onTrack ? 'ok' : 'warn';
+  const statusLabel = onTrack ? 'On Track' : 'Below Target';
+  const advice = target !== null
+    ? (onTrack
+        ? `RITA's backtest CAGR of ${cagr.toFixed(1)}% meets your ${target.toFixed(1)}% target. Strategy is viable.`
+        : `RITA's backtest CAGR (${cagr.toFixed(1)}%) is below your ${target.toFixed(1)}% target. Consider retraining or lowering the target.`)
+    : `Latest backtest CAGR: ${cagr.toFixed(1)}%.`;
+
+  const recHtml = `<div class="result-panel" id="backtest-recommendation">
+    <div class="card-hdr" style="margin-bottom:10px">
+      <span class="card-title">Backtest Recommendation</span>
+      <span class="badge ${statusCls}" style="margin-left:8px">${statusLabel}</span>
+    </div>
+    <div style="font-size:12px;color:var(--t2);margin-bottom:10px">${advice}</div>
+    <div class="kpi-row-4">
+      <div class="kpi"><div class="kpi-label">RITA CAGR</div><div class="kpi-value ${onTrack ? 'pos' : 'neg'}">${cagr.toFixed(2)}%</div><div class="kpi-delta">from backtest</div></div>
+      ${target !== null ? `<div class="kpi"><div class="kpi-label">Your Target</div><div class="kpi-value">${target.toFixed(1)}%</div><div class="kpi-delta">annual return</div></div>` : ''}
+      ${sharpe !== null ? `<div class="kpi"><div class="kpi-label">Sharpe Ratio</div><div class="kpi-value ${sharpe >= 1 ? 'pos' : 'neg'}">${sharpe.toFixed(3)}</div><div class="kpi-delta">target ≥ 1.0</div></div>` : ''}
+      ${mdd !== null ? `<div class="kpi"><div class="kpi-label">Max Drawdown</div><div class="kpi-value ${Math.abs(mdd) < 10 ? 'pos' : 'warn'}">${mdd.toFixed(2)}%</div><div class="kpi-delta">target &lt; 10%</div></div>` : ''}
+    </div>
+  </div>`;
+
+  const existing = document.getElementById('backtest-recommendation');
+  if (existing) {
+    existing.outerHTML = recHtml;
+  } else {
+    goalResult.insertAdjacentHTML('beforeend', recHtml);
   }
 }

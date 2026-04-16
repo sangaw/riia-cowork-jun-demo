@@ -8,6 +8,7 @@ class TrainingRunModel(Base):
     __tablename__ = "training_runs"
 
     run_id = Column(String, primary_key=True)
+    instrument = Column(String, nullable=False, default="NIFTY")
     model_version = Column(String, nullable=False)
     algorithm = Column(String, nullable=False, default="DoubleDQN")
     timesteps = Column(Integer, nullable=False)

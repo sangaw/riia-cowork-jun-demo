@@ -12,9 +12,14 @@ Publish sprint deliverables to Confluence at the end of each sprint. Keeps the E
 | Source | Purpose |
 |--------|---------|
 | `PLAN_STATUS.md` | Identify which days' deliverables need documenting |
+| `riia-jun-release/Spec_Python_Code.md` | Verify current architecture before writing API or service docs |
+| `riia-jun-release/Spec_DB.md` | Verify current DB structure before writing data model docs |
+| `riia-jun-release/Spec_JS_Code.md` | Verify current frontend module map before writing JS docs |
 | Source files produced this sprint (e.g. `config.py`, `repositories/base.py`) | Extract accurate technical detail; never paraphrase from memory |
 | ADR files in `riia-jun-release/docs/` | Reproduce decisions accurately |
 | Existing publish scripts in `project-office/confluence/pages/` | Follow the same pattern |
+
+**Spec staleness check:** Before publishing, compare the sprint's code changes against the spec files. If a spec is stale (describes old field names, old endpoints, or removed patterns), flag it to the user and update the spec before publishing to Confluence.
 
 ## Outputs
 | Artifact | Destination |

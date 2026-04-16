@@ -5,6 +5,20 @@ import { mkChart, C } from './charts.js';
 
 let _msTimeframe = 'daily';
 
+/** Update the Nifty trailing-return hint on the Financial Goal section. */
+export async function loadGoalHint() {
+  try {
+    const rows = await api('/api/v1/market-signals?timeframe=daily&periods=252');
+    if (!rows || rows.length < 2) return;
+    const first = rows[0], last = rows[rows.length - 1];
+    const ret12m = ((parseFloat(last.Close) / parseFloat(first.Close)) - 1) * 100;
+    const hint = document.getElementById('historical-avg-hint');
+    if (hint && !isNaN(ret12m)) {
+      hint.textContent = `Nifty 50 last 12 months (${first.date} → ${last.date}): ${ret12m.toFixed(1)}%`;
+    }
+  } catch (_) {}
+}
+
 export function switchMsTab(tf) {
   _msTimeframe = tf;
   ['daily','weekly','monthly'].forEach(t => {
@@ -25,13 +39,22 @@ export async function loadMarketSignals() {
 
     // ── Data range label ────────────────────────────────────
     const firstDate = rows.find(r => r.date)?.date || '—';
-    setEl('ms-data-range', `Data: ${firstDate} → ${last.date || '—'} &nbsp;|&nbsp; ${rows.length} bars`);
+    const tfLabel = _msTimeframe === 'monthly' ? 'Monthly' : _msTimeframe === 'weekly' ? 'Weekly' : 'Daily';
+    setEl('ms-data-range', `${tfLabel} · ${firstDate} → ${last.date || '—'} &nbsp;|&nbsp; ${rows.length} bars`);
+    const pvSub = document.getElementById('ms-pv-subtitle');
+    if (pvSub) pvSub.textContent = `— close price · ${tfLabel.toLowerCase()} volume`;
+
+    // x-axis tick formatter — monthly shows "YYYY-MM", weekly shows "MM-DD", daily shows "MM-DD"
+    const _xFmt = _msTimeframe === 'monthly'
+      ? (v) => typeof v === 'string' ? v.slice(0, 7) : v
+      : (v) => typeof v === 'string' ? v.slice(5)    : v;
+    const _xTicks = _msTimeframe === 'monthly' ? 12 : _msTimeframe === 'weekly' ? 16 : 12;
 
     // ── Signal summary KPIs ─────────────────────────────────
     const rsi = parseFloat(last.rsi_14);
     setEl('ms-rsi-val', isNaN(rsi) ? '—' : rsi.toFixed(1));
-    document.getElementById('ms-rsi-val').className = 'kpi-value ' + (rsi > 70 ? 'neg' : rsi < 30 ? 'pos' : 'neu');
-    setEl('ms-rsi-sig', rsi > 70 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral');
+    document.getElementById('ms-rsi-val').className = 'kpi-value ' + (rsi > 60 ? 'neg' : rsi < 30 ? 'pos' : 'neu');
+    setEl('ms-rsi-sig', rsi > 60 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral');
 
     const macdVal = parseFloat(last.macd);
     const sigVal  = parseFloat(last.macd_signal);
@@ -62,11 +85,12 @@ export async function loadMarketSignals() {
     document.getElementById('ms-ema26-val').className = 'kpi-value ' + (abv26 ? 'pos' : 'neg');
     setEl('ms-ema26-sig', abv26 ? 'Above EMA26' : 'Below EMA26');
 
-    // Update historical avg hint from last 252 days
+    // Update historical avg hint on the Financial Goal section
     const histHint = document.getElementById('historical-avg-hint');
-    if (histHint && rows.length >= 2) {
+    if (histHint && rows.length >= 2 && _msTimeframe === 'daily') {
       const ret12m = ((parseFloat(last.Close) / parseFloat(rows[0].Close)) - 1) * 100;
-      if (!isNaN(ret12m)) histHint.textContent = `Last ${rows.length} trading days: ${ret12m.toFixed(1)}%`;
+      if (!isNaN(ret12m))
+        histHint.textContent = `Nifty 50 last 12 months (${rows[0].date} → ${last.date}): ${ret12m.toFixed(1)}%`;
     }
 
     const atrRaw  = parseFloat(last.atr_14);
@@ -98,7 +122,7 @@ export async function loadMarketSignals() {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { family: C.mono, size: 10 } } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           yPrice: { position: 'left',  grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(0), font: { family: C.mono, size: 10 } } },
           yVol:   { position: 'right', grid: { display: false }, ticks: { callback: v => v >= 1e7 ? (v/1e7).toFixed(0)+'Cr' : v >= 1e5 ? (v/1e5).toFixed(0)+'L' : v, font: { family: C.mono, size: 10 } } },
         }
@@ -126,7 +150,7 @@ export async function loadMarketSignals() {
           }}
         },
         scales: {
-          x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: 8, font: { family: C.mono, size: 10 } } },
+          x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v, font: { family: C.mono, size: 10 } } }
         }
       }
@@ -150,7 +174,7 @@ export async function loadMarketSignals() {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { family: C.mono, size: 10 } } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(1), font: { family: C.mono, size: 10 } } }
         }
       }
@@ -171,7 +195,7 @@ export async function loadMarketSignals() {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
         scales: {
-          x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: 8, font: { family: C.mono, size: 10 } } },
+          x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(0), font: { family: C.mono, size: 10 } } }
         }
       }
@@ -218,7 +242,7 @@ export async function loadMarketSignals() {
         responsive: true, maintainAspectRatio: false,
         plugins: { legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 20 } } },
         scales: {
-          x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: 8, font: { family: C.mono, size: 10 } } },
+          x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(0), font: { family: C.mono, size: 10 } } }
         }
       }
@@ -249,7 +273,7 @@ export async function loadMarketSignals() {
           }}
         },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { family: C.mono, size: 10 } } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(1)+'%', font: { family: C.mono, size: 10 } } }
         }
       }
@@ -280,7 +304,7 @@ export async function loadMarketSignals() {
           }}
         },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8, font: { family: C.mono, size: 10 } } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           y: { min: -1, max: 1, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(1), font: { family: C.mono, size: 10 } } }
         }
       }
@@ -291,8 +315,8 @@ export async function loadMarketSignals() {
     const mkAlert = (cls, txt) => `<span class="badge ${cls}" style="font-size:11px;padding:4px 10px">${txt}</span>`;
 
     // RSI
-    if      (rsi > 70)       alerts.push(mkAlert('err',  `RSI Overbought ${rsi.toFixed(1)}`));
-    else if (rsi > 60)       alerts.push(mkAlert('warn', `RSI Approaching OB ${rsi.toFixed(1)}`));
+    if      (rsi > 60)       alerts.push(mkAlert('err',  `RSI Overbought ${rsi.toFixed(1)}`));
+    else if (rsi > 55)       alerts.push(mkAlert('warn', `RSI Approaching OB ${rsi.toFixed(1)}`));
     else if (rsi < 30)       alerts.push(mkAlert('ok',   `RSI Oversold ${rsi.toFixed(1)}`));
     else if (rsi < 40)       alerts.push(mkAlert('warn', `RSI Approaching OS ${rsi.toFixed(1)}`));
 

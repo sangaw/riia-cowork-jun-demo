@@ -80,7 +80,7 @@ export async function loadHealth() {
 
 export async function loadMetrics() {
   try {
-    const [d, prog] = await Promise.all([api('/metrics'), api('/progress').catch(() => ({}))]);
+    const [d, prog] = await Promise.all([api('/api/v1/metrics/summary'), api('/progress').catch(() => ({}))]);
     const t = d.training || {};
     if (t.latest_backtest_sharpe) {
       const sharpe = t.latest_backtest_sharpe;
@@ -129,6 +129,9 @@ export async function loadPerfSummary() {
       setEl('kpi-days', 'Run pipeline');
       return;
     }
+    // No completed backtest data yet — leave KPIs set by loadMetrics() untouched
+    if (d.portfolio_total_return_pct == null) return;
+
     setEl('kpi-return', fmtPct(d.portfolio_total_return_pct));
     document.getElementById('kpi-return').className = 'kpi-value ' + (parseFloat(d.portfolio_total_return_pct) > 0 ? 'pos' : 'neg');
     setEl('kpi-bnh', `vs B&H ${fmtPct(d.benchmark_total_return_pct)}`);
@@ -140,6 +143,27 @@ export async function loadPerfSummary() {
     document.getElementById('kpi-mdd').className = 'kpi-value ' + (Math.abs(parseFloat(d.max_drawdown_pct)) < 10 ? 'pos' : 'neg');
     setEl('kpi-winrate', fmtPct(d.win_rate_pct));
     setEl('kpi-days', `${d.total_days} days`);
+
+    // Re-render constraints using the same performance data that drives the KPIs.
+    // loadMetrics() may use a different (stale) source — performance-summary wins.
+    const sharpe = parseFloat(d.sharpe_ratio);
+    const mdd    = parseFloat(d.max_drawdown_pct);
+    const cagr   = parseFloat(d.portfolio_cagr_pct);
+    const sharpeOk = !isNaN(sharpe) && sharpe >= 1;
+    const mddOk    = !isNaN(mdd)    && Math.abs(mdd) < 10;
+    const allMet   = sharpeOk && mddOk;
+    if (document.getElementById('constraints-badge')) {
+      document.getElementById('constraints-badge').className = 'badge ' + (allMet ? 'ok' : 'err');
+      setEl('constraints-badge', allMet ? 'All Met' : 'Not Met');
+      setEl('constraints-details', `
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--t2)">
+          <div style="display:flex;justify-content:space-between"><span>Sharpe ≥ 1.0</span><span class="badge ${sharpeOk ? 'ok' : 'err'}">${sharpeOk ? 'Met' : 'Not Met'}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Max DD &lt; 10%</span><span class="badge ${mddOk ? 'ok' : 'err'}">${mddOk ? 'Met' : 'Not Met'}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>CAGR</span><span style="font-family:var(--fm)">${fmtPct(isNaN(cagr) ? null : cagr)}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Total days</span><span style="font-family:var(--fm)">${d.total_days || '—'}</span></div>
+        </div>
+      `);
+    }
   } catch (e) { /* performance data not yet available */ }
 }
 

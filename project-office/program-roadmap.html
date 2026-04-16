@@ -53,6 +53,10 @@ html { scroll-behavior: smooth; }
   --sprint5-bg: #FEF2F2;
   --sprint5-bd: #FCA5A5;
 
+  --sprint6:    #0C4A6E;   /* Model/ML      — sky    */
+  --sprint6-bg: #E0F2FE;
+  --sprint6-bd: #7DD3FC;
+
   /* Semantic */
   --ok:       #1A6B3C;
   --ok-bg:    #EDF7F2;
@@ -680,29 +684,36 @@ body {
     <span class="ni-sub">Release</span>
   </div>
 
+  <div class="ni s-sprint6" data-s="sprint6" onclick="nav(this,'sprint6')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M5 7l1.5 1.5L9.5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Sprint 6
+    <span class="ni-sub">Model/ML</span>
+  </div>
+
   <!-- Sidebar footer: overall program progress -->
   <div class="s-foot">
     <div class="mc">
       <div class="mc-ey">Program Status</div>
       <div class="mc-nm">RITA v1.0 Refactor</div>
       <div class="mc-r">
-        <span>Sprint 0</span>
-        <span class="mc-v ok" id="s0-status">Done</span>
-      </div>
-      <div class="mc-r">
-        <span>Sprint 1</span>
+        <span>S0–S4</span>
         <span class="mc-v ok">Done</span>
       </div>
       <div class="mc-r">
-        <span>Sprint 2</span>
-        <span class="mc-v active">In Progress</span>
+        <span>Sprint 5</span>
+        <span class="mc-v ok">Done</span>
       </div>
       <div class="mc-r">
-        <span>Sprint 5</span>
-        <span class="mc-v plan">Planned</span>
+        <span>Sprint 6</span>
+        <span class="mc-v ok">Done</span>
       </div>
       <div class="mc-bar">
-        <div class="mc-bar-fill" id="overall-bar" style="width:94%"></div>
+        <div class="mc-bar-fill" id="overall-bar" style="width:100%"></div>
       </div>
     </div>
   </div>
@@ -719,7 +730,7 @@ body {
 
     <!-- Page header -->
     <div class="ph">
-      <div class="ph-badge active">Live</div>
+      <div class="ph-badge ok">v1.0 Released</div>
       <div>
         <div class="ph-t">RITA Production Refactor — Roadmap</div>
         <div class="ph-g">Sprint-based delivery · POC to production-grade release</div>
@@ -741,28 +752,28 @@ body {
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Overall Progress</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">94%</div>
-            <div style="font-size:8.5px;color:var(--t3)">Day 32 of 34</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-pct">100%</div>
+            <div style="font-size:8.5px;color:var(--t3)">Day 42 of 42 — v1.0 Released</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>Complete</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">5</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 Architecture · S1 Foundation · S2 API · S2.5 DB · S3 Services · S4 Frontend · S5 Day 32 ✓</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-done">8</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-done-sub">S0 · S1 · S2 · S2.5 · S3 · S4 · S5 · S6 — all complete</div>
           </div>
           <div>
-            <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--active)"></span>In Progress</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--active)" id="kpi-active">1</div>
-            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">Sprint 5 · Integration, Security &amp; Release</div>
+            <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>In Progress</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-active">0</div>
+            <div style="font-size:8.5px;color:var(--t3)" id="kpi-active-sub">All sprints delivered</div>
           </div>
           <div>
-            <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--t4)"></span>Planned</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--t3)" id="kpi-planned">1</div>
-            <div style="font-size:8.5px;color:var(--t3)">Sprint 5</div>
+            <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px"><span class="ey-d" style="background:var(--ok)"></span>Released</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)" id="kpi-planned">v1.0</div>
+            <div style="font-size:8.5px;color:var(--t3)">Tagged 2026-04-16</div>
           </div>
           <div>
             <div style="font-family:var(--fm);font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);margin-bottom:2px">Days Done</div>
-            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">32</div>
-            <div style="font-size:8.5px;color:var(--t3)">of 34 total</div>
+            <div style="font-weight:800;font-size:17px;line-height:1;color:var(--ok)">42</div>
+            <div style="font-size:8.5px;color:var(--t3)">of 42 total</div>
           </div>
         </div>
       </div>
@@ -804,8 +815,13 @@ body {
           </div>
           <div style="display:flex;align-items:center;gap:7px">
             <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S5 · Release</div>
-            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s5" style="width:50%;height:100%;background:var(--sprint5);border-radius:3px"></div></div>
-            <span style="font-family:var(--fm);font-size:8.5px;color:var(--sprint5);min-width:28px;text-align:right" id="pct-s5">50%</span>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s5" style="width:100%;height:100%;background:var(--ok);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--ok);min-width:28px;text-align:right" id="pct-s5">100%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <div style="font-family:var(--fm);font-size:8.5px;color:var(--t3);min-width:88px">S6 · Model/ML</div>
+            <div style="flex:1;height:5px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;overflow:hidden"><div id="bar-s6" style="width:100%;height:100%;background:var(--sprint6);border-radius:3px"></div></div>
+            <span style="font-family:var(--fm);font-size:8.5px;color:var(--sprint6);min-width:28px;text-align:right" id="pct-s6">100%</span>
           </div>
         </div>
       </div>
@@ -1067,25 +1083,31 @@ body {
               <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint2)">S2</td>
               <td style="padding:9px 8px;font-size:12px">API Decomposition</td>
               <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">9–14</td>
-              <td style="padding:9px 8px"><span class="badge active">In Progress</span></td>
+              <td style="padding:9px 8px"><span class="badge ok">Done</span></td>
             </tr>
             <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint3)">S3</td>
               <td style="padding:9px 8px;font-size:12px">Service Layer &amp; Observability</td>
-              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">15–20</td>
-              <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">15–24</td>
+              <td style="padding:9px 8px"><span class="badge ok">Done</span></td>
             </tr>
             <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint4)">S4</td>
               <td style="padding:9px 8px;font-size:12px">Frontend &amp; Responsive</td>
-              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">21–26</td>
-              <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">25–30</td>
+              <td style="padding:9px 8px"><span class="badge ok">Done</span></td>
             </tr>
-            <tr>
+            <tr style="border-bottom:1px solid var(--border)">
               <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint5)">S5</td>
               <td style="padding:9px 8px;font-size:12px">Integration &amp; Release</td>
-              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">27–30</td>
-              <td style="padding:9px 8px"><span class="badge planned">Planned</span></td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">31–34</td>
+              <td style="padding:9px 8px"><span class="badge ok">Done</span></td>
+            </tr>
+            <tr>
+              <td style="padding:9px 8px 9px 0;font-weight:700;font-size:12px;color:var(--sprint6)">S6</td>
+              <td style="padding:9px 8px;font-size:12px">Model Building &amp; ML</td>
+              <td style="padding:9px 8px;font-family:var(--fm);font-size:11px;color:var(--t3)">35–38</td>
+              <td style="padding:9px 8px"><span class="badge ok">Done</span></td>
             </tr>
           </tbody>
         </table>
@@ -1682,17 +1704,17 @@ body {
   ══════════════════════════════════════════ -->
   <section id="sec-sprint5" class="sec">
     <div class="ph">
-      <div class="ph-badge active">In Progress</div>
+      <div class="ph-badge active">Testing</div>
       <div>
         <div class="ph-t">Sprint 5 — Integration, Security &amp; Release</div>
-        <div class="ph-g">Days 31–34 · Full regression, security hardening, production deployment, v1.0 tag</div>
+        <div class="ph-g">Days 31–34 · Full regression, security hardening, production deployment, v1.0 tag · Day 34 deferred pending testing</div>
       </div>
     </div>
     <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
       <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint5)">31–34</div><div class="kpi-sub">4 work days</div></div>
       <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">4</div><div class="kpi-sub">QA · Security · Ops · Release</div></div>
-      <div class="kpi"><div class="kpi-ey">Done / Total</div><div class="kpi-val" style="color:var(--sprint5)">2 / 4</div><div class="kpi-sub">Day 31 partial · Day 32 ✓</div></div>
-      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--active)">In Progress</div><div class="kpi-sub">Day 33 next: Terraform + k8s</div></div>
+      <div class="kpi"><div class="kpi-ey">Done / Total</div><div class="kpi-val" style="color:var(--sprint5)">3 / 4</div><div class="kpi-sub">Day 31 partial · Day 32 ✓ · Day 33 ✓</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--active)">Testing</div><div class="kpi-sub">Day 34 release after testing complete</div></div>
     </div>
     <div class="wave-hdr">
       <span class="badge active" style="font-size:10px;padding:3px 10px">Sprint 5 — In Progress</span>
@@ -1726,14 +1748,14 @@ body {
       </div>
 
       <div class="card" style="border-top:3px solid var(--sprint5)">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Kubernetes &amp; Production Ops</div><span class="badge planned">Planned</span></div>
-        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Terraform + k8s manifests: Deployment, Service, Ingress, HPA, PVC. Non-root SecurityContext. AlertManager rules. Cloud provider swap from local Docker.</div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Kubernetes &amp; Production Ops</div><span class="badge ok">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">k8s manifests (Deployment, Service, Ingress) + docker-compose.yml + Terraform scaffolding delivered via external AI agent. Files: k8s/, terraform/, docker-compose.yml.</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">Ops</span><span class="badge" style="background:var(--sprint5-bg);color:var(--sprint5);border-color:var(--sprint5-bd)">Day 33</span></div>
         <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
         <div style="display:flex;flex-direction:column;gap:5px">
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">k8s manifests</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">AlertManager</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
-          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Cloud swap</div><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--sprint5)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--t3)">Pending</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">k8s manifests</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">docker-compose</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Terraform</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--ok)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
         </div>
       </div>
 
@@ -1750,7 +1772,70 @@ body {
       </div>
 
     </div>
-    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 5 Done When:</strong> Coverage ≥80% enforced in CI · Security audit passed · k8s manifests deployable · Git tag v1.0 created · All 14 Confluence pages published &amp; reviewed · PM retrospective complete.</span></div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 5 Done When:</strong> Coverage ≥80% enforced in CI · Security audit passed · k8s manifests deployable · Git tag v1.0 created · All Confluence pages published &amp; reviewed · PM retrospective complete.</span></div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SPRINT 6 — Model Building, Logging & Performance Metrics
+  ══════════════════════════════════════════ -->
+  <section id="sec-sprint6" class="sec">
+    <div class="ph">
+      <div class="ph-badge ok">Done</div>
+      <div>
+        <div class="ph-t">Sprint 6 — Model Building, Logging &amp; Performance Metrics</div>
+        <div class="ph-g">Days 35–38 · DoubleDQN training engine, multi-seed, TrainingTracker, performance analytics, drift detection</div>
+      </div>
+    </div>
+    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:22px">
+      <div class="kpi"><div class="kpi-ey">Days</div><div class="kpi-val" style="color:var(--sprint6)">35–38</div><div class="kpi-sub">4 work days</div></div>
+      <div class="kpi"><div class="kpi-ey">Deliverables</div><div class="kpi-val">4</div><div class="kpi-sub">ML engine · Tracker · Analytics · Drift</div></div>
+      <div class="kpi"><div class="kpi-ey">Done / Total</div><div class="kpi-val" style="color:var(--ok)">4 / 4</div><div class="kpi-sub">All days complete ✓</div></div>
+      <div class="kpi"><div class="kpi-ey">Status</div><div class="kpi-val" style="font-size:16px;color:var(--ok)">Done</div><div class="kpi-sub">121/122 tests pass</div></div>
+    </div>
+    <div class="wave-hdr">
+      <span class="badge ok" style="font-size:10px;padding:3px 10px">Sprint 6 — Complete</span>
+      <span class="wave-hdr-title">Model Building &amp; Performance Metrics · Days 35–38</span>
+      <span class="wave-hdr-sub">Real DoubleDQN training · multi-seed · TrainingTracker · analytics · drift detection</span>
+    </div>
+    <div class="g3" style="margin-bottom:22px">
+
+      <div class="card" style="border-top:3px solid var(--sprint6)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">DoubleDQN Training Engine</div><span class="badge ok">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px"><code>train_best_of_n</code> added to <code>trading_env.py</code>. Real <code>backtest_dispatch</code> replaces stub — uses <code>run_episode()</code> with deterministic validation. <code>ml_dispatch</code> supports <code>n_seeds</code> for multi-seed training. structlog step events throughout.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint6-bg);color:var(--sprint6);border-color:var(--sprint6-bd)">Engineer</span><span class="badge" style="background:var(--sprint6-bg);color:var(--sprint6);border-color:var(--sprint6-bd)">Day 35</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">train_best_of_n</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Real backtest</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">n_seeds support</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint6)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">TrainingTracker &amp; Logging</div><span class="badge ok">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px"><code>core/training_tracker.py</code> records each training round with val/backtest metrics, constraints-met flag, seed. Wired into <code>workflow_service</code> (try/except safe — never blocks training). structlog step events in <code>ml_dispatch</code>.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint6-bg);color:var(--sprint6);border-color:var(--sprint6-bd)">Engineer</span><span class="badge" style="background:var(--sprint6-bg);color:var(--sprint6);border-color:var(--sprint6-bd)">Day 36</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">TrainingTracker</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">structlog events</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="border-top:3px solid var(--sprint6)">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px"><div style="font-weight:700;font-size:13px">Performance Analytics &amp; Drift Detection</div><span class="badge ok">Done</span></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-bottom:10px">Day 37: <code>core/performance.py</code> — portfolio comparison, performance feedback, stress scenarios. 3 new API endpoints. Day 38: <code>core/drift_detector.py</code> (5 DB-backed checks) + <code>/api/v1/drift</code> upgrade.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"><span class="badge" style="background:var(--sprint6-bg);color:var(--sprint6);border-color:var(--sprint6-bd)">Engineer</span><span class="badge" style="background:var(--sprint6-bg);color:var(--sprint6);border-color:var(--sprint6-bd)">Days 37–38</span></div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Progress</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Perf analytics</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">Drift detection</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+          <div class="bar-r" style="gap:6px"><div class="bar-lbl" style="min-width:72px;font-size:10px">API endpoints</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--sprint6)"></div></div><span style="font-family:var(--fm);font-size:9px;color:var(--ok)">Done</span></div>
+        </div>
+      </div>
+
+    </div>
+    <div class="al ok"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M2.5 7l3 3 6-6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Sprint 6 Complete:</strong> Real DoubleDQN engine · multi-seed training · TrainingTracker · performance analytics · DriftDetector (5 DB-backed checks) · 121/122 tests pass · pipeline model-reuse bug fixed.</span></div>
   </section>
 
 </main>

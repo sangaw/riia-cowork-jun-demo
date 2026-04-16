@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # ── Training Runs ─────────────────────────────────────────────────────────────
 
 class TrainingRunBase(BaseModel):
+    instrument: str = Field(default="NIFTY", max_length=32)  # e.g. NIFTY, BANKNIFTY
     model_version: str = Field(max_length=64)   # e.g. v1.0, v1.1
     algorithm: str = Field(default="DoubleDQN", max_length=64)
     timesteps: int = Field(ge=0)                # e.g. 200000

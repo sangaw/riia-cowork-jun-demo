@@ -132,8 +132,8 @@ def test_ops_observability_drift(base_url):
     r = requests.get(f"{base_url}/api/v1/drift", timeout=TIMEOUT)
     assert r.status_code == 200
     body = r.json()
-    assert "health" in body
-    assert "report" in body
+    assert "summary" in body
+    assert "checks" in body
 
 
 def test_ops_observability_mcp_calls(base_url):

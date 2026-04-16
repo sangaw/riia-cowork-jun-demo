@@ -6,10 +6,17 @@ export let _currentSection = 'home';
 export let _mcpPollTimer = null;
 let _chatWarmedUp = false;
 
-export function warmupChat() {
-  if (_chatWarmedUp) return;
+export async function warmupChat() {
+  if (_chatWarmedUp) return null;
   _chatWarmedUp = true;
-  fetch(`${API}/api/v1/chat/warmup`, { method: 'POST' }).catch(() => {});
+  try {
+    const res = await fetch(`${API}/api/v1/chat/warmup`, { method: 'POST' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return { chips: data.chips || null, alerts: data.alerts || null };
+  } catch {
+    return null;
+  }
 }
 
 // Section loaders map — populated by main.js after all modules are imported

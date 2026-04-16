@@ -28,15 +28,34 @@ It gives all agents the essential context they need without re-reading the codeb
 
 **Full agent rules (guardrails, inputs, outputs, ADR references):** `project-office/agents/` — one card per role.
 
+## Spec Files — Read Before Touching Code
+
+All spec files live in `riia-jun-release/`. **Read the relevant spec before reading any source code.**
+Specs are pre-digested summaries — reading them first avoids loading large source files and cuts token usage significantly.
+
+| Spec file | Read when... |
+|---|---|
+| `Spec_Python_Code.md` | Writing or reviewing any Python (routes, services, repos, core) |
+| `Spec_DB.md` | Touching the database, migrations, ORM models, seeding, or any repository class |
+| `Spec_Data.md` | Reading or writing data files; touching data_loader, seeding, or output paths |
+| `Spec_JS_Code.md` | Writing or reviewing any JS in `dashboard/js/` |
+| `Spec_HTML_Code.md` | Writing or reviewing any HTML in `dashboard/` |
+| `Spec_Chat_Feature.md` | Touching the chat pipeline, classifier, or `/api/v1/chat` endpoints |
+
+**Maintenance rule (Definition of Done):** If a code change alters an API contract, data schema, data file layout, or architectural pattern, the relevant spec file **must be updated in the same commit**. A change is not done until the spec reflects it.
+
+---
+
 ## Token Efficiency Rules (ALL agents must follow)
 
 1. **Never read `production_ready.md` in full.** Pass only the relevant section as an excerpt.
-2. **Read large files in slices** — max 400 lines at a time, targeted at the section being modified.
+2. **Read spec files first, source files second** — specs are in `riia-jun-release/Spec_*.md`; use them to orient before touching code.
+3. **Read large files in slices** — max 400 lines at a time, targeted at the section being modified.
    - `rest_api.py` = 1,533 lines | `rita.html` = 4,000 lines | `fno.html` = 3,500 lines
-3. **Read `PLAN_STATUS.md` first** — it tells you what's done and what's next. Don't re-explore.
-4. **Engineer agents use worktree isolation** — `isolation: "worktree"` for all code-writing agents.
-5. **Max 4 agent invocations per session** to stay within 80% of the Claude Pro quota.
-6. **Write outputs to files immediately** — agents must persist artifacts before the session ends.
+4. **Read `PLAN_STATUS.md` first** — it tells you what's done and what's next. Don't re-explore.
+5. **Engineer agents use worktree isolation** — `isolation: "worktree"` for all code-writing agents.
+6. **Max 4 agent invocations per session** to stay within 80% of the Claude Pro quota.
+7. **Write outputs to files immediately** — agents must persist artifacts before the session ends.
 
 ## Workspace Structure
 
@@ -185,3 +204,4 @@ SECTION = {
 - Do not commit `confluence-api-key.txt` or `.env` files
 - Do not add `print()` statements — use `structlog` (Sprint 3+)
 - Do not make API calls to external data providers — all data is local CSV
+- Do not change an API contract, schema, or data layout without updating the corresponding `Spec_*.md` file in the same commit

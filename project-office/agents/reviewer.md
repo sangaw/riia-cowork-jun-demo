@@ -12,6 +12,10 @@ Review engineer code against ADRs and project standards. Produce a written revie
 | Source | Purpose |
 |--------|---------|
 | `PLAN_STATUS.md` | Understand which sprint/day is being reviewed |
+| `riia-jun-release/Spec_Python_Code.md` | **Always** — authoritative reference for architecture and pattern compliance |
+| `riia-jun-release/Spec_DB.md` | When the diff touches models, repos, migrations, or seeding |
+| `riia-jun-release/Spec_JS_Code.md` | When the diff touches `dashboard/js/` |
+| `riia-jun-release/Spec_HTML_Code.md` | When the diff touches `dashboard/*.html` |
 | Git diff of the engineer's branch | Primary review target |
 | Relevant ADRs from `riia-jun-release/docs/` | Check compliance |
 | `CLAUDE.md` → "What NOT to Do" section | Check for banned patterns |
@@ -41,6 +45,10 @@ Review engineer code against ADRs and project standards. Produce a written revie
 ### Testability
 - [ ] New public functions are testable without a running server
 - [ ] No global mutable state introduced
+
+### Spec Maintenance
+- [ ] If the diff changes an API contract, data schema, or architectural pattern — the relevant `Spec_*.md` file is updated in the same PR
+- [ ] No spec file is left describing a shape that no longer matches the code
 
 ## Guardrails
 - **Report only — do not modify source files**

@@ -2,9 +2,22 @@
 import { apiFetch } from './api.js';
 import { badge } from './utils.js';
 
+const _RUN_CMD = `pytest tests/e2e/test_rita_scenarios.py --junitxml=test-results/junit-rita-scenarios.xml
+pytest tests/e2e/test_fno_scenarios.py  --junitxml=test-results/junit-fno-scenarios.xml
+pytest tests/e2e/test_ops_scenarios.py  --junitxml=test-results/junit-ops-scenarios.xml`;
+
 export async function loadTestResults() {
   const data = await apiFetch('/api/v1/test-results');
-  if (!data) return;
+  if (!data) {
+    _showNoData('API error — could not load test results');
+    return;
+  }
+
+  // No XML files generated yet — show actionable message instead of all-zeros
+  if (!data.data_available) {
+    _showNoData();
+    return;
+  }
 
   const suites = data.suites || [];
   let totalTests = 0, totalPassed = 0, totalFailed = 0;
@@ -58,5 +71,33 @@ export async function loadTestResults() {
         <td>${badge('FAIL', 'danger')}</td>
       </tr>`).join('')}</tbody>
     </table>`;
+  }
+}
+
+function _showNoData(msg) {
+  const noDataHtml = `<div class="al i" style="grid-column:1/-1;padding:10px 14px">
+    <svg class="al-ic" width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 4v3M6.5 9h.01" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    ${msg || 'No test results found — run the scenario tests to generate results.'}
+  </div>`;
+
+  ['test-total','test-passed','test-failed','test-rate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+  ['rita-summary','fno-summary','ops-summary'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = 'Not run yet';
+  });
+  ['rita-results','fno-results','ops-results'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = noDataHtml;
+  });
+
+  const defEl = document.getElementById('test-defects');
+  if (defEl) {
+    defEl.innerHTML = `<div style="padding:12px 0">
+      <div style="font-size:12px;color:var(--t3);margin-bottom:8px">${msg || 'Run the e2e scenario tests from the project root (with the API server running):'}</div>
+      <pre style="font-size:11px;font-family:var(--fm);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;color:var(--text);white-space:pre-wrap">${_RUN_CMD}</pre>
+    </div>`;
   }
 }

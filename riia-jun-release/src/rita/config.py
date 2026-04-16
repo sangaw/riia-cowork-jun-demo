@@ -94,6 +94,20 @@ class InstrumentsSettings(BaseSettings):
     banknifty: InstrumentConfig = InstrumentConfig(lot_size=30)
 
 
+class ChatSettings(BaseSettings):
+    model_config = SettingsConfigDict(extra="forbid")
+
+    # Local path to the sentence-transformers/all-MiniLM-L6-v2 snapshot.
+    # Override via RITA_CHAT__EMBED_MODEL_PATH env var or base.yaml.
+    # When set to a local directory SentenceTransformer() loads offline — no
+    # HuggingFace network call is ever made.
+    embed_model_path: str = (
+        r"C:\Users\Sandeep\.cache\huggingface\hub"
+        r"\models--sentence-transformers--all-MiniLM-L6-v2"
+        r"\snapshots\c9745ed1d9f207416be6d2e6f8de32d1f16199bf"
+    )
+
+
 class DatabaseSettings(BaseSettings):
     model_config = SettingsConfigDict(extra="forbid")
 
@@ -138,6 +152,7 @@ class Settings(BaseSettings):
     server: ServerSettings = ServerSettings()
     data: DataSettings = DataSettings()
     model: ModelSettings = ModelSettings()
+    chat: ChatSettings = ChatSettings()
     instruments: InstrumentsSettings = InstrumentsSettings()
     security: SecuritySettings = SecuritySettings()
     database: DatabaseSettings = DatabaseSettings()
