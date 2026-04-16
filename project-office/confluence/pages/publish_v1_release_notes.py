@@ -4,7 +4,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from confluence.publish import ConfluenceClient, SECTION
 
 TITLE = "RITA v1.0 — Release Notes"
-PAGE_ID = None  # Set after first run
+PAGE_ID = "71794689"
 
 BODY = """
 <h1>RITA v1.0 Release Notes</h1>
