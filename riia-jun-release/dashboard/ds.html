@@ -26,7 +26,12 @@ html{scroll-behavior:smooth}
   --shm:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
 }
 body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px;line-height:1.5;min-height:100vh;}
-.shell{display:grid;grid-template-columns:220px 1fr;grid-template-rows:52px 1fr;min-height:100vh;}
+.shell{display:grid;grid-template-columns:220px 1fr;grid-template-rows:52px 1fr;min-height:100vh;transition:grid-template-columns .22s cubic-bezier(.4,0,.2,1);}
+.shell.nav-collapsed{grid-template-columns:0px 1fr;}
+.shell.nav-collapsed .sidebar{overflow:hidden;border-right:none;}
+.nav-toggle{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:1.5px solid var(--border);border-radius:var(--r);background:var(--surface);cursor:pointer;flex-shrink:0;margin-right:10px;transition:background .12s,border-color .12s;}
+.nav-toggle:hover{background:var(--surface2);border-color:var(--border2);}
+.nav-toggle svg{display:block;}
 
 /* ── Topbar ── */
 .topbar{grid-column:1/-1;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:200;box-shadow:var(--sh);}
@@ -256,6 +261,11 @@ tr:hover td{background:var(--surface2);}
 
 <!-- ── Topbar ── -->
 <header class="topbar">
+  <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/>
+    </svg>
+  </button>
   <a class="logo" href="/dashboard/" style="text-decoration:none;color:inherit;">
     <div class="logo-icon">
       <svg width="14" height="14" viewBox="0 0 16 16"><path d="M8 1L1 5v6l7 4 7-4V5L8 1zm0 1.8L13.5 6 8 9.2 2.5 6 8 2.8zM2 7.1l5.5 3.2v3.9L2 11V7.1zm7.5 7.1v-3.9L15 7.1V11l-5.5 3.2z"/></svg>
@@ -309,6 +319,12 @@ tr:hover td{background:var(--surface2);}
     </div>
     <div class="nav-item c-build" data-s="explain" onclick="show('explain',this)">
       <span class="nav-icon">🔍</span> Explainability
+    </div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Portfolio</div>
+    <div class="nav-item c-ds" data-s="scenarios" onclick="show('scenarios',this)">
+      <span class="nav-icon">🗂</span> Scenarios
     </div>
   </div>
   <div class="nav-section">
@@ -621,9 +637,15 @@ tr:hover td{background:var(--surface2);}
     <div class="kpi"><div class="kpi-label">Total Trade Events</div><div class="kpi-value" id="t-total">—</div></div>
   </div>
 
+  <div class="kpi-row kpi-row-3" style="margin-bottom:16px">
+    <div class="kpi"><div class="kpi-label">Avg Sharpe at Entry</div><div class="kpi-value" id="t-sharpe-entry">—</div><div class="kpi-delta">Rolling 63-day at entry date</div></div>
+    <div class="kpi"><div class="kpi-label">Avg Sharpe at Exit</div><div class="kpi-value" id="t-sharpe-exit">—</div><div class="kpi-delta">Rolling 63-day at exit date</div></div>
+    <div class="kpi"><div class="kpi-label">Sharpe Delta (Exit − Entry)</div><div class="kpi-value" id="t-sharpe-delta">—</div><div class="kpi-delta">Positive = model exits on improving risk</div></div>
+  </div>
+
   <div class="chart-wrap">
-    <div class="chart-title" id="trades-chart-title">Close — ▲ Entry · ▼ Profit Exit · ✕ Loss Exit (All Phases)</div>
-    <div class="chart-box h300"><canvas id="ch-trade-price"></canvas></div>
+    <div class="chart-title" id="trades-chart-title">Rolling 63d Sharpe &amp; Close Price — ▲ Entry (blue) · ▼ Profit Exit (green) · ● Loss Exit (red)</div>
+    <div class="chart-box" style="height:320px"><canvas id="ch-trade-combined"></canvas></div>
   </div>
 
   <div class="card-row">
@@ -902,7 +924,7 @@ tr:hover td{background:var(--surface2);}
       <div class="kpi"><div class="kpi-label">From</div><div class="kpi-value" id="vk-from" style="font-size:13px">—</div></div>
       <div class="kpi"><div class="kpi-label">To</div><div class="kpi-value" id="vk-to" style="font-size:13px">—</div></div>
       <div class="kpi"><div class="kpi-label">Missing %</div><div class="kpi-value" id="vk-missing">—</div></div>
-      <div class="kpi"><div class="kpi-label">Trend Classes</div><div class="kpi-value" id="vk-trends">—</div></div>
+      <div class="kpi"><div class="kpi-label">Regimes</div><div class="kpi-value ds" id="vk-trends">—</div></div>
     </div>
 
     <!-- Distributions -->
@@ -925,6 +947,31 @@ tr:hover td{background:var(--surface2);}
     <div class="viz-grid-2" id="viz-cluster-grid"></div>
 
   </div><!-- /viz-results -->
+
+  <!-- Portfolio Overview — shown when Portfolio pill selected -->
+  <div id="viz-portfolio-results" style="display:none;">
+    <div class="kpi-row kpi-row-4" style="margin-bottom:14px;">
+      <div class="kpi"><div class="kpi-label">Instruments</div><div class="kpi-value ds" id="vp-count">4</div><div class="kpi-delta">in portfolio</div></div>
+      <div class="kpi"><div class="kpi-label">Common Days</div><div class="kpi-value ds" id="vp-days">—</div><div class="kpi-delta">aligned calendar</div></div>
+      <div class="kpi"><div class="kpi-label">Data From</div><div class="kpi-value" id="vp-from" style="font-size:13px">—</div></div>
+      <div class="kpi"><div class="kpi-label">Data To</div><div class="kpi-value" id="vp-to" style="font-size:13px">—</div></div>
+    </div>
+    <div class="viz-section-hdr">Instrument Coverage</div>
+    <div id="vp-inst-grid" class="viz-grid-4" style="margin-bottom:14px;"></div>
+    <div class="chart-wrap" style="margin-bottom:14px;">
+      <div class="chart-title">Normalized Price (base = 1.0) — All Instruments</div>
+      <div class="chart-box h260"><canvas id="chart-vp-returns"></canvas></div>
+    </div>
+    <div class="viz-section-hdr">Daily Returns Correlation</div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hdr"><span class="card-title">Correlation Matrix</span></div>
+      <div class="corr-table-wrap" id="vp-corr-table"></div>
+    </div>
+    <div style="padding:12px 16px;background:var(--ds-bg);border:1.5px solid var(--ds-bd);border-radius:var(--r);font-size:12px;color:var(--ds);">
+      Portfolio configured. Go to <strong>Scenarios</strong> in the sidebar to run a portfolio backtest.
+    </div>
+  </div><!-- /viz-portfolio-results -->
+
 </div>
 
 <!-- Viz Modal -->
@@ -935,6 +982,106 @@ tr:hover td{background:var(--surface2);}
     <div class="viz-modal-desc" id="vm-desc"></div>
     <div class="viz-modal-canvas-wrap"><canvas id="vm-canvas"></canvas></div>
   </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     PORTFOLIO SCENARIOS
+     ════════════════════════════════════════════════ -->
+<div id="s-scenarios" class="section">
+  <div class="page-hdr">
+    <div>
+      <div class="page-title">Portfolio Scenarios</div>
+      <div class="page-sub">Backtest a multi-instrument portfolio using individually trained DDQN models</div>
+    </div>
+  </div>
+
+  <!-- ── Row 1: Instrument sliders (4-col) ── -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;">
+    <div id="sc-card-nifty" style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <label class="cfg-check" style="margin:0"><input type="checkbox" id="sc-inst-nifty" value="nifty" checked onchange="scToggleInst('nifty')"><span style="font-weight:700">NIFTY 50</span></label>
+        <span class="badge ds" style="font-size:9px">INR</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px;">
+        <span style="font-family:var(--fm);font-size:22px;font-weight:600;color:var(--ds);line-height:1" id="sc-pct-nifty">25</span>
+        <span style="font-family:var(--fm);font-size:13px;color:var(--ds)">%</span>
+      </div>
+      <input type="range" id="sc-slider-nifty" min="0" max="100" value="25" step="1" style="width:100%;accent-color:var(--ds);cursor:pointer" oninput="scUpdateTotal()">
+      <div style="font-family:var(--fm);font-size:10px;color:var(--t3);text-align:right;margin-top:4px">≈ <span id="sc-eur-nifty">€250</span></div>
+    </div>
+    <div id="sc-card-banknifty" style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <label class="cfg-check" style="margin:0"><input type="checkbox" id="sc-inst-banknifty" value="banknifty" checked onchange="scToggleInst('banknifty')"><span style="font-weight:700">BANKNIFTY</span></label>
+        <span class="badge ds" style="font-size:9px">INR</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px;">
+        <span style="font-family:var(--fm);font-size:22px;font-weight:600;color:var(--ds);line-height:1" id="sc-pct-banknifty">25</span>
+        <span style="font-family:var(--fm);font-size:13px;color:var(--ds)">%</span>
+      </div>
+      <input type="range" id="sc-slider-banknifty" min="0" max="100" value="25" step="1" style="width:100%;accent-color:var(--ds);cursor:pointer" oninput="scUpdateTotal()">
+      <div style="font-family:var(--fm);font-size:10px;color:var(--t3);text-align:right;margin-top:4px">≈ <span id="sc-eur-banknifty">€250</span></div>
+    </div>
+    <div id="sc-card-asml" style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <label class="cfg-check" style="margin:0"><input type="checkbox" id="sc-inst-asml" value="asml" checked onchange="scToggleInst('asml')"><span style="font-weight:700">ASML</span></label>
+        <span class="badge ds" style="font-size:9px">EUR</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px;">
+        <span style="font-family:var(--fm);font-size:22px;font-weight:600;color:var(--ds);line-height:1" id="sc-pct-asml">25</span>
+        <span style="font-family:var(--fm);font-size:13px;color:var(--ds)">%</span>
+      </div>
+      <input type="range" id="sc-slider-asml" min="0" max="100" value="25" step="1" style="width:100%;accent-color:var(--ds);cursor:pointer" oninput="scUpdateTotal()">
+      <div style="font-family:var(--fm);font-size:10px;color:var(--t3);text-align:right;margin-top:4px">≈ <span id="sc-eur-asml">€250</span></div>
+    </div>
+    <div id="sc-card-nvidia" style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;box-shadow:var(--sh);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <label class="cfg-check" style="margin:0"><input type="checkbox" id="sc-inst-nvidia" value="nvidia" checked onchange="scToggleInst('nvidia')"><span style="font-weight:700">NVIDIA</span></label>
+        <span class="badge ds" style="font-size:9px">USD</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:6px;">
+        <span style="font-family:var(--fm);font-size:22px;font-weight:600;color:var(--ds);line-height:1" id="sc-pct-nvidia">25</span>
+        <span style="font-family:var(--fm);font-size:13px;color:var(--ds)">%</span>
+      </div>
+      <input type="range" id="sc-slider-nvidia" min="0" max="100" value="25" step="1" style="width:100%;accent-color:var(--ds);cursor:pointer" oninput="scUpdateTotal()">
+      <div style="font-family:var(--fm);font-size:10px;color:var(--t3);text-align:right;margin-top:4px">≈ <span id="sc-eur-nvidia">€250</span></div>
+    </div>
+  </div>
+
+  <!-- ── Row 2: Dates + capital + run button ── -->
+  <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 16px;box-shadow:var(--sh);display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px;">
+    <div class="cfg-group" style="margin:0;min-width:130px;">
+      <label class="cfg-label">Start</label>
+      <input class="cfg-input" id="sc-from" type="date" style="padding:5px 8px">
+    </div>
+    <div class="cfg-group" style="margin:0;min-width:130px;">
+      <label class="cfg-label">End</label>
+      <input class="cfg-input" id="sc-to" type="date" style="padding:5px 8px">
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--ds-bg);border:1px solid var(--ds-bd);border-radius:var(--r);">
+        <span style="font-size:11px;color:var(--ds);font-weight:600">Total Capital €</span>
+        <input type="number" id="sc-capital" value="1000" min="100" step="100" style="width:72px;font-family:var(--fm);font-size:13px;font-weight:600;color:var(--ds);border:none;background:transparent;padding:0;text-align:right;outline:none" oninput="scUpdateTotal()">
+      </div>
+      <span style="font-family:var(--fm);font-size:11px;color:var(--t3)" id="sc-remaining-lbl">· 0% stays as cash</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn btn-ds" id="btn-sc" onclick="runPortfolioScenario()" style="white-space:nowrap">▶ Run Backtest</button>
+      <span id="sc-spinner" style="display:none"><span class="spinner"></span></span>
+      <span id="sc-status" class="badge" style="display:none"></span>
+    </div>
+  </div>
+
+  <!-- ── Row 3: How it works (compact strip) ── -->
+  <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;">
+    <span style="font-family:var(--fm);font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t4);white-space:nowrap;padding-top:1px">How it works</span>
+    <span style="font-size:11px;color:var(--t2)"><strong>①</strong> Build models per instrument via Build section.</span>
+    <span style="font-size:11px;color:var(--t2)"><strong>②</strong> Set % allocation and date range.</span>
+    <span style="font-size:11px;color:var(--t2)"><strong>③</strong> Run Backtest — Sharpe, MDD, RITA vs B&amp;H.</span>
+    <span style="font-size:11px;color:var(--warn)"><strong>ℹ</strong> Whole-share: if allocation &lt; 1 share cost, that capital stays cash. FX: EUR/INR≈91 · EUR/USD≈1.09 · NIFTY lot=75 · BANKNIFTY lot=30</span>
+  </div>
+
+  <!-- Results -->
+  <div id="sc-result"></div>
 </div>
 
 </main>
@@ -1014,8 +1161,30 @@ function mkChart(id, type, data, extra={}) {
       ...extra
     }
   });
+  // Attach expand-on-click to parent .chart-wrap (once only)
+  const wrap = canvas.closest('.chart-wrap');
+  if (wrap && !wrap.dataset.expandBound) {
+    wrap.dataset.expandBound = '1';
+    wrap.style.cursor = 'zoom-in';
+    wrap.addEventListener('click', () => {
+      const titleEl = wrap.querySelector('.chart-title');
+      openChartModal(id, titleEl ? titleEl.textContent.trim() : '');
+    });
+  }
   return CHARTS[id];
 }
+
+function openChartModal(id, title) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  document.getElementById('chart-modal-title').textContent = title || '';
+  document.getElementById('chart-modal-img').src = canvas.toDataURL('image/png');
+  document.getElementById('chart-modal').style.display = 'flex';
+}
+function closeChartModal() {
+  document.getElementById('chart-modal').style.display = 'none';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChartModal(); });
 
 // ═══════════════════════════════════════════════════════════════
 // UNDERSTAND DATA
@@ -1040,6 +1209,7 @@ function loadUnderstand() {
     if (!_vizSelectedInstrument && active?.id) {
       _vizSelectedInstrument = active.id;
     }
+    const portfolioSel = _vizSelectedInstrument === '__portfolio__';
     list.innerHTML = instruments.map(inst => {
       const ready = inst.data_ready !== false;
       const sel = _vizSelectedInstrument === inst.id;
@@ -1047,7 +1217,9 @@ function loadUnderstand() {
         title="${ready?'':'Data not prepared yet'}"
         onclick="vizSelectInstrument('${inst.id}',this)"
         ${!ready?'disabled':''}>${inst.name||inst.id}</button>`;
-    }).join('');
+    }).join('') +
+      `<span style="display:inline-block;width:1px;height:22px;background:var(--border2);margin:0 6px;vertical-align:middle;"></span>` +
+      `<button class="viz-pill${portfolioSel?' selected':''}" title="Cross-instrument portfolio view" onclick="vizSelectInstrument('__portfolio__',this)">📊 Portfolio</button>`;
     // If still nothing selected, fall back to first ready
     if (!_vizSelectedInstrument) {
       const first = instruments.find(i => i.data_ready !== false);
@@ -1073,10 +1245,15 @@ async function runUnderstand() {
     document.getElementById('viz-status').textContent = 'Select an instrument first.';
     return;
   }
+  // Portfolio pill → cross-instrument overview
+  if (_vizSelectedInstrument === '__portfolio__') {
+    return runPortfolioOverview();
+  }
   const statusEl = document.getElementById('viz-status');
   statusEl.innerHTML = '<span class="spinner"></span>Loading…';
   document.getElementById('viz-empty').style.display = 'none';
   document.getElementById('viz-results').style.display = 'none';
+  document.getElementById('viz-portfolio-results').style.display = 'none';
 
   try {
     const d = await api(`/api/v1/data-understanding?instrument_id=${_vizSelectedInstrument}`);
@@ -1419,7 +1596,8 @@ function show(sId, el) {
     dashboard:loadDashboard, performance:loadPerformance, risk:loadRisk,
     trades:loadTrades, explain:loadExplain, training:loadTraining,
     observability:loadObservability, mcp:loadMCP,
-    changelog:loadChangelog, export:loadExport
+    changelog:loadChangelog, export:loadExport,
+    scenarios:loadScenariosPage
   };
   if (loaders[sId]) loaders[sId]();
 }
@@ -1475,9 +1653,10 @@ async function runPipeline(forceRetrain) {
   const seeds = parseInt(get('b-seeds')?.value || 3);
 
   const body = {
+    instrument: selectedInstrumentId,
     target_return_pct:15, time_horizon_days:252, risk_tolerance:'moderate',
     force_retrain: forceRetrain,
-    seeds,
+    n_seeds: seeds,
     sim_start: get(`${iid}-start`).value||null,
     sim_end:   get(`${iid}-end`).value||null
   };
@@ -1527,7 +1706,14 @@ async function runPipeline(forceRetrain) {
   async function pollProgress() {
     try {
       const prog = await api('/progress');
-      const steps = prog.steps || {};
+      // /progress returns steps as an array [{name,status},…].
+      // Convert to a keyed object so STEP_KEYS lookups work correctly.
+      const stepsArr = Array.isArray(prog.steps) ? prog.steps : [];
+      const steps = {};
+      STEP_KEYS.forEach((k, i) => {
+        const s = stepsArr[i];
+        steps[k] = s ? (s.status === 'completed') : false;
+      });
 
       // Find first incomplete step = currently running step
       let runningStep = null;
@@ -1535,23 +1721,37 @@ async function runPipeline(forceRetrain) {
         if (!steps[STEP_KEYS[i]]) { runningStep = i + 1; break; }
       }
 
-      // If all steps appear done but we haven't seen an in-progress state yet,
-      // this is stale data from the prior completed run — stay on "Starting…"
+      // Stale data guard: all done but haven't seen in-progress yet → prior run
       if (runningStep === null && !seenInProgress) {
         pollTimer = setTimeout(pollProgress, 2000);
         return;
       }
-      if (runningStep === null) runningStep = 8; // truly on last step
       if (!seenInProgress) seenInProgress = true;
+
+      // ── All steps complete: pipeline finished ─────────────────────────────
+      if (runningStep === null) {
+        for (let i = 1; i <= 8; i++) markIStep(prefix, i, 'done');
+        statusEl.innerHTML = '<span class="badge ok" style="font-size:11px">✓ Complete</span>';
+        try {
+          const log = await api('/api/v1/step-log');
+          if (log && log.length) buildAccordion(accId, log);
+        } catch(e) {}
+        await loadActiveInstrument();
+        running = false;
+        get(btnId).disabled = false;
+        setTimeout(() => { const n = document.querySelector('[data-s="dashboard"]'); show('dashboard', n); }, 800);
+        return; // stop polling
+      }
+
       lastRunningStep = runningStep;
 
-      // Update step bar — only mark steps the server has confirmed done
+      // Update step bar
       for (let i = 1; i <= 8; i++) {
         if (steps[STEP_KEYS[i-1]]) markIStep(prefix, i, 'done');
         else if (i === runningStep)  markIStep(prefix, i, 'running');
       }
 
-      // Status line — show real training progress for step 4
+      // Status line — show training progress detail for step 4
       if (runningStep === 4 && forceRetrain) {
         api('/api/v1/training-progress').then(rows => {
           if (rows && rows.length) {
@@ -1574,28 +1774,20 @@ async function runPipeline(forceRetrain) {
 
   pollProgress(); // start real-time polling immediately
 
+  // Fire the pipeline — 202 means accepted, training runs in background.
+  // Completion is detected by the polling loop above, not by this response.
   try {
-    const result = await api('/api/v1/pipeline',{
+    await api('/api/v1/pipeline', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(body)
+      body: JSON.stringify(body)
     });
-    clearTimeout(pollTimer);
-    for(let i=1;i<=8;i++) markIStep(prefix,i,'done');
-    statusEl.innerHTML='<span class="badge ok" style="font-size:11px">✓ Complete</span>';
-    lastResults = result;
-    try {
-      const log = await api('/api/v1/step-log');
-      if (log&&log.length) buildAccordion(accId, log);
-    } catch(e){}
-    await loadActiveInstrument(); // refresh topbar pill + page subtitles for new instrument
-    setTimeout(()=>{ const n=document.querySelector('[data-s="dashboard"]'); show('dashboard',n); }, 800);
+    // Pipeline accepted — polling takes it from here. Nothing to do.
   } catch(e) {
     clearTimeout(pollTimer);
     markIStep(prefix, lastRunningStep, 'pending');
-    statusEl.innerHTML=`<span class="badge err" style="font-size:11px">✗ ${e.message}</span>`;
-  } finally {
-    running=false;
-    get(btnId).disabled=false;
+    statusEl.innerHTML = `<span class="badge err" style="font-size:11px">✗ ${e.message}</span>`;
+    running = false;
+    get(btnId).disabled = false;
   }
 }
 
@@ -1623,9 +1815,9 @@ async function loadInstruments() {
     const raw = Array.isArray(d) ? d : (d.instruments||[]);
     _instrumentList = raw.map(i => typeof i === 'string'
       ? { id: i, name: i }
-      : { id: i.id||i.name||'nifty50', name: i.name||i.symbol||i.id||'NIFTY' });
-    if (!_instrumentList.length) _instrumentList = [{ id:'nifty50', name:'NIFTY' }];
-  } catch(e){ _instrumentList = [{ id:'nifty50', name:'NIFTY' }]; }
+      : { id: i.id||i.name||'nifty', name: i.name||i.symbol||i.id||'NIFTY' });
+    if (!_instrumentList.length) _instrumentList = [{ id:'nifty', name:'NIFTY' }];
+  } catch(e){ _instrumentList = [{ id:'nifty', name:'NIFTY' }]; }
 
   ['b-instrument','r-instrument'].forEach(selId => {
     const sel = document.getElementById(selId);
@@ -1750,7 +1942,7 @@ async function loadPerformance() {
     if(daily&&daily.length) {
       const labels=daily.map(r=>r.date);
       const strat=daily.map(r=>parseFloat(r.cumulative_strategy??r.portfolio_value??1)*100);
-      const bnh  =daily.map(r=>parseFloat(r.cumulative_bnh??r.buy_hold??1)*100);
+      const bnh  =daily.map(r=>parseFloat(r.benchmark_value??r.cumulative_bnh??r.buy_hold??1)*100);
       const alloc=daily.map(r=>parseFloat(r.allocation??0));
       // Compute drawdown from portfolio_value if drawdown_pct column absent
       const pvRaw=daily.map(r=>parseFloat(r.portfolio_value??1));
@@ -1844,20 +2036,29 @@ async function loadRisk() {
     ]});
 
     mkChart('ch-budget','line',{labels,datasets:[
-      {label:'DD Budget Used %',data:budget,borderColor:C.run,backgroundColor:C.runBg,borderWidth:1.5,pointRadius:0,fill:true}
-    ]},{plugins:{legend:{labels:{font:{family:"'IBM Plex Mono'",size:10},color:C.t2}},annotation:{annotations:{limit:{type:'line',yMin:100,yMax:100,borderColor:C.danger,borderDash:[4,2]}}}}});
+      {label:'DD Budget Used % (100% = 10% MDD limit hit)',data:budget,borderColor:C.run,backgroundColor:C.runBg,borderWidth:1.5,pointRadius:0,fill:true}
+    ]},{
+      plugins:{
+        legend:{labels:{font:{family:"'IBM Plex Mono'",size:10},color:C.t2}},
+        annotation:{annotations:{limit:{type:'line',yMin:100,yMax:100,borderColor:C.danger,borderDash:[4,2],label:{display:true,content:'MDD Limit',position:'end',color:C.danger,font:{size:9,family:"'IBM Plex Mono'"}}}}}
+      },
+      scales:{
+        x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,maxTicksLimit:12}},
+        y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,callback:v=>v+'%'},min:0}
+      }
+    });
 
     mkChart('ch-trade-risk','bar',{labels,datasets:[
       {label:'ΔVaR %',data:delta,backgroundColor:delta.map(v=>v>0?C.dangerBg:C.buildBg),borderColor:delta.map(v=>v>0?C.danger:C.build),borderWidth:1}
     ]});
 
     mkChart('ch-regime','line',{labels,datasets:[
-      {label:'Trend Score',data:trend,borderColor:C.ds,backgroundColor:C.dsBg,borderWidth:1.5,pointRadius:0,fill:true,yAxisID:'y'},
+      {label:'Trend Score (−1=bearish, 0=neutral, +1=bullish)',data:trend,borderColor:C.ds,backgroundColor:C.dsBg,borderWidth:1.5,pointRadius:0,fill:true,yAxisID:'y'},
       {label:'Allocation %',data:alloc.map(v=>v*100),borderColor:C.build,backgroundColor:'transparent',borderWidth:1,borderDash:[3,2],pointRadius:0,yAxisID:'y2'}
     ]},{scales:{
       x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,maxTicksLimit:12}},
-      y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3}},
-      y2:{position:'right',grid:{display:false},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3},min:0,max:100}
+      y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,callback:v=>v===1?'+1 Bull':v===0?'Neutral':v===-1?'−1 Bear':v},min:-1,max:1},
+      y2:{position:'right',grid:{display:false},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,callback:v=>v+'%'},min:0,max:100}
     }});
 
     const phases={};
@@ -1888,6 +2089,16 @@ async function loadTrades() {
     s('t-entries',entries.length||events.length); s('t-profit',pEx.length); s('t-loss',lEx.length);
     s('t-winrate',fmtPctRaw(wr*100,1)); s('t-total',events.length);
 
+    // ── Sharpe KPIs ──────────────────────────────────────────────────────────
+    const entrySharpes=entries.map(e=>e.sharpe_at_trade).filter(v=>v!=null);
+    const exitSharpes=[...pEx,...lEx].map(e=>e.sharpe_at_trade).filter(v=>v!=null);
+    const avgEntryS=entrySharpes.length?entrySharpes.reduce((a,b)=>a+b,0)/entrySharpes.length:null;
+    const avgExitS =exitSharpes.length ?exitSharpes.reduce((a,b)=>a+b,0)/exitSharpes.length :null;
+    const deltaS   =(avgEntryS!=null&&avgExitS!=null)?avgExitS-avgEntryS:null;
+    const fmtS=v=>v==null?'—':v.toFixed(2);
+    const fmtSEl=(id,v,pos)=>{const el=document.getElementById(id);if(!el)return;el.textContent=fmtS(v);el.className='kpi-value'+(v==null?'':v>0?' pos':v<0?' neg':'');};
+    fmtSEl('t-sharpe-entry',avgEntryS); fmtSEl('t-sharpe-exit',avgExitS); fmtSEl('t-sharpe-delta',deltaS);
+
     if(daily&&daily.length) {
       const labels=daily.map(r=>r.date);
       const prices=daily.map(r=>parseFloat(r.close_price??r.close??r.price??0));
@@ -1899,17 +2110,51 @@ async function loadTrades() {
         let peak=pv[0]; for(let j=1;j<=i;j++) if(pv[j]>peak) peak=pv[j];
         return peak>0?(v-peak)/peak*100:0;
       });
-      const ep=entries.map(e=>({x:e.date,y:parseFloat(e.price??0)}));
-      const pp=pEx.map(e=>({x:e.date,y:parseFloat(e.price??0)}));
-      const lp=lEx.map(e=>({x:e.date,y:parseFloat(e.price??0)}));
+
+      // ── Rolling 63-day Sharpe from daily returns ─────────────────────────
+      const pvRets=pv.map((v,i)=>i===0?0:(pv[i-1]>0?(v-pv[i-1])/pv[i-1]:0));
+      const rollSharpe=pvRets.map((_,i)=>{
+        if(i<2) return null;
+        const sl=pvRets.slice(Math.max(0,i-63),i);
+        const mn=sl.reduce((a,b)=>a+b,0)/sl.length;
+        const sd=Math.sqrt(sl.map(x=>(x-mn)**2).reduce((a,b)=>a+b,0)/sl.length);
+        return sd>0?(mn/sd)*Math.sqrt(252):null;
+      });
+
+      // ── Combined Sharpe + Price chart with split entry/exit markers ─────────
+      const entryDates      = new Set(entries.map(e=>e.date));
+      const profitExitDates = new Set(pEx.map(e=>e.date));
+      const lossExitDates   = new Set(lEx.map(e=>e.date));
+      const sharpeAtEntry       = labels.map((l,i)=>entryDates.has(l)      ? rollSharpe[i] : null);
+      const sharpeAtProfitExit  = labels.map((l,i)=>profitExitDates.has(l) ? rollSharpe[i] : null);
+      const sharpeAtLossExit    = labels.map((l,i)=>lossExitDates.has(l)   ? rollSharpe[i] : null);
 
       const _tradeInstName = _activeInst?.name || _activeInst?.id || 'Close';
-      mkChart('ch-trade-price','line',{labels,datasets:[
-        {label:`${_tradeInstName} Close`,data:prices,borderColor:C.ds,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0},
-        {label:'▲ Entry',data:labels.map(l=>{const f=ep.find(p=>p.x===l);return f?f.y:null;}),pointRadius:5,pointBackgroundColor:C.build,pointStyle:'triangle',borderColor:'transparent',backgroundColor:'transparent',showLine:false},
-        {label:'▼ Profit Exit',data:labels.map(l=>{const f=pp.find(p=>p.x===l);return f?f.y:null;}),pointRadius:5,pointBackgroundColor:C.build,pointStyle:'rectRot',borderColor:'transparent',backgroundColor:'transparent',showLine:false},
-        {label:'✕ Loss Exit',data:labels.map(l=>{const f=lp.find(p=>p.x===l);return f?f.y:null;}),pointRadius:5,pointBackgroundColor:C.danger,pointStyle:'crossRot',borderColor:'transparent',backgroundColor:'transparent',showLine:false}
-      ]});
+      if(document.getElementById('trades-chart-title'))
+        document.getElementById('trades-chart-title').textContent=
+          `Rolling 63d Sharpe & ${_tradeInstName} Close — ▲ Entry (blue) · ▼ Profit Exit (green) · ● Loss Exit (red)`;
+
+      mkChart('ch-trade-combined','line',{labels,datasets:[
+        // Sharpe line — left Y axis
+        {label:'Rolling 63d Sharpe',data:rollSharpe,borderColor:C.mon,backgroundColor:'transparent',borderWidth:2,pointRadius:0,yAxisID:'y'},
+        // Close price line — right Y axis (muted, for price context)
+        {label:`${_tradeInstName} Close`,data:prices,borderColor:C.ds,backgroundColor:'transparent',borderWidth:1,borderDash:[3,2],pointRadius:0,yAxisID:'y2'},
+        // Entry markers — bright blue triangle (left Y)
+        {label:'▲ Entry',data:sharpeAtEntry,pointRadius:8,pointBackgroundColor:'#3B82F6',pointBorderColor:'#3B82F6',pointHoverRadius:10,pointStyle:'triangle',borderColor:'transparent',backgroundColor:'transparent',showLine:false,yAxisID:'y'},
+        // Profit exit markers — bright green inverted triangle (left Y)
+        {label:'▼ Profit Exit',data:sharpeAtProfitExit,pointRadius:8,pointBackgroundColor:'#22C55E',pointBorderColor:'#22C55E',pointHoverRadius:10,pointStyle:'triangle',rotation:180,borderColor:'transparent',backgroundColor:'transparent',showLine:false,yAxisID:'y'},
+        // Loss exit markers — bright red circle (left Y)
+        {label:'● Loss Exit',data:sharpeAtLossExit,pointRadius:7,pointBackgroundColor:'#EF4444',pointBorderColor:'#EF4444',pointHoverRadius:10,pointStyle:'circle',borderColor:'transparent',backgroundColor:'transparent',showLine:false,yAxisID:'y'}
+      ]},{
+        scales:{
+          x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,maxTicksLimit:12}},
+          y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3},
+             title:{display:true,text:'Sharpe Ratio',color:C.mon,font:{size:9,family:"'IBM Plex Mono'"}}},
+          y2:{position:'right',grid:{display:false},
+              ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.ds},
+              title:{display:true,text:'Close Price',color:C.ds,font:{size:9,family:"'IBM Plex Mono'"}}}
+        }
+      });
 
       mkChart('ch-trade-pv','line',{labels,datasets:[
         {label:'Portfolio Value',data:pv,borderColor:C.build,backgroundColor:C.buildBg,borderWidth:1.5,pointRadius:0,fill:true}
@@ -1920,20 +2165,25 @@ async function loadTrades() {
     }
 
     const phases={};
-    events.forEach(e=>{ const p=e.phase||'All'; if(!phases[p]) phases[p]={phase:p,entries:0,profit:0,loss:0};
-      if(e.event_type==='entry'||e.trade_type==='entry') phases[p].entries++;
-      else if(parseFloat(e.pnl??0)>0) phases[p].profit++; else phases[p].loss++; });
+    events.forEach(e=>{ const p=e.phase||'All'; if(!phases[p]) phases[p]={phase:p,entries:0,profit:0,loss:0,sharpeEntry:[],sharpeExit:[]};
+      if(e.event_type==='entry'||e.trade_type==='entry'){phases[p].entries++;if(e.sharpe_at_trade!=null)phases[p].sharpeEntry.push(e.sharpe_at_trade);}
+      else{if(parseFloat(e.pnl??0)>0) phases[p].profit++; else phases[p].loss++;if(e.sharpe_at_trade!=null)phases[p].sharpeExit.push(e.sharpe_at_trade);}});
+    const avgArr=a=>a.length?+(a.reduce((x,y)=>x+y,0)/a.length).toFixed(2):null;
     const phRows=Object.values(phases).map(p=>({phase:p.phase,entries:p.entries,profit_exits:p.profit,loss_exits:p.loss,
-      win_rate:fmtPctRaw((p.profit+p.loss)>0?p.profit/(p.profit+p.loss)*100:0,1)}));
+      win_rate:fmtPctRaw((p.profit+p.loss)>0?p.profit/(p.profit+p.loss)*100:0,1),
+      avg_entry_sharpe:avgArr(p.sharpeEntry)??'—', avg_exit_sharpe:avgArr(p.sharpeExit)??'—'}));
     document.getElementById('trade-phase-tbl').innerHTML=mkTbl(phRows,[
       {key:'phase',label:'Phase'},{key:'entries',label:'Entries',mono:true,right:true},
       {key:'profit_exits',label:'Profit Exits',mono:true,right:true},{key:'loss_exits',label:'Loss Exits',mono:true,right:true},
-      {key:'win_rate',label:'Win Rate',mono:true,right:true}
+      {key:'win_rate',label:'Win Rate',mono:true,right:true},
+      {key:'avg_entry_sharpe',label:'Avg Entry Sharpe',mono:true,right:true},
+      {key:'avg_exit_sharpe',label:'Avg Exit Sharpe',mono:true,right:true}
     ]);
     document.getElementById('trade-log-tbl').innerHTML=mkTbl(events,[
       {key:'date',label:'Date',mono:true},{key:'phase',label:'Phase'},
       {key:'risk_action',label:'Action'},{key:'allocation',label:'Alloc',mono:true,right:true},
       {key:'delta_allocation',label:'Δ Alloc',mono:true,right:true},
+      {key:'sharpe_at_trade',label:'Sharpe',mono:true,right:true},
       {key:'portfolio_var_95',label:'VaR 95%',mono:true,right:true},{key:'regime',label:'Regime'}
     ]);
   } catch(e){ console.warn('Trades:',e); }
@@ -2248,8 +2498,285 @@ async function loadActiveInstrument() {
   } catch { /* silently skip */ }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// PORTFOLIO OVERVIEW (Understand section — Portfolio pill)
+// ═══════════════════════════════════════════════════════════════
+
+async function runPortfolioOverview() {
+  const statusEl = document.getElementById('viz-status');
+  statusEl.innerHTML = '<span class="spinner"></span>Loading portfolio data…';
+  document.getElementById('viz-empty').style.display = 'none';
+  document.getElementById('viz-results').style.display = 'none';
+  document.getElementById('viz-portfolio-results').style.display = 'none';
+
+  try {
+    const d = await api('/api/v1/portfolio/overview');
+    statusEl.textContent = '';
+    renderPortfolioOverview(d);
+    document.getElementById('viz-portfolio-results').style.display = '';
+  } catch(e) {
+    statusEl.innerHTML = '';
+    document.getElementById('vp-days').textContent = '—';
+    document.getElementById('vp-from').textContent = '—';
+    document.getElementById('vp-to').textContent = '—';
+    document.getElementById('vp-corr-table').innerHTML =
+      `<div class="empty">Portfolio overview not available: ${e.message}<br><span style="color:var(--t3)">Build individual models first, then reload.</span></div>`;
+    document.getElementById('vp-inst-grid').innerHTML = '';
+    document.getElementById('viz-portfolio-results').style.display = '';
+  }
+}
+
+function renderPortfolioOverview(d) {
+  if (!d) return;
+  const INST_COLORS = { nifty:C.build, banknifty:C.run, asml:C.ds, nvidia:C.warn };
+  const INST_LABELS = { nifty:'NIFTY 50', banknifty:'BANKNIFTY', asml:'ASML', nvidia:'NVIDIA' };
+
+  document.getElementById('vp-days').textContent = d.common_days?.toLocaleString() ?? '—';
+  document.getElementById('vp-from').textContent = d.date_from ?? '—';
+  document.getElementById('vp-to').textContent   = d.date_to   ?? '—';
+  document.getElementById('vp-count').textContent = d.instruments?.length ?? 4;
+
+  // Per-instrument cards
+  const grid = document.getElementById('vp-inst-grid');
+  if (grid && d.instruments) {
+    grid.innerHTML = d.instruments.map(inst => {
+      const color = INST_COLORS[inst.id] || C.t3;
+      const label = INST_LABELS[inst.id] || inst.name || inst.id;
+      return `<div class="viz-card" style="border-top-color:${color}">
+        <span class="badge ds">${inst.currency || ''}</span>
+        <div class="viz-card-title">${label}</div>
+        <div class="viz-desc">
+          Rows: ${inst.rows?.toLocaleString() ?? '—'}<br>
+          ${inst.date_from || ''} → ${inst.date_to || ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Normalized price chart
+  if (d.normalized_returns?.length) {
+    const labels = d.normalized_returns.map(r => r.date);
+    const series = Object.keys(INST_COLORS).filter(k => d.normalized_returns[0]?.[k] != null);
+    const datasets = series.map(k => ({
+      label: INST_LABELS[k] || k,
+      data: d.normalized_returns.map(r => r[k] != null ? parseFloat(r[k]).toFixed(4) : null),
+      borderColor: INST_COLORS[k],
+      backgroundColor: 'transparent',
+      borderWidth: 1.5, pointRadius: 0, fill: false,
+    }));
+    destroyChart('chart-vp-returns');
+    const canvas = document.getElementById('chart-vp-returns');
+    if (canvas && datasets.length) {
+      const sc = {
+        x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,maxTicksLimit:12}},
+        y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3}}
+      };
+      CHARTS['chart-vp-returns'] = new Chart(canvas, {
+        type:'line', data:{labels, datasets},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{font:{family:"'IBM Plex Mono'",size:10},color:C.t2}}},
+          scales:sc}
+      });
+    }
+  }
+
+  // Correlation table
+  const corrWrap = document.getElementById('vp-corr-table');
+  if (corrWrap && d.correlation_matrix) {
+    const names = Object.keys(d.correlation_matrix);
+    const ths = names.map(n=>`<th>${INST_LABELS[n]||n}</th>`).join('');
+    const rows = names.map(r => {
+      const cells = names.map(c => {
+        const v = d.correlation_matrix[r]?.[c];
+        if (v == null) return '<td>—</td>';
+        const n = parseFloat(v);
+        const bg = n >= 0.7 ? '#B6DEC9' : n <= -0.4 ? '#FCA5A5' : n >= 0.4 ? '#FEF4EB' : '';
+        return `<td style="${bg?`background:${bg};`:''}font-weight:${r===c?700:400}">${n.toFixed(2)}</td>`;
+      }).join('');
+      return `<tr><th>${INST_LABELS[r]||r}</th>${cells}</tr>`;
+    }).join('');
+    corrWrap.innerHTML = `<table class="corr-table"><thead><tr><th></th>${ths}</tr></thead><tbody>${rows}</tbody></table>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PORTFOLIO SCENARIOS SECTION
+// ═══════════════════════════════════════════════════════════════
+
+function loadScenariosPage() { /* section is ready on show — nothing to auto-load */ }
+
+function scToggleInst(id) {
+  const cb   = document.getElementById(`sc-inst-${id}`);
+  const card = document.getElementById(`sc-card-${id}`);
+  const sl   = document.getElementById(`sc-slider-${id}`);
+  if (!cb || !card || !sl) return;
+  const on = cb.checked;
+  card.style.opacity   = on ? '' : '0.45';
+  sl.disabled          = !on;
+  sl.style.cursor      = on ? 'pointer' : 'not-allowed';
+  scUpdateTotal();
+}
+
+function scUpdateTotal() {
+  const ids     = ['nifty','banknifty','asml','nvidia'];
+  const capital = parseFloat(document.getElementById('sc-capital')?.value || 1000);
+  let allocatedPct = 0;
+  ids.forEach(id => {
+    const cb  = document.getElementById(`sc-inst-${id}`);
+    const sl  = document.getElementById(`sc-slider-${id}`);
+    const pct = sl ? parseFloat(sl.value) : 0;
+    // Update % label (number only — the % sign is a sibling <span>)
+    const pctEl = document.getElementById(`sc-pct-${id}`);
+    if (pctEl) pctEl.textContent = pct;
+    // Update EUR estimate
+    const eurEl = document.getElementById(`sc-eur-${id}`);
+    if (eurEl) eurEl.textContent = '€' + Math.round(capital * pct / 100).toLocaleString();
+    if (cb?.checked) allocatedPct += pct;
+  });
+  const remaining = 100 - allocatedPct;
+  const remEl = document.getElementById('sc-remaining-lbl');
+  if (remEl) {
+    if (remaining < 0) {
+      remEl.innerHTML = `<span style="color:var(--warn);font-weight:600">· ${Math.abs(remaining)}% over-allocated</span>`;
+    } else {
+      remEl.textContent = `· ${remaining}% stays as cash`;
+    }
+  }
+}
+
+async function runPortfolioScenario() {
+  const from = document.getElementById('sc-from').value;
+  const to   = document.getElementById('sc-to').value;
+  if (!from || !to) { alert('Select both start and end dates.'); return; }
+  if (from >= to)   { alert('Start date must be before end date.'); return; }
+
+  const ids = ['nifty','banknifty','asml','nvidia'];
+  const selected = ids.filter(id => document.getElementById(`sc-inst-${id}`)?.checked);
+  if (!selected.length) { alert('Select at least one instrument.'); return; }
+
+  const capital = parseFloat(document.getElementById('sc-capital')?.value || 1000);
+  const allocations = {};
+  selected.forEach(id => {
+    const pct = parseFloat(document.getElementById(`sc-slider-${id}`)?.value || 0);
+    allocations[id] = Math.round(capital * pct / 100);
+  });
+
+  const btn     = document.getElementById('btn-sc');
+  const spinner = document.getElementById('sc-spinner');
+  const badge   = document.getElementById('sc-status');
+  btn.disabled = true;
+  spinner.style.display = '';
+  badge.style.display = ''; badge.className = 'badge run'; badge.textContent = 'Running…';
+  document.getElementById('sc-result').innerHTML = '';
+
+  try {
+    const result = await api('/api/v1/portfolio/backtest', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ instruments: selected, allocations_eur: allocations, start_date: from, end_date: to })
+    });
+    badge.className = 'badge ok'; badge.textContent = 'Done';
+    renderPortfolioScenarioResults(result, from, to);
+  } catch(e) {
+    badge.className = 'badge err'; badge.textContent = 'Error';
+    document.getElementById('sc-result').innerHTML =
+      `<div class="card"><div style="color:var(--danger);font-size:12px">Error: ${e.message}</div></div>`;
+  } finally {
+    btn.disabled = false;
+    spinner.style.display = 'none';
+  }
+}
+
+function renderPortfolioScenarioResults(d, from, to) {
+  const resultEl = document.getElementById('sc-result');
+  if (!d || !Object.keys(d).length) { resultEl.innerHTML = '<div class="empty">No results returned.</div>'; return; }
+  const _f = v => (v !== null && v !== undefined && !isNaN(parseFloat(v))) ? parseFloat(v) : null;
+  const sharpe = _f(d.sharpe_ratio);
+  const mdd    = _f(d.max_drawdown_pct);
+  const ret    = _f(d.portfolio_total_return_pct);
+  const bnh    = _f(d.benchmark_total_return_pct);
+  const cagr   = _f(d.portfolio_cagr_pct);
+
+  let html = `
+  <div class="card-hdr" style="margin-bottom:10px">
+    <span class="card-title">Portfolio Results — ${from} → ${to}</span>
+    <span class="badge ds" style="margin-left:8px">${d.instruments_count ?? selected?.length ?? ''} instruments · €${(d.total_eur_allocated??1000).toLocaleString()}</span>
+  </div>
+  <div class="kpi-row kpi-row-4" style="margin-bottom:14px">
+    <div class="kpi"><div class="kpi-label">Portfolio Sharpe</div><div class="kpi-value ${sharpe!==null?(sharpe>=1?'pos':sharpe>=0?'neu':'neg'):''}">${sharpe!==null?sharpe.toFixed(3):'—'}</div><div class="kpi-delta">target ≥ 1.0</div></div>
+    <div class="kpi"><div class="kpi-label">Max Drawdown</div><div class="kpi-value ${mdd!==null?(Math.abs(mdd)<=10?'pos':'warn'):''}">${mdd!==null?mdd.toFixed(2)+'%':'—'}</div><div class="kpi-delta">target &lt; 10%</div></div>
+    <div class="kpi"><div class="kpi-label">Portfolio Return</div><div class="kpi-value neu">${ret!==null?ret.toFixed(2)+'%':'—'}</div><div class="kpi-delta">B&amp;H avg ${bnh!==null?bnh.toFixed(2)+'%':'—'}</div></div>
+    <div class="kpi"><div class="kpi-label">CAGR</div><div class="kpi-value neu">${cagr!==null?cagr.toFixed(2)+'%':'—'}</div><div class="kpi-delta">annualised</div></div>
+  </div>`;
+
+  // Per-instrument table
+  if (d.instruments?.length) {
+    const INST_LABELS = {nifty:'NIFTY 50',banknifty:'BANKNIFTY',asml:'ASML',nvidia:'NVIDIA'};
+    const trs = d.instruments.map(inst => {
+      const r = _f(inst.return_pct); const s = _f(inst.sharpe); const w = _f(inst.weight_pct);
+      return `<tr>
+        <td class="td-mono">${INST_LABELS[inst.id]||inst.name||inst.id}</td>
+        <td class="td-mono">${inst.currency||'—'}</td>
+        <td class="td-mono" style="text-align:right">€${(inst.allocated_eur||0).toLocaleString()}</td>
+        <td class="td-mono" style="text-align:right;color:${r!==null?(r>=0?'var(--build)':'var(--danger)'):'inherit'}">${r!==null?r.toFixed(2)+'%':'—'}</td>
+        <td class="td-mono" style="text-align:right">${s!==null?s.toFixed(3):'—'}</td>
+        <td class="td-mono" style="text-align:right">${w!==null?w.toFixed(1)+'%':'—'}</td>
+      </tr>`;
+    }).join('');
+    html += `<div class="tbl-wrap" style="margin-bottom:14px"><table>
+      <thead><tr><th>Instrument</th><th>Ccy</th><th style="text-align:right">Allocated</th><th style="text-align:right">Return</th><th style="text-align:right">Sharpe</th><th style="text-align:right">Weight</th></tr></thead>
+      <tbody>${trs}</tbody></table></div>`;
+  }
+
+  // Chart
+  if (d.daily?.length) {
+    const labels   = d.daily.map(r => r.date);
+    const portVals = d.daily.map(r => r.portfolio_value != null ? ((parseFloat(r.portfolio_value)-1)*100).toFixed(2) : null);
+    const bnhVals  = d.daily.map(r => r.benchmark_value  != null ? ((parseFloat(r.benchmark_value) -1)*100).toFixed(2) : null);
+    html += `<div class="chart-wrap"><div class="chart-title">Cumulative Return (%) — DDQN Portfolio vs Equal-Weight B&amp;H</div>
+      <div class="chart-box h260"><canvas id="chart-sc-portfolio"></canvas></div></div>`;
+    resultEl.innerHTML = html;
+    destroyChart('chart-sc-portfolio');
+    const canvas = document.getElementById('chart-sc-portfolio');
+    if (canvas) {
+      const INST_COLORS = {nifty:C.build,banknifty:C.run,asml:C.ds,nvidia:C.warn};
+      const sc = {
+        x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,maxTicksLimit:12}},
+        y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,callback:v=>v+'%'}}
+      };
+      const datasets = [
+        {label:'RITA Portfolio',data:portVals,borderColor:C.ds,backgroundColor:C.dsBg,fill:true,pointRadius:0,borderWidth:2},
+        {label:'Equal-Weight B&H',data:bnhVals,borderColor:C.warn,backgroundColor:'transparent',fill:false,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+      ];
+      if (d.instrument_series) {
+        const INST_LABELS = {nifty:'NIFTY 50',banknifty:'BANKNIFTY',asml:'ASML',nvidia:'NVIDIA'};
+        Object.entries(d.instrument_series).forEach(([k, vals]) => {
+          datasets.push({label:INST_LABELS[k]||k,
+            data:vals.map(v=>v!=null?((parseFloat(v)-1)*100).toFixed(2):null),
+            borderColor:INST_COLORS[k]||C.t3,backgroundColor:'transparent',
+            fill:false,pointRadius:0,borderWidth:1,borderDash:[2,2]});
+        });
+      }
+      CHARTS['chart-sc-portfolio'] = new Chart(canvas, {
+        type:'line',data:{labels,datasets},
+        options:{responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{labels:{font:{family:"'IBM Plex Mono'",size:10},color:C.t2}}},
+          scales:sc}
+      });
+    }
+    return;
+  }
+  resultEl.innerHTML = html;
+}
+
 // ─── INIT ──────────────────────────────────────────────────────
 async function init() {
+  // Default simulation end date to today so charts always show current data
+  const today = new Date().toISOString().slice(0, 10);
+  ['b-end', 'r-end'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = today;
+  });
+
   await loadInstruments();
   await checkStatus();
   setInterval(checkStatus, 30000);
@@ -2257,6 +2784,50 @@ async function init() {
   loadUnderstand();  // default landing section
 }
 init();
+</script>
+
+<!-- ── Chart expand modal ───────────────────────────────── -->
+<div id="chart-modal" onclick="closeChartModal()" style="
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.72);
+  align-items:center;justify-content:center;cursor:zoom-out;">
+  <div onclick="event.stopPropagation()" style="
+    background:var(--surface);border-radius:var(--r);
+    padding:24px;width:94vw;max-width:94vw;max-height:96vh;
+    box-shadow:0 8px 40px rgba(0,0,0,0.4);position:relative;overflow:auto;">
+    <button onclick="closeChartModal()" style="
+      position:absolute;top:10px;right:14px;
+      background:none;border:none;font-size:22px;
+      cursor:pointer;color:var(--t2);line-height:1;">✕</button>
+    <div id="chart-modal-title" style="font-family:var(--fs);font-size:16px;font-weight:600;margin-bottom:16px;padding-right:28px;color:var(--text)"></div>
+    <img id="chart-modal-img" style="width:100%;max-height:88vh;display:block;border-radius:4px;object-fit:contain;" />
+  </div>
+</div>
+
+<!-- ── Nav toggle (desktop collapse) ─────────────────────── -->
+<script>
+(function(){
+  var KEY='rita_nav_collapsed';
+  var btn=document.getElementById('nav-toggle');
+  var shell=document.querySelector('.shell');
+  var sidebar=document.querySelector('.sidebar');
+  if(!btn||!shell||!sidebar)return;
+  if(window.innerWidth>768&&localStorage.getItem(KEY)==='1')shell.classList.add('nav-collapsed');
+  btn.addEventListener('click',function(){
+    if(window.innerWidth>768){
+      var c=shell.classList.toggle('nav-collapsed');
+      localStorage.setItem(KEY,c?'1':'0');
+    } else {
+      sidebar.classList.toggle('open');
+      document.body.classList.toggle('nav-open');
+    }
+  });
+  document.addEventListener('click',function(e){
+    if(document.body.classList.contains('nav-open')&&!sidebar.contains(e.target)&&e.target!==btn){
+      sidebar.classList.remove('open');document.body.classList.remove('nav-open');
+    }
+  });
+})();
 </script>
 </body>
 </html>
