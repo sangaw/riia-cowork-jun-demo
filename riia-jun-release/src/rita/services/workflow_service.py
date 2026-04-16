@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 import structlog
 from sqlalchemy.orm import Session
 
-from rita.core.ml_dispatch import TrainingConfig, train
+from rita.core.ml_dispatch import TrainingConfig, load_instrument_defaults, train
 from rita.database import SessionLocal
 from rita.repositories.training import TrainingMetricsRepository, TrainingRunsRepository
 from rita.schemas.training import TrainingMetric, TrainingRun, TrainingRunCreate
@@ -178,6 +178,7 @@ class WorkflowService:
         from rita.core.data_loader import model_dir
         settings = body.model_dump()
         instrument = settings.get("instrument", "NIFTY")
+        inst_defaults = load_instrument_defaults(instrument)
         config = TrainingConfig(
             run_id=run_id,
             instrument=instrument,
@@ -189,6 +190,7 @@ class WorkflowService:
             net_arch=settings["net_arch"],
             exploration_pct=settings["exploration_pct"],
             output_dir=str(model_dir(instrument)),
+            n_seeds=inst_defaults.get("n_seeds", 1),
         )
         threading.Thread(target=_run_training_job, args=(config,), daemon=True).start()
         return run

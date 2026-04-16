@@ -1,6 +1,6 @@
 """RITA Core — Trading Environment & Agent Utilities
 
-NiftyTradingEnv: gymnasium environment for Nifty 50 / any OHLCV instrument.
+RIIATradingEnv: gymnasium environment for Nifty 50 / any OHLCV instrument.
 TrainingProgressCallback: SB3 callback that records training metrics.
 train_agent: create, train and save a Double-DQN model.
 train_best_of_n: train N seeds, return the winner by validation Sharpe.
@@ -70,7 +70,7 @@ class TrainingProgressCallback(BaseCallback):
 
 # ── Gymnasium trading environment ─────────────────────────────────────────────
 
-class NiftyTradingEnv(gym.Env):
+class RIIATradingEnv(gym.Env):
     """Custom gymnasium environment for Nifty 50 / generic OHLCV trading.
 
     Each episode covers a random 252-day (≈1 year) window from the DataFrame.
@@ -210,7 +210,7 @@ def train_agent(
     os.makedirs(output_dir, exist_ok=True)
     model_path = os.path.join(output_dir, model_name)
 
-    env = Monitor(NiftyTradingEnv(train_df))
+    env = Monitor(RIIATradingEnv(train_df))
 
     model = DQN(
         policy="MlpPolicy",

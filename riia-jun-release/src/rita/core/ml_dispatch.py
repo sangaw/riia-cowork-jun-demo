@@ -21,8 +21,45 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import structlog
+import yaml
 
 log = structlog.get_logger()
+
+# ---------------------------------------------------------------------------
+# Per-instrument fine-tuning defaults
+# ---------------------------------------------------------------------------
+
+_INSTRUMENTS_CONFIG_DIR = Path(__file__).parents[4] / "config" / "instruments"
+
+_INSTRUMENT_DEFAULTS_CACHE: dict[str, dict] = {}
+
+
+def load_instrument_defaults(instrument: str) -> dict:
+    """Return the training sub-section from config/instruments/{instrument}.yaml.
+
+    Keys: timesteps, learning_rate, buffer_size, exploration_pct, n_seeds,
+          episode_length.
+
+    Falls back to an empty dict if no file exists for the instrument, so
+    callers can always do ``defaults.get("n_seeds", 1)`` safely.
+    """
+    key = instrument.upper()
+    if key in _INSTRUMENT_DEFAULTS_CACHE:
+        return _INSTRUMENT_DEFAULTS_CACHE[key]
+
+    config_file = _INSTRUMENTS_CONFIG_DIR / f"{key.lower()}.yaml"
+    if not config_file.exists():
+        log.warning("instrument_defaults.not_found", instrument=key)
+        _INSTRUMENT_DEFAULTS_CACHE[key] = {}
+        return {}
+
+    with config_file.open() as fh:
+        raw = yaml.safe_load(fh)
+
+    defaults = raw.get("training", {})
+    _INSTRUMENT_DEFAULTS_CACHE[key] = defaults
+    log.debug("instrument_defaults.loaded", instrument=key, keys=list(defaults.keys()))
+    return defaults
 
 
 # ---------------------------------------------------------------------------
