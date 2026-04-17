@@ -1172,13 +1172,28 @@ def mcp_calls() -> list[dict[str, Any]]:
 
 # ── GET /api/v1/test-results ───────────────────────────────────────────────
 
-_JUNIT_FILES = {
-    "rita": "test-results/junit-rita-scenarios.xml",
-    "fno":  "test-results/junit-fno-scenarios.xml",
-    "ops":  "test-results/junit-ops-scenarios.xml",
-}
+_E2E_SUITE_NAMES = ["rita", "fno", "ops"]
 
 _RELEASE_ROOT = Path(__file__).parent.parent.parent.parent.parent
+
+def _latest_xml(folder: Path) -> Optional[Path]:
+    """Return the newest XML in folder (sorted descending by filename)."""
+    if not folder.exists():
+        return None
+    xmls = sorted(folder.glob("*.xml"), reverse=True)
+    return xmls[0] if xmls else None
+
+
+def _history_runs(folder: Path) -> list[dict[str, Any]]:
+    """Return all XMLs in folder as run summaries, newest first."""
+    if not folder.exists():
+        return []
+    result = []
+    for xml in sorted(folder.glob("*.xml"), reverse=True):
+        data = _parse_junit(xml)
+        data["run_id"] = xml.stem
+        result.append(data)
+    return result
 
 
 def _parse_junit(path: Path) -> dict[str, Any]:
@@ -1192,11 +1207,11 @@ def _parse_junit(path: Path) -> dict[str, Any]:
     if suite is None:
         return {"total": 0, "passed": 0, "failed": 0, "cases": [], "run_at": None}
 
-    total   = int(suite.get("tests", 0))
+    total    = int(suite.get("tests", 0))
     failures = int(suite.get("failures", 0))
     errors   = int(suite.get("errors", 0))
-    failed  = failures + errors
-    passed  = total - failed
+    failed   = failures + errors
+    passed   = total - failed
 
     cases = []
     for tc in suite.findall("testcase"):
@@ -1205,7 +1220,6 @@ def _parse_junit(path: Path) -> dict[str, Any]:
         status = "passed" if failure is None else "failed"
         message = ""
         if failure is not None:
-            # Extract just the assertion line, not the full traceback
             raw = failure.get("message", "") or (failure.text or "")
             message = raw.split("\n")[0][:80]
         cases.append({"name": name, "status": status, "message": message})
@@ -1219,36 +1233,172 @@ def _parse_junit(path: Path) -> dict[str, Any]:
     }
 
 
-@router.get("/test-results", summary="Latest scenario test results")
+def _extract_module_name(classname: str) -> str:
+    """Extract leaf module from dotted classname e.g. 'tests.unit.test_api_experience'."""
+    if not classname:
+        return "unknown"
+    return classname.split(".")[-1]
+
+
+def _parse_junit_grouped(path: Path) -> dict[str, Any]:
+    """Parse JUnit XML and add per-module breakdown keyed by classname leaf."""
+    base = _parse_junit(path)
+    if not path.exists():
+        return {**base, "modules": {}}
+
+    tree = ET.parse(path)
+    root = tree.getroot()
+    suite = root if root.tag == "testsuite" else root.find("testsuite")
+    if suite is None:
+        return {**base, "modules": {}}
+
+    modules: dict[str, dict] = {}
+    for tc in suite.findall("testcase"):
+        name      = tc.get("name", "")
+        classname = tc.get("classname", "")
+        mod       = _extract_module_name(classname)
+        failure   = tc.find("failure")
+        status    = "passed" if failure is None else "failed"
+        message   = ""
+        if failure is not None:
+            raw     = failure.get("message", "") or (failure.text or "")
+            message = raw.split("\n")[0][:80]
+
+        if mod not in modules:
+            modules[mod] = {"total": 0, "passed": 0, "failed": 0, "cases": []}
+        modules[mod]["total"] += 1
+        modules[mod]["passed" if status == "passed" else "failed"] += 1
+        modules[mod]["cases"].append({"name": name, "status": status, "message": message})
+
+    return {**base, "modules": modules}
+
+
+
+@router.get("/test-results", summary="Latest test results — e2e, integration, unit")
 def test_results() -> dict[str, Any]:
-    """Return structured results from the latest scenario test JUnit XML files.
+    """Return last-run summary grouped by suite type and module.
 
-    Consumed by the Test Results section in ops.html.
-    Returns results for RITA, FnO, and Ops scenario suites.
-    When no XML files exist, returns data_available=False so the UI can
-    show an actionable message instead of all-zero KPIs.
+    Reads timestamped XMLs from:
+      test-results/e2e/{rita,fno,ops}/<ts>-<suite>.xml
+      test-results/unit/<ts>-unit.xml
+      test-results/integration/<ts>-integration.xml
+
+    Files are written by conftest.pytest_sessionfinish after each test run.
+    The newest filename (lexicographic descending) is treated as the latest result.
+
+    Response keys:
+      suite_summary  — totals by type (e2e / unit / integration)
+      modules        — one entry per test file / classname group
+      suites         — e2e list (rita / fno / ops)
     """
-    suites = []
+    all_modules: list[dict] = []
+    suite_summary: dict[str, dict] = {}
+    suites: list[dict] = []
     any_file_found = False
-    for name, rel_path in _JUNIT_FILES.items():
-        path = _RELEASE_ROOT / rel_path
-        if path.exists():
-            any_file_found = True
-        data = _parse_junit(path)
-        data["name"] = name
-        suites.append(data)
 
-    total  = sum(s["total"]  for s in suites)
-    passed = sum(s["passed"] for s in suites)
-    failed = sum(s["failed"] for s in suites)
+    # ── E2E suites ────────────────────────────────────────────────────────────
+    e2e_total = e2e_passed = e2e_failed = 0
+    e2e_run_at: Optional[str] = None
+
+    for name in _E2E_SUITE_NAMES:
+        suite_dir  = _RELEASE_ROOT / "test-results" / "e2e" / name
+        latest_xml = _latest_xml(suite_dir)
+        has_runs   = latest_xml is not None
+
+        if has_runs:
+            latest = _parse_junit(latest_xml)
+            any_file_found = True
+        else:
+            latest = {"total": 0, "passed": 0, "failed": 0, "cases": [], "run_at": None}
+
+        runs = _history_runs(suite_dir)
+
+        suites.append({
+            "name":        name,
+            "file_exists": has_runs,
+            "total":       latest["total"],
+            "passed":      latest["passed"],
+            "failed":      latest["failed"],
+            "cases":       latest["cases"],
+            "run_at":      latest["run_at"],
+            "runs":        [{"run_id": r["run_id"], "total": r["total"],
+                             "passed": r["passed"], "failed": r["failed"],
+                             "run_at": r["run_at"]} for r in runs],
+        })
+        all_modules.append({
+            "module":      name,
+            "suite_type":  "e2e",
+            "file_exists": has_runs,
+            "total":       latest["total"],
+            "passed":      latest["passed"],
+            "failed":      latest["failed"],
+            "cases":       latest["cases"],
+            "run_at":      latest["run_at"],
+        })
+
+        e2e_total  += latest["total"]
+        e2e_passed += latest["passed"]
+        e2e_failed += latest["failed"]
+        if latest["run_at"] and (e2e_run_at is None or latest["run_at"] > e2e_run_at):
+            e2e_run_at = latest["run_at"]
+
+    suite_summary["e2e"] = {
+        "total": e2e_total, "passed": e2e_passed, "failed": e2e_failed,
+        "run_at": e2e_run_at, "module_count": len(_E2E_SUITE_NAMES),
+        "file_exists": e2e_total > 0,
+    }
+
+    # ── Unit and Integration suites (classname → module) ─────────────────────
+    for suite_type in ("unit", "integration"):
+        st_dir     = _RELEASE_ROOT / "test-results" / suite_type
+        latest_xml = _latest_xml(st_dir)
+        has_runs   = latest_xml is not None
+
+        if has_runs:
+            latest = _parse_junit_grouped(latest_xml)
+            any_file_found = True
+        else:
+            latest = {"total": 0, "passed": 0, "failed": 0, "modules": {}, "run_at": None}
+
+        runs = _history_runs(st_dir)
+
+        for mod_name, mod_data in latest.get("modules", {}).items():
+            all_modules.append({
+                "module":      mod_name,
+                "suite_type":  suite_type,
+                "file_exists": has_runs,
+                "total":       mod_data["total"],
+                "passed":      mod_data["passed"],
+                "failed":      mod_data["failed"],
+                "cases":       mod_data["cases"],
+                "run_at":      latest["run_at"],
+            })
+
+        suite_summary[suite_type] = {
+            "total":        latest["total"],
+            "passed":       latest["passed"],
+            "failed":       latest["failed"],
+            "run_at":       latest["run_at"],
+            "module_count": len(latest.get("modules", {})),
+            "file_exists":  has_runs,
+            "runs":         [{"run_id": r["run_id"], "total": r["total"],
+                              "passed": r["passed"], "failed": r["failed"],
+                              "run_at": r.get("run_at")} for r in runs],
+        }
+
+    total  = sum(s["total"]  for s in suite_summary.values())
+    passed = sum(s["passed"] for s in suite_summary.values())
+    failed = sum(s["failed"] for s in suite_summary.values())
 
     return {
         "data_available": any_file_found,
-        "total": total,
-        "passed": passed,
-        "failed": failed,
-        "pass_rate": round(passed / total * 100, 1) if total > 0 else 0,
-        "suites": suites,
+        "total":         total,
+        "passed":        passed,
+        "failed":        failed,
+        "pass_rate":     round(passed / total * 100, 1) if total > 0 else 0,
+        "suite_summary": suite_summary,
+        "modules":       all_modules,
+        "suites":        suites,
     }
 
 
@@ -1597,7 +1747,6 @@ def training_history(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     repo = TrainingRunsRepository(db)
     # sort oldest-first to assign round numbers, then reverse for newest-first output
     runs = sorted(repo.read_all(), key=lambda r: r.recorded_at)
-    total = len(runs)
     result = []
     for i, r in enumerate(runs):
         mdd_raw = r.backtest_mdd or 0.0
@@ -1761,7 +1910,6 @@ def trade_events(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
         portfolio_var_95, delta_var, regime
     """
     import math as _math
-    import statistics as _stats
 
     runs_repo = BacktestRunsRepository(db)
     results_repo = BacktestResultsRepository(db)

@@ -118,3 +118,48 @@ def _ensure_config_dir_patched():
     import rita.config as cfg_module
     cfg_module._CONFIG_DIR = _CONFIG_DIR
     yield
+
+
+def pytest_sessionfinish(session, exitstatus):  # noqa: ARG001
+    """Move a completed JUnit XML from test-execution/ into test-results/.
+
+    pytest writes the XML to test-execution/<stem>.xml during the run.
+    After the session ends we move it to test-results/<type>/<timestamp>-<name>.xml
+    so the display folder only ever contains finished, uniquely-named results.
+
+    Stem → destination mapping:
+      e2e-rita  →  test-results/e2e/rita/<ts>-rita.xml
+      e2e-fno   →  test-results/e2e/fno/<ts>-fno.xml
+      e2e-ops   →  test-results/e2e/ops/<ts>-ops.xml
+      unit      →  test-results/unit/<ts>-unit.xml
+      integration → test-results/integration/<ts>-integration.xml
+    """
+    import shutil
+    from datetime import datetime
+
+    xmlpath = getattr(session.config.option, "xmlpath", None)
+    if not xmlpath:
+        return
+    xml_file = Path(xmlpath).resolve()
+    if not xml_file.exists():
+        return
+
+    exec_dir = _REPO_ROOT / "test-execution"
+    try:
+        xml_file.relative_to(exec_dir)
+    except ValueError:
+        return  # not in test-execution/ — nothing to do
+
+    stem = xml_file.stem  # e.g. "e2e-rita", "unit", "integration"
+    ts = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+
+    if stem.startswith("e2e-"):
+        suite_name = stem[4:]  # "rita", "fno", "ops"
+        dest_dir = _REPO_ROOT / "test-results" / "e2e" / suite_name
+        dest_name = f"{ts}-{suite_name}.xml"
+    else:
+        dest_dir = _REPO_ROOT / "test-results" / stem
+        dest_name = f"{ts}-{stem}.xml"
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(xml_file), dest_dir / dest_name)

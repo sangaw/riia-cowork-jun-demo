@@ -642,40 +642,56 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
     <div class="ph">
       <div class="ph-badge" style="background:var(--ok-bg);color:var(--ok);border-color:var(--ok)">Test</div>
       <div>
-        <div class="ph-t">Scenario Test Results</div>
-        <div class="ph-g">Latest functional e2e scenario run — RITA, FnO, Ops dashboards</div>
+        <div class="ph-t">Test Results</div>
+        <div class="ph-g">Last run results — E2E scenarios, integration and unit tests</div>
       </div>
+      <button class="btn" style="margin-left:auto" onclick="refreshTestResults()">&#8635; Refresh</button>
     </div>
 
-    <div class="kpi-strip" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px" id="test-kpis">
-      <div class="kpi"><div class="kpi-ey">Total</div><div class="kpi-val" id="test-total">—</div><div class="kpi-sub">scenarios</div></div>
-      <div class="kpi"><div class="kpi-ey">Passed</div><div class="kpi-val" style="color:var(--ok)" id="test-passed">—</div><div class="kpi-sub">green</div></div>
-      <div class="kpi"><div class="kpi-ey">Failed</div><div class="kpi-val" style="color:var(--danger)" id="test-failed">—</div><div class="kpi-sub">defects</div></div>
-      <div class="kpi"><div class="kpi-ey">Pass Rate</div><div class="kpi-val" id="test-rate">—</div><div class="kpi-sub">%</div></div>
+    <!-- ── 2×2 grid: rows auto-equalize height so grids align ── -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+      <!-- [Row 1, Col 1] Suite Metrics — 3 cards, single row -->
+      <div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Suite Metrics</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div class="card" id="ts-e2e"><div class="loading">Loading…</div></div>
+          <div class="card" id="ts-integration"><div class="loading">Loading…</div></div>
+          <div class="card" id="ts-unit"><div class="loading">Loading…</div></div>
+        </div>
+      </div>
+
+      <!-- [Row 1, Col 2] Overall Results — 4 KPIs, 2×2 -->
+      <div>
+        <div style="font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">Overall Results</div>
+        <div class="kpi-strip" style="grid-template-columns:repeat(2,1fr)" id="test-kpis">
+          <div class="kpi"><div class="kpi-ey">Total Tests</div><div class="kpi-val" id="test-total">—</div><div class="kpi-sub">all suites</div></div>
+          <div class="kpi"><div class="kpi-ey">Pass Rate</div><div class="kpi-val" id="test-rate">—</div><div class="kpi-sub">%</div></div>
+          <div class="kpi"><div class="kpi-ey">Passed</div><div class="kpi-val" style="color:var(--ok)" id="test-passed">—</div><div class="kpi-sub">green</div></div>
+          <div class="kpi"><div class="kpi-ey">Failed</div><div class="kpi-val" style="color:var(--danger)" id="test-failed">—</div><div class="kpi-sub">defects</div></div>
+        </div>
+      </div>
+
+      <!-- [Row 2, Col 1] Module grid -->
+      <div class="card">
+        <div class="c-ey"><div class="ey-d" style="background:var(--optimize)"></div>Test Modules</div>
+        <div id="test-module-grid" style="margin-top:8px"><div class="loading">Loading…</div></div>
+      </div>
+
+      <!-- [Row 2, Col 2] Failures grid -->
+      <div class="card">
+        <div class="c-ey"><div class="ey-d" style="background:var(--danger)"></div>Failures</div>
+        <div id="test-failures" style="margin-top:8px"><div class="loading">Loading…</div></div>
+      </div>
+
     </div>
 
-    <div class="g3" style="margin-bottom:16px">
-      <div class="card">
-        <div class="c-ey"><div class="ey-d" style="background:var(--build)"></div>RITA Dashboard</div>
-        <div class="c-t" id="rita-summary">Loading…</div>
-        <div id="rita-results" style="margin-top:10px;max-height:132px;overflow-y:auto"></div>
-      </div>
-      <div class="card">
-        <div class="c-ey"><div class="ey-d" style="background:var(--p02)"></div>FnO Dashboard</div>
-        <div class="c-t" id="fno-summary">Loading…</div>
-        <div id="fno-results" style="margin-top:10px;max-height:132px;overflow-y:auto"></div>
-      </div>
-      <div class="card">
-        <div class="c-ey"><div class="ey-d" style="background:var(--ok)"></div>Ops Dashboard</div>
-        <div class="c-t" id="ops-summary">Loading…</div>
-        <div id="ops-results" style="margin-top:10px;max-height:132px;overflow-y:auto"></div>
-      </div>
+    <!-- ── Run History — full width, spans both columns ── -->
+    <div class="card" style="margin-top:16px">
+      <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Run History</div>
+      <div id="test-run-history" style="margin-top:8px"><div class="loading">Loading…</div></div>
     </div>
 
-    <div class="card">
-      <div class="c-ey"><div class="ey-d" style="background:var(--danger)"></div>Defects — Failed Scenarios</div>
-      <div class="tbl-wrap" id="test-defects"><div class="loading">Loading…</div></div>
-    </div>
   </section>
 
   <!-- ══ DEPLOYMENTS ══ -->

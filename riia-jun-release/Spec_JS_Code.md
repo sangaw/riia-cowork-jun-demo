@@ -177,6 +177,24 @@ timesteps, backtest_sharpe, backtest_mdd_pct, backtest_return_pct
 **Consumer:** `health.js` → `loadHealth()`, `export.js` → `loadExport()`  
 **Key fields:** `status`, `model_exists`, `model_age_days`, `csv_loaded`, `data_freshness.latest_date`, `data_freshness.days_since_latest`, `last_pipeline_run`, `output_dir`
 
+### `GET /api/v1/test-results`
+**Consumer:** `ops/test-results.js` → `loadTestResults()`  
+**Key fields:**
+```
+data_available          bool — false when no XML files exist yet
+total, passed, failed   overall counts (all suite types)
+pass_rate               float %
+suite_summary           { e2e, unit, integration } each: { total, passed, failed, run_at, module_count, file_exists }
+modules[]               one per test file: { module, suite_type, total, passed, failed, cases[], run_at, file_exists }
+suites[]                backward-compat e2e list (rita, fno, ops)
+```
+**DOM targets (ops.html `#sec-test`):**
+- Suite cards: `#ts-e2e`, `#ts-integration`, `#ts-unit`
+- Module grid: `#test-module-grid` (sticky-header table, max-height 200px)
+- KPIs: `#test-total`, `#test-passed`, `#test-failed`, `#test-rate`
+- Failures: `#test-failures` (sticky-header table, max-height 252px)
+- Run history: `#test-run-history` (sticky-header table, max-height 200px, all suites newest-first)
+
 ---
 
 ## 7. Module-Level State
