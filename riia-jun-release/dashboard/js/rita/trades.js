@@ -13,9 +13,10 @@ let _tjRows = [];  // cached for snapshot
 export async function loadTrades() {
   try {
     const instrument = localStorage.getItem('ritaInstrument') || 'NIFTY';
-    const [rows, history] = await Promise.all([
+    const [rows, history, perf] = await Promise.all([
       api(`/api/v1/risk-timeline?phase=all&instrument=${instrument}`),
       api(`/api/v1/training-history?instrument=${instrument}`).catch(() => []),
+      api('/api/v1/performance-summary').catch(() => null),
     ]);
     if (!rows || !rows.length) {
       setEl('trades-table-wrap', '<div class="empty">No data — run pipeline first.</div>');
@@ -84,18 +85,24 @@ export async function loadTrades() {
       const fullDays = btRows.filter(r => parseFloat(r.allocation || 0) >= 0.99).length;
       const maxDD    = btRows.length ? Math.min(...btRows.map(r => parseFloat(r.current_drawdown_pct || 0))) : null;
 
+      // Use performance-summary for Sharpe/MDD/Return — same source as Performance page
+      const btSharpe  = perf ? _fs(perf.sharpe_ratio) : '—';
+      const btMdd     = perf ? _fv(perf.max_drawdown_pct) : '—';
+      const btReturn  = perf ? _fv(perf.portfolio_total_return_pct) : '—';
+      const btTrades  = perf ? _fi(perf.total_trades) : '—';
+
       backtestCard = `
         <div style="border:1px solid ${cfgBt.color};border-radius:7px;padding:12px 14px;background:${cfgBt.bg};height:100%">
           <div style="font-weight:700;color:${cfgBt.color};margin-bottom:8px;font-size:12px">Backtest</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;font-size:11px">
             <div><span style="color:var(--t3)">Days</span><div style="font-weight:600">${btRows.length || '—'}</div></div>
-            <div><span style="color:var(--t3)">Sharpe</span><div style="font-weight:600">${latest ? _fs(latest.backtest_sharpe) : '—'}</div></div>
+            <div><span style="color:var(--t3)">Sharpe</span><div style="font-weight:600">${btSharpe}</div></div>
             <div><span style="color:var(--t3)">Max DD</span><div style="font-weight:600">${maxDD != null ? maxDD.toFixed(2) + '%' : '—'}</div></div>
-            <div><span style="color:var(--t3)">MDD %</span><div style="font-weight:600">${latest ? _fv(latest.backtest_mdd_pct) : '—'}</div></div>
+            <div><span style="color:var(--t3)">MDD %</span><div style="font-weight:600">${btMdd}</div></div>
             <div><span style="color:var(--t3)">Cash</span><div style="font-weight:600">${cashDays}d</div></div>
-            <div><span style="color:var(--t3)">Return %</span><div style="font-weight:600">${latest ? _fv(latest.backtest_return_pct) : '—'}</div></div>
+            <div><span style="color:var(--t3)">Return %</span><div style="font-weight:600">${btReturn}</div></div>
             <div><span style="color:var(--t3)">Half / Full</span><div style="font-weight:600">${halfDays}d / ${fullDays}d</div></div>
-            <div><span style="color:var(--t3)">Trades</span><div style="font-weight:600">${latest ? _fi(latest.backtest_trades) : '—'}</div></div>
+            <div><span style="color:var(--t3)">Trades</span><div style="font-weight:600">${btTrades}</div></div>
           </div>
         </div>`;
     }
