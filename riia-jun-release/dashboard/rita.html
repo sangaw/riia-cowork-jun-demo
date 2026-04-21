@@ -805,9 +805,9 @@ tr:hover td{background:var(--surface2);}
   <!-- Phase legend + model info on same row -->
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px">
     <div style="display:flex;gap:20px;align-items:center">
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#1565C0;display:inline-block"></span>Train (2010–2022)</span>
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#6A1B9A;display:inline-block"></span>Validation (2023–2024)</span>
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#2E7D32;display:inline-block"></span>Backtest (2025)</span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#1565C0;display:inline-block"></span><span id="tj-label-train">Train</span></span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#6A1B9A;display:inline-block"></span><span id="tj-label-val">Validation</span></span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#2E7D32;display:inline-block"></span><span id="tj-label-bt">Backtest</span></span>
     </div>
     <div id="trades-model-info" style="display:flex;gap:16px;align-items:center;font-size:11px;color:var(--t2)"></div>
   </div>

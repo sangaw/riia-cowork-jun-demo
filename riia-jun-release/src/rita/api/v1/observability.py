@@ -1799,6 +1799,57 @@ def training_history(instrument: str = "NIFTY", db: Session = Depends(get_db)) -
     return result
 
 
+# ── GET /api/v1/training-split ────────────────────────────────────────────────
+
+@router.get("/training-split", summary="Actual train/val/backtest date ranges for an instrument")
+def training_split(instrument: str = "NIFTY", db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Return the actual date ranges used for train, validation, and backtest phases.
+
+    Train/val dates are derived from the instrument CSV using the same 80/20 split
+    as ml_dispatch.  Backtest dates come from the latest completed backtest_run.
+    """
+    from rita.core.data_understanding import find_instrument_csv
+    from rita.core.technical_analyzer import calculate_indicators
+
+    result: dict[str, Any] = {
+        "train_start": None, "train_end": None,
+        "val_start": None,   "val_end": None,
+        "backtest_start": None, "backtest_end": None,
+    }
+
+    # ── Train / val split from CSV ───────────────────────────────────────────
+    try:
+        from rita.core.data_loader import load_nifty_csv
+        csv_path = find_instrument_csv(instrument)
+        df = load_nifty_csv(str(csv_path))
+        df = calculate_indicators(df)
+        split_idx = int(len(df) * 0.8)
+        train_df = df.iloc[:split_idx]
+        val_df   = df.iloc[split_idx:]
+        result["train_start"] = str(train_df.index[0].date())
+        result["train_end"]   = str(train_df.index[-1].date())
+        result["val_start"]   = str(val_df.index[0].date())
+        result["val_end"]     = str(val_df.index[-1].date())
+    except Exception:
+        pass
+
+    # ── Backtest dates from latest completed backtest_run ────────────────────
+    try:
+        runs_repo = BacktestRunsRepository(db)
+        completed = [
+            r for r in runs_repo.read_all()
+            if r.status in ("complete", "completed") and (r.instrument or "NIFTY") == instrument
+        ]
+        if completed:
+            latest = max(completed, key=lambda r: r.ended_at or r.recorded_at)
+            result["backtest_start"] = str(latest.start_date)
+            result["backtest_end"]   = str(latest.end_date)
+    except Exception:
+        pass
+
+    return result
+
+
 def _regime(allocation: Any) -> str:
     """Derive a simple regime label from the model's allocation decision."""
     if allocation is None:

@@ -13,10 +13,11 @@ let _tjRows = [];  // cached for snapshot
 export async function loadTrades() {
   try {
     const instrument = localStorage.getItem('ritaInstrument') || 'NIFTY';
-    const [rows, history, perf] = await Promise.all([
+    const [rows, history, perf, split] = await Promise.all([
       api(`/api/v1/risk-timeline?phase=all&instrument=${instrument}`),
       api(`/api/v1/training-history?instrument=${instrument}`).catch(() => []),
       api('/api/v1/performance-summary').catch(() => null),
+      api(`/api/v1/training-split?instrument=${instrument}`).catch(() => null),
     ]);
     if (!rows || !rows.length) {
       setEl('trades-table-wrap', '<div class="empty">No data — run pipeline first.</div>');
@@ -41,6 +42,20 @@ export async function loadTrades() {
         `<span style="color:var(--t3)">Timesteps</span>&nbsp;<strong>${latest.timesteps ? (latest.timesteps / 1000).toFixed(0) + 'k' : '—'}</strong>`,
         `<span style="color:var(--t3)">Model ver</span>&nbsp;<strong>${latest.model_version || '—'}</strong>`,
       ].join('<span style="color:var(--t3);margin:0 2px">·</span>') : '';
+    }
+
+    // ── Phase legend labels — update with actual date ranges ─────────────────
+    const _yr = d => d ? d.slice(0, 4) : null;
+    if (split) {
+      const trainLabel = document.getElementById('tj-label-train');
+      const valLabel   = document.getElementById('tj-label-val');
+      const btLabel    = document.getElementById('tj-label-bt');
+      if (trainLabel && split.train_start && split.train_end)
+        trainLabel.textContent = `Train (${_yr(split.train_start)}–${_yr(split.train_end)})`;
+      if (valLabel && split.val_start && split.val_end)
+        valLabel.textContent = `Validation (${_yr(split.val_start)}–${_yr(split.val_end)})`;
+      if (btLabel && split.backtest_start && split.backtest_end)
+        btLabel.textContent = `Backtest (${_yr(split.backtest_start)}–${_yr(split.backtest_end)})`;
     }
 
     // ── Phase KPI cards ──────────────────────────────────────────────────────
