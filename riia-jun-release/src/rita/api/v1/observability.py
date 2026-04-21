@@ -402,21 +402,33 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     runs_repo = BacktestRunsRepository(db)
     results_repo = BacktestResultsRepository(db)
 
-    # Find the latest completed backtest run
-    all_runs = [r for r in runs_repo.read_all() if r.status in ("complete", "completed")]
+    # Filter completed backtest runs to the active instrument in a single read.
+    all_runs = [
+        r for r in runs_repo.read_all()
+        if r.status in ("complete", "completed")
+        and (r.instrument or "NIFTY").upper() == _active_instrument_id.upper()
+    ]
+    # _run_instrument_id = active instrument when a backtest exists, else "NONE".
+    # Frontend stale-check fires when they differ → blanks KPIs with "No backtest yet".
+    run_instrument = _active_instrument_id if all_runs else "NONE"
+
+    _empty = {
+        "portfolio_total_return_pct": None,
+        "benchmark_total_return_pct": None,
+        "portfolio_cagr_pct": None,
+        "benchmark_cagr_pct": None,
+        "sharpe_ratio": None,
+        "max_drawdown_pct": None,
+        "annual_volatility_pct": None,
+        "win_rate_pct": None,
+        "total_days": 0,
+        "constraints_met": False,
+        "_run_instrument_id": run_instrument,
+        "_active_instrument_id": _active_instrument_id,
+    }
+
     if not all_runs:
-        return {
-            "portfolio_total_return_pct": None,
-            "benchmark_total_return_pct": None,
-            "portfolio_cagr_pct": None,
-            "benchmark_cagr_pct": None,
-            "sharpe_ratio": None,
-            "max_drawdown_pct": None,
-            "annual_volatility_pct": None,
-            "win_rate_pct": None,
-            "total_days": 0,
-            "constraints_met": False,
-        }
+        return _empty
 
     latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
     results = sorted(
@@ -425,18 +437,7 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     )
 
     if not results:
-        return {
-            "portfolio_total_return_pct": None,
-            "benchmark_total_return_pct": None,
-            "portfolio_cagr_pct": None,
-            "benchmark_cagr_pct": None,
-            "sharpe_ratio": None,
-            "max_drawdown_pct": None,
-            "annual_volatility_pct": None,
-            "win_rate_pct": None,
-            "total_days": 0,
-            "constraints_met": False,
-        }
+        return _empty
 
     # Total return: last portfolio_value is normalised (1.0 = start)
     port_final = results[-1].portfolio_value
@@ -510,9 +511,8 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
         "win_rate_pct": win_rate_pct,
         "total_days": total_days,
         "constraints_met": constraints_met,
-        # Internal fields for stale-data detection in loadPerfSummary()
-        "_run_instrument_id": None,
-        "_active_instrument_id": None,
+        "_run_instrument_id": run_instrument,
+        "_active_instrument_id": _active_instrument_id,
     }
 
 
@@ -530,7 +530,11 @@ def backtest_daily(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     runs_repo = BacktestRunsRepository(db)
     results_repo = BacktestResultsRepository(db)
 
-    all_runs = [r for r in runs_repo.read_all() if r.status in ("complete", "completed")]
+    all_runs = [
+        r for r in runs_repo.read_all()
+        if r.status in ("complete", "completed")
+        and (r.instrument or "NIFTY").upper() == _active_instrument_id.upper()
+    ]
     if not all_runs:
         return []
 
@@ -818,6 +822,7 @@ def _run_pipeline_job(
         else:
             start_date = end_date - timedelta(days=req.time_horizon_days)
         backtest_body = BacktestRunCreate(
+            instrument=req.instrument or _active_instrument_id,
             start_date=start_date,
             end_date=end_date,
             model_version=reused_model_version,
@@ -1009,7 +1014,7 @@ def analyze_market(db: Session = Depends(get_db)) -> dict[str, Any]:
 
     try:
         # Reuse the market_signals computation (full 252-bar history → derive signals from last bar)
-        rows = market_signals(timeframe="daily", periods=252, db=db)
+        rows = market_signals(timeframe="daily", periods=252, instrument=_active_instrument_id, db=db)
         if not rows:
             return {"step": 2, "name": "Market Analysis", "result": null_result}
 
@@ -1537,9 +1542,10 @@ def portfolio_comparison(
 def market_signals(
     timeframe: str = "daily",
     periods: int = 252,
+    instrument: str = "NIFTY",
     db: Session = Depends(get_db),
 ) -> list[dict[str, Any]]:
-    """Return a time series of NIFTY technical indicators for the RITA dashboard.
+    """Return a time series of technical indicators for the selected instrument.
 
     Shape consumed by market-signals.js loadMarketSignals():
     ```json
@@ -1566,24 +1572,23 @@ def market_signals(
     ```
 
     Query params:
+    - ``instrument``: uppercase instrument id (default "NIFTY").
     - ``timeframe``: "daily" | "weekly" | "monthly" — aggregation reserved for future use.
     - ``periods``: number of most-recent rows to return (default 252 ≈ 1 trading year).
     """
     import numpy as np  # noqa: PLC0415
     import pandas as pd  # noqa: PLC0415
 
+    inst = instrument.upper()
     records = MarketDataCacheRepository(db).read_all()
-    nifty = [r for r in records if r.underlying == "NIFTY"]
+    nifty = [r for r in records if r.underlying == inst]
 
     if not nifty:
-        # DB cache empty — try reading directly from the CSV file
-        from pathlib import Path as _Path  # noqa: PLC0415
+        # DB cache empty (or non-NIFTY instrument) — load directly from CSV
         from rita.core.data_loader import load_nifty_csv  # noqa: PLC0415
-        _raw = _Path("data/raw/NIFTY/merged.csv")
-        csv_path = _raw if _raw.exists() else _Path(get_settings().data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
-        if not csv_path.exists():
-            return []
+        from rita.core.data_understanding import find_instrument_csv  # noqa: PLC0415
         try:
+            csv_path = find_instrument_csv(inst)
             _df = load_nifty_csv(str(csv_path))
             daily_close  = _df["Close"].astype(float)
             daily_high   = _df["High"].astype(float)
@@ -1718,7 +1723,7 @@ def market_signals(
 # ── GET /api/v1/training-history ──────────────────────────────────────────────
 
 @router.get("/training-history", summary="Training run history")
-def training_history(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+def training_history(instrument: str = "NIFTY", db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     """Return all training runs ordered newest-first.
 
     Shape consumed by training.js and audit.js:
@@ -1746,30 +1751,48 @@ def training_history(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     """
     repo = TrainingRunsRepository(db)
     # sort oldest-first to assign round numbers, then reverse for newest-first output
-    runs = sorted(repo.read_all(), key=lambda r: r.recorded_at)
+    runs = sorted(
+        [r for r in repo.read_all() if (r.instrument or "NIFTY") == instrument],
+        key=lambda r: r.recorded_at,
+    )
     result = []
     for i, r in enumerate(runs):
-        mdd_raw = r.backtest_mdd or 0.0
-        sharpe = r.backtest_sharpe or 0.0
-        ret_raw = r.backtest_return or 0.0
-        mdd_pct = round(mdd_raw * 100, 2)
-        ret_pct = round(ret_raw * 100, 2)
-        constraints_met = bool(sharpe >= 1.0 and abs(mdd_pct) < 10) if r.backtest_sharpe is not None else None
+        def _pct(v): return round(v * 100, 2) if v is not None else None
+        def _f(v):   return round(v, 4) if v is not None else None
+
+        bt_sharpe = _f(r.backtest_sharpe)
+        bt_mdd    = _pct(r.backtest_mdd)
+        bt_ret    = _pct(r.backtest_return)
+        bt_constraints = bool(bt_sharpe >= 1.0 and abs(bt_mdd) < 10) if bt_sharpe is not None and bt_mdd is not None else None
+
         result.append({
-            "round": i + 1,
-            "run_id": r.run_id,
-            "timestamp": r.recorded_at.isoformat(),
+            "round":    i + 1,
+            "run_id":   r.run_id,
+            "instrument": r.instrument or "NIFTY",
+            "timestamp":  r.recorded_at.isoformat(),
             "model_version": r.model_version,
             "algorithm": r.algorithm,
-            "status": r.status,
+            "status":    r.status,
             "timesteps": r.timesteps,
             "source": "trained",
-            "val_sharpe": sharpe,          # best proxy — no separate val_sharpe stored in DB
-            "backtest_sharpe": sharpe,
-            "backtest_mdd_pct": mdd_pct,
-            "backtest_return_pct": ret_pct,
-            "backtest_cagr_pct": ret_pct,  # best proxy — no separate CAGR stored in DB
-            "backtest_constraints_met": constraints_met,
+            # Training phase
+            "train_sharpe":     _f(r.train_sharpe),
+            "train_mdd_pct":    _pct(r.train_mdd),
+            "train_return_pct": _pct(r.train_return),
+            "train_trades":     r.train_trades,
+            # Validation phase
+            "val_sharpe":       _f(r.val_sharpe),
+            "val_mdd_pct":      _pct(r.val_mdd),
+            "val_return_pct":   _pct(r.val_return),
+            "val_cagr_pct":     _pct(r.val_cagr),
+            "val_trades":       r.val_trades,
+            # Backtest phase
+            "backtest_sharpe":          bt_sharpe,
+            "backtest_mdd_pct":         bt_mdd,
+            "backtest_return_pct":      bt_ret,
+            "backtest_cagr_pct":        bt_ret,
+            "backtest_trades":          r.backtest_trades,
+            "backtest_constraints_met": bt_constraints,
             "notes": "",
         })
     result.reverse()  # newest-first for display
@@ -1793,6 +1816,7 @@ def _regime(allocation: Any) -> str:
 @router.get("/risk-timeline", summary="Risk timeline from latest backtest")
 def risk_timeline(
     phase: str = "all",
+    instrument: str = "NIFTY",
     db: Session = Depends(get_db),
 ) -> list[dict[str, Any]]:
     """Return daily portfolio vs benchmark values from the latest completed backtest.
@@ -1806,7 +1830,7 @@ def risk_timeline(
     runs_repo = BacktestRunsRepository(db)
     results_repo = BacktestResultsRepository(db)
 
-    all_runs = [r for r in runs_repo.read_all() if r.status in ("complete", "completed")]
+    all_runs = [r for r in runs_repo.read_all() if r.status in ("complete", "completed") and (r.instrument or "NIFTY") == instrument]
     if not all_runs:
         return []
 
@@ -2047,6 +2071,7 @@ def shap_values() -> list[dict[str, Any]]:
 
 class _BacktestQuickRequest(BaseModel):
     """Loose request body — all fields optional for convenience endpoint."""
+    instrument: Optional[str] = None   # defaults to server active instrument
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     model_version: str = "latest"
@@ -2089,11 +2114,13 @@ def submit_backtest_quick(
         except ValueError:
             pass
 
+    instrument = (req.instrument or _active_instrument_id).upper()
     run_id = str(_uuid.uuid4())
     now = datetime.now(timezone.utc)
 
     run = _BTRun(
         run_id=run_id,
+        instrument=instrument,
         start_date=start,
         end_date=end,
         model_version=req.model_version,
@@ -2107,6 +2134,7 @@ def submit_backtest_quick(
 
     cfg = _BTCfg(
         run_id=run_id,
+        instrument=instrument,
         start_date=start,
         end_date=end,
         model_version=req.model_version,
@@ -2116,6 +2144,21 @@ def submit_backtest_quick(
 
     log.info("backtest_quick.submitted", run_id=run_id)
     return {"status": "accepted", "run_id": run_id, "message": "Backtest started."}
+
+
+@router.get("/backtest-status/{run_id}", summary="Poll backtest run status (no auth)")
+def backtest_status(run_id: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Return the status of a backtest run by run_id.
+
+    Used by scenarios.js to poll until the job is complete or failed.
+    Returns ``{ "run_id": ..., "status": "pending"|"running"|"complete"|"failed" }``.
+    """
+    from rita.repositories.backtest import BacktestRunsRepository as _BTRepo
+    run = _BTRepo(db).find_by_id(run_id)
+    if run is None:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail=f"Run {run_id!r} not found")
+    return {"run_id": run_id, "status": run.status}
 
 
 # ── Data Understanding ─────────────────────────────────────────────────────────
