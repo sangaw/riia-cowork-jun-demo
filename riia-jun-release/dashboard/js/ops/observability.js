@@ -13,7 +13,7 @@ export async function loadObservability() {
   const checksEl = document.getElementById('drift-checks');
 
   if (drift) {
-    const overall = drift.health?.overall ?? 'unknown';
+    const overall = drift.summary?.overall ?? 'unknown';
     const alertCls = overall === 'ok' ? 'ok' : overall === 'warn' ? 'w' : overall === 'alert' ? 'd' : 'i';
     alertEl.innerHTML = `<div class="al ${alertCls}">
       <svg class="al-ic" width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -24,7 +24,7 @@ export async function loadObservability() {
       Overall system health: <strong>${overall.toUpperCase()}</strong>
     </div>`;
 
-    const report = drift.report || {};
+    const report = drift.checks || {};
     const checkOrder = ['sharpe_drift','return_degradation','data_freshness','pipeline_health','constraint_breach'];
     const checkLabels = {sharpe_drift:'Sharpe Drift',return_degradation:'Return Degradation',
       data_freshness:'Data Freshness',pipeline_health:'Pipeline Health',constraint_breach:'Constraint Breach'};

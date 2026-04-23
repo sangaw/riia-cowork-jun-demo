@@ -802,14 +802,15 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
-  <!-- Phase legend + model info on same row -->
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:12px">
-    <div style="display:flex;gap:20px;align-items:center">
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#1565C0;display:inline-block"></span><span id="tj-label-train">Train</span></span>
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#6A1B9A;display:inline-block"></span><span id="tj-label-val">Validation</span></span>
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#2E7D32;display:inline-block"></span><span id="tj-label-bt">Backtest</span></span>
+  <!-- Phase legend + model info -->
+  <div style="margin-bottom:12px">
+    <div style="display:flex;gap:20px;align-items:center;font-size:12px;flex-wrap:nowrap;white-space:nowrap">
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#1565C0;flex-shrink:0;display:inline-block"></span><span id="tj-label-train">Train</span></span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#6A1B9A;flex-shrink:0;display:inline-block"></span><span id="tj-label-val">Validation</span></span>
+      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#2E7D32;flex-shrink:0;display:inline-block"></span><span id="tj-label-bt">Backtest</span></span>
+      <span style="color:var(--border,#ddd);margin:0 4px">|</span>
+      <div id="trades-model-info" style="display:flex;gap:14px;align-items:center;font-size:11px;color:var(--t2);flex-wrap:nowrap;white-space:nowrap"></div>
     </div>
-    <div id="trades-model-info" style="display:flex;gap:16px;align-items:center;font-size:11px;color:var(--t2)"></div>
   </div>
 
   <!-- Phase summary KPIs -->

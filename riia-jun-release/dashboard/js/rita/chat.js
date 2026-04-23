@@ -30,11 +30,20 @@ function _fmtInr(n) {
   });
 })();
 
+export function refreshChatChips() {
+  const inst = (localStorage.getItem('ritaInstrument') || 'NIFTY').toUpperCase();
+  document.querySelectorAll('.chat-chip[data-tmpl]').forEach(btn => {
+    btn.textContent = btn.dataset.tmpl.replace(/\{inst\}/g, inst);
+  });
+}
+
 export function useChip(btn) {
   const ta = document.getElementById('chat-ta');
   if (!ta) return;
-  // Dynamic chips store the actual query in data-query; static chips use textContent
-  ta.value = (btn.dataset.query || btn.textContent).trim();
+  const inst = (localStorage.getItem('ritaInstrument') || 'NIFTY').toUpperCase();
+  // data-query: fully resolved (dynamic chips from API); data-tmpl: static template with {inst}; fallback: textContent
+  const raw = btn.dataset.query || btn.dataset.tmpl || btn.textContent;
+  ta.value = raw.replace(/\{inst\}/g, inst).trim();
   ta.style.height = 'auto';
   ta.style.height = Math.min(ta.scrollHeight, 80) + 'px';
   ta.focus();
@@ -59,6 +68,7 @@ export async function sendChatMsg() {
   try {
     const data = await api('/api/v1/chat', 'POST', {
       query,
+      instrument:         (localStorage.getItem('ritaInstrument') || 'NIFTY').toUpperCase(),
       portfolio_inr:      ctx.portfolio_inr,
       target_return_pct:  ctx.target_return_pct,
       time_horizon_days:  ctx.time_horizon_days,
@@ -178,7 +188,8 @@ export function updateChips(chips) {
 export function clearChat() {
   const box = document.getElementById('chat-messages');
   const ctx = _readGoalContext();
-  const parts = ['Hi! Ask me anything about Nifty investment.'];
+  const inst = (localStorage.getItem('ritaInstrument') || 'this instrument');
+  const parts = [`Hi! Ask me about the ${inst} instrument — returns, risk, allocation, or stress scenarios.`];
   if (ctx.portfolio_inr) parts.push(`Portfolio: **${_fmtInr(ctx.portfolio_inr)}**`);
   if (ctx.risk_tolerance) parts.push(`Risk: **${ctx.risk_tolerance}**`);
   if (ctx.target_return_pct) parts.push(`Target: **${ctx.target_return_pct}% CAGR**`);

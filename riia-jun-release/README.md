@@ -117,3 +117,15 @@ Option 1 — Local Python (recommended for development)
 
   # E2E (Playwright — needs server running on :8765)
   pytest tests/e2e/ -q
+  
+  
+  docker commands
+   1. Free up Docker disk space first:
+    docker system prune -f
+  
+    2. Retry the build — it may just work now with freed space.
+  
+    3. If it fails again, disable BuildKit (falls back to legacy builder which is more tolerant):
+    DOCKER_BUILDKIT=0 docker build -t rita .
+  
+  4. If on Docker Desktop — check Settings → Resources → increase Disk image size (needs at least ~10 GB free) and Memory to 4+ GB.

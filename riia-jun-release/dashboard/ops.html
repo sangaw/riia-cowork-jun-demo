@@ -261,6 +261,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
   <span class="t-crumb">Operations Portal</span>
   <div class="t-right">
     <a href="index.html" style="font-family:var(--fm);font-size:11px;color:var(--t3);text-decoration:none;display:flex;align-items:center;gap:4px;padding:4px 10px;border:1px solid var(--border);border-radius:var(--r)">← Home</a>
+    <!-- Active instrument pill -->
+    <div id="inst-pill" style="display:none;align-items:center;gap:8px;background:var(--surface2);border:1.5px solid var(--border);border-radius:100px;padding:4px 12px 4px 8px;font-family:var(--fm);font-size:11px;color:var(--t2)">
+      <span id="inst-pill-flag" style="font-size:15px"></span>
+      <span id="inst-pill-name"></span>
+      <span id="inst-pill-exch" style="color:var(--t4)"></span>
+      <span style="color:var(--border2)">·</span>
+      <a href="index.html" style="color:var(--run);text-decoration:none;font-size:10px;font-weight:600;letter-spacing:.04em">SWITCH ↗</a>
+    </div>
     <div class="status-pill">
       <span class="status-dot" id="api-dot"></span>
       <span id="api-text">Checking…</span>
@@ -928,5 +936,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 </script>
 
 <script type="module" src="./js/ops/main.js"></script>
+<script>
+(async function initInstPill() {
+  try {
+    const saved = localStorage.getItem('ritaInstrument');
+    if (saved) {
+      await fetch('/api/v1/instrument/select', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({instrument_id: saved})
+      }).catch(() => {});
+    }
+    const res = await fetch('/api/v1/instrument/active');
+    if (!res.ok) return;
+    const inst = await res.json();
+    if (!inst || !inst.id) return;
+    document.getElementById('inst-pill-flag').textContent = inst.flag || '';
+    document.getElementById('inst-pill-name').textContent = inst.name || inst.id;
+    document.getElementById('inst-pill-exch').textContent = inst.exchange ? '· ' + inst.exchange : '';
+    document.getElementById('inst-pill').style.display = 'flex';
+    document.title = 'RIIA Ops — ' + (inst.name || inst.id);
+  } catch (_) {}
+})();
+</script>
 </body>
 </html>

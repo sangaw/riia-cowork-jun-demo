@@ -10,7 +10,8 @@ export async function warmupChat() {
   if (_chatWarmedUp) return null;
   _chatWarmedUp = true;
   try {
-    const res = await fetch(`${API}/api/v1/chat/warmup`, { method: 'POST' });
+    const inst = (localStorage.getItem('ritaInstrument') || 'NIFTY').toUpperCase();
+    const res = await fetch(`${API}/api/v1/chat/warmup?instrument=${inst}`, { method: 'POST' });
     if (!res.ok) return null;
     const data = await res.json();
     return { chips: data.chips || null, alerts: data.alerts || null };

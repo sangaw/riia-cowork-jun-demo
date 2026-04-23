@@ -61,8 +61,13 @@ def _run_backtest_job(run_id: str, config: BacktestConfig) -> None:
         if run is None:
             return
 
-        runs_repo.upsert(BacktestRun(**{**run.model_dump(), "status": "complete", "ended_at": ended_at}))
-        log.info("backtest.complete", run_id=run_id)
+        runs_repo.upsert(BacktestRun(**{
+            **run.model_dump(),
+            "status": "complete",
+            "ended_at": ended_at,
+            "total_trades": outcome.total_trades,
+        }))
+        log.info("backtest.complete", run_id=run_id, total_trades=outcome.total_trades)
 
         results_repo.bulk_create([
             BacktestResult(
@@ -131,6 +136,7 @@ class BacktestService:
         data = body.model_dump()
         config = BacktestConfig(
             run_id=run_id,
+            instrument=data.get("instrument", "NIFTY"),
             start_date=data["start_date"],
             end_date=data["end_date"],
             model_version=data["model_version"],

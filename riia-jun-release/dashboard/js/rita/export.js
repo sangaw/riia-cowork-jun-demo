@@ -45,17 +45,16 @@ export async function runGoal() {
 export async function runMarket() {
   const btn = document.getElementById('btn-market');
   btn.disabled = true; btn.textContent = 'Analyzing...';
-  const badge = document.getElementById('market-status-badge');
-  badge.className = 'badge run'; badge.textContent = 'Running';
+  const bdg = document.getElementById('market-status-badge');
+  bdg.className = 'badge run'; bdg.textContent = 'Running';
   try {
     const d = await api('/api/v1/market', 'POST');
-    badge.className = 'badge ok'; badge.textContent = 'Done';
-    renderMarketResult('market-result', d);
+    bdg.className = 'badge ok'; bdg.textContent = 'Done';
+    renderMarketResult(d);
   } catch (e) {
-    badge.className = 'badge err'; badge.textContent = 'Error';
-    setEl('market-result', `<div class="card"><div style="color:var(--danger);font-size:12px">Error: ${e.message}</div></div>`);
+    bdg.className = 'badge err'; bdg.textContent = `Error: ${e.message}`;
   } finally {
-    btn.disabled = false; btn.textContent = 'Analyze Market';
+    btn.disabled = false; btn.textContent = 'Analyse Market';
     loadProgress();
   }
 }

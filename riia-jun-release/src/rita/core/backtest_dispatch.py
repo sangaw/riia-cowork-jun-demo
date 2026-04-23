@@ -48,6 +48,7 @@ class BacktestOutcome:
     total_return: float
     sharpe_ratio: float
     max_drawdown: float
+    total_trades: int = 0
     daily_results: list[DailyResult] = field(default_factory=list)
 
 
@@ -79,13 +80,17 @@ def run_backtest(config: BacktestConfig) -> BacktestOutcome:
 
     # ── 1. Locate model file ─────────────────────────────────────────────────
     mdir = model_dir(instrument)
-    # Try exact name first, then prefix search
     candidates: list[Path] = []
-    exact = mdir / f"{config.model_version}.zip"
-    if exact.exists():
-        candidates = [exact]
+
+    if config.model_version.lower() == "latest":
+        # Pick the most recently modified zip in the instrument directory
+        candidates = sorted(mdir.glob("*.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
     else:
-        candidates = sorted(mdir.glob(f"{config.model_version}*.zip"))
+        exact = mdir / f"{config.model_version}.zip"
+        if exact.exists():
+            candidates = [exact]
+        else:
+            candidates = sorted(mdir.glob(f"{config.model_version}*.zip"))
 
     if not candidates:
         raise ValueError(
@@ -127,6 +132,7 @@ def run_backtest(config: BacktestConfig) -> BacktestOutcome:
     total_return = perf["portfolio_total_return_pct"] / 100.0
     sharpe_ratio = perf["sharpe_ratio"]
     max_drawdown = perf["max_drawdown_pct"] / 100.0
+    total_trades = int(perf.get("total_trades", 0))
 
     # ── 5. Build DailyResult list ────────────────────────────────────────────
     portfolio_values: list[float] = episode["portfolio_values"]
@@ -158,5 +164,6 @@ def run_backtest(config: BacktestConfig) -> BacktestOutcome:
         total_return=round(total_return, 6),
         sharpe_ratio=round(sharpe_ratio, 6),
         max_drawdown=round(max_drawdown, 6),
+        total_trades=total_trades,
         daily_results=daily_results,
     )

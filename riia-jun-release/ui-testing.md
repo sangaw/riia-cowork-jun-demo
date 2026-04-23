@@ -1,11 +1,17 @@
-RITA App
+Ops
 
-1. Overview
-	a. Data Shown
-		1. Sharpe Ratio, Max Drawdown, Total Return, CAGR, Win Rate
-		2. Model status, MOdel file, Age, Last Run, CSV Loaded
-		3. Comstraints
-		4. Dataa Freshness - Latest Date, Days old, Status
-	b. Button - Run Pipeline
-	c. Button - Reset Session
-	
+1. Test results are overwriting existing test results
+2. Draft data still shows till 31 Dec
+
+1. Docker check
+
+
+ pytest tests/unit/ --junitxml=test-results/unit/latest.xml
+ 
+ pytest tests/e2e/test_rita_scenarios.py --junitxml=test-results/e2e/rita/latest.xml -v
+ pytest tests/e2e/test_fno_scenarios.py  --junitxml=test-results/e2e/fno/latest.xml  -v
+ pytest tests/unit/        --junitxml=test-results/unit/latest.xml        -v
+ pytest tests/integration/ --junitxml=test-results/integration/latest.xml -v
+ 
+  pytest tests/unit/ --junitxml=test-execution/unit.xml
+  

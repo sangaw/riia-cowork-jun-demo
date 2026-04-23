@@ -29,7 +29,7 @@ import numpy as np
 # ── Singleton model ───────────────────────────────────────────────────────────
 
 _model = None
-_seed_embeddings: Optional[np.ndarray] = None   # (N, 384) float32, normalised
+_seed_embeddings: Optional[np.ndarray] = None   # (N, 384) float32, normalised — rebuilt on first call
 _seed_to_intent: list[int] = []                  # seed row → intent index
 
 CONFIDENCE_THRESHOLD = 0.42   # cosine sim; below this = unreliable match
@@ -70,7 +70,7 @@ INTENTS: list[Intent] = [
             "what is the current market sentiment",
             "is the market bullish or bearish",
             "how is the market feeling today",
-            "overall market mood nifty",
+            "overall market mood today",
             "what is investor sentiment right now",
             "bullish or bearish signal today",
             "what does the market analysis say",
@@ -85,18 +85,18 @@ INTENTS: list[Intent] = [
     Intent(
         name="trend_direction",
         seeds=[
-            "what direction is nifty trending",
+            "what direction is the market trending",
             "is it an uptrend or downtrend",
-            "which way is nifty heading",
-            "current price trend for nifty",
+            "which way is the market heading",
+            "current price trend for this instrument",
             "is the market in an uptrend",
             "EMA trend direction today",
-            "short term vs long term moving average nifty",
+            "short term vs long term moving average today",
         ],
         handler="market_sentiment",
         template=(
-            "Nifty is in a **{trend}** (trend score {trend_score:+.3f}). "
-            "EMA-50: \u20b9{ema_50:,.0f} | EMA-200: \u20b9{ema_200:,.0f}."
+            "The instrument is in a **{trend}** (trend score {trend_score:+.3f}). "
+            "EMA-50: {ema_50:,.2f} | EMA-200: {ema_200:,.2f}."
         ),
     ),
 
@@ -105,32 +105,32 @@ INTENTS: list[Intent] = [
         seeds=[
             "what is the RSI reading today",
             "is the market overbought or oversold",
-            "RSI signal for nifty right now",
-            "relative strength index level nifty",
-            "momentum indicator reading nifty",
-            "RSI based buy or sell signal nifty",
+            "RSI signal right now",
+            "relative strength index level today",
+            "momentum indicator reading today",
+            "RSI based buy or sell signal today",
         ],
         handler="market_sentiment",
         template=(
             "RSI-14: **{rsi_14:.1f}** ({rsi_signal}). "
-            "Close: \u20b9{close:,.0f} as of {date}."
+            "Close: {close:,.2f} as of {date}."
         ),
     ),
 
     Intent(
         name="volatility_check",
         seeds=[
-            "how volatile is nifty right now",
+            "how volatile is the market right now",
             "current market volatility level",
-            "what is nifty volatility today",
-            "ATR reading for nifty",
-            "how much is nifty moving each day",
-            "daily price swings in nifty",
+            "what is market volatility today",
+            "ATR reading for this instrument",
+            "how much is the market moving each day",
+            "daily price swings in the market",
             "is volatility high or low today",
         ],
         handler="market_sentiment",
         template=(
-            "ATR-14: \u20b9{atr_14:,.0f} (at {atr_pct:.0f}th percentile of history). "
+            "ATR-14: {atr_14:,.2f} (at {atr_pct:.0f}th percentile of history). "
             "Volatility: **{volatility_label}**. Trend: {trend}."
         ),
     ),
@@ -140,14 +140,14 @@ INTENTS: list[Intent] = [
     Intent(
         name="invest_now",
         seeds=[
-            "can I invest in nifty now",
+            "can I invest in this market now",
             "should I enter the market today",
-            "is now a good time to buy nifty",
+            "is now a good time to buy",
             "should I invest right now",
-            "is this a good entry point for nifty",
-            "right time to put money in nifty",
-            "what is the risk of investing in nifty today",
-            "should I buy nifty or wait",
+            "is this a good entry point",
+            "right time to put money in this instrument",
+            "what is the risk of investing today",
+            "should I buy or wait",
         ],
         handler="strategy_recommendation",
         template=(
@@ -159,12 +159,12 @@ INTENTS: list[Intent] = [
     Intent(
         name="allocation_level",
         seeds=[
-            "what allocation should I have in nifty",
+            "what allocation should I have in this instrument",
             "how much of my portfolio should be in equities",
-            "optimal portfolio allocation for nifty",
-            "what percentage of capital to invest in nifty",
-            "nifty allocation recommendation today",
-            "how much exposure to nifty should I have",
+            "optimal portfolio allocation",
+            "what percentage of capital to invest",
+            "instrument allocation recommendation today",
+            "how much exposure to this instrument should I have",
         ],
         handler="strategy_recommendation",
         template=(
@@ -176,13 +176,13 @@ INTENTS: list[Intent] = [
     Intent(
         name="conservative_strategy",
         seeds=[
-            "safe investment approach for nifty",
-            "conservative allocation for nifty",
-            "low risk nifty strategy",
-            "I want to protect my capital in nifty",
-            "minimum risk nifty investment",
-            "capital protection strategy nifty",
-            "risk-averse investor nifty approach",
+            "safe investment approach for this instrument",
+            "conservative allocation for this instrument",
+            "low risk investment strategy",
+            "I want to protect my capital",
+            "minimum risk investment",
+            "capital protection strategy",
+            "risk-averse investor approach",
         ],
         handler="strategy_recommendation",
         params={"hint": "conservative"},
@@ -195,13 +195,13 @@ INTENTS: list[Intent] = [
     Intent(
         name="aggressive_strategy",
         seeds=[
-            "aggressive nifty investment strategy",
-            "maximum allocation to nifty",
-            "high risk high reward in nifty",
-            "I can tolerate high risk in nifty",
-            "full equity allocation nifty",
-            "go all in on nifty",
-            "aggressive investor nifty recommendation",
+            "aggressive investment strategy",
+            "maximum allocation to this instrument",
+            "high risk high reward investment",
+            "I can tolerate high risk",
+            "full equity allocation",
+            "go all in on this investment",
+            "aggressive investor recommendation",
         ],
         handler="strategy_recommendation",
         params={"hint": "aggressive"},
@@ -216,12 +216,12 @@ INTENTS: list[Intent] = [
     Intent(
         name="return_1m",
         seeds=[
-            "what returns can I expect in 1 month from nifty",
-            "nifty outlook for next month",
-            "monthly return estimate nifty",
-            "nifty return next 30 days",
-            "1 month investment return nifty",
-            "short term return 1 month nifty",
+            "what returns can I expect in 1 month",
+            "market outlook for next month",
+            "monthly return estimate",
+            "market return next 30 days",
+            "1 month investment return",
+            "short term return 1 month",
         ],
         handler="return_estimates",
         params={"period_days": 21, "label": "1 month"},
@@ -234,12 +234,12 @@ INTENTS: list[Intent] = [
     Intent(
         name="return_3m",
         seeds=[
-            "3 month nifty return estimate",
-            "quarterly outlook for nifty",
-            "nifty returns over next 3 months",
-            "short to medium term return nifty",
-            "3 month investment horizon nifty",
-            "quarterly return nifty forecast",
+            "3 month return estimate",
+            "quarterly outlook for this instrument",
+            "returns over next 3 months",
+            "short to medium term return",
+            "3 month investment horizon",
+            "quarterly return forecast",
         ],
         handler="return_estimates",
         params={"period_days": 91, "label": "3 months"},
@@ -252,12 +252,12 @@ INTENTS: list[Intent] = [
     Intent(
         name="return_6m",
         seeds=[
-            "6 month nifty return estimate",
-            "half year nifty outlook",
-            "nifty returns over next 6 months",
-            "6 month investment estimate nifty",
-            "semi-annual return expectation nifty",
-            "nifty performance over half a year",
+            "6 month return estimate",
+            "half year market outlook",
+            "returns over next 6 months",
+            "6 month investment estimate",
+            "semi-annual return expectation",
+            "market performance over half a year",
         ],
         handler="return_estimates",
         params={"period_days": 182, "label": "6 months"},
@@ -270,13 +270,13 @@ INTENTS: list[Intent] = [
     Intent(
         name="return_1y",
         seeds=[
-            "annual return from nifty",
-            "1 year investment return nifty",
-            "yearly nifty return estimate",
-            "how much will nifty give in 1 year",
-            "one year outlook nifty",
-            "expected annual return nifty",
-            "nifty 12 month return",
+            "annual return from this instrument",
+            "1 year investment return",
+            "yearly return estimate",
+            "how much will this instrument give in 1 year",
+            "one year outlook",
+            "expected annual return",
+            "12 month return estimate",
         ],
         handler="return_estimates",
         params={"period_days": 365, "label": "1 year"},
@@ -289,12 +289,12 @@ INTENTS: list[Intent] = [
     Intent(
         name="return_3y",
         seeds=[
-            "3 year nifty return estimate",
-            "medium term return nifty 3 years",
-            "how much does nifty grow in 3 years",
-            "3 year CAGR nifty estimate",
-            "compound return over 3 years nifty",
-            "nifty wealth creation 3 years",
+            "3 year return estimate",
+            "medium term return over 3 years",
+            "how much does this instrument grow in 3 years",
+            "3 year CAGR estimate",
+            "compound return over 3 years",
+            "wealth creation over 3 years",
         ],
         handler="return_estimates",
         params={"period_days": 1095, "label": "3 years"},
@@ -307,12 +307,12 @@ INTENTS: list[Intent] = [
     Intent(
         name="return_5y",
         seeds=[
-            "5 year nifty return estimate",
-            "long term investment return nifty",
-            "how much will nifty give in 5 years",
-            "5 year wealth creation nifty",
-            "long horizon return estimate nifty",
-            "nifty CAGR over 5 years",
+            "5 year return estimate",
+            "long term investment return",
+            "how much will this instrument give in 5 years",
+            "5 year wealth creation",
+            "long horizon return estimate",
+            "CAGR over 5 years",
         ],
         handler="return_estimates",
         params={"period_days": 1825, "label": "5 years"},
@@ -327,17 +327,17 @@ INTENTS: list[Intent] = [
     Intent(
         name="stress_crash_10",
         seeds=[
-            "what if nifty falls 10 percent",
+            "what if the market falls 10 percent",
             "10 percent market correction impact on portfolio",
-            "nifty drops 10 percent what happens",
+            "market drops 10 percent what happens",
             "mild correction scenario 10 percent",
-            "impact of 10 percent nifty decline",
-            "10 percent downside scenario nifty",
+            "impact of 10 percent market decline",
+            "10 percent downside scenario",
         ],
         handler="stress_scenarios",
         params={"move": -10},
         template=(
-            "If Nifty falls 10%: RITA ({rita_pct}% invested) \u2192 **{rita_impact:.1f}%** "
+            "If the market falls 10%: RITA ({rita_pct}% invested) \u2192 **{rita_impact:.1f}%** "
             "vs Aggressive \u221210.0%, Moderate \u22126.0%, Conservative \u22123.0%. "
             "Drawdown breach (>10%): {breach_note}."
         ),
@@ -346,17 +346,17 @@ INTENTS: list[Intent] = [
     Intent(
         name="stress_crash_20",
         seeds=[
-            "nifty crash 20 percent scenario",
+            "market crash 20 percent scenario",
             "severe bear market impact on portfolio",
             "what if market crashes 20 percent",
-            "deep correction 20 percent fall nifty",
-            "worst case bear market scenario nifty",
-            "nifty 20 percent downside risk",
+            "deep correction 20 percent fall",
+            "worst case bear market scenario",
+            "market 20 percent downside risk",
         ],
         handler="stress_scenarios",
         params={"move": -20},
         template=(
-            "If Nifty falls 20%: RITA ({rita_pct}% invested) \u2192 **{rita_impact:.1f}%** "
+            "If the market falls 20%: RITA ({rita_pct}% invested) \u2192 **{rita_impact:.1f}%** "
             "vs Aggressive \u221220.0%, Moderate \u221212.0%, Conservative \u22126.0%. "
             "Drawdown breach: {breach_note}."
         ),
@@ -365,17 +365,17 @@ INTENTS: list[Intent] = [
     Intent(
         name="stress_rally_10",
         seeds=[
-            "what if nifty rises 10 percent",
-            "10 percent rally scenario nifty",
+            "what if the market rises 10 percent",
+            "10 percent rally scenario",
             "bull market 10 percent gain portfolio",
-            "nifty up 10 percent portfolio effect",
-            "strong nifty rally scenario",
-            "10 percent upside scenario nifty",
+            "market up 10 percent portfolio effect",
+            "strong market rally scenario",
+            "10 percent upside scenario",
         ],
         handler="stress_scenarios",
         params={"move": 10},
         template=(
-            "If Nifty rallies 10%: RITA ({rita_pct}% invested) \u2192 **+{rita_impact:.1f}%** "
+            "If the market rallies 10%: RITA ({rita_pct}% invested) \u2192 **+{rita_impact:.1f}%** "
             "vs Aggressive +10.0%, Moderate +6.0%, Conservative +3.0%."
         ),
     ),
@@ -383,17 +383,17 @@ INTENTS: list[Intent] = [
     Intent(
         name="stress_flat",
         seeds=[
-            "sideways market scenario nifty",
-            "nifty stays flat what happens to portfolio",
+            "sideways market scenario",
+            "market stays flat what happens to portfolio",
             "no market movement scenario",
-            "range-bound nifty impact",
-            "flat nifty scenario portfolio effect",
-            "nifty going nowhere impact on investment",
+            "range-bound market impact",
+            "flat market scenario portfolio effect",
+            "market going nowhere impact on investment",
         ],
         handler="stress_scenarios",
         params={"move": 0},
         template=(
-            "If Nifty stays flat (0%): all profiles show ~0% portfolio change. "
+            "If the market stays flat (0%): all profiles show ~0% portfolio change. "
             "RITA current stance: {recommendation} ({rita_pct}% invested)."
         ),
     ),
@@ -440,14 +440,29 @@ INTENTS: list[Intent] = [
     ),
 
     Intent(
+        name="backtest_1y_return",
+        seeds=[
+            "what is the realistic return for 1 year for this instrument",
+            "realistic 1 year return from model backtest",
+            "what did the model achieve in 2025",
+            "model backtest return for 1 year",
+            "what is the actual model return for the year",
+            "how much did RITA return in the backtest for 1 year",
+            "backtest 1 year realistic return",
+        ],
+        handler="backtest_1y_return",
+        template="",   # handler builds response directly
+    ),
+
+    Intent(
         name="portfolio_compare",
         seeds=[
-            "compare different portfolio allocation strategies nifty",
+            "compare different portfolio allocation strategies",
             "how do conservative moderate aggressive portfolios compare",
-            "portfolio scenario comparison nifty",
-            "which allocation strategy is best for nifty",
-            "show conservative vs aggressive nifty comparison",
-            "compare RITA to buy and hold nifty",
+            "portfolio scenario comparison",
+            "which allocation strategy is best for this instrument",
+            "show conservative vs aggressive portfolio comparison",
+            "compare RITA to buy and hold",
         ],
         handler="portfolio_comparison",
         template=(
@@ -673,6 +688,40 @@ def dispatch(
             ),
         }
         return intent.template.format(**ctx)
+
+    # ── Backtest 1-year realistic return ─────────────────────────────────────
+    elif h == "backtest_1y_return":
+        from rita.config import get_settings
+        settings = get_settings()
+        instrument = os.path.basename(output_dir).upper()
+        hist_path = os.path.join(settings.model.path, instrument, "training_history.csv")
+        if not os.path.exists(hist_path):
+            return _NO_PERF_MSG
+        best_row: dict = {}
+        with open(hist_path, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        # Use the run with the highest backtest_return_pct (most recent if tied)
+        for row in rows:
+            try:
+                ret = float(row.get("backtest_return_pct", 0) or 0)
+                if not best_row or ret > float(best_row.get("backtest_return_pct", 0)):
+                    best_row = row
+            except (ValueError, TypeError):
+                continue
+        if not best_row:
+            return _NO_PERF_MSG
+        ret_pct  = float(best_row.get("backtest_return_pct", 0))
+        cagr_pct = float(best_row.get("backtest_cagr_pct", ret_pct))
+        sharpe   = float(best_row.get("backtest_sharpe", 0))
+        mdd_pct  = float(best_row.get("backtest_mdd_pct", 0))
+        quality  = "strong" if sharpe >= 1.0 else "moderate" if sharpe >= 0.5 else "weak"
+        return (
+            f"**Realistic 1-year model backtest return for {instrument} (2025): {ret_pct:.1f}%**\n"
+            f"CAGR: {cagr_pct:.1f}% · Sharpe: {sharpe:.3f} · Max Drawdown: {mdd_pct:.2f}%\n"
+            f"Signal quality: **{quality}** ({'target met ✓' if sharpe >= 1.0 else 'below 1.0 target — consider retraining'}).\n"
+            f"This return is from the RITA Double DQN backtest on historical {instrument} data. "
+            f"Past backtest performance is not a guarantee of future results."
+        )
 
     # ── Portfolio comparison ──────────────────────────────────────────────────
     elif h == "portfolio_comparison":

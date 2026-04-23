@@ -7,7 +7,7 @@ by reading all data from the SQLAlchemy database instead of CSV files.
 Key checks:
   1. Sharpe drift        : Latest Sharpe vs rolling-window mean (warn if Δ > threshold)
   2. Return degradation  : Backtest return trend over last N rounds (warn if consistently declining)
-  3. Data freshness      : Days since latest date in market_data_cache table
+  3. Data freshness      : Days since latest date in market_data_cache table (CSV fallback)
   4. Pipeline health     : Run failure rate + per-model-version timing from training/backtest tables
   5. Constraint breach   : Count of rounds failing Sharpe > 1.0 or MDD < 10%
 
@@ -193,26 +193,47 @@ class DriftDetector:
     # ─── Check 3: Data Freshness ──────────────────────────────────────────────
 
     def check_data_freshness(self) -> dict[str, Any]:
-        """Check how old the latest date in the market_data_cache table is."""
+        """Check how old the latest date in the market_data_cache table is.
+
+        Falls back to reading the CSV directly when the DB is empty or stale,
+        using the same paths as the market_signals endpoint.
+        """
+        from pathlib import Path as _Path  # noqa: PLC0415
+
+        db_latest: date | None = None
         try:
             repo = MarketDataCacheRepository(self._db)
             records = repo.read_all()
+            if records:
+                raw = max(r.date for r in records)
+                db_latest = raw.date() if isinstance(raw, datetime) else raw
         except Exception:
             log.warning("drift_detector.market_data.load_failed", exc_info=True)
-            return {"status": "warn", "message": "Could not load market data from DB.", "days_old": None}
 
-        if not records:
+        csv_latest: date | None = None
+        try:
+            from rita.core.data_loader import load_nifty_csv  # noqa: PLC0415
+            from rita.config import get_settings  # noqa: PLC0415
+            _raw = _Path("data/raw/NIFTY/merged.csv")
+            csv_path = _raw if _raw.exists() else _Path(get_settings().data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
+            if csv_path.exists():
+                _df = load_nifty_csv(str(csv_path))
+                if not _df.empty:
+                    csv_latest = _df.index[-1].date()
+        except Exception:
+            log.warning("drift_detector.csv_date_read_failed", exc_info=True)
+
+        latest_date = max(d for d in (db_latest, csv_latest) if d is not None) if (db_latest or csv_latest) else None
+
+        if latest_date is None:
             return {
                 "status": "warn",
-                "message": "No market data cached — load price data to enable freshness check.",
+                "message": "No market data found — load price data to enable freshness check.",
                 "days_old": None,
                 "latest_date": None,
             }
 
         try:
-            latest_date = max(r.date for r in records)
-            if isinstance(latest_date, datetime):
-                latest_date = latest_date.date()
             days_old = (date.today() - latest_date).days
         except Exception as exc:
             return {"status": "warn", "message": f"Could not compute data age: {exc}", "days_old": None}

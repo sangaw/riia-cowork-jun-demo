@@ -90,15 +90,27 @@ def _run_training_job(config: TrainingConfig) -> None:
         if run is None:
             return
 
+        val_mdd_pct = round(outcome.max_drawdown * 100, 2)
+        val_constraints = outcome.sharpe >= 1.0 and abs(val_mdd_pct) < 10
         complete_run = TrainingRun(
             **{
                 **run.model_dump(),
                 "status": "complete",
                 "ended_at": ended_at,
                 "model_path": outcome.model_path,
+                "train_sharpe": outcome.train_sharpe,
+                "train_mdd": outcome.train_mdd,
+                "train_return": outcome.train_return,
+                "train_trades": outcome.train_trades,
+                "val_sharpe": outcome.sharpe,
+                "val_mdd": outcome.max_drawdown,
+                "val_return": outcome.total_return,
+                "val_cagr": outcome.total_return,   # proxy until CAGR computed separately
+                "val_trades": outcome.val_trades,
                 "backtest_sharpe": outcome.sharpe,
                 "backtest_mdd": outcome.max_drawdown,
                 "backtest_return": outcome.total_return,
+                "backtest_trades": outcome.val_trades,
             }
         )
         runs_repo.upsert(complete_run)
@@ -115,17 +127,17 @@ def _run_training_job(config: TrainingConfig) -> None:
                 },
                 val_metrics={
                     "sharpe_ratio": outcome.sharpe,
-                    "max_drawdown_pct": outcome.max_drawdown * 100,
-                    "portfolio_cagr_pct": 0.0,
-                    "constraints_met": outcome.sharpe >= 1.0 and abs(outcome.max_drawdown * 100) < 10,
+                    "max_drawdown_pct": val_mdd_pct,
+                    "portfolio_cagr_pct": round(outcome.total_return * 100, 2),
+                    "constraints_met": val_constraints,
                 },
                 backtest_metrics={
                     "sharpe_ratio": outcome.sharpe,
-                    "max_drawdown_pct": outcome.max_drawdown * 100,
-                    "portfolio_total_return_pct": outcome.total_return * 100,
-                    "portfolio_cagr_pct": outcome.total_return * 100,
-                    "total_trades": 0,
-                    "constraints_met": outcome.sharpe >= 1.0 and abs(outcome.max_drawdown * 100) < 10,
+                    "max_drawdown_pct": val_mdd_pct,
+                    "portfolio_total_return_pct": round(outcome.total_return * 100, 2),
+                    "portfolio_cagr_pct": round(outcome.total_return * 100, 2),
+                    "total_trades": outcome.val_trades,
+                    "constraints_met": val_constraints,
                 },
                 notes=f"run_id={config.run_id[:8]}",
             )

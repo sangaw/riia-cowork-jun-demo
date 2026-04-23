@@ -5,16 +5,21 @@ import { mkChart, C } from './charts.js';
 
 let _msTimeframe = 'daily';
 
-/** Update the Nifty trailing-return hint on the Financial Goal section. */
+function _getInstrument() {
+  return (localStorage.getItem('ritaInstrument') || 'NIFTY').toUpperCase();
+}
+
+/** Update the trailing-return hint on the Financial Goal section. */
 export async function loadGoalHint() {
   try {
-    const rows = await api('/api/v1/market-signals?timeframe=daily&periods=252');
+    const inst = _getInstrument();
+    const rows = await api(`/api/v1/market-signals?timeframe=daily&periods=252&instrument=${inst}`);
     if (!rows || rows.length < 2) return;
     const first = rows[0], last = rows[rows.length - 1];
     const ret12m = ((parseFloat(last.Close) / parseFloat(first.Close)) - 1) * 100;
     const hint = document.getElementById('historical-avg-hint');
     if (hint && !isNaN(ret12m)) {
-      hint.textContent = `Nifty 50 last 12 months (${first.date} → ${last.date}): ${ret12m.toFixed(1)}%`;
+      hint.textContent = `${inst} last 12 months (${first.date} → ${last.date}): ${ret12m.toFixed(1)}%`;
     }
   } catch (_) {}
 }
@@ -30,8 +35,9 @@ export function switchMsTab(tf) {
 
 export async function loadMarketSignals() {
   const periods = _msTimeframe === 'monthly' ? 60 : _msTimeframe === 'weekly' ? 104 : 252;
+  const inst = _getInstrument();
   try {
-    const rows = await api(`/api/v1/market-signals?timeframe=${_msTimeframe}&periods=${periods}`);
+    const rows = await api(`/api/v1/market-signals?timeframe=${_msTimeframe}&periods=${periods}&instrument=${inst}`);
     if (!rows || !rows.length) return;
 
     const last = rows[rows.length - 1];
@@ -90,7 +96,7 @@ export async function loadMarketSignals() {
     if (histHint && rows.length >= 2 && _msTimeframe === 'daily') {
       const ret12m = ((parseFloat(last.Close) / parseFloat(rows[0].Close)) - 1) * 100;
       if (!isNaN(ret12m))
-        histHint.textContent = `Nifty 50 last 12 months (${rows[0].date} → ${last.date}): ${ret12m.toFixed(1)}%`;
+        histHint.textContent = `${inst} last 12 months (${rows[0].date} → ${last.date}): ${ret12m.toFixed(1)}%`;
     }
 
     const atrRaw  = parseFloat(last.atr_14);

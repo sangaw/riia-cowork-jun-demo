@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 # ── Backtest Runs ─────────────────────────────────────────────────────────────
 
 class BacktestRunBase(BaseModel):
+    instrument: str = Field(default="NIFTY", max_length=32)
     start_date: date
     end_date: date
     model_version: str = Field(max_length=64)
@@ -23,6 +24,7 @@ class BacktestRun(BacktestRunBase):
 
     run_id: str
     status: str = "pending"                 # pending / running / complete / failed
+    total_trades: Optional[int] = None
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
     recorded_at: datetime

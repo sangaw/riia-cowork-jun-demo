@@ -71,61 +71,41 @@ export function renderGoalResult(containerId, d) {
   }
 }
 
-export function renderMarketResult(containerId, d) {
+export function renderMarketResult(d) {
   const r = d.result || d;
   const fv = (v, dec=2) => (v != null && !isNaN(parseFloat(v))) ? parseFloat(v).toFixed(dec) : '—';
-  const trendCls = {uptrend:'ok', sideways:'neu', downtrend:'err'};
-  const macdCls  = {bullish:'ok', bearish:'err'};
-  const rsiCls   = {overbought:'err', oversold:'ok', neutral:'neu'};
-  const bbCls    = {near_upper_band:'err', near_lower_band:'ok', middle:'neu'};
-  const sentCls  = {complacent:'ok', neutral:'neu', fearful:'err'};
 
-  const mkRow = (label, value, note='') => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="color:var(--t3)">${label}</span>
-      <span style="font-family:var(--fm);color:var(--text)">${value}${note ? ` <span style="color:var(--t4);font-size:10px">${note}</span>` : ''}</span>
-    </div>`;
-  const mkSection = (title, color, rows) => `
-    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${color};margin-bottom:8px">${title}</div>
-      ${rows}
-    </div>`;
+  const trendCls = {uptrend:'pos', sideways:'neu', downtrend:'neg'};
+  const rsiCls   = {overbought:'neg', oversold:'pos', neutral:'neu'};
+  const macdCls  = {bullish:'pos', bearish:'neg'};
+  const bbCls    = {near_upper_band:'neg', near_lower_band:'pos', middle:'neu'};
+  const sentCls  = {complacent:'pos', neutral:'neu', fearful:'neg'};
 
-  const html = `<div class="result-panel">
-    <div class="result-title">Step ${d.step||2} — ${d.name||'Market Analysis'} <span class="badge ok">Done</span></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-      ${mkSection('Trend &amp; Sentiment', 'var(--run)',
-        mkRow('Date', r.date||'—') +
-        mkRow('Close', r.close != null ? r.close.toLocaleString('en-IN') : '—') +
-        mkRow('Trend', `<span class="badge ${trendCls[r.trend]||'neu'}">${r.trend||'—'}</span>`) +
-        mkRow('Trend Score', fv(r.trend_score, 3), '(-1 bear → +1 bull)') +
-        mkRow('Sentiment', `<span class="badge ${sentCls[r.sentiment_proxy]||'neu'}">${r.sentiment_proxy||'—'}</span>`)
-      )}
-      ${mkSection('RSI', 'var(--warn)',
-        mkRow('RSI-14', fv(r.rsi_14, 2)) +
-        mkRow('Signal', `<span class="badge ${rsiCls[r.rsi_signal]||'neu'}">${r.rsi_signal||'—'}</span>`) +
-        mkRow('Range', '40–60 neutral zone', '') +
-        mkRow('Overbought / Oversold', '&gt;70 / &lt;30')
-      )}
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-      ${mkSection('MACD', 'var(--build)',
-        mkRow('MACD Line', fv(r.macd, 4)) +
-        mkRow('Signal Line', fv(r.macd_signal_line, 4)) +
-        mkRow('Signal', `<span class="badge ${macdCls[r.macd_signal]||'neu'}">${r.macd_signal||'—'}</span>`)
-      )}
-      ${mkSection('Bollinger Bands', 'var(--t2)',
-        mkRow('BB %B', fv(r.bb_pct_b, 3)) +
-        mkRow('Position', `<span class="badge ${bbCls[r.bb_position]||'neu'}">${(r.bb_position||'—').replace(/_/g,' ')}</span>`)
-      )}
-      ${mkSection('ATR', 'var(--mon)',
-        mkRow('ATR-14', fv(r.atr_14, 2)) +
-        mkRow('ATR Percentile', fv(r.atr_percentile, 3), '0=low · 1=high vol') +
-        mkRow('EMA 5 / 13 / 26', `${fv(r.ema_5,0)} / ${fv(r.ema_13,0)} / ${fv(r.ema_26,0)}`)
-      )}
-    </div>
-  </div>`;
-  setEl(containerId, html);
+  const _set = (id, text, cls) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    if (cls) el.className = 'kpi-value ' + cls;
+  };
+
+  // Row 2
+  _set('ma-date',        r.date || '—');
+  _set('ma-close',       r.close != null ? r.close.toLocaleString('en-IN') : '—');
+  _set('ma-trend',       (r.trend || '—').replace(/_/g,' '),  trendCls[r.trend] || 'neu');
+  setEl('ma-trend-score', `score ${fv(r.trend_score, 2)}`);
+  _set('ma-sentiment',   (r.sentiment_proxy || '—').replace(/_/g,' '), sentCls[r.sentiment_proxy] || 'neu');
+  _set('ma-rsi',         fv(r.rsi_14, 1), rsiCls[r.rsi_signal] || 'neu');
+  setEl('ma-rsi-sig',    r.rsi_signal || '—');
+
+  // Row 3
+  _set('ma-macd',        fv(r.macd, 3), macdCls[r.macd_signal] || 'neu');
+  setEl('ma-macd-sig',   r.macd_signal || '—');
+  _set('ma-bb',          fv(r.bb_pct_b, 3), bbCls[r.bb_position] || 'neu');
+  setEl('ma-bb-sig',     (r.bb_position || '—').replace(/_/g,' '));
+  _set('ma-atr',         fv(r.atr_14, 2));
+  setEl('ma-atr-sig',    `pctl ${fv(r.atr_percentile, 2)}`);
+  _set('ma-ema',         `${fv(r.ema_5,0)} / ${fv(r.ema_13,0)}`);
+  _set('ma-ema2',        fv(r.ema_26, 0));
 }
 
 export function renderStepResult(containerId, d) {

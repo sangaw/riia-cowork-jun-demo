@@ -38,8 +38,22 @@ export async function runScenarioBacktest() {
   setEl('scenario-result', '');
 
   try {
-    // Pass the selected date range directly — /api/v1/period does not exist.
-    await api('/api/v1/backtest', 'POST', { start_date: from, end_date: to });
+    const instrument = localStorage.getItem('ritaInstrument') || 'NIFTY';
+    const submitted = await api('/api/v1/backtest', 'POST', { instrument, start_date: from, end_date: to });
+    const runId = submitted.run_id;
+
+    // Poll until complete or failed (max 3 min, 3 s interval)
+    const MAX_POLLS = 60;
+    let polls = 0;
+    while (polls < MAX_POLLS) {
+      await new Promise(r => setTimeout(r, 3000));
+      const s = await api(`/api/v1/backtest-status/${runId}`);
+      if (s.status === 'complete') break;
+      if (s.status === 'failed') throw new Error('Backtest failed — check model files exist for this instrument.');
+      polls++;
+    }
+    if (polls >= MAX_POLLS) throw new Error('Backtest timed out after 3 minutes.');
+
     const [perf, daily] = await Promise.all([
       api('/api/v1/performance-summary'),
       api('/api/v1/backtest-daily'),

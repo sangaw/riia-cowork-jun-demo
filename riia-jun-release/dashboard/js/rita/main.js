@@ -1,7 +1,7 @@
 // ── RITA Dashboard — main.js (entry point) ─────────────────
 import { api } from './api.js';
 import { show, warmupChat, _sectionLoaders, getCurrentSection } from './nav.js';
-import { loadHealth, loadMetrics, loadPerfSummary, loadDrift, loadProgress } from './health.js';
+import { loadHealth, loadPerfSummary, loadDrift, loadProgress } from './health.js';
 import { switchMsTab, loadMarketSignals, loadGoalHint } from './market-signals.js';
 import { loadPerformance } from './performance.js';
 import { loadTrades, downloadTradeJournal } from './trades.js';
@@ -14,11 +14,11 @@ import { loadMcp } from './mcp.js';
 import { loadExport, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './export.js';
 import { loadScenarios, runScenarioBacktest, setScenarioPeriod } from './scenarios.js';
 import { loadAudit } from './audit.js';
-import { useChip, sendChatMsg, clearChat, updateChips, showAlerts } from './chat.js';
+import { useChip, sendChatMsg, clearChat, updateChips, showAlerts, refreshChatChips } from './chat.js';
 import { openChartModal, closeChartModal } from './chart-modal.js';
 
 // ── Populate section loaders map ───────────────────────────
-_sectionLoaders.market            = async () => { clearChat(); const data = await warmupChat(); if (data) { updateChips(data.chips); showAlerts(data.alerts); } };
+_sectionLoaders.market            = async () => { refreshChatChips(); clearChat(); const data = await warmupChat(); if (data) { updateChips(data.chips); showAlerts(data.alerts); } };
 _sectionLoaders['market-signals'] = loadMarketSignals;
 _sectionLoaders.goal              = loadGoalHint;
 _sectionLoaders.scenarios         = loadScenarios;
@@ -35,6 +35,7 @@ _sectionLoaders.audit             = loadAudit;
 
 // ── Expose to window for inline HTML onclick attributes ────
 window.show               = show;
+window.selectInstrumentTab = selectInstrumentTab;
 window.switchMsTab        = switchMsTab;
 window.downloadTradeJournal = downloadTradeJournal;
 window.runGoal            = runGoal;
@@ -64,13 +65,38 @@ window.loadAudit          = loadAudit;
 
 // ── Refresh all home KPIs & active section ─────────────────
 async function refresh() {
-  await Promise.all([loadHealth(), loadMetrics(), loadPerfSummary(), loadDrift(), loadProgress()]);
+  await Promise.all([loadHealth(), loadPerfSummary(), loadDrift(), loadProgress()]);
   const current = getCurrentSection();
   if (_sectionLoaders[current]) _sectionLoaders[current]();
 }
 
 // Expose refresh so export.js can call it via window._ritaRefresh
 window._ritaRefresh = refresh;
+
+// ── Instrument tab selection (Overview) ───────────────────
+function _initInstrumentTabs() {
+  const saved = localStorage.getItem('ritaInstrument') || 'NIFTY';
+  document.querySelectorAll('.inst-tab').forEach(t =>
+    t.classList.toggle('active', t.id === 'itab-' + saved)
+  );
+}
+
+async function selectInstrumentTab(id) {
+  localStorage.setItem('ritaInstrument', id);
+  document.querySelectorAll('.inst-tab').forEach(t =>
+    t.classList.toggle('active', t.id === 'itab-' + id)
+  );
+  try { await api('/api/v1/instrument/select', 'POST', { instrument_id: id }).catch(() => {}); } catch (_) {}
+  if (getCurrentSection() === 'market') {
+    clearChat();
+    const data = await warmupChat();
+    if (data) { updateChips(data.chips); showAlerts(data.alerts); }
+  } else {
+    refreshChatChips();
+  }
+  await loadActiveInstrument();
+  await Promise.all([loadHealth(), loadPerfSummary(), loadDrift(), loadProgress()]);
+}
 
 // ── Active instrument pill ─────────────────────────────────
 async function loadActiveInstrument() {
@@ -87,4 +113,4 @@ async function loadActiveInstrument() {
 }
 
 // ── Init ───────────────────────────────────────────────────
-window.addEventListener('load', () => { refresh(); loadActiveInstrument(); });
+window.addEventListener('load', () => { _initInstrumentTabs(); refresh(); loadActiveInstrument(); });

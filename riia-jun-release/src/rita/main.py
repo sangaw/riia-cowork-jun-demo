@@ -62,6 +62,37 @@ async def lifespan(app: FastAPI):
     log.info("app.startup", name=settings.app.name, version=settings.app.version)
     Base.metadata.create_all(bind=engine)
 
+    # ── Column migrations (idempotent: SQLite raises OperationalError if col exists) ──
+    _NEW_COLUMNS = [
+        ("backtest_runs",  "instrument",     "VARCHAR DEFAULT 'NIFTY'"),
+        ("backtest_runs",  "total_trades",   "INTEGER"),
+        ("training_runs",  "train_sharpe",   "REAL"),
+        ("training_runs",  "train_mdd",      "REAL"),
+        ("training_runs",  "train_return",   "REAL"),
+        ("training_runs",  "train_trades",   "INTEGER"),
+        ("training_runs",  "val_sharpe",     "REAL"),
+        ("training_runs",  "val_mdd",        "REAL"),
+        ("training_runs",  "val_return",     "REAL"),
+        ("training_runs",  "val_cagr",       "REAL"),
+        ("training_runs",  "val_trades",     "INTEGER"),
+        ("training_runs",  "backtest_trades","INTEGER"),
+    ]
+    try:
+        from rita.database import SessionLocal as _SL
+        _mdb = _SL()
+        try:
+            for _tbl, _col, _typedef in _NEW_COLUMNS:
+                try:
+                    _mdb.execute(text(f"ALTER TABLE {_tbl} ADD COLUMN {_col} {_typedef}"))
+                    _mdb.commit()
+                    log.info("db.migration.column_added", table=_tbl, column=_col)
+                except Exception:
+                    _mdb.rollback()  # column already exists — safe to ignore
+        finally:
+            _mdb.close()
+    except Exception as _exc:
+        log.warning("db.migration_failed", error=str(_exc))
+
     # ── Seed instruments table (one-time, skipped if rows already exist) ─────
     try:
         import datetime as _dt
@@ -105,7 +136,6 @@ async def lifespan(app: FastAPI):
         import datetime as _dt
         from rita.core.data_loader import load_nifty_csv
         from rita.repositories.market_data import MarketDataCacheRepository
-        from rita.schemas.market_data import MarketDataCache as _MarketDataCache
         from rita.database import SessionLocal
 
         # Raw historical file (2025); nifty_manual.csv provides 2026 data

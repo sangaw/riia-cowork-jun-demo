@@ -1,5 +1,5 @@
 """ORM models for the training_runs and training_metrics tables."""
-from sqlalchemy import Column, DateTime, Float, Integer, String
+from sqlalchemy import Column, DateTime, Float, Integer, String  # noqa: F401
 
 from rita.database import Base
 
@@ -20,9 +20,19 @@ class TrainingRunModel(Base):
     status = Column(String, nullable=False, default="pending")
     started_at = Column(DateTime, nullable=True)
     ended_at = Column(DateTime, nullable=True)
+    train_sharpe = Column(Float, nullable=True)
+    train_mdd = Column(Float, nullable=True)
+    train_return = Column(Float, nullable=True)
+    train_trades = Column(Integer, nullable=True)
+    val_sharpe = Column(Float, nullable=True)
+    val_mdd = Column(Float, nullable=True)
+    val_return = Column(Float, nullable=True)
+    val_cagr = Column(Float, nullable=True)
+    val_trades = Column(Integer, nullable=True)
     backtest_sharpe = Column(Float, nullable=True)
     backtest_mdd = Column(Float, nullable=True)
     backtest_return = Column(Float, nullable=True)
+    backtest_trades = Column(Integer, nullable=True)
     model_path = Column(String, nullable=True)
     recorded_at = Column(DateTime, nullable=False)
 

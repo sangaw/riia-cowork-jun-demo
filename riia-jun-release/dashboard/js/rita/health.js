@@ -79,37 +79,10 @@ export async function loadHealth() {
 }
 
 export async function loadMetrics() {
-  try {
-    const [d, prog] = await Promise.all([api('/api/v1/metrics/summary'), api('/progress').catch(() => ({}))]);
-    const t = d.training || {};
-    if (t.latest_backtest_sharpe) {
-      const sharpe = t.latest_backtest_sharpe;
-      const mdd = t.latest_backtest_mdd_pct;
-      const cagr = t.latest_backtest_cagr_pct;
-      setEl('kpi-sharpe', fmt(sharpe, 3));
-      document.getElementById('kpi-sharpe').className = 'kpi-value ' + (sharpe >= 1 ? 'pos' : 'neg');
-      setEl('kpi-mdd', fmtPct(mdd));
-      document.getElementById('kpi-mdd').className = 'kpi-value ' + (Math.abs(mdd) < 10 ? 'pos' : 'neg');
-      setEl('kpi-cagr', fmtPct(cagr));
-      setEl('kpi-days', t.rounds ? t.rounds + ' rounds' : '—');
-    }
-    // Constraints
-    if (t.latest_constraints_met != null) {
-      const met = t.latest_constraints_met;
-      document.getElementById('constraints-badge').className = 'badge ' + (met ? 'ok' : 'err');
-      setEl('constraints-badge', met ? 'All Met' : 'Not Met');
-      setEl('constraints-details', `
-        <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--t2)">
-          <div style="display:flex;justify-content:space-between"><span>Sharpe ≥ 1.0</span><span class="badge ${t.latest_backtest_sharpe >= 1 ? 'ok' : 'err'}">${t.latest_backtest_sharpe >= 1 ? 'Met' : 'Not Met'}</span></div>
-          <div style="display:flex;justify-content:space-between"><span>Max DD &lt; 10%</span><span class="badge ${Math.abs(t.latest_backtest_mdd_pct) < 10 ? 'ok' : 'err'}">${Math.abs(t.latest_backtest_mdd_pct) < 10 ? 'Met' : 'Not Met'}</span></div>
-          <div style="display:flex;justify-content:space-between"><span>CAGR</span><span style="font-family:var(--fm)">${fmtPct(t.latest_backtest_cagr_pct)}</span></div>
-          <div style="display:flex;justify-content:space-between"><span>Training rounds</span><span style="font-family:var(--fm)">${t.rounds || '—'}</span></div>
-        </div>
-      `);
-    }
-  } catch (e) {
-    console.warn('metrics error', e);
-  }
+  // loadMetrics no longer writes KPI strip elements (kpi-sharpe, kpi-mdd, kpi-cagr, kpi-days,
+  // constraints-badge). loadPerfSummary() is the sole writer for those — two writers on the
+  // same elements caused the visible flip on the overview page.
+  // loadMetrics is kept for future use (e.g. monitoring section) but does nothing on home.
 }
 
 export async function loadPerfSummary() {
@@ -129,8 +102,23 @@ export async function loadPerfSummary() {
       setEl('kpi-days', 'Run pipeline');
       return;
     }
-    // No completed backtest data yet — leave KPIs set by loadMetrics() untouched
-    if (d.portfolio_total_return_pct == null) return;
+    // No completed backtest data for this instrument — clear KPIs explicitly
+    if (d.portfolio_total_return_pct == null) {
+      ['kpi-return','kpi-cagr','kpi-sharpe','kpi-mdd','kpi-winrate'].forEach(id => {
+        setEl(id, '—');
+        const el = document.getElementById(id);
+        if (el) el.className = 'kpi-value';
+      });
+      setEl('kpi-bnh', 'No backtest yet');
+      setEl('kpi-cagr-bnh', '');
+      setEl('kpi-days', 'Run backtest');
+      if (document.getElementById('constraints-badge')) {
+        document.getElementById('constraints-badge').className = 'badge warn';
+        setEl('constraints-badge', 'No Data');
+        setEl('constraints-details', '');
+      }
+      return;
+    }
 
     setEl('kpi-return', fmtPct(d.portfolio_total_return_pct));
     document.getElementById('kpi-return').className = 'kpi-value ' + (parseFloat(d.portfolio_total_return_pct) > 0 ? 'pos' : 'neg');
@@ -170,10 +158,10 @@ export async function loadPerfSummary() {
 export async function loadDrift() {
   try {
     const d = await api('/api/v1/drift');
-    const h = d.health || 'unknown';
+    const h = (d.summary && d.summary.overall) || 'unknown';
     const cls = h === 'ok' ? 'ok' : h === 'warn' ? 'warn' : 'err';
     const alerts = [];
-    const r = d.report || {};
+    const r = d.checks || {};
     if (r.sharpe_drift) alerts.push({ cls: r.sharpe_drift.status === 'ok' ? 'ok' : 'warn', msg: 'Sharpe drift: ' + r.sharpe_drift.message, tag: r.sharpe_drift.status });
     if (r.return_degradation) alerts.push({ cls: r.return_degradation.status === 'ok' ? 'ok' : 'warn', msg: 'Return trend: ' + r.return_degradation.message, tag: r.return_degradation.status });
     if (r.data_freshness) alerts.push({ cls: r.data_freshness.status === 'ok' ? 'ok' : 'warn', msg: 'Data: ' + r.data_freshness.message, tag: r.data_freshness.status });

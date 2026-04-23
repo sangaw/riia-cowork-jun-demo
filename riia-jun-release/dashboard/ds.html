@@ -166,7 +166,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .h180{height:180px;} .h220{height:220px;} .h260{height:260px;} .h300{height:300px;} .h340{height:340px;}
 
 /* Tables */
-.tbl-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:auto;max-height:300px;box-shadow:var(--sh);margin-bottom:14px;}
+.tbl-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);overflow:auto;max-height:228px;box-shadow:var(--sh);margin-bottom:14px;}
+
+/* ── Training phase tabs ── */
+.train-tab-bar{display:flex;gap:4px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:4px;margin-bottom:16px;width:fit-content;}
+.train-tab{font-family:var(--fd);font-size:12px;font-weight:500;padding:6px 18px;border-radius:4px;border:none;cursor:pointer;background:transparent;color:var(--t2);transition:background .12s,color .12s;}
+.train-tab:hover{background:var(--surface2);color:var(--text);}
+.train-tab.active{background:var(--run-bg);color:var(--run);font-weight:700;}
+.train-panel{display:block;}
+.train-panel.hidden{display:none;}
+
+/* ── Performance phase tabs ── */
+.perf-phase-tab{font-family:var(--fd);font-size:12px;font-weight:500;padding:6px 18px;border-radius:4px;border:none;cursor:pointer;background:transparent;color:var(--t2);transition:background .12s,color .12s;}
+.perf-phase-tab:hover{background:var(--surface2);color:var(--text);}
+.perf-phase-tab.active{background:var(--build-bg);color:var(--build);font-weight:700;}
+.perf-phase-panel{display:block;}
+.perf-phase-panel.hidden{display:none;}
+.round-cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;}
 table{width:100%;border-collapse:collapse;}
 th{position:sticky;top:0;z-index:1;background:var(--surface2);font-family:var(--fm);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--t3);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border);}
 td{padding:7px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--t2);}
@@ -330,7 +346,7 @@ tr:hover td{background:var(--surface2);}
   <div class="nav-section">
     <div class="nav-label">Model</div>
     <div class="nav-item c-run" data-s="training" onclick="show('training',this)">
-      <span class="nav-icon">📉</span> Training Progress
+      <span class="nav-icon">📉</span> Training Metrics
     </div>
     <div class="nav-item c-run" data-s="changelog" onclick="show('changelog',this)">
       <span class="nav-icon">📝</span> Model Changelog
@@ -541,9 +557,7 @@ tr:hover td{background:var(--surface2);}
     <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-value" id="p-winrate">—</div><div class="kpi-delta" id="p-winrate-d"></div></div>
   </div>
 
-  <div class="alert-strip" id="perf-constraints">
-    <div class="alert-row"><span class="alert-icon">⏳</span><span class="alert-msg">Loading…</span></div>
-  </div>
+  <div class="alert-strip" id="perf-constraints" style="display:none"></div>
 
   <div class="card-row">
     <div class="chart-wrap">
@@ -567,13 +581,51 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
+  <!-- ── Round-by-Round Comparison ── -->
   <div class="card">
-    <div class="card-hdr">
-      <span class="card-title">Model Build History</span>
-      <span class="badge ds" id="build-badge">0 runs</span>
+    <div class="card-hdr" style="margin-bottom:14px">
+      <span class="card-title">Round-by-Round Comparison</span>
+      <div class="train-tab-bar" style="margin:0">
+        <button class="perf-phase-tab active" onclick="switchPerfTab('training',this)">Training</button>
+        <button class="perf-phase-tab" onclick="switchPerfTab('validation',this)">Validation</button>
+        <button class="perf-phase-tab" onclick="switchPerfTab('backtest',this)">Backtest</button>
+      </div>
     </div>
-    <div class="tbl-wrap" id="build-hist-tbl"><div class="empty">No runs recorded yet.</div></div>
+
+    <!-- Training phase -->
+    <div id="pp-training" class="perf-phase-panel">
+      <div class="round-cmp-grid">
+        <div class="chart-wrap" style="margin-bottom:0">
+          <div class="chart-title">Training — Sharpe, MDD, Return &amp; Trades per Round</div>
+          <div class="chart-box h260"><canvas id="ch-pf-train"></canvas></div>
+        </div>
+        <div class="tbl-wrap" id="pf-train-tbl" style="max-height:280px"><div class="empty">No training history yet. Run a Build pipeline first.</div></div>
+      </div>
+    </div>
+
+    <!-- Validation phase -->
+    <div id="pp-validation" class="perf-phase-panel hidden">
+      <div class="round-cmp-grid">
+        <div class="chart-wrap" style="margin-bottom:0">
+          <div class="chart-title">Validation — Sharpe, MDD, Return &amp; Trades per Round</div>
+          <div class="chart-box h260"><canvas id="ch-pf-val"></canvas></div>
+        </div>
+        <div class="tbl-wrap" id="pf-val-tbl" style="max-height:280px"><div class="empty">No validation data yet.</div></div>
+      </div>
+    </div>
+
+    <!-- Backtest phase -->
+    <div id="pp-backtest" class="perf-phase-panel hidden">
+      <div class="round-cmp-grid">
+        <div class="chart-wrap" style="margin-bottom:0">
+          <div class="chart-title">Backtest — Sharpe, MDD, Return &amp; Trades per Round</div>
+          <div class="chart-box h260"><canvas id="ch-pf-bt"></canvas></div>
+        </div>
+        <div class="tbl-wrap" id="pf-bt-tbl" style="max-height:280px"><div class="empty">No backtest data yet.</div></div>
+      </div>
+    </div>
   </div>
+
 </div>
 
 <!-- ════════════════════════════════════════════════
@@ -700,11 +752,11 @@ tr:hover td{background:var(--surface2);}
 </div>
 
 <!-- ════════════════════════════════════════════════
-     TRAINING PROGRESS
+     TRAINING METRICS
      ════════════════════════════════════════════════ -->
 <div id="s-training" class="section">
   <div class="page-hdr">
-    <div><div class="page-title">Training Progress</div><div class="page-sub">Round-by-round model improvement across training experiments</div></div>
+    <div><div class="page-title">Training Metrics</div><div class="page-sub">Round-by-round model improvement across training experiments</div></div>
     <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadTraining()">↻ Refresh</button></div>
   </div>
 
@@ -715,35 +767,80 @@ tr:hover td{background:var(--surface2);}
     <div class="kpi"><div class="kpi-label">Latest Val Sharpe</div><div class="kpi-value" id="tr-latest-val">—</div></div>
   </div>
 
-  <div class="card-row">
-    <div class="chart-wrap">
-      <div class="chart-title">Sharpe Ratio — Round by Round</div>
-      <div class="chart-box h260"><canvas id="ch-tr-sharpe"></canvas></div>
+  <!-- Phase tabs -->
+  <div class="train-tab-bar">
+    <button class="train-tab active" onclick="switchTrainTab('training',this)">Training</button>
+    <button class="train-tab" onclick="switchTrainTab('validation',this)">Validation</button>
+    <button class="train-tab" onclick="switchTrainTab('backtest',this)">Backtest</button>
+  </div>
+
+  <!-- ── Training panel ── -->
+  <div id="tt-training" class="train-panel">
+    <div class="card-row">
+      <div class="chart-wrap">
+        <div class="chart-title">Sharpe Ratio — Round by Round</div>
+        <div class="chart-box h260"><canvas id="ch-tr-sharpe-t"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Max Drawdown % — Round by Round (lower is better)</div>
+        <div class="chart-box h260"><canvas id="ch-tr-mdd-t"></canvas></div>
+      </div>
     </div>
     <div class="chart-wrap">
-      <div class="chart-title">Max Drawdown — Round by Round (lower is better)</div>
-      <div class="chart-box h260"><canvas id="ch-tr-mdd"></canvas></div>
+      <div class="chart-title">TD Loss &amp; Reward over Timesteps (last build run)</div>
+      <div class="chart-box h220"><canvas id="ch-tr-loss"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Training Progress Log</span></div>
+      <div class="tbl-wrap" id="train-progress-tbl"><div class="empty">No training progress data yet. Run a Build pipeline first.</div></div>
     </div>
   </div>
 
-  <div class="chart-wrap">
-    <div class="chart-title">Backtest Total Return &amp; CAGR — Round by Round</div>
-    <div class="chart-box h220"><canvas id="ch-tr-return"></canvas></div>
+  <!-- ── Validation panel ── -->
+  <div id="tt-validation" class="train-panel hidden">
+    <div id="val-no-data" class="empty" style="display:none;padding:24px 0">No validation metrics recorded. Validation metrics (val_sharpe, val_mdd_pct) are populated when training completes. Loss &amp; Reward curves are on the Training tab.</div>
+    <div id="val-charts-wrap">
+      <div class="card-row">
+        <div class="chart-wrap">
+          <div class="chart-title">Validation Sharpe — Round by Round</div>
+          <div class="chart-box h260"><canvas id="ch-tr-val-sharpe"></canvas></div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-title">Validation Max Drawdown — Round by Round (lower is better)</div>
+          <div class="chart-box h260"><canvas id="ch-tr-val-mdd"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Validation Results by Run</span></div>
+        <div class="tbl-wrap" id="train-val-tbl"><div class="empty">No validation data yet.</div></div>
+      </div>
+    </div>
   </div>
 
-  <div class="chart-wrap">
-    <div class="chart-title">Training Loss &amp; Reward over Timesteps (available after retrain)</div>
-    <div class="chart-box h220"><canvas id="ch-tr-loss"></canvas></div>
-  </div>
-
-  <div class="card">
-    <div class="card-hdr"><span class="card-title">Constraint Checklist per Round</span></div>
-    <div class="tbl-wrap" id="train-constraint-tbl"><div class="empty">No data.</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-hdr"><span class="card-title">Full Training History</span></div>
-    <div class="tbl-wrap" id="train-hist-tbl"><div class="empty">No training history yet.</div></div>
+  <!-- ── Backtest panel ── -->
+  <div id="tt-backtest" class="train-panel hidden">
+    <div class="card-row">
+      <div class="chart-wrap">
+        <div class="chart-title">Backtest Sharpe — Round by Round</div>
+        <div class="chart-box h260"><canvas id="ch-tr-sharpe"></canvas></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Backtest Max Drawdown — Round by Round (lower is better)</div>
+        <div class="chart-box h260"><canvas id="ch-tr-mdd"></canvas></div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Backtest Total Return &amp; CAGR — Round by Round</div>
+      <div class="chart-box h220"><canvas id="ch-tr-return"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Constraint Checklist per Round</span></div>
+      <div class="tbl-wrap" id="train-constraint-tbl"><div class="empty">No data.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Full Training History</span></div>
+      <div class="tbl-wrap" id="train-hist-tbl"><div class="empty">No training history yet.</div></div>
+    </div>
   </div>
 </div>
 
@@ -821,6 +918,14 @@ tr:hover td{background:var(--surface2);}
   <div class="page-hdr">
     <div><div class="page-title">Model Changelog</div><div class="page-sub">Track every model improvement — reward changes, hyperparameters, features, data updates</div></div>
     <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadChangelog()">↻ Refresh</button></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-hdr">
+      <span class="card-title">Model Build History</span>
+      <span class="badge ds" id="build-badge">0 runs</span>
+    </div>
+    <div class="tbl-wrap" id="build-hist-tbl"><div class="empty">No runs recorded yet.</div></div>
   </div>
 
   <div class="tbl-wrap" id="cl-tbl"><div class="empty">Loading…</div></div>
@@ -1931,12 +2036,16 @@ async function loadPerformance() {
     set('p-winrate',fmtPctRaw(parseFloat(p.win_rate_pct??p.win_rate??0),1), '');
 
     const constraints=summary.constraints||[];
+    const perfCons=document.getElementById('perf-constraints');
     if(constraints.length) {
-      document.getElementById('perf-constraints').innerHTML=constraints.map(c=>{
+      perfCons.style.display='';
+      perfCons.innerHTML=constraints.map(c=>{
         const ok=c.passed||c.status==='pass'||c.status==='ok';
         const cls=ok?'ok':(c.status==='warn'?'warn':'err');
         return `<div class="alert-row ${cls}"><span class="alert-icon">${ok?'✓':(cls==='warn'?'⚠':'✗')}</span><span class="alert-msg">${c.name||c.constraint}: <strong>${c.value??''}</strong></span><span class="alert-tag">${c.threshold??''}</span></div>`;
       }).join('');
+    } else {
+      perfCons.style.display='none';
     }
 
     if(daily&&daily.length) {
@@ -1983,20 +2092,104 @@ async function loadPerformance() {
       ]},{scales:{x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3,maxTicksLimit:12}},y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3},min:0,max:100}}});
     }
 
-    const rows=Array.isArray(history)?history:(history.runs||[]);
-    const histEl=document.getElementById('build-hist-tbl');
-    const badge=document.getElementById('build-badge');
-    if(rows.length) {
-      if(badge) badge.textContent=`${rows.length} runs`;
-      histEl.innerHTML=mkTbl(rows.slice().reverse(),[
-        {key:'run_date',label:'Date',mono:true},{key:'instrument',label:'Instrument'},
-        {key:'timesteps',label:'Timesteps',mono:true,right:true},{key:'seeds',label:'Seeds',mono:true,right:true},
-        {key:'val_sharpe',label:'Val Sharpe',mono:true,right:true},
-        {key:'backtest_return_pct',label:'Return%',mono:true,right:true},
-        {key:'sharpe_ratio',label:'Sharpe',mono:true,right:true},
-        {key:'max_drawdown_pct',label:'Max DD%',mono:true,right:true},{key:'notes',label:'Notes'}
-      ]);
-    } else { histEl.innerHTML='<div class="empty">No build history recorded yet.</div>'; }
+    // ── Round-by-Round Comparison ── all 3 tabs from training-history ──
+    // Same structure across Training / Validation / Backtest: Sharpe | MDD | Return | Trades
+    // x-axis = run index; goal is to see trend as model is fine-tuned across rounds.
+    try {
+      const history2 = await api('/api/v1/training-history').catch(()=>[]);
+      const hRows = Array.isArray(history2)?history2:(history2.runs||[]);
+      const hLabels = hRows.map((r,i)=>`R${i+1}`);  // short run labels to avoid x-axis clutter
+
+      // Shared chart config factory — same scale structure for all 3 panels
+      const cmpScales = {
+        x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3}},
+        y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3},title:{display:true,text:'Sharpe / MDD / Return',color:C.t3,font:{size:9}}},
+        y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3},title:{display:true,text:'Trades',color:C.t3,font:{size:9}}}
+      };
+      const tblCols = [
+        {key:'run',label:'Run'},
+        {key:'sharpe',label:'Sharpe',mono:true,right:true},
+        {key:'mdd',label:'MDD %',mono:true,right:true},
+        {key:'ret',label:'Return %',mono:true,right:true},
+        {key:'trades',label:'Trades',mono:true,right:true}
+      ];
+
+      if(hRows.length) {
+        // ── Training panel ──────────────────────────────────────────────────────
+        // No separate training-phase metrics in DB. Use backtest outcome (post-train
+        // results) + timesteps on right axis to show training effort vs outcome.
+        const trSharpe    = hRows.map(r=>parseFloat(r.backtest_sharpe??0)||null);
+        const trMdd       = hRows.map(r=>Math.abs(parseFloat(r.backtest_mdd_pct??0))||null);
+        const trRet       = hRows.map(r=>parseFloat(r.backtest_return_pct??0)||null);
+        const trTimesteps = hRows.map(r=>parseInt(r.timesteps??0)||null);
+        mkChart('ch-pf-train','line',{labels:hLabels,datasets:[
+          {label:'Post-Train Sharpe',data:trSharpe,borderColor:C.ds,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y'},
+          {label:'Post-Train MDD %',data:trMdd,borderColor:C.danger,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y',borderDash:[4,2]},
+          {label:'Post-Train Return %',data:trRet,borderColor:C.run,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y',borderDash:[2,2]},
+          {label:'Timesteps (k)',data:trTimesteps.map(v=>v?Math.round(v/1000):null),borderColor:C.mon,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y1',borderDash:[6,2]}
+        ]},{scales:{
+          x:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3}},
+          y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3},title:{display:true,text:'Sharpe / MDD / Return',color:C.t3,font:{size:9}}},
+          y1:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3},title:{display:true,text:'Timesteps (k)',color:C.t3,font:{size:9}}}
+        }});
+        const pfTrainTbl = document.getElementById('pf-train-tbl');
+        if(pfTrainTbl) pfTrainTbl.innerHTML = mkTbl(
+          hRows.map((r,i)=>({
+            run:hLabels[i],
+            sharpe:fmt(parseFloat(r.backtest_sharpe??0),3),
+            mdd:fmtPctRaw(Math.abs(parseFloat(r.backtest_mdd_pct??0)),1),
+            ret:fmtPctRaw(parseFloat(r.backtest_return_pct??0),1),
+            trades:r.timesteps?`${Math.round(parseInt(r.timesteps)/1000)}k`:'—'
+          })),
+          [{key:'run',label:'Run'},{key:'sharpe',label:'Sharpe',mono:true,right:true},{key:'mdd',label:'MDD %',mono:true,right:true},{key:'ret',label:'Return %',mono:true,right:true},{key:'trades',label:'Timesteps',mono:true,right:true}]
+        );
+
+        // ── Validation panel ── val_sharpe (proxy=backtest_sharpe) / val_mdd_pct / val_cagr_pct
+        // Note: val_sharpe == backtest_sharpe in the API (no separate val DB column).
+        // val_mdd_pct and val_cagr_pct are best-available proxies from training history.
+        const valSharpe = hRows.map(r=>parseFloat(r.val_sharpe??r.backtest_sharpe??0)||null);
+        const valMdd    = hRows.map(r=>Math.abs(parseFloat(r.val_mdd_pct??r.backtest_mdd_pct??0))||null);
+        const valRet    = hRows.map(r=>parseFloat(r.val_cagr_pct??r.backtest_cagr_pct??r.backtest_return_pct??0)||null);
+        const valTrades = hRows.map(r=>parseInt(r.val_trade_count??r.backtest_trade_count??0)||null);
+        mkChart('ch-pf-val','line',{labels:hLabels,datasets:[
+          {label:'Val Sharpe',data:valSharpe,borderColor:C.ds,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y'},
+          {label:'Val MDD %',data:valMdd,borderColor:C.danger,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y',borderDash:[4,2]},
+          {label:'Val CAGR %',data:valRet,borderColor:C.run,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y',borderDash:[2,2]},
+          {label:'Trades',data:valTrades,borderColor:C.mon,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y1',borderDash:[6,2]}
+        ]},{scales:cmpScales});
+        const pfValTbl = document.getElementById('pf-val-tbl');
+        if(pfValTbl) pfValTbl.innerHTML = mkTbl(
+          hRows.map((r,i)=>({
+            run:hLabels[i],
+            sharpe:fmt(parseFloat(r.val_sharpe??r.backtest_sharpe??0),3),
+            mdd:fmtPctRaw(Math.abs(parseFloat(r.val_mdd_pct??r.backtest_mdd_pct??0)),1),
+            ret:fmtPctRaw(parseFloat(r.val_cagr_pct??r.backtest_cagr_pct??r.backtest_return_pct??0),1),
+            trades:r.val_trade_count??r.backtest_trade_count??'—'
+          })), tblCols);
+
+        // ── Backtest panel ── backtest_sharpe / backtest_mdd_pct / backtest_return_pct / backtest_trade_count
+        const btSharpe = hRows.map(r=>parseFloat(r.backtest_sharpe??r.sharpe_ratio??r.sharpe??0)||null);
+        const btMdd    = hRows.map(r=>Math.abs(parseFloat(r.backtest_mdd_pct??r.max_drawdown_pct??0))||null);
+        const btRet    = hRows.map(r=>parseFloat(r.backtest_return_pct??r.total_return_pct??0)||null);
+        const btTrades = hRows.map(r=>parseInt(r.backtest_trade_count??r.trade_count??0)||null);
+        mkChart('ch-pf-bt','line',{labels:hLabels,datasets:[
+          {label:'BT Sharpe',data:btSharpe,borderColor:C.ds,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y'},
+          {label:'BT MDD %',data:btMdd,borderColor:C.danger,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y',borderDash:[4,2]},
+          {label:'BT Return %',data:btRet,borderColor:C.run,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y',borderDash:[2,2]},
+          {label:'Trades',data:btTrades,borderColor:C.mon,backgroundColor:'transparent',borderWidth:1.5,pointRadius:3,spanGaps:false,yAxisID:'y1',borderDash:[6,2]}
+        ]},{scales:cmpScales});
+        const pfBtTbl = document.getElementById('pf-bt-tbl');
+        if(pfBtTbl) pfBtTbl.innerHTML = mkTbl(
+          hRows.map((r,i)=>({
+            run:hLabels[i],
+            sharpe:r.backtest_sharpe!=null?fmt(parseFloat(r.backtest_sharpe??r.sharpe_ratio??r.sharpe??0),3):'—',
+            mdd:r.backtest_mdd_pct!=null?fmtPctRaw(Math.abs(parseFloat(r.backtest_mdd_pct??r.max_drawdown_pct??0)),1):'—',
+            ret:r.backtest_return_pct!=null?fmtPctRaw(parseFloat(r.backtest_return_pct??r.total_return_pct??0),1):'—',
+            trades:r.backtest_trade_count??r.trade_count??'—'
+          })), tblCols);
+      }
+    } catch(e2){ console.warn('perf-round-cmp:',e2); }
+
   } catch(e){ console.warn('Performance:',e); }
 }
 
@@ -2257,7 +2450,23 @@ async function loadExplain() {
   } catch(e){ console.warn('Explain:',e); }
 }
 
-// ─── TRAINING PROGRESS ─────────────────────────────────────────
+// ─── TRAINING METRICS ──────────────────────────────────────────
+function switchTrainTab(tab, el) {
+  document.querySelectorAll('.train-tab').forEach(t=>t.classList.remove('active'));
+  el?.classList.add('active');
+  document.querySelectorAll('.train-panel').forEach(p=>p.classList.add('hidden'));
+  const panel=document.getElementById('tt-'+tab);
+  if(panel) panel.classList.remove('hidden');
+}
+
+function switchPerfTab(tab, el) {
+  document.querySelectorAll('.perf-phase-tab').forEach(t=>t.classList.remove('active'));
+  el?.classList.add('active');
+  document.querySelectorAll('.perf-phase-panel').forEach(p=>p.classList.add('hidden'));
+  const panel=document.getElementById('pp-'+tab);
+  if(panel) panel.classList.remove('hidden');
+}
+
 async function loadTraining() {
   try {
     const [history, progress] = await Promise.all([
@@ -2267,44 +2476,93 @@ async function loadTraining() {
     const rows=Array.isArray(history)?history:(history.runs||[]);
     const el=id=>document.getElementById(id);
     if(el('tr-rounds')) el('tr-rounds').textContent=rows.length;
+
     if(rows.length) {
-      const sharpes=rows.map(r=>parseFloat(r.sharpe_ratio??r.sharpe??0)).filter(v=>!isNaN(v));
+      const btSharpes=rows.map(r=>parseFloat(r.backtest_sharpe??r.sharpe_ratio??r.sharpe??0)).filter(v=>!isNaN(v)&&v!==0);
       const latest=rows[rows.length-1];
-      if(el('tr-best-sharpe')) el('tr-best-sharpe').textContent=fmt(Math.max(...sharpes),2);
-      if(el('tr-latest-ret')) el('tr-latest-ret').textContent=fmtPctRaw(parseFloat(latest.total_return_pct??latest.total_return??0),1);
+      if(el('tr-best-sharpe')) el('tr-best-sharpe').textContent=btSharpes.length?fmt(Math.max(...btSharpes),2):'—';
+      if(el('tr-latest-ret')) el('tr-latest-ret').textContent=fmtPctRaw(parseFloat(latest.backtest_return_pct??latest.total_return_pct??latest.total_return??0),1);
       if(el('tr-latest-val')) el('tr-latest-val').textContent=fmt(latest.val_sharpe??0,2);
 
-      const labels=rows.map((r,i)=>r.run_date||`Run ${i+1}`);
-      mkChart('ch-tr-sharpe','line',{labels,datasets:[
-        {label:'Backtest Sharpe',data:rows.map(r=>parseFloat(r.sharpe_ratio??r.sharpe??0)),borderColor:C.build,backgroundColor:C.buildBg,borderWidth:2,pointRadius:4,fill:true},
-        {label:'Val Sharpe',data:rows.map(r=>parseFloat(r.val_sharpe??0)),borderColor:C.ds,backgroundColor:'transparent',borderWidth:2,pointRadius:4,borderDash:[4,2]}
+      const labels=rows.map((r,i)=>r.timestamp?.slice(0,10)||`Run ${i+1}`);
+      const btSharpeData=rows.map(r=>parseFloat(r.backtest_sharpe??r.sharpe_ratio??r.sharpe??0)||null);
+      const valSharpeData=rows.map(r=>{ const v=parseFloat(r.val_sharpe); return isNaN(v)||v===0?null:v; });
+      const btMddData=rows.map(r=>Math.abs(parseFloat(r.backtest_mdd_pct??r.max_drawdown_pct??r.max_drawdown??0))||null);
+
+      // ── Training tab: Sharpe + MDD per round (same structure as Validation/Backtest) ──
+      mkChart('ch-tr-sharpe-t','line',{labels,datasets:[
+        {label:'Sharpe',data:btSharpeData,borderColor:C.build,backgroundColor:C.buildBg,borderWidth:2,pointRadius:5,fill:true,spanGaps:false}
       ]});
-      mkChart('ch-tr-mdd','line',{labels,datasets:[
-        {label:'Max DD %',data:rows.map(r=>Math.abs(parseFloat(r.max_drawdown_pct??r.max_drawdown??0))),borderColor:C.danger,backgroundColor:C.dangerBg,borderWidth:2,pointRadius:4,fill:true}
-      ]});
-      mkChart('ch-tr-return','bar',{labels,datasets:[
-        {label:'Total Return %',data:rows.map(r=>parseFloat(r.total_return_pct??r.total_return??0)),backgroundColor:C.buildBg,borderColor:C.build,borderWidth:1.5},
-        {label:'CAGR %',data:rows.map(r=>parseFloat(r.cagr_pct??r.cagr??0)),backgroundColor:C.dsBg,borderColor:C.ds,borderWidth:1.5}
+      mkChart('ch-tr-mdd-t','line',{labels,datasets:[
+        {label:'Max DD %',data:btMddData,borderColor:C.danger,backgroundColor:C.dangerBg,borderWidth:2,pointRadius:5,fill:true,spanGaps:false}
       ]});
 
+      // ── Backtest tab charts ──
+      mkChart('ch-tr-sharpe','line',{labels,datasets:[
+        {label:'Backtest Sharpe',data:btSharpeData,borderColor:C.build,backgroundColor:C.buildBg,borderWidth:2,pointRadius:5,fill:true,spanGaps:false},
+        {label:'Val Sharpe',data:valSharpeData,borderColor:C.ds,backgroundColor:'transparent',borderWidth:2,pointRadius:5,borderDash:[4,2],spanGaps:false}
+      ]});
+      mkChart('ch-tr-mdd','line',{labels,datasets:[
+        {label:'Backtest Max DD %',data:btMddData,borderColor:C.danger,backgroundColor:C.dangerBg,borderWidth:2,pointRadius:5,fill:true,spanGaps:false}
+      ]});
+      mkChart('ch-tr-return','bar',{labels,datasets:[
+        {label:'BT Return %',data:rows.map(r=>parseFloat(r.backtest_return_pct??r.total_return_pct??r.total_return??0)||null),backgroundColor:C.buildBg,borderColor:C.build,borderWidth:1.5},
+        {label:'BT CAGR %',data:rows.map(r=>parseFloat(r.backtest_cagr_pct??r.cagr_pct??r.cagr??0)||null),backgroundColor:C.dsBg,borderColor:C.ds,borderWidth:1.5}
+      ]});
+
+      // ── Validation tab: show/hide based on data availability ──
+      const hasValData=valSharpeData.some(v=>v!==null);
+      const valNoData=el('val-no-data'), valChartsWrap=el('val-charts-wrap');
+      if(valNoData) valNoData.style.display=hasValData?'none':'';
+      if(valChartsWrap) valChartsWrap.style.display=hasValData?'':'none';
+      if(hasValData) {
+        mkChart('ch-tr-val-sharpe','line',{labels,datasets:[
+          {label:'Val Sharpe',data:valSharpeData,borderColor:C.ds,backgroundColor:C.dsBg,borderWidth:2,pointRadius:5,fill:true,spanGaps:false}
+        ]});
+        mkChart('ch-tr-val-mdd','line',{labels,datasets:[
+          {label:'Val Max DD %',data:rows.map(r=>Math.abs(parseFloat(r.val_mdd_pct??0))||null),borderColor:C.danger,backgroundColor:C.dangerBg,borderWidth:2,pointRadius:5,fill:true,spanGaps:false}
+        ]});
+        el('train-val-tbl').innerHTML=mkTbl(rows.slice().reverse(),[
+          {key:'timestamp',label:'Date',mono:true},{key:'instrument',label:'Instrument'},
+          {key:'round',label:'Round',mono:true,right:true},
+          {key:'val_sharpe',label:'Val Sharpe',mono:true,right:true},
+          {key:'val_cagr_pct',label:'Val CAGR%',mono:true,right:true},
+          {key:'val_mdd_pct',label:'Val Max DD%',mono:true,right:true},{key:'notes',label:'Notes'}
+        ]);
+      }
+
+      // ── Backtest tab: constraint checklist computed from actual values ──
       const cRows=rows.map((r,i)=>{
-        const cs=r.constraints||[];
-        return {run:r.run_date||`Run ${i+1}`,sharpe:fmt(r.sharpe_ratio??r.sharpe??0,2),
-          mdd:fmtPctRaw(r.max_drawdown_pct??r.max_drawdown??0,1),
-          constraints_pass:`${cs.filter(c=>c.passed||c.status==='pass').length}/${cs.length||'—'}`,notes:r.notes||''};
+        const sh=parseFloat(r.backtest_sharpe??r.sharpe_ratio??r.sharpe??0);
+        const md=Math.abs(parseFloat(r.backtest_mdd_pct??r.max_drawdown_pct??r.max_drawdown??0));
+        const sharpeOk=sh>=0.5, mddOk=md<=25;
+        return {
+          run:r.timestamp?.slice(0,10)||`Run ${i+1}`,
+          sharpe:sh?fmt(sh,3):'—',
+          mdd:md?fmtPctRaw(md,1):'—',
+          sharpe_ok:sharpeOk?'✓ ≥0.5':'✗ <0.5',
+          mdd_ok:mddOk?'✓ ≤25%':'✗ >25%',
+          trades:r.backtest_trade_count||'—',
+          notes:r.notes||''
+        };
       });
-      document.getElementById('train-constraint-tbl').innerHTML=mkTbl(cRows,[
-        {key:'run',label:'Run',mono:true},{key:'sharpe',label:'Sharpe',mono:true,right:true},
-        {key:'mdd',label:'Max DD%',mono:true,right:true},{key:'constraints_pass',label:'Constraints',mono:true,right:true},{key:'notes',label:'Notes'}
+      el('train-constraint-tbl').innerHTML=mkTbl(cRows,[
+        {key:'run',label:'Run',mono:true},{key:'sharpe',label:'BT Sharpe',mono:true,right:true},
+        {key:'sharpe_ok',label:'Sharpe OK',mono:true},{key:'mdd',label:'BT Max DD%',mono:true,right:true},
+        {key:'mdd_ok',label:'MDD OK',mono:true},{key:'trades',label:'Trades',mono:true,right:true},{key:'notes',label:'Notes'}
       ]);
-      document.getElementById('train-hist-tbl').innerHTML=mkTbl(rows.slice().reverse(),[
-        {key:'run_date',label:'Date',mono:true},{key:'instrument',label:'Instrument'},
-        {key:'timesteps',label:'Timesteps',mono:true,right:true},{key:'seeds',label:'Seeds',mono:true,right:true},
-        {key:'val_sharpe',label:'Val Sharpe',mono:true,right:true},{key:'sharpe_ratio',label:'Sharpe',mono:true,right:true},
-        {key:'total_return_pct',label:'Return%',mono:true,right:true},{key:'max_drawdown_pct',label:'Max DD%',mono:true,right:true},{key:'notes',label:'Notes'}
+      el('train-hist-tbl').innerHTML=mkTbl(rows.slice().reverse(),[
+        {key:'timestamp',label:'Date',mono:true},{key:'instrument',label:'Instrument'},
+        {key:'timesteps',label:'Timesteps',mono:true,right:true},
+        {key:'backtest_sharpe',label:'BT Sharpe',mono:true,right:true},
+        {key:'val_sharpe',label:'Val Sharpe',mono:true,right:true},
+        {key:'backtest_return_pct',label:'BT Return%',mono:true,right:true},
+        {key:'backtest_mdd_pct',label:'BT Max DD%',mono:true,right:true},
+        {key:'backtest_trade_count',label:'Trades',mono:true,right:true},{key:'notes',label:'Notes'}
       ]);
     }
 
+    // ── Training tab: loss/reward chart + progress log ──
     if(progress&&progress.length) {
       const pLabels=progress.map(r=>r.timestep??r.step);
       mkChart('ch-tr-loss','line',{labels:pLabels,datasets:[
@@ -2315,6 +2573,12 @@ async function loadTraining() {
         y:{grid:{color:C.grid},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3}},
         y2:{position:'right',grid:{display:false},ticks:{font:{family:"'IBM Plex Mono'",size:9},color:C.t3}}
       }});
+      const progEl=el('train-progress-tbl');
+      if(progEl) progEl.innerHTML=mkTbl(progress.slice(0,100),[
+        {key:'timestep',label:'Timestep',mono:true,right:true},
+        {key:'td_loss',label:'TD Loss',mono:true,right:true},
+        {key:'reward',label:'Reward',mono:true,right:true}
+      ]);
     }
   } catch(e){ console.warn('Training:',e); }
 }
@@ -2398,15 +2662,41 @@ async function loadMCP() {
 
 // ─── MODEL CHANGELOG ───────────────────────────────────────────
 async function loadChangelog() {
+  // ── Build history (top card) ──
+  try {
+    const history=await api('/api/v1/training-history').catch(()=>[]);
+    const rows=Array.isArray(history)?history:(history.runs||[]);
+    const histEl=document.getElementById('build-hist-tbl');
+    const badge=document.getElementById('build-badge');
+    if(rows.length) {
+      if(badge) badge.textContent=`${rows.length} runs`;
+      if(histEl) histEl.innerHTML=mkTbl(rows.slice().reverse(),[
+        {key:'timestamp',label:'Date',mono:true},{key:'instrument',label:'Instrument'},
+        {key:'timesteps',label:'Timesteps',mono:true,right:true},
+        {key:'backtest_sharpe',label:'BT Sharpe',mono:true,right:true},
+        {key:'val_sharpe',label:'Val Sharpe',mono:true,right:true},
+        {key:'backtest_return_pct',label:'BT Return%',mono:true,right:true},
+        {key:'backtest_mdd_pct',label:'BT Max DD%',mono:true,right:true},{key:'notes',label:'Notes'}
+      ]);
+    } else if(histEl) {
+      histEl.innerHTML='<div class="empty">No build history recorded yet.</div>';
+    }
+  } catch(e){ /* silently skip if API unavailable */ }
+
+  // ── Changelog entries ──
   try {
     const data=await api('/api/v1/changelog');
     const rows=Array.isArray(data)?data:(data.entries||[]);
-    document.getElementById('cl-tbl').innerHTML=mkTbl(rows.slice().reverse(),[
-      {key:'date',label:'Date',mono:true},{key:'version',label:'Version',mono:true},
-      {key:'category',label:'Category'},{key:'change',label:'Change'},{key:'notes',label:'Notes'}
-    ]);
+    document.getElementById('cl-tbl').innerHTML=rows.length
+      ? mkTbl(rows.slice().reverse(),[
+          {key:'date',label:'Date',mono:true},{key:'version',label:'Version',mono:true},
+          {key:'category',label:'Category'},{key:'change',label:'Change'},{key:'notes',label:'Notes'}
+        ])
+      : '<div class="empty">No changelog entries yet. Add one below.</div>';
     document.getElementById('cl-date').value=new Date().toISOString().slice(0,10);
-  } catch(e){ document.getElementById('cl-tbl').innerHTML='<div class="empty">Could not load changelog.</div>'; }
+  } catch(e){
+    document.getElementById('cl-tbl').innerHTML=`<div class="empty">Could not load changelog: ${e.message}</div>`;
+  }
 }
 
 async function saveChangelog() {

@@ -30,17 +30,18 @@ It gives all agents the essential context they need without re-reading the codeb
 
 ## Spec Files — Read Before Touching Code
 
-All spec files live in `riia-jun-release/`. **Read the relevant spec before reading any source code.**
+All spec files live in `riia-jun-release/specs/`. **Read the relevant spec before reading any source code.**
 Specs are pre-digested summaries — reading them first avoids loading large source files and cuts token usage significantly.
 
 | Spec file | Read when... |
 |---|---|
-| `Spec_Python_Code.md` | Writing or reviewing any Python (routes, services, repos, core) |
-| `Spec_DB.md` | Touching the database, migrations, ORM models, seeding, or any repository class |
-| `Spec_Data.md` | Reading or writing data files; touching data_loader, seeding, or output paths |
-| `Spec_JS_Code.md` | Writing or reviewing any JS in `dashboard/js/` |
-| `Spec_HTML_Code.md` | Writing or reviewing any HTML in `dashboard/` |
-| `Spec_Chat_Feature.md` | Touching the chat pipeline, classifier, or `/api/v1/chat` endpoints |
+| `specs/Spec_Python_Code.md` | Writing or reviewing any Python (routes, services, repos, core) |
+| `specs/Spec_DB.md` | Touching the database, migrations, ORM models, seeding, or any repository class |
+| `specs/Spec_Data.md` | Reading or writing data files; touching data_loader, seeding, or output paths |
+| `specs/Spec_JS_Code.md` | Writing or reviewing any JS in `dashboard/js/` |
+| `specs/Spec_HTML_Code.md` | Writing or reviewing any HTML in `dashboard/` |
+| `specs/Spec_Chat_Feature.md` | Touching the chat pipeline, classifier, or `/api/v1/chat` endpoints |
+| `specs/Spec_RITA_App.md` | General app overview and architecture |
 
 **Maintenance rule (Definition of Done):** If a code change alters an API contract, data schema, data file layout, or architectural pattern, the relevant spec file **must be updated in the same commit**. A change is not done until the spec reflects it.
 
@@ -49,7 +50,7 @@ Specs are pre-digested summaries — reading them first avoids loading large sou
 ## Token Efficiency Rules (ALL agents must follow)
 
 1. **Never read `production_ready.md` in full.** Pass only the relevant section as an excerpt.
-2. **Read spec files first, source files second** — specs are in `riia-jun-release/Spec_*.md`; use them to orient before touching code.
+2. **Read spec files first, source files second** — specs are in `riia-jun-release/specs/`; use them to orient before touching code.
 3. **Read large files in slices** — max 400 lines at a time, targeted at the section being modified.
    - `rest_api.py` = 1,533 lines | `rita.html` = 4,000 lines | `fno.html` = 3,500 lines
 4. **Read `PLAN_STATUS.md` first** — it tells you what's done and what's next. Don't re-explore.

@@ -84,9 +84,14 @@ class TrainingConfig:
 @dataclass
 class TrainingOutcome:
     model_path:      str
-    sharpe:          float
-    max_drawdown:    float
-    total_return:    float
+    sharpe:          float       # validation-phase Sharpe
+    max_drawdown:    float       # validation-phase MDD (fraction)
+    total_return:    float       # validation-phase total return (fraction)
+    val_trades:      int = 0
+    train_sharpe:    float = 0.0
+    train_mdd:       float = 0.0
+    train_return:    float = 0.0
+    train_trades:    int = 0
     episode_metrics: list[dict] = field(default_factory=list)
     """Each dict: timestep, loss, ep_rew_mean."""
     seed_results:    dict = field(default_factory=dict)
@@ -105,8 +110,6 @@ def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
                      Called every 1000 timesteps with {timestep, loss, ep_rew_mean}.
     """  # noqa: D401
     """Load data, train Double-DQN, validate, save model, return real metrics."""
-    import numpy as np
-
     from rita.core.data_loader import load_nifty_csv
     from rita.core.data_understanding import find_instrument_csv
     from rita.core.technical_analyzer import calculate_indicators
@@ -164,17 +167,30 @@ def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
     log.info("ml_dispatch.training_complete", run_id=config.run_id, model_path=model_path)
 
     # ── 5. Validation episode → real performance metrics ──────────────────────
+    sharpe = 0.0; mdd = 0.0; total_return = 0.0; val_trades = 0
     try:
         val_result = run_episode(model, val_df)
         perf = val_result["performance"]
         sharpe       = perf["sharpe_ratio"]
-        mdd          = perf["max_drawdown_pct"] / 100.0   # store as fraction
+        mdd          = perf["max_drawdown_pct"] / 100.0
         total_return = perf["portfolio_total_return_pct"] / 100.0
+        val_trades   = int(perf.get("total_trades", 0))
     except Exception:
-        sharpe = 0.0
-        mdd = 0.0
-        total_return = 0.0
+        pass
     log.info("ml_dispatch.validation_complete", run_id=config.run_id, sharpe=round(sharpe, 3), mdd=round(mdd, 4))
+
+    # ── 5b. Training episode → train-phase metrics ────────────────────────────
+    train_sharpe = 0.0; train_mdd = 0.0; train_return = 0.0; train_trades = 0
+    try:
+        train_result = run_episode(model, train_df)
+        tp = train_result["performance"]
+        train_sharpe = tp["sharpe_ratio"]
+        train_mdd    = tp["max_drawdown_pct"] / 100.0
+        train_return = tp["portfolio_total_return_pct"] / 100.0
+        train_trades = int(tp.get("total_trades", 0))
+    except Exception:
+        pass
+    log.info("ml_dispatch.train_episode_complete", run_id=config.run_id, train_sharpe=round(train_sharpe, 3))
 
     # ── 6. Episode metrics from callback ─────────────────────────────────────
     episode_metrics = [
@@ -199,6 +215,11 @@ def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
         sharpe=round(sharpe, 4),
         max_drawdown=round(mdd, 4),
         total_return=round(total_return, 4),
+        val_trades=val_trades,
+        train_sharpe=round(train_sharpe, 4),
+        train_mdd=round(train_mdd, 4),
+        train_return=round(train_return, 4),
+        train_trades=train_trades,
         episode_metrics=episode_metrics,
         seed_results=training_metadata,
     )

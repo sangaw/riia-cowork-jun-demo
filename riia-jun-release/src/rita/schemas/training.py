@@ -29,9 +29,19 @@ class TrainingRun(TrainingRunBase):
     status: str = "pending"                 # pending / running / complete / failed
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
+    train_sharpe: Optional[float] = None
+    train_mdd: Optional[float] = None
+    train_return: Optional[float] = None
+    train_trades: Optional[int] = None
+    val_sharpe: Optional[float] = None
+    val_mdd: Optional[float] = None
+    val_return: Optional[float] = None
+    val_cagr: Optional[float] = None
+    val_trades: Optional[int] = None
     backtest_sharpe: Optional[float] = None
     backtest_mdd: Optional[float] = None
     backtest_return: Optional[float] = None
+    backtest_trades: Optional[int] = None
     model_path: Optional[str] = None        # path to .zip model file
     recorded_at: datetime
 

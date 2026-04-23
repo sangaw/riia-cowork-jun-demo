@@ -45,17 +45,17 @@ export async function loadTrades() {
     }
 
     // ── Phase legend labels — update with actual date ranges ─────────────────
-    const _yr = d => d ? d.slice(0, 4) : null;
+    const _lbl = d => { if (!d) return null; const dt = new Date(d + 'T00:00:00'); return dt.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }); };
     if (split) {
       const trainLabel = document.getElementById('tj-label-train');
       const valLabel   = document.getElementById('tj-label-val');
       const btLabel    = document.getElementById('tj-label-bt');
       if (trainLabel && split.train_start && split.train_end)
-        trainLabel.textContent = `Train (${_yr(split.train_start)}–${_yr(split.train_end)})`;
+        trainLabel.textContent = `Train (${_lbl(split.train_start)} – ${_lbl(split.train_end)})`;
       if (valLabel && split.val_start && split.val_end)
-        valLabel.textContent = `Validation (${_yr(split.val_start)}–${_yr(split.val_end)})`;
+        valLabel.textContent = `Validation (${_lbl(split.val_start)} – ${_lbl(split.val_end)})`;
       if (btLabel && split.backtest_start && split.backtest_end)
-        btLabel.textContent = `Backtest (${_yr(split.backtest_start)}–${_yr(split.backtest_end)})`;
+        btLabel.textContent = `Backtest (${_lbl(split.backtest_start)} – ${_lbl(split.backtest_end)})`;
     }
 
     // ── Phase KPI cards ──────────────────────────────────────────────────────

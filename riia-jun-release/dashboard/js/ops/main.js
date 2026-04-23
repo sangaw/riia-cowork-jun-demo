@@ -22,6 +22,7 @@ sectionLoaders['dailyops']      = () => { loadDailyOps(); loadInstruments(); };
 
 // ── Window bindings for inline onclick= attributes ────────────────────────────
 window.nav                = nav;
+window.refreshTestResults = loadTestResults;
 window.triggerSnapshot    = triggerSnapshot;
 window.loadChat           = loadChat;
 window.loadDailyOps       = loadDailyOps;
