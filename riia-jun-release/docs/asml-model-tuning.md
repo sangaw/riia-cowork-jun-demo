@@ -1,11 +1,27 @@
 # ASML Model — Sharpe Analysis & Tuning Recommendations
 
-**Model file:** `models/ASML/pipeline-b66e9dd9_b66e9dd9.zip`
-**Analysis date:** 2026-04-16
+---
+
+## Run 2 — current baseline (2026-04-23)
+
+Fixes applied: price-invariant ATR/MACD normalisation + timesteps 200k → 300k.
+
+| Metric | Value |
+|---|---|
+| Timesteps | 300,000 |
+| Total Return | 57.8% |
+| CAGR | 117.9% |
+| Sharpe Ratio | **2.95** |
+| Max Drawdown | **-6.1%** |
+| Win Rate | 35.6% |
+
+The model **significantly outperforms** the passive buy-and-hold benchmark (Run 1 B&H Sharpe ~1.30).
+MDD improved from -50.76% → -6.1%, confirming the agent now detects and responds to elevated volatility.
+Low win rate (35.6%) is expected for a trend-following RL agent — winning trades are larger in magnitude.
 
 ---
 
-## Training run baseline
+## Run 1 — original baseline (2026-04-16)
 
 | Metric | Value |
 |---|---|
@@ -126,20 +142,21 @@ data:
 
 ---
 
-## Priority order
+## Fix status
 
-| Priority | Action | File |
-|---|---|---|
-| 1 | Replace `atr_14/atr_mean` with `atr_14/Close*100` in `_get_obs()` and `run_episode()` | `trading_env.py` |
-| 1 | Replace `macd/(macd_std*3)` with `(macd/Close)*1000` in `_get_obs()` and `run_episode()` | `trading_env.py` |
-| 2 | Set `timesteps: 300000` | `config/instruments/asml.yaml` |
-| 3 | Add `start_year: 2010` filter | `asml.yaml` + `data_loader.py` |
+| Priority | Action | File | Status |
+|---|---|---|---|
+| 1 | Replace `atr_14/atr_mean` with `atr_14/Close*100` | `trading_env.py` | ✅ Done (2026-04-23) |
+| 1 | Replace `macd/(macd_std*3)` with `(macd/Close)*1000` | `trading_env.py` | ✅ Done (2026-04-23) |
+| 2 | Set `timesteps: 300000` | `config/instruments/asml.yaml` | ✅ Done (2026-04-23) |
+| 3 | Add `start_year: 2010` filter | `asml.yaml` + `data_loader.py` | ⏳ Deferred — not needed given Run 2 results |
 
 ---
 
-## Expected outcome after fixes
+## Next retune triggers
 
-With price-scale-invariant observations and 300k timesteps, the agent should:
-- Detect the 2022 vol spike and reduce allocation (lowering MDD from ~50% toward ~20–25%)
-- Track the 2023–2024 bull run with higher allocation (improving return capture)
-- Target Sharpe > 1.5 in the val period (vs 0.936 currently)
+Retune when any of the following occur:
+- New EUV generation ships (order cycle regime shift)
+- Sharpe drops below 1.5 over a rolling 6-month window
+- MDD exceeds -15% in live operation
+- New data extends beyond 2026 (recheck normalisation ranges)
