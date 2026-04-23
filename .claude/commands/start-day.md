@@ -15,8 +15,8 @@ Then identify, for each pending task, which skill file maps to it:
 | Task type | Skill file to use |
 |---|---|
 | Add/modify a FastAPI endpoint | `project-office/skills/skill-add-api-endpoint.md` |
-| Fix a frontend JS bug | `project-office/skills/skill-fix-js-bug.md` (Phase 2) |
-| Add a DB model or repository | `project-office/skills/skill-add-db-model.md` (Phase 2) |
+| Fix a frontend JS bug | `project-office/skills/skill-fix-js-bug.md` |
+| Add a DB model or repository | `project-office/skills/skill-add-db-model.md` |
 | Add a chat intent | `project-office/skills/skill-add-chat-intent.md` (Phase 3) |
 | End-of-day routine | Use `/end-day` command |
 
