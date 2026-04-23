@@ -81,8 +81,10 @@ dist/
 .ipynb_checkpoints/
 *.ipynb
 
-# ── Claude memory (local only, contains personal context) ────────────────────
-.claude/
+# ── Claude local settings (personal context — not shared) ────────────────────
+# Ignore contents but not the dir, so commands/ sub-exception works
+.claude/*
+!.claude/commands/
 
 # ── Terraform ─────────────────────────────────────────────────────────────────
 **/.terraform/
