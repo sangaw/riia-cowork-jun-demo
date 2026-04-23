@@ -89,13 +89,11 @@ async function selectInstrumentTab(id) {
   try { await api('/api/v1/instrument/select', 'POST', { instrument_id: id }).catch(() => {}); } catch (_) {}
   if (getCurrentSection() === 'market') {
     clearChat();
-    const data = await warmupChat();
+    const data = await warmupChat(true);
     if (data) { updateChips(data.chips); showAlerts(data.alerts); }
-  } else {
-    refreshChatChips();
   }
   await loadActiveInstrument();
-  await Promise.all([loadHealth(), loadPerfSummary(), loadDrift(), loadProgress()]);
+  await Promise.all([loadHealth(), loadPerfSummary(), loadDrift(), loadProgress(), loadMarketSignals()]);
 }
 
 // ── Active instrument pill ─────────────────────────────────

@@ -6,18 +6,27 @@ export let _currentSection = 'home';
 export let _mcpPollTimer = null;
 let _chatWarmedUp = false;
 
-export async function warmupChat() {
-  if (_chatWarmedUp) return null;
+export async function warmupChat(force = false) {
+  if (_chatWarmedUp && !force) return null;
   _chatWarmedUp = true;
   try {
     const inst = (localStorage.getItem('ritaInstrument') || 'NIFTY').toUpperCase();
     const res = await fetch(`${API}/api/v1/chat/warmup?instrument=${inst}`, { method: 'POST' });
     if (!res.ok) return null;
     const data = await res.json();
-    return { chips: data.chips || null, alerts: data.alerts || null };
+    return { chips: data.chips || _fallbackChips(), alerts: data.alerts || null };
   } catch {
-    return null;
+    return { chips: _fallbackChips(), alerts: null };
   }
+}
+
+function _fallbackChips() {
+  return [
+    { label: 'Overall market sentiment today?',   query: 'What is the current market sentiment?' },
+    { label: 'Is the market overbought/oversold?', query: 'Is the market overbought or oversold?' },
+    { label: 'How has RITA performed historically?', query: 'How has RITA model performed historically?' },
+    { label: '3-year return outlook?',             query: '3 year return estimate' },
+  ];
 }
 
 // Section loaders map — populated by main.js after all modules are imported

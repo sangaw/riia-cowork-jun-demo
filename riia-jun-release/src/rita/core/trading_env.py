@@ -107,9 +107,7 @@ class RIIATradingEnv(gym.Env):
         self.df = df.dropna(subset=required_cols).copy()
         self.episode_length = min(episode_length, len(self.df) - 1)
 
-        # Normalisation stats (computed once on the full dataset)
-        self._macd_std = float(self.df["macd"].std()) or 1.0
-        self._atr_mean = float(self.df["atr_14"].mean()) or 1.0
+        # ATR and MACD normalised as % of price — scale-invariant across all instruments and price regimes
 
         self.observation_space = spaces.Box(
             low=-3.0, high=3.0, shape=(self._n_features,), dtype=np.float32
@@ -131,12 +129,12 @@ class RIIATradingEnv(gym.Env):
         obs_list = [
             float(np.clip(row["daily_return"] * 10, -3, 3)),
             float(np.clip(row["rsi_14"] / 100.0, 0, 1)),
-            float(np.clip(row["macd"] / (self._macd_std * 3), -3, 3)),
+            float(np.clip((row["macd"] / row["Close"]) * 1000, -3, 3)),
             float(np.clip(row["bb_pct_b"], -0.5, 1.5)),
             float(np.clip(row["trend_score"], -1, 1)),
             float(self._current_allocation),
             float(1.0 - self._step_idx / self.episode_length),
-            float(np.clip(row["atr_14"] / self._atr_mean, 0, 3)),
+            float(np.clip(row["atr_14"] / row["Close"] * 100, 0, 3)),
         ]
         if self._use_ema_ratio:
             obs_list.append(float(np.clip((row["ema_ratio"] - 1.0) * 20, -3, 3)))
@@ -262,8 +260,6 @@ def run_episode(model: DQN, df: pd.DataFrame) -> dict:
     if len(data) == 0:
         raise ValueError("DataFrame has no valid rows after dropping NaN indicators.")
 
-    macd_std = float(data["macd"].std()) or 1.0
-    atr_mean = float(data["atr_14"].mean()) or 1.0
     has_ema  = "ema_ratio" in data.columns and not data["ema_ratio"].isna().all()
 
     portfolio_value = 1.0
@@ -281,12 +277,12 @@ def run_episode(model: DQN, df: pd.DataFrame) -> dict:
         obs_list = [
             float(np.clip(row["daily_return"] * 10, -3, 3)),
             float(np.clip(row["rsi_14"] / 100.0, 0, 1)),
-            float(np.clip(row["macd"] / (macd_std * 3), -3, 3)),
+            float(np.clip((row["macd"] / row["Close"]) * 1000, -3, 3)),
             float(np.clip(row["bb_pct_b"], -0.5, 1.5)),
             float(np.clip(row["trend_score"], -1, 1)),
             float(allocations[-1] if allocations else 0.0),
             float(1.0 - i / len(data)),
-            float(np.clip(row["atr_14"] / atr_mean, 0, 3)),
+            float(np.clip(row["atr_14"] / row["Close"] * 100, 0, 3)),
         ]
         if n_obs >= 9 and has_ema:
             obs_list.append(float(np.clip((row["ema_ratio"] - 1.0) * 20, -3, 3)))

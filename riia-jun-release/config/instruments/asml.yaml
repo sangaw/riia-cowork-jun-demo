@@ -4,7 +4,7 @@
 instrument: ASML
 
 training:
-  timesteps: 200000
+  timesteps: 300000
   learning_rate: 0.0002     # moderate LR; steadier price behaviour than NVIDIA
   buffer_size: 50000
   exploration_pct: 0.55

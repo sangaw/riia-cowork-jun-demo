@@ -188,7 +188,7 @@ export function updateChips(chips) {
 export function clearChat() {
   const box = document.getElementById('chat-messages');
   const ctx = _readGoalContext();
-  const inst = (localStorage.getItem('ritaInstrument') || 'this instrument');
+  const inst = (localStorage.getItem('ritaInstrument') || 'NIFTY');
   const parts = [`Hi! Ask me about the ${inst} instrument — returns, risk, allocation, or stress scenarios.`];
   if (ctx.portfolio_inr) parts.push(`Portfolio: **${_fmtInr(ctx.portfolio_inr)}**`);
   if (ctx.risk_tolerance) parts.push(`Risk: **${ctx.risk_tolerance}**`);

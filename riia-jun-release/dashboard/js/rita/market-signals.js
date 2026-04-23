@@ -38,7 +38,10 @@ export async function loadMarketSignals() {
   const inst = _getInstrument();
   try {
     const rows = await api(`/api/v1/market-signals?timeframe=${_msTimeframe}&periods=${periods}&instrument=${inst}`);
-    if (!rows || !rows.length) return;
+    if (!rows || !rows.length) {
+      setEl('ms-data-range', `No data available for ${inst}`);
+      return;
+    }
 
     const last = rows[rows.length - 1];
     const dates = rows.map(r => r.date);
