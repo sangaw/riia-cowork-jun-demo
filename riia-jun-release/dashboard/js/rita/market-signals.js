@@ -36,6 +36,7 @@ export function switchMsTab(tf) {
 export async function loadMarketSignals() {
   const periods = _msTimeframe === 'monthly' ? 60 : _msTimeframe === 'weekly' ? 104 : 252;
   const inst = _getInstrument();
+  setEl('ms-data-range', `Loading ${inst}…`);
   try {
     const rows = await api(`/api/v1/market-signals?timeframe=${_msTimeframe}&periods=${periods}&instrument=${inst}`);
     if (!rows || !rows.length) {

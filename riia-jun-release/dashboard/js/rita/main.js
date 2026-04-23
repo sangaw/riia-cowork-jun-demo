@@ -87,13 +87,18 @@ async function selectInstrumentTab(id) {
     t.classList.toggle('active', t.id === 'itab-' + id)
   );
   try { await api('/api/v1/instrument/select', 'POST', { instrument_id: id }).catch(() => {}); } catch (_) {}
-  if (getCurrentSection() === 'market') {
+  const section = getCurrentSection();
+  if (section === 'market') {
     clearChat();
     const data = await warmupChat(true);
     if (data) { updateChips(data.chips); showAlerts(data.alerts); }
   }
   await loadActiveInstrument();
-  await Promise.all([loadHealth(), loadPerfSummary(), loadDrift(), loadProgress(), loadMarketSignals()]);
+  const instrumentSections = new Set(['trades', 'performance', 'scenarios', 'risk', 'market-signals', 'diagnostics', 'explain']);
+  await Promise.all([
+    loadHealth(), loadPerfSummary(), loadDrift(), loadProgress(), loadMarketSignals(),
+    ...(instrumentSections.has(section) && _sectionLoaders[section] ? [_sectionLoaders[section]()] : []),
+  ]);
 }
 
 // ── Active instrument pill ─────────────────────────────────

@@ -19,6 +19,8 @@ export async function loadExport() {
 }
 
 // ── Pipeline step actions ──────────────────────────────────
+function _inst() { return (localStorage.getItem('ritaInstrument') || 'NIFTY').toUpperCase(); }
+
 export async function runGoal() {
   const btn = document.getElementById('btn-goal');
   btn.disabled = true; btn.textContent = 'Running...';
@@ -28,6 +30,7 @@ export async function runGoal() {
       target_return_pct: parseFloat(document.getElementById('inp-target').value),
       time_horizon_days: parseInt(document.getElementById('inp-horizon').value),
       risk_tolerance: document.querySelector('input[name="inp-risk"]:checked')?.value || 'moderate',
+      instrument: _inst(),
     });
     document.getElementById('goal-status-badge').className = 'badge ok';
     setEl('goal-status-badge', 'Done');
@@ -48,7 +51,7 @@ export async function runMarket() {
   const bdg = document.getElementById('market-status-badge');
   bdg.className = 'badge run'; bdg.textContent = 'Running';
   try {
-    const d = await api('/api/v1/market', 'POST');
+    const d = await api('/api/v1/market', 'POST', { instrument: _inst() });
     bdg.className = 'badge ok'; bdg.textContent = 'Done';
     renderMarketResult(d);
   } catch (e) {
@@ -64,7 +67,7 @@ export async function runStrategy() {
   btn.disabled = true; btn.textContent = 'Running...';
   document.getElementById('strategy-status-badge').className = 'badge run';
   try {
-    const d = await api('/api/v1/strategy', 'POST');
+    const d = await api('/api/v1/strategy', 'POST', { instrument: _inst() });
     document.getElementById('strategy-status-badge').className = 'badge ok';
     setEl('strategy-status-badge', 'Done');
     renderStepResult('strategy-result', d);
@@ -85,6 +88,7 @@ export async function runFullPipeline() {
     await api('/api/v1/pipeline', 'POST', {
       target_return_pct: 15, time_horizon_days: 365,
       risk_tolerance: 'moderate', timesteps: 200000, force_retrain: false,
+      instrument: _inst(),
     });
     await window._ritaRefresh();
     alert('Pipeline complete! Explore Performance and Risk tabs.');

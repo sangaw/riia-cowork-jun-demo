@@ -44,8 +44,9 @@ export async function loadHealth() {
     `);
 
     // Sharpe trend sparkline
+    const trendWrap = document.getElementById('sharpe-trend-wrap');
     if (d.sharpe_trend_last5 && d.sharpe_trend_last5.length > 1) {
-      document.getElementById('sharpe-trend-wrap').style.display = '';
+      if (trendWrap) { trendWrap.style.display = ''; trendWrap.innerHTML = ''; }
       requestAnimationFrame(() => mkChart('chart-sharpe-trend', {
         type: 'line',
         data: {
@@ -70,6 +71,9 @@ export async function loadHealth() {
           }
         }
       }));
+    } else if (trendWrap) {
+      trendWrap.style.display = '';
+      trendWrap.innerHTML = '<span style="font-size:11px;color:var(--t3)">Not enough runs yet</span>';
     }
   } catch (e) {
     const dot = document.getElementById('status-dot');
@@ -78,40 +82,33 @@ export async function loadHealth() {
   }
 }
 
-export async function loadMetrics() {
-  // loadMetrics no longer writes KPI strip elements (kpi-sharpe, kpi-mdd, kpi-cagr, kpi-days,
-  // constraints-badge). loadPerfSummary() is the sole writer for those — two writers on the
-  // same elements caused the visible flip on the overview page.
-  // loadMetrics is kept for future use (e.g. monitoring section) but does nothing on home.
-}
-
 export async function loadPerfSummary() {
   try {
     const d = await api('/api/v1/performance-summary');
+    const activeInst = (d._active_instrument_id || 'this instrument').toUpperCase();
     const stale = d._run_instrument_id && d._active_instrument_id &&
                   d._run_instrument_id !== d._active_instrument_id;
     if (stale) {
-      // Output files belong to a different instrument — show blanks
       ['kpi-return','kpi-cagr','kpi-sharpe','kpi-mdd','kpi-winrate'].forEach(id => {
         setEl(id, '—');
         const el = document.getElementById(id);
         if (el) el.className = 'kpi-value';
       });
-      setEl('kpi-bnh', 'No backtest yet');
+      setEl('kpi-bnh', `No ${activeInst} results yet`);
       setEl('kpi-cagr-bnh', '');
-      setEl('kpi-days', 'Run pipeline');
+      setEl('kpi-days', `Run pipeline for ${activeInst}`);
       return;
     }
-    // No completed backtest data for this instrument — clear KPIs explicitly
+    // No completed backtest data for this instrument
     if (d.portfolio_total_return_pct == null) {
       ['kpi-return','kpi-cagr','kpi-sharpe','kpi-mdd','kpi-winrate'].forEach(id => {
         setEl(id, '—');
         const el = document.getElementById(id);
         if (el) el.className = 'kpi-value';
       });
-      setEl('kpi-bnh', 'No backtest yet');
+      setEl('kpi-bnh', `No ${activeInst} backtest yet`);
       setEl('kpi-cagr-bnh', '');
-      setEl('kpi-days', 'Run backtest');
+      setEl('kpi-days', `Run pipeline for ${activeInst}`);
       if (document.getElementById('constraints-badge')) {
         document.getElementById('constraints-badge').className = 'badge warn';
         setEl('constraints-badge', 'No Data');
