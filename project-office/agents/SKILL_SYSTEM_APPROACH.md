@@ -1,7 +1,7 @@
 # Agent Skill System — Design & Build Guide
 
 **Created:** 2026-04-23  
-**Status:** Approved — ready to implement  
+**Status:** Complete — all three phases built (2026-04-23)  
 **Goal:** Reduce per-session token cost from ~25,000 (spec reads) to ~5,000 (skill reads) by pre-merging agent knowledge into task-specific skill files.
 
 ---
@@ -60,21 +60,24 @@ Eliminates re-explaining context per session for complex multi-agent tasks.
 
 ## Build Order
 
-### Phase 1 (next session — ~2 hours)
-1. Create `.claude/commands/engineer-task.md`
-2. Create `.claude/commands/start-day.md`  
-3. Create `.claude/commands/end-day.md`
-4. Create `project-office/skills/skill-add-api-endpoint.md`
+### Phase 1 — DONE
+1. `.claude/commands/engineer-task.md`
+2. `.claude/commands/start-day.md`
+3. `.claude/commands/end-day.md`
+4. `project-office/skills/skill-add-api-endpoint.md`
 
-### Phase 2 (session after)
-5. Create `project-office/skills/skill-fix-js-bug.md`
-6. Create `project-office/skills/skill-add-db-model.md`
-7. Create `.claude/commands/fix-bug.md`
+### Phase 2 — DONE
+5. `project-office/skills/skill-fix-js-bug.md`
+6. `project-office/skills/skill-add-db-model.md`
+7. `.claude/commands/fix-bug.md`
 
-### Phase 3 (later)
-8. `skill-add-chat-intent.md`
-9. `skill-end-of-day.md`
-10. Agent prompt templates in `project-office/agents/prompts/`
+### Phase 3 — DONE
+8. `project-office/skills/skill-add-chat-intent.md`
+9. `project-office/skills/skill-end-of-day.md`
+10. `project-office/agents/prompts/prompt-engineer-task.md`
+11. `project-office/agents/prompts/prompt-qa-sprint.md`
+12. `project-office/agents/prompts/prompt-review.md`
+13. `project-office/agents/prompts/prompt-techwriter-sprint.md`
 
 ---
 

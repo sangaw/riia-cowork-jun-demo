@@ -17,7 +17,7 @@ Before writing any code, read the skill file that matches this task:
 | Add/modify a FastAPI endpoint | `project-office/skills/skill-add-api-endpoint.md` |
 | Fix a frontend JS bug | `project-office/skills/skill-fix-js-bug.md` |
 | Add a DB model or repository | `project-office/skills/skill-add-db-model.md` |
-| Add a chat intent | `project-office/skills/skill-add-chat-intent.md` (Phase 3) |
+| Add a chat intent | `project-office/skills/skill-add-chat-intent.md` |
 
 The skill file contains all rules, code templates, and the definition of done. **Do not read spec files** — the skill file has everything you need.
 
