@@ -34,6 +34,7 @@ from rita.metrics import instrument_app
 from rita.middleware import TraceIDMiddleware
 from rita.repositories.base import RepositoryValidationError
 from rita.api.v1.auth import router as auth_router
+from rita.api.v1.users import router as users_router
 from rita.api.v1.system.positions import router as positions_router
 from rita.api.v1.system.orders import router as orders_router
 from rita.api.v1.system.snapshots import router as snapshots_router
@@ -42,13 +43,22 @@ from rita.api.v1.system.alerts import router as alerts_router
 from rita.api.v1.system.audit import router as audit_router
 from rita.api.v1.system.market_data import router as market_data_router
 from rita.api.v1.system.config_overrides import router as config_overrides_router
+from rita.api.v1.system.instruments import router as instruments_router
+from rita.api.v1.system.market_signals import router as market_signals_router
+from rita.api.v1.system.training_runs import router as training_runs_router
+from rita.api.v1.system.drift import router as drift_router
+from rita.api.v1.system.data_prep import router as data_prep_router
 from rita.api.v1.workflow.train import router as train_router
 from rita.api.v1.workflow.backtest import router as backtest_router
 from rita.api.v1.workflow.evaluate import router as evaluate_router
+from rita.api.v1.workflow.pipeline import router as pipeline_router
 from rita.api.experience.dashboard import router as dashboard_router
 from rita.api.experience.fno import router as fno_router
 from rita.api.experience.ops import router as ops_router
-from rita.api.v1.observability import router as observability_router
+from rita.api.experience.rita import router as rita_experience_router
+from rita.api.experience.pipeline_wizard import router as pipeline_wizard_router
+from rita.api.experience.ds import router as ds_router
+from rita.api.experience.agent_panel import router as agent_panel_router
 from rita.api.v1.workflow.chat import router as chat_router
 from rita.api.v1.portfolio import router as portfolio_router
 
@@ -76,6 +86,8 @@ async def lifespan(app: FastAPI):
         ("training_runs",  "val_cagr",       "REAL"),
         ("training_runs",  "val_trades",     "INTEGER"),
         ("training_runs",  "backtest_trades","INTEGER"),
+        ("paper_positions", "entry_date",   "DATE"),
+        ("paper_positions", "expiry_date",  "DATE"),
     ]
     try:
         from rita.database import SessionLocal as _SL
@@ -130,64 +142,117 @@ async def lifespan(app: FastAPI):
     except Exception as _exc:
         log.warning("instruments.seed_failed", error=str(_exc))
 
-    # ── Seed market data from CSV if DB is empty ─────────────────────────────
+    # ── Seed market data (2025–2026) for all instruments if not yet present ───
     try:
         import uuid as _uuid
         import datetime as _dt
-        from rita.core.data_loader import load_nifty_csv
+        import pandas as _pd  # noqa: PLC0415
+        from rita.core.data_loader import load_instrument_data
         from rita.repositories.market_data import MarketDataCacheRepository
+        from rita.models.market_data import MarketDataCacheModel as _MDModel  # noqa: PLC0415
         from rita.database import SessionLocal
-
-        # Raw historical file (2025); nifty_manual.csv provides 2026 data
-        csv_path = Path("data/raw/NIFTY/merged.csv")
 
         db = SessionLocal()
         try:
             repo = MarketDataCacheRepository(db)
-            if not repo.read_all():   # only ingest if table is empty
-                import pandas as _pd  # noqa: PLC0415
-                from rita.models.market_data import MarketDataCacheModel as _MDModel  # noqa: PLC0415
+            seeded = {r.underlying for r in repo.read_all()}
 
-                # Load 2025 data from the raw historical file
-                frames = []
-                if csv_path.exists():
-                    _df_raw = load_nifty_csv(str(csv_path))
-                    frames.append(_df_raw[_df_raw.index.year == 2025])
-                else:
-                    log.warning("market_data.csv_not_found", path=str(csv_path.resolve()))
-
-                # Also load 2026 data from the manually maintained daily file
-                _manual = Path(settings.data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
-                if _manual.exists() and _manual != csv_path:
-                    _df_manual = load_nifty_csv(str(_manual))
-                    frames.append(_df_manual[_df_manual.index.year == 2026])
-
-                if frames:
-                    df = _pd.concat(frames).sort_index()
-                    df = df[~df.index.duplicated(keep="last")]
-                    now = _dt.datetime.now(_dt.timezone.utc)
-                    records = [
+            for _inst in ["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]:
+                if _inst in seeded:
+                    continue
+                try:
+                    _df = load_instrument_data(_inst)
+                    _df = _df[_df.index.year.isin([2025, 2026])]
+                    _df = _df[~_df.index.duplicated(keep="last")].sort_index()
+                    if _df.empty:
+                        log.warning("market_data.no_rows", instrument=_inst)
+                        continue
+                    _now = _dt.datetime.now(_dt.timezone.utc)
+                    _records = [
                         _MDModel(
                             cache_id=str(_uuid.uuid4()),
-                            date=dt.date(),
-                            underlying="NIFTY",
-                            open=float(row["Open"]),
-                            high=float(row["High"]),
-                            low=float(row["Low"]),
-                            close=float(row["Close"]),
-                            shares_traded=int(row["Volume"]) if "Volume" in row.index and row["Volume"] == row["Volume"] else None,
-                            recorded_at=now,
+                            date=_ts.date(),
+                            underlying=_inst,
+                            open=float(_row["Open"]),
+                            high=float(_row["High"]),
+                            low=float(_row["Low"]),
+                            close=float(_row["Close"]),
+                            shares_traded=int(_row["Volume"]) if "Volume" in _row.index and not _pd.isna(_row["Volume"]) else None,
+                            recorded_at=_now,
                         )
-                        for dt, row in df.iterrows()
+                        for _ts, _row in _df.iterrows()
                     ]
-                    db.add_all(records)
+                    db.add_all(_records)
                     db.commit()
-                    log.info("market_data.seeded", rows=len(records))
+                    log.info("market_data.seeded", instrument=_inst, rows=len(_records))
+                except Exception as _exc:
+                    log.warning("market_data.seed_failed", instrument=_inst, error=str(_exc))
         finally:
             db.close()
     except Exception as _exc:
         log.warning("market_data.seed_failed", error=str(_exc))
 
+
+    # ── Seed / sync paper positions (update-or-insert per instrument) ─────────
+    try:
+        import uuid as _uuid3
+        import datetime as _dt3
+        from rita.repositories.paper_positions import PaperPositionsRepository
+        from rita.models.paper_positions import PaperPositionModel as _PPModel
+
+        _PAPER = [
+            dict(
+                instrument="ASML26MAY1300CE",
+                underlying="ASML", option_type="CE", strike=1300.0,
+                expiry="MAY26",    expiry_date=_dt3.date(2026, 5, 15),
+                quantity=-1,       avg_price=24.15, last_traded_price=24.00,
+                pnl=15.00,         pct_change=-0.62,
+                currency="EUR",    lot_size=100,
+                sl_price=1260.0,   target_price=1150.0,
+                entry_date=_dt3.date(2026, 4, 24),
+            ),
+            dict(
+                instrument="ASML26JUN1300CE",
+                underlying="ASML", option_type="CE", strike=1300.0,
+                expiry="JUN26",    expiry_date=_dt3.date(2026, 6, 15),
+                quantity=-1,       avg_price=115.00, last_traded_price=115.32,
+                pnl=-32.00,        pct_change=0.28,
+                currency="EUR",    lot_size=100,
+                sl_price=1260.0,   target_price=1150.0,
+                entry_date=_dt3.date(2026, 4, 24),
+            ),
+        ]
+
+        _ppdb = SessionLocal()
+        try:
+            _pp_repo = PaperPositionsRepository(_ppdb)
+            _existing = {r.instrument: r.position_id for r in _pp_repo.read_all()}
+            _now3 = _dt3.datetime.now(_dt3.timezone.utc)
+
+            for _p in _PAPER:
+                if _p["instrument"] in _existing:
+                    # Update mutable fields to keep paper data current
+                    _ppdb.execute(text(
+                        "UPDATE paper_positions SET "
+                        "last_traded_price=:ltp, pnl=:pnl, pct_change=:chg, "
+                        "entry_date=:ed, expiry_date=:xd "
+                        "WHERE instrument=:inst"
+                    ), {"ltp": _p["last_traded_price"], "pnl": _p["pnl"],
+                        "chg": _p["pct_change"], "ed": _p["entry_date"],
+                        "xd": _p["expiry_date"],  "inst": _p["instrument"]})
+                    _ppdb.commit()
+                    log.info("paper_positions.updated", instrument=_p["instrument"])
+                else:
+                    _ppdb.add(_PPModel(
+                        position_id=str(_uuid3.uuid4()),
+                        product="NRML", recorded_at=_now3, **_p,
+                    ))
+                    _ppdb.commit()
+                    log.info("paper_positions.inserted", instrument=_p["instrument"])
+        finally:
+            _ppdb.close()
+    except Exception as _exc:
+        log.warning("paper_positions.seed_failed", error=str(_exc))
 
     yield
     log.info("app.shutdown")
@@ -217,6 +282,9 @@ app.add_exception_handler(Exception, unhandled_exception_handler)
 # -- Auth router (no auth required on /auth/token itself) ---------------------
 app.include_router(auth_router)
 
+# -- Users router (admin only) ------------------------------------------------
+app.include_router(users_router)
+
 # -- System tier -- pure CRUD routers (one per table) -------------------------
 app.include_router(positions_router)
 app.include_router(orders_router)
@@ -226,19 +294,26 @@ app.include_router(alerts_router)
 app.include_router(audit_router)
 app.include_router(market_data_router)
 app.include_router(config_overrides_router)
+app.include_router(instruments_router)
+app.include_router(market_signals_router)
+app.include_router(training_runs_router)
+app.include_router(drift_router)
+app.include_router(data_prep_router)
 
 # -- Workflow tier -- JWT-protected business process routers ------------------
 app.include_router(train_router, dependencies=[Depends(get_current_user)])
 app.include_router(backtest_router, dependencies=[Depends(get_current_user)])
 app.include_router(evaluate_router, dependencies=[Depends(get_current_user)])
+app.include_router(pipeline_router)
 
 # -- Experience Layer -- UI-shaped aggregation routers (read-only) -------------
 app.include_router(dashboard_router)
 app.include_router(fno_router)
 app.include_router(ops_router)
-
-# -- Observability -- structured JSON for Ops dashboard -----------------------
-app.include_router(observability_router)
+app.include_router(rita_experience_router)
+app.include_router(pipeline_wizard_router)
+app.include_router(ds_router)
+app.include_router(agent_panel_router)
 
 # -- Chat -- local intent classifier + OHLCV dispatch (no external API) -------
 app.include_router(chat_router)
