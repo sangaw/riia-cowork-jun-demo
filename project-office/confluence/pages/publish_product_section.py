@@ -9,12 +9,13 @@ Pages created:
      2c. Engineering          (parent: RIIA App)
      2d. Operations           (parent: RIIA App)
 
-Run from project root:
+Run from any directory:
   CONFLUENCE_EMAIL=contact@ravionics.nl python project-office/confluence/pages/publish_product_section.py
 """
 
 import sys, os
-sys.path.insert(0, os.path.abspath("project-office"))
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from confluence.publish import ConfluenceClient, HOMEPAGE_ID
 
 client = ConfluenceClient()

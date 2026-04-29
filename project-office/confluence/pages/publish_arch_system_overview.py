@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from confluence.publish import ConfluenceClient, SECTION
 
 TITLE = "System Architecture Overview"
-PAGE_ID = "68911105"
+PAGE_ID = SECTION["arch_system_overview"]  # 68911105
 
 BODY = """
 <h2>1. Purpose</h2>

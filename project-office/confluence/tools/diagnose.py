@@ -1,7 +1,7 @@
 """Diagnose the 403 — compare what test_create.py did vs the main scripts."""
 import sys, json, base64, urllib.request, urllib.error
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from confluence.publish import _load_token, EMAIL, BASE_URL, SPACE_KEY, SECTION
 
 token = _load_token()

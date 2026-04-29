@@ -1,6 +1,6 @@
 import sys, urllib.request, urllib.error, base64
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from confluence.publish import _load_token, EMAIL, BASE_URL
 
 token = _load_token()

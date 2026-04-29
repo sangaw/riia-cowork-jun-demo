@@ -61,6 +61,11 @@ SECTION = {
     "architecture_current": "76644368",  # Architecture page — current system state
     "engineering_current":  "76611602",  # Engineering page — API inventory + commands
     "ops_current":          "76611617",  # App Operations page — runbook
+    # ── Architecture child pages ──────────────────────────────────────────────
+    "arch_system_overview": "68911105",  # System Architecture Overview (under architecture)
+    # ── Engineering Documentation child pages ─────────────────────────────────
+    "rl_trading_model":     "76677125",  # RL Trading Model (under engineering)
+    "ml_training_pipeline": "76677141",  # ML Training Pipeline (under engineering)
 }
 
 
@@ -123,6 +128,12 @@ class ConfluenceClient:
             url = f"https://ravionics.atlassian.net/wiki{result['_links']['webui']}"
             return result["id"], url
         raise RuntimeError(f"Update page {page_id} failed: HTTP {status} — {result.get('message','')[:120]}")
+
+    def append_to_page(self, page_id: str, title: str, html_to_append: str):
+        """Read current page body and append html_to_append, then update."""
+        page = self.get_page(page_id, expand="version,body.storage")
+        current_body = page["body"]["storage"]["value"]
+        return self.update_page(page_id, title, current_body + html_to_append)
 
     def move_page(self, page_id: str, new_parent_id: str):
         """Move page to a new parent. Preserves content."""
