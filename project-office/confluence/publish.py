@@ -39,18 +39,28 @@ def _load_email() -> str:
 EMAIL     = _load_email()
 BASE_URL  = os.environ.get("CONFLUENCE_BASE_URL", "https://ravionics.atlassian.net/wiki/rest/api")
 SPACE_KEY = os.environ.get("CONFLUENCE_SPACE_KEY", "RIIAProjec")
-HOMEPAGE_ID = "65110332"
+HOMEPAGE_ID = "65110332"  # Data Science Project - RIIA
 
-# ── Page IDs (section parents — populated after hierarchy setup) ─────────────
+# ── Page IDs (last verified 2026-04-29 after user restructure) ───────────────
 SECTION = {
-    "project_management": "65273887",
-    "how_we_work":        "65241125",
-    "architecture":       "65339419",
-    "engineering":        "65404944",
-    "quality_testing":    "65404959",
-    "operations":         "65339434",
-    "release_notes":      "65208341",
-    "sprint_boards":      "65077274",
+    # ── Top-level sections ────────────────────────────────────────────────────
+    "homepage":             "65110332",  # Data Science Project - RIIA (root)
+    "how_we_work":          "65241125",
+    "project_management":   "65273887",
+    "project_summary":      "76578819",  # Project Summary (sprint history)
+    "release_notes":        "65208341",
+    "sprint_boards":        "65077274",  # under project_management
+    # ── RIIA App product section ──────────────────────────────────────────────
+    "riia_app":             "76611585",  # RIIA App (product section root)
+    "requirements":         "76644353",  # Requirements — direct child of riia_app
+    "architecture":         "65339419",  # Architecture and Design section
+    "engineering":          "65404944",  # Engineering Documentation section
+    "operations":           "65339434",  # Operations section
+    "quality_testing":      "65404959",  # Quality and Testing section
+    # ── Current-state product docs (live, not sprint artefacts) ──────────────
+    "architecture_current": "76644368",  # Architecture page — current system state
+    "engineering_current":  "76611602",  # Engineering page — API inventory + commands
+    "ops_current":          "76611617",  # App Operations page — runbook
 }
 
 
