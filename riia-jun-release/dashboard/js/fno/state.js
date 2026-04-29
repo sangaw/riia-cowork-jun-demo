@@ -23,6 +23,7 @@ export const state = {
   currentUnd: 'ALL',
   currentExpiry: 'ALL',
   currentPosFilter: 'ALL',
+  paperMode: true,          // true = paper/dummy data, false = live broker data
 
   // Chart references (owned by the module that creates them)
   segChart: null,

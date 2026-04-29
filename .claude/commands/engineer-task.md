@@ -8,57 +8,57 @@ You are an Engineer agent for the RITA production codebase.
 
 ---
 
-## Step 1 — Load the right skill file
+## Step 1 — Choose the right command
 
-Before writing any code, read the skill file that matches this task:
+Run the specialized command that matches this task — it contains all rules and the definition of done:
 
-| Task type | Skill file |
+| Task type | Use command |
 |---|---|
-| Add/modify a FastAPI endpoint | `project-office/skills/skill-add-api-endpoint.md` |
-| Fix a frontend JS bug | `project-office/skills/skill-fix-js-bug.md` |
-| Add a DB model or repository | `project-office/skills/skill-add-db-model.md` |
-| Add a chat intent | `project-office/skills/skill-add-chat-intent.md` |
+| Add or modify a FastAPI endpoint | `/add-endpoint <task>` |
+| Fix a frontend JS bug | `/fix-bug <bug description>` |
+| Add a DB model, repository, or migration | `/add-db-model <task>` |
+| Add a chat classifier intent | `/add-chat-intent <task>` |
+| Add/update a feature in the RITA dashboard | `/add-rita-feature <task>` |
+| Add/update a feature in the FnO dashboard | `/add-fno-feature <task>` |
+| Add/update a feature in the Ops dashboard | `/add-ops-feature <task>` |
+| Add a new data field, analysis, or ML model | `/add-data-feature <task>` |
+| Add/update a feature in the Mobile PWA | `/add-mobile-feature <task>` |
 
-The skill file contains all rules, code templates, and the definition of done. **Do not read spec files** — the skill file has everything you need.
+If none of the above match, continue below with the general guardrails.
 
 ---
 
-## Step 2 — Mandatory guardrails (apply to every task)
-
-These apply regardless of which skill file you use:
+## General Guardrails (when no specialized command applies)
 
 **Architecture:**
-- Routes must go in the correct tier — system (`api/v1/system/`), workflow (`api/v1/workflow/`), or experience (`api/experience/`). See skill file for decision tree.
-- No direct DB/file I/O in routes or services — all data access via `repositories/` only.
+- Routes go in the correct tier: system (`api/v1/system/`), workflow (`api/v1/workflow/`), or experience (`api/experience/`)
+- No direct DB/file I/O in routes or services — all data access via `repositories/` only
 
 **Session/DB:**
-- Every repo constructor requires `db: Session` — never call `MyRepo()` without it.
+- Every repo constructor requires `db: Session` — never call `MyRepo()` without it
 - FastAPI dependency: `def get_svc(db: Session = Depends(get_db)) -> MyService: return MyService(db)`
-- Background threads must open their own session via `SessionLocal()` and close in `finally`.
-- `upsert()` already calls `db.commit()` — do not commit again.
+- Background threads must open their own session via `SessionLocal()` and close in `finally`
+- `upsert()` already calls `db.commit()` — do not commit again
 
 **Code quality:**
-- No `print()` statements — use `structlog` (or nothing if logging not yet in place).
-- No hardcoded lot sizes — NIFTY=75, BANKNIFTY=30 must come from `settings.instruments.*`.
-- No external API calls — all data is local CSV/SQLite.
-- Do not touch `rita_input/` — it is read-only source data.
+- No `print()` statements — use `structlog`
+- No hardcoded lot sizes — NIFTY=75, BANKNIFTY=30 must come from `settings.instruments.*`
+- No external API calls — all data is local CSV/SQLite
+- Do not touch `rita_input/` — read-only source data
 
 **Spec maintenance:**
-- If your change alters an API contract, schema, or data layout — update the relevant `specs/Spec_*.md` file in the same commit. A change is not done without updating the spec.
+- Any change to an API contract, schema, or data layout → update `Specs/Spec_Python_Code.md` in the same commit
 
 ---
 
-## Step 3 — Implement
+## Step 2 — Implement
 
-Work in targeted slices (max 400 lines per file read). Implement only what the task requires — no refactoring, no extra abstractions.
+Work in targeted slices (max 400 lines per file read). Implement only what the task requires.
 
 ---
 
-## Step 4 — Verify definition of done
+## Minimum Definition of Done
 
-Check every item in the skill file's "Definition of Done" section before reporting complete.
-
-Minimum always:
 - [ ] `ruff check src/` passes
 - [ ] New endpoint: JS field list matches handler's `return` dict exactly
-- [ ] Spec file updated if API contract changed
+- [ ] `Specs/Spec_Python_Code.md` updated if API contract changed

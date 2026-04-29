@@ -30,6 +30,7 @@ html{scroll-behavior:smooth}
   --warn:#92480A;--warn-bg:#FEF4EB;--warn-bd:#F5C99A;
   --danger:#9B1C1C;--danger-bg:#FEF2F2;--danger-bd:#FCA5A5;
   --info:#0056B8;--info-bg:#EDF4FF;--info-bd:#AECBF5;
+  --user:#5C6BC0;--user-bg:#E8EAF6;--user-bd:#9FA8DA;
 
   --fd:'Epilogue',sans-serif;--fm:'IBM Plex Mono',monospace;--fs:'Instrument Serif',serif;
   --r:6px;
@@ -73,6 +74,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .ni.on.n-test{border-left-color:var(--ok);color:var(--ok);}
 .ni.on.n-obs{border-left-color:var(--data);color:var(--data);}
 .ni.on.n-chat{border-left-color:var(--chat);color:var(--chat);}
+.ni.on.n-users{border-left-color:var(--user);color:var(--user);}
 .ni-ic{width:15px;height:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .ng-hdr{display:flex;align-items:center;gap:7px;padding:10px 18px 4px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);}
 .ng-dot{width:7px;height:7px;border-radius:1.5px;flex-shrink:0;}
@@ -386,6 +388,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
     Daily Ops
   </div>
 
+  <div class="ng-hdr" style="margin-top:4px">
+    <div class="ng-dot" style="background:var(--user)"></div>Access
+  </div>
+  <div class="ni n-users" onclick="nav(this,'users')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 7C8.65685 7 10 5.65685 10 4C10 2.34315 8.65685 1 7 1C5.34315 1 4 2.34315 4 4C4 5.65685 5.34315 7 7 7Z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M1 13C1 10.3 3.3 8 6 8H8C10.7 8 13 10.3 13 13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    User Management
+  </div>
+
   <div class="s-foot">
     <div class="mc">
       <div class="mc-ey">Pipeline Status</div>
@@ -451,6 +466,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
           <div class="sb"><div class="sb-l">Sharpe</div><div class="sb-v" id="mdl-sharpe">—</div></div>
           <div class="sb"><div class="sb-l">Max DD</div><div class="sb-v" id="mdl-mdd">—</div></div>
           <div class="sb"><div class="sb-l">CAGR</div><div class="sb-v" id="mdl-cagr">—</div></div>
+          <div class="sb"><div class="sb-l">Backtest Period</div><div class="sb-v" id="mdl-bt-range" style="font-size:0.72rem">—</div></div>
         </div>
         <div class="bar-wrap" style="margin-top:14px;">
           <div class="bar-r">
@@ -899,6 +915,40 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
           </tr></thead>
           <tbody id="dops-history-tbody">
             <tr><td colspan="4" style="text-align:center;color:var(--t3);">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ USER MANAGEMENT ══ -->
+  <section class="sec" id="sec-users">
+    <div class="ph">
+      <div class="ph-badge" style="background:var(--user-bg);color:var(--user);border:1px solid var(--user-bd)">Access</div>
+      <div>
+        <div class="ph-t">User Role Management</div>
+        <div class="ph-g">Manage RBAC module access for Google OAuth identities across environments</div>
+      </div>
+      <button class="btn" style="margin-left:auto;font-size:11px;font-family:var(--fm);padding:5px 12px;border:1px solid var(--border);border-radius:5px;background:var(--surface);cursor:pointer;" onclick="loadUsers()">&#8635; Refresh</button>
+    </div>
+
+    <div class="card">
+      <div class="c-ey"><div class="ey-d" style="background:var(--user)"></div>Role Assignments</div>
+      <div class="tbl-wrap" style="max-height: 500px;">
+        <table id="users-table">
+          <thead>
+            <tr>
+              <th>Google Email / Sub ID</th>
+              <th>Last Active</th>
+              <th style="text-align:center">Assist Research</th>
+              <th style="text-align:center">Create Portfolio</th>
+              <th style="text-align:center">Review Portfolio</th>
+              <th style="text-align:center">Ops Portal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="7" class="loading">Loading...</td></tr>
           </tbody>
         </table>
       </div>

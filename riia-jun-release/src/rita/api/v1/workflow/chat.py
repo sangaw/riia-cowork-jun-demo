@@ -16,10 +16,12 @@ from pathlib import Path
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from rita.config import get_settings
+from rita.database import get_db
 
 log = structlog.get_logger()
 
@@ -169,7 +171,7 @@ def _build_dynamic_chips(summary: dict, scored: dict, instrument_name: str) -> l
 
 
 @router.post("/warmup", status_code=202)
-def chat_warmup(instrument: str | None = None) -> dict:
+def chat_warmup(instrument: str | None = None, db: Session = Depends(get_db)) -> dict:
     """Pre-warm the intent classifier and compute market-driven chips for the given instrument.
 
     Called by the dashboard when the user opens the Market Analysis section.
@@ -177,11 +179,11 @@ def chat_warmup(instrument: str | None = None) -> dict:
     """
     from rita.core.classifier import _build_seed_index
     from rita.core.technical_analyzer import get_market_summary, get_sentiment_score
-    from rita.api.v1.observability import _active_instrument_id
+    from rita.api.v1.workflow.pipeline import _get_active_instrument_id
 
     _build_seed_index()
 
-    inst = (instrument or _active_instrument_id).upper()
+    inst = (instrument or _get_active_instrument_id(db)).upper()
     chips = None
     alerts: list = []
     try:
@@ -199,7 +201,7 @@ def chat_warmup(instrument: str | None = None) -> dict:
 
 
 @router.post("")
-def chat(req: ChatRequest) -> dict:
+def chat(req: ChatRequest, db: Session = Depends(get_db)) -> dict:
     """Classify a free-text investment query and return a deterministic OHLCV-driven response.
 
     Uses all-MiniLM-L6-v2 (local, offline) cosine similarity to route to one of
@@ -208,13 +210,13 @@ def chat(req: ChatRequest) -> dict:
     """
     from rita.core.classifier import classify, dispatch
     from rita.core.chat_monitor import log_query as _log_query
-    from rita.api.v1.observability import _active_instrument_id
+    from rita.api.v1.workflow.pipeline import _get_active_instrument_id
     from pathlib import Path as _Path
 
     settings = get_settings()
     t0 = _time.perf_counter()
 
-    inst = (req.instrument or _active_instrument_id).upper()
+    inst = (req.instrument or _get_active_instrument_id(db)).upper()
     instrument_output_dir = str(_Path(settings.data.output_dir) / inst)
 
     try:

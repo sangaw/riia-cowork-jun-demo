@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 class PortfolioBase(BaseModel):
     date: date
-    underlying: Optional[Literal["NIFTY", "BANKNIFTY"]] = None
+    underlying: Optional[Literal["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]] = None
     month: Optional[str] = None
     group_id: Optional[str] = None
     group_name: Optional[str] = None

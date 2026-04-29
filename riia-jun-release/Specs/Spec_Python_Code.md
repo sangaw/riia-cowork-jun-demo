@@ -1,121 +1,458 @@
-# RITA (Risk Informed Trading Approach) - AI Code Specifications
+# RITA (Risk Informed Trading Approach) — Python Code Specification
 
-This document serves as a high-density, low-token reference for AI agents to understand the system architecture, design patterns, and constraints of the RITA codebase.
+High-density reference for AI agents. Read before writing or modifying any Python in this repository.
 
-**IMPORTANT FOR AI AGENTS**: Before writing or modifying any code in this repository, read and adhere to these guidelines.
+**IMPORTANT FOR AI AGENTS**: Before writing or modifying any code, read and adhere to these guidelines.
 
-## 1. Tech Stack Overview
-- **Language:** Python 3.11+
-- **Web Framework:** FastAPI, Uvicorn
-- **Validation & Settings:** Pydantic 2.x, Pydantic-Settings
-- **ORM & Database:** SQLAlchemy 2.x, Alembic, SQLite (for v1)
-- **Data Engineering & ML:** Pandas, NumPy, Stable-baselines3
-- **Testing:** Pytest, Pytest-asyncio, Playwright (for E2E)
-- **Frontend Layer:** Vanilla JS, CSS (no React/Vue)
+---
+
+## 1. Tech Stack
+
+| Tool | Version | Purpose |
+|---|---|---|
+| Python | 3.11+ | Runtime |
+| FastAPI | latest | Web framework |
+| Uvicorn | latest | ASGI server |
+| Pydantic 2.x | | Validation + Settings |
+| Pydantic-Settings | | Environment config |
+| SQLAlchemy 2.x | | ORM |
+| Alembic | 1.13+ | Migrations |
+| SQLite | | v1 DB (swap to PostgreSQL in v2 via `database_url`) |
+| Pandas, NumPy | | Data engineering |
+| Stable-baselines3 | | DoubleDQN RL |
+| LangGraph | | Multi-agent workflow (agent_panel.py) |
+| structlog | | JSON structured logging |
+| prometheus-fastapi-instrumentator | 6.1+ | Metrics |
+| pytest, pytest-asyncio | | Testing |
+| sentence-transformers | | Local intent classifier |
+| python-jose | | JWT |
+| slowapi | | Rate limiting |
+
+---
 
 ## 2. Three-Tier API Architecture (ADR-001)
 
-The API is strictly divided into three tiers to enforce the Single Responsibility Principle. 
-**Do NOT cross contamination rules.**
-
 ### Tier 1: System (`src/rita/api/v1/system/`)
-- **Purpose**: Pure CRUD for individual tables.
-- **Rules**: 
-  - Call **one** repository only.
-  - Zero business logic. 
-  - Never call a service, never call another router, and never combine data from multiple tables.
-- **Examples**: `PositionsRouter`, `OrdersRouter`, `SnapshotsRouter`.
+
+Pure CRUD — **one repository per router, zero business logic, no cross-table reads**.
+
+| File | Router prefix | Key endpoints |
+|---|---|---|
+| `positions.py` | `/api/v1/positions` | GET list, POST create, GET/{id}, PUT/{id}, DELETE/{id} |
+| `orders.py` | `/api/v1/orders` | CRUD |
+| `snapshots.py` | `/api/v1/snapshots` | CRUD |
+| `trades.py` | `/api/v1/trades` | CRUD |
+| `alerts.py` | `/api/v1/alerts` | CRUD |
+| `audit.py` | `/api/v1/audit` | GET list, POST create |
+| `market_data.py` | `/api/v1/market-data` | CRUD |
+| `config_overrides.py` | `/api/v1/config-overrides` | CRUD |
+| `instruments.py` | `/api/v1/instruments` | GET list, GET/{id}, PUT/{id} — instrument registry |
+| `market_signals.py` | `/api/v1/market-signals` | `GET ?timeframe=daily\|weekly\|monthly&periods=N&instrument=X` — computes RSI/MACD/BB/ATR/EMA from `market_data_cache` |
+| `training_runs.py` | `/api/v1/training-history`, `/api/v1/split-dates`, `/api/v1/backtest-status/{id}` | Training run records + split date computation |
+| `drift.py` | `/api/v1/drift` | `GET` → `DriftDetector.run()` → `{summary, checks}` |
+| `data_prep.py` | `/api/v1/data-prep/status`, `/api/v1/test-results`, `/api/v1/shap-values`, `/api/v1/data-understanding` | File system checks, JUnit XML parsing, SHAP values |
 
 ### Tier 2: Workflow (`src/rita/api/v1/workflow/`)
-- **Purpose**: Stateful orchestrations and long-running ML jobs.
-- **Rules**: 
-  - Call **services only** (e.g., `WorkflowService`, `ModelTrainingService`).
-  - Never read or write via repositories directly.
-  - Used for things like `train`, `backtest`, `evaluate`.
+
+Stateful orchestration — **calls services only, JWT-protected (except pipeline.py and chat.py)**.
+
+| File | Endpoints | Auth |
+|---|---|---|
+| `train.py` | `POST /api/v1/train` | JWT |
+| `backtest.py` | `POST /api/v1/backtest` | JWT |
+| `evaluate.py` | `POST /api/v1/evaluate` | JWT |
+| `pipeline.py` | `POST /api/v1/instrument/select`, `GET /api/v1/pipeline/progress`, `POST /api/v1/pipeline/quick-backtest` | No JWT |
+| `chat.py` | `POST /api/v1/chat`, `POST /api/v1/chat/warmup` | No JWT |
 
 ### Tier 3: Experience Layer (`src/rita/api/experience/`)
-- **Purpose**: Composes UI-ready payloads for specific screens.
-- **Rules**: 
-  - Read-only composition. No writing data. No side effects.
-  - Call System routers or services to aggregate data. 
-  - Structure response exactly to what the UI component needs to prevent N+1 queries by the frontend.
-  - **Examples**: `DashboardExperience`, `FnoExperience`, `OpsExperience`.
 
-## 3. Data & Repository Layer (ADR-002 & ADR-003)
+Read-only aggregation — **no writes, no side effects, no DB commits**.
 
-The application has migrated away from CSV flat-files and now uses SQLite via SQLAlchemy 2.x ORM.
-There are 15 tables mapped as ORM models in `src/rita/models`.
+| File | Prefix | Endpoints |
+|---|---|---|
+| `dashboard.py` | `/api/experience` | `GET /rita` (DashboardPayload), `GET /fno` (FnoPayload), `GET /ops` (OpsPayload) — legacy |
+| `fno.py` | `/api/experience/fno` | `GET /` → FnO aggregated payload (snapshots + portfolio + manoeuvres) |
+| `ops.py` | `/api/experience/ops` | `GET /` (OpsPayload), `GET /metrics/summary`, `GET /step-log`, `GET /users`, `POST /users`, `DELETE /users/{id}` |
+| `rita.py` | `/api/v1` | See Section 6 below |
+| `pipeline_wizard.py` | `/api/v1` | `POST /goal`, `POST /market`, `POST /strategy` |
+| `ds.py` | `/api/experience/ds` | `GET /` → instruments + training history + split dates |
+| `agent_panel.py` | `/api/v1/agent-panel` | `POST /run-day`, `GET /plot/{day_index}` |
 
-### Repository Pattern Rules
-- External code (routers, services) **must never** interact with the database session directly.
-- The `SqlRepository` base class defines standard data access.
-- Every table gets exactly one repository class situated in `src/rita/repositories/`.
-- Repositories inject `SessionLocal` via dependency injection (`Depends(get_db)`).
+### Other (`src/rita/api/v1/`)
 
-### Schema Validation
-- Pydantic models are defined in `src/rita/schemas/` to strictly define data contracts.
-- Database outputs from SQLAlchemy models are validated through Pydantic schemas before returning to the caller.
-
-## 4. Frontend conventions (`dashboard/`)
-- Located entirely in the `dashboard/` structure.
-- Uses decomposed ES module pattern (`js/rita/`, `js/fno/`, `js/ops/`).
-- Only Vanilla JavaScript + Modern responsive CSS. **Do not use React, Tailwind, or complex build tools.**
-- Interacts strictly with the Tier 3 Experience Layer API. 
-
-## 5. Testing Expectations
-- **Unit Tests (`tests/unit/`)**: Isolate your test using mocks. Target is 200+ unit tests covering all edge cases.
-- **Integration Tests (`tests/integration/`)**: Test repositories and API bounds via in-memory `sqlite:///:memory:`.
-- **E2E Tests (`tests/e2e/`)**: Playwright flows representing user interaction.
-
-## 6. Migration and Infrastructure
-- Any modifications to SQLAlchemy models MUST be followed by an Alembic migration script generation (`alembic revision --autogenerate -m "X"`).
-- Docker deployment is expected via `Dockerfile`. 
-- K8s manifests live in `k8s/`. DO NOT modify these without explicit instructions.
-
-## 7. Portfolio Feature (added 2026-04-15)
-
-### Core engine: `src/rita/core/portfolio_engine.py`
-
-| Constant / Helper | Purpose |
+| File | Endpoints |
 |---|---|
-| `FX_EUR_PER_UNIT` | Static FX rates: INR→EUR (÷91), USD→EUR (÷1.09), EUR=1.0 |
-| `INSTRUMENT_CCY` | Maps NIFTY/BANKNIFTY → INR, ASML → EUR, NVIDIA → USD |
-| `ALL_INSTRUMENTS` | `["NIFTY","BANKNIFTY","ASML","NVIDIA"]` — fixed universe |
-| `_load_with_indicators(id)` | `load_nifty_csv` + `calculate_indicators` — returns DatetimeIndex df |
-| `_find_best_model(id)` | Most recently modified `.zip` in `data/output/{ID}/`, or `None` |
-| `_invested_fraction(alloc_eur, price_eur)` | Whole-share constraint: `floor(alloc/price) * price / alloc` |
-| `_adjust_for_cash(values, frac)` | Scale portfolio series: `frac * v + (1-frac)` — cash stays at 1.0 |
+| `auth.py` | `POST /auth/token` — issues JWT (rate-limited 10/min) |
+| `users.py` | `GET /api/v1/users`, `POST /api/v1/users` |
+| `portfolio.py` | See Section 7 below |
 
-**`portfolio_overview() → dict`**
-- Loads all 4 instruments, aligns to common date intersection
-- Returns: `instruments[]`, `common_days`, `date_from`, `date_to`, `normalized_returns[]` (≤500 pts), `correlation_matrix{}`
-- Normalised returns keyed lowercase: `nifty`, `banknifty`, `asml`, `nvidia`
+---
 
-**`portfolio_backtest(instruments, allocations_eur, start_date, end_date) → dict`**
-- Per instrument: load + filter → whole-share fraction → `run_episode()` (or B&H fallback if no model)
-- Applies `_adjust_for_cash()` to both port and bnh series
-- Combines with EUR weights; calls `compute_all_metrics()` on combined arrays
-- Returns: flat KPIs + `instruments[]` (per-instrument: `return_pct, sharpe, allocated_eur, invested_eur, weight_pct, model_used`) + `daily[]` + `instrument_series{}`
-- B&H fallback: `model_used = "bnh_fallback"`, portfolio = normalised Close / Close[0]
+## 3. Repository Pattern (ADR-002 & ADR-003)
 
-### Router: `src/rita/api/v1/portfolio.py`
+### Base class: `SqlRepository[T, M]` (`src/rita/repositories/base.py`)
 
-| Endpoint | Method | Auth | Description |
+```python
+class SqlRepository(Generic[T, M]):
+    def __init__(self, db: Session) -> None: ...
+    def read_all(self) -> list[T]: ...
+    def find_by_id(self, id: str) -> T | None: ...
+    def upsert(self, obj: T) -> T: ...         # calls db.commit() internally
+    def delete(self, id: str) -> bool: ...
+```
+
+**Critical rule:** `upsert()` calls `db.commit()` — **never commit again after calling upsert**.
+
+### Concrete repositories
+
+| File | Class | Table | Notes |
 |---|---|---|---|
-| `/api/v1/portfolio/overview` | GET | None | Calls `portfolio_overview()` |
-| `/api/v1/portfolio/backtest` | POST | None | `PortfolioBacktestRequest` → `portfolio_backtest()` |
+| `repositories/positions.py` | `PositionsRepository` | `positions` | |
+| `repositories/orders.py` | `OrdersRepository` | `orders` | |
+| `repositories/snapshots.py` | `SnapshotsRepository` | `snapshots` | |
+| `repositories/trades.py` | `TradesRepository` | `trades` | |
+| `repositories/alerts.py` | `AlertsRepository` | `alerts` | |
+| `repositories/audit.py` | `AuditLogRepository` | `audit_log` | |
+| `repositories/market_data.py` | `MarketDataCacheRepository` | `market_data_cache` | |
+| `repositories/config_overrides.py` | `ConfigOverridesRepository` | `config_overrides` | |
+| `repositories/instrument.py` | `InstrumentRepository` | `instruments` | |
+| `repositories/training.py` | `TrainingRunsRepository` | `training_runs` | |
+| `repositories/backtest.py` | `BacktestRunsRepository`, `BacktestResultsRepository` | `backtest_runs`, `backtest_results` | |
+| `repositories/risk.py` | `RiskTimelineRepository` | `risk_timeline` | |
+| `repositories/manoeuvres.py` | `ManoeuvresRepository` | `manoeuvres` | |
+| `repositories/portfolio.py` | `PortfolioRepository` | `portfolio` | |
+| `repositories/model_registry.py` | `ModelRegistryRepository` | `model_registry` | |
+| `repositories/paper_positions.py` | `PaperPositionsRepository` | `paper_positions` | Paper/simulation positions |
 
-**`PortfolioBacktestRequest` fields:**
-- `instruments: list[str]` — defaults to all 4
-- `allocations_eur: dict[str, float]` — key is lowercase instrument id (e.g. `"nifty"`)
-- `start_date: str` — ISO `YYYY-MM-DD`
-- `end_date: str` — ISO `YYYY-MM-DD`
+### FastAPI dependency injection pattern
 
-Registered in `main.py` after `chat_router`, no JWT dependency.
+```python
+from rita.database import get_db
 
-## AI Agent Directives:
-1. Always maintain the 3-Tier separation. Never inject a repository directly into a workflow.
-2. Don't leave commented-out redundant code or fallback functions.
-3. Don't add new Javascript frameworks; maintain the vanilla ES module system.
-4. If writing ML logic, isolate it within `src/rita/core/` and don't leak it into the routers.
-5. Portfolio endpoints are **read-only** — no DB writes. They live in `api/v1/portfolio.py`, not the experience layer, because they run heavy computation (not just DB aggregation).
+def get_my_service(db: Session = Depends(get_db)) -> MyService:
+    return MyService(db)
+
+@router.get("/endpoint")
+def endpoint(svc: MyService = Depends(get_my_service)) -> dict:
+    return svc.do_something()
+```
+
+### Background thread pattern
+
+```python
+from rita.database import SessionLocal
+
+def _background_worker(run_id: str) -> None:
+    db = SessionLocal()
+    try:
+        repo = MyRepository(db)
+        # ... work ...
+    finally:
+        db.close()
+```
+
+---
+
+## 4. ORM Models (`src/rita/models/`)
+
+| File | Class | Key columns |
+|---|---|---|
+| `instrument.py` | `InstrumentModel` | `instrument_id (PK)`, `name`, `exchange`, `country_code`, `lot_size`, `is_available` |
+| `market_data.py` | `MarketDataCacheModel` | `cache_id (PK)`, `date`, `underlying`, `open/high/low/close`, `shares_traded`, `recorded_at` |
+| `paper_positions.py` | `PaperPositionModel` | `position_id (PK)`, `instrument`, `underlying`, `product`, `option_type`, `strike`, `expiry`, `quantity`, `avg_price`, `last_traded_price`, `pnl`, `pct_change`, `currency`, `lot_size`, `sl_price`, `target_price`, `entry_date`, `expiry_date`, `recorded_at` |
+| `training.py` | `TrainingRunModel` | `run_id (PK)`, `status`, `instrument`, `model_version`, `algorithm`, `timesteps`, `train_sharpe/mdd/return/trades`, `val_sharpe/mdd/return/cagr/trades`, `backtest_sharpe/mdd/return/cagr/trades/constraints_met`, `recorded_at`, `ended_at` |
+| `backtest.py` | `BacktestRunModel`, `BacktestResultModel` | Run: `run_id, instrument, start_date, end_date, strategy params, total_trades, status`. Result: `result_id, run_id, date, portfolio_value, benchmark_value, allocation, close_price, sharpe_ratio, max_drawdown` |
+| `risk.py` | `RiskTimelineModel` | Composite PK, day-by-day allocation + drawdown + regime |
+| `positions.py` | `PositionModel` | FnO broker positions |
+| `orders.py` | `OrderModel` | Intraday orders |
+| `manoeuvres.py` | `ManoeuvreModel` | `id, date, timestamp, action, lot_key, from_group, to_group, nifty_spot, ...` |
+| `portfolio.py` | `PortfolioModel` | `id, date, group_name, group_id, underlying, view, lot_count, pnl_now, sl_pnl, target_pnl, nifty_spot, banknifty_spot` |
+| `config_overrides.py` | `ConfigOverrideModel` | `key (PK), value` |
+| `audit.py` | `AuditLogModel` | `id, timestamp, endpoint, method, status_code, trace_id` |
+| `alerts.py` | `AlertModel` | Chat/query confidence log |
+| `user.py` | `UserModel` | `user_id, username, email, hashed_password, is_active, is_admin, created_at` |
+| `model_registry.py` | `ModelRegistryModel` | Model version tracking |
+
+---
+
+## 5. Schemas (`src/rita/schemas/`)
+
+All schemas are Pydantic 2.x models. Each ORM model has a corresponding schema.
+
+| Schema file | Key classes |
+|---|---|
+| `instrument.py` | `Instrument` |
+| `market_data.py` | `MarketDataCache` |
+| `paper_positions.py` | `PaperPosition` |
+| `training.py` | `TrainingRun` |
+| `backtest.py` | `BacktestRun`, `BacktestResult` |
+| `risk.py` | `RiskTimeline` |
+| `positions.py` | `Position` |
+| `orders.py` | `Order` |
+| `manoeuvres.py` | `Manoeuvre` |
+| `portfolio.py` | `Portfolio` |
+| `snapshots.py` | `Snapshot` |
+| `trades.py` | `Trade` |
+| `config_overrides.py` | `ConfigOverride` |
+| `audit.py` | `AuditLog` |
+| `alerts.py` | `Alert` |
+| `model_registry.py` | `ModelRegistry` |
+
+---
+
+## 6. Experience Layer — `rita.py` Endpoints
+
+**Prefix:** `/api/v1`
+
+| Endpoint | Method | Key logic |
+|---|---|---|
+| `/instrument/active` | GET | Reads `active_instrument_id` from `config_overrides`; returns `{id, name, flag, exchange, lot_size}` |
+| `/performance-summary` | GET | Latest backtest KPIs for active instrument. Returns `_run_instrument_id` and `_active_instrument_id` for stale-check. |
+| `/backtest-daily` | GET | Daily portfolio/benchmark/allocation series for latest completed backtest of active instrument |
+| `/performance-feedback` | GET | Calls `build_performance_feedback(backtest_df, perf_metrics, training_rounds)` |
+| `/portfolio-comparison` | GET | Calls `build_portfolio_comparison(backtest_df, portfolio_inr)` |
+| `/risk-timeline?phase=all&instrument=NIFTY` | GET | Per-day risk stats: drawdown, rolling vol, VaR 95, regime, trend_score |
+| `/trade-events` | GET | Entry/exit events derived from allocation changes (threshold 0.05) — includes sharpe_at_trade, delta_var |
+| `/stress-scenarios` | GET | Calls `simulate_stress_scenarios(portfolio_inr, [-20,-10,-5,5,10,20], rita_allocation_pct)` |
+
+**`_get_active_instrument_id(db)`** — shared helper in both `rita.py` and `pipeline_wizard.py`:
+```python
+def _get_active_instrument_id(db: Session) -> str:
+    cfg = ConfigOverridesRepository(db).find_by_id("active_instrument_id")
+    return cfg.value.upper() if cfg and cfg.value else "NIFTY"
+```
+
+---
+
+## 7. Portfolio Router — `api/v1/portfolio.py`
+
+**Prefix:** `/api/v1/portfolio`
+
+| Endpoint | Method | Key logic |
+|---|---|---|
+| `/overview` | GET | `portfolio_overview()` — loads all 4 instruments, aligns to common date intersection, returns normalised returns + correlation matrix |
+| `/backtest` | POST | `PortfolioBacktestRequest` → `portfolio_backtest(instruments, allocations_eur, start_date, end_date)` |
+| `/positions?mode=paper\|live` | GET | paper → `PaperPositionsRepository`; live → `PositionsRepository`. Returns `_position_to_row()` shaped list |
+| `/summary` | GET | `PortfolioService.list_all()` + `MarketDataCacheRepository` → total_pnl, lot_count, spot prices, OHLCV `market` dict for all 4 instruments |
+| `/price-history?periods=N` | GET | Last N NIFTY OHLCV records from `market_data_cache` |
+| `/hedge-history` | GET | `ManoeuvreService.list_all()` filtered to hedge actions |
+| `/man-groups` | GET | Aggregates portfolio records by group_name |
+| `/man-snapshot` | POST | No-op with 200 OK (records snapshot intent) |
+| `/man-pnl-history` | GET | `PortfolioService.list_all()` sorted by date |
+| `/man-daily-status` | GET | Today's manoeuvre count + last manoeuvre record |
+| `/man-daily-snapshot` | POST | No-op with 200 OK |
+
+**`_position_to_row(r)`** — transforms Position/PaperPosition ORM row into JS-ready dict with `{instrument, full, und, exp, type, strike, side, qty, avg, ltp, chg, pnl, currency, lot_size, sl_price, target_price, entry_date, expiry_date}`.
+
+---
+
+## 8. Pipeline Wizard — `experience/pipeline_wizard.py`
+
+**Prefix:** `/api/v1`
+
+| Endpoint | Method | Request | Key logic |
+|---|---|---|---|
+| `/goal` | POST | `GoalRequest{target_return_pct, time_horizon_days, risk_tolerance}` | Computes feasibility (conservative/realistic/ambitious/unrealistic), yearly NIFTY returns, last 12m return |
+| `/market` | POST | none | Calls `_compute_market_signals(db, instrument, "daily", 252)` → enriches latest bar with trend/RSI/MACD/BB labels |
+| `/strategy` | POST | none | Returns algorithm config: DoubleDQN, timesteps, learning_rate, batch_size, gamma |
+
+**`_compute_market_signals(db, instrument, timeframe, periods)`** — internal helper that:
+1. Reads from `market_data_cache` (or falls back to CSV)
+2. Resamples to weekly/monthly if needed
+3. Computes RSI-14, MACD(12,26,9), BB(20,2σ), ATR-14, EMA-5/13/26/50, trend_score
+4. Returns last `periods` bars
+
+---
+
+## 9. Agent Panel — `experience/agent_panel.py`
+
+See `Spec_RITA_App.md` Section 9 for full AgentState and node details.
+
+**LangGraph setup:**
+```python
+_workflow = StateGraph(AgentState)
+_workflow.add_node("context", context_agent)
+# ... 5 more nodes
+_memory = MemorySaver()
+_graph = _workflow.compile(checkpointer=_memory)
+```
+
+**Session state management (server-side):**
+```python
+SESSION_DATA: dict[str, dict] = {}  # thread_id → {cash, holdings, portfolio_value}
+```
+- Initialised to `{cash: 5000.0, holdings: 0.0, portfolio_value: 5000.0}` on day 0 or new thread
+- Updated after each LangGraph invocation
+
+**Data source:** ASML April 2026 data loaded eagerly at module import from `data/raw/ASML/asml_2001-2026.csv`
+
+---
+
+## 10. Core Engine — `src/rita/core/`
+
+### `data_loader.py`
+
+```python
+def load_nifty_csv(path: str) -> pd.DataFrame:
+    """Returns DatetimeIndex df with columns: Open, High, Low, Close, Volume.
+    Handles: IST timezone-aware dates, plain ISO, dd-MMM-yyyy formats."""
+
+def load_instrument_data(instrument_id: str) -> pd.DataFrame:
+    """Loads the correct CSV for NIFTY/BANKNIFTY/ASML/NVIDIA via find_instrument_csv."""
+```
+
+### `trading_env.py`
+
+```python
+class RITAEnv(gym.Env):
+    """DoubleDQN trading environment. Actions: 0=sell, 1=hold, 2=buy."""
+
+def train_best_of_n(env, n_seeds: int = 3) -> DoubleDQN:
+    """Train n models with different seeds, return the one with best backtest Sharpe."""
+```
+
+### `ml_dispatch.py`
+
+```python
+def _run_training(run_id: str, instrument: str, n_seeds: int = 3) -> None:
+    """Daemon thread function. Full cycle:
+    1. Create TrainingRun record (pending → running)
+    2. load_instrument_data(instrument)
+    3. train_best_of_n(env, n_seeds) → saves .zip to models/{instrument}/
+    4. TrainingTracker writes training_history.csv
+    5. Update TrainingRun with all phase metrics (train/val/backtest Sharpe, MDD, return)
+    6. status = complete | failed
+    """
+```
+
+### `backtest_dispatch.py`
+
+```python
+def run_episode(model: DoubleDQN, df: pd.DataFrame) -> tuple[list, list]:
+    """Real backtest engine (not a stub). Returns (portfolio_values, benchmark_values)."""
+```
+
+### `training_tracker.py`
+
+```python
+class TrainingTracker:
+    def __init__(self, run_id: str, instrument: str): ...
+    def record_step(self, timestep: int, reward: float, loss: float): ...
+    def flush(self): ...  # writes training_history.csv
+```
+
+### `performance.py`
+
+```python
+def compute_all_metrics(port_values: list, bench_values: list, risk_free: float = 0.0) -> dict:
+    """Returns: sharpe, sortino, calmar, max_drawdown, cagr, win_rate, total_days"""
+
+def build_performance_feedback(backtest_df: pd.DataFrame, perf_metrics: dict, training_rounds: int) -> dict:
+    """Structured feedback card: stage (Early|Developing|Consistent|Strong), guidance list, constraint checklist"""
+
+def build_portfolio_comparison(backtest_df: pd.DataFrame, portfolio_inr: float) -> dict:
+    """Compare RITA vs Conservative (20% eq)/Moderate (50% eq)/Aggressive (80% eq) profiles"""
+
+def simulate_stress_scenarios(portfolio_inr: float, market_moves: list[int], rita_allocation_pct: float) -> dict:
+    """Point-in-time stress test. Returns scenario rows: {move_pct, portfolio_pnl, mdd_breach, profiles}"""
+```
+
+### `portfolio_engine.py`
+
+```python
+FX_EUR_PER_UNIT = {"INR": 1/91, "USD": 1/1.09, "EUR": 1.0}
+INSTRUMENT_CCY  = {"NIFTY": "INR", "BANKNIFTY": "INR", "ASML": "EUR", "NVIDIA": "USD"}
+ALL_INSTRUMENTS = ["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]
+
+def portfolio_overview() -> dict:
+    """Loads all 4 instruments, aligns to common date intersection.
+    Returns: instruments[], common_days, date_from, date_to,
+             normalised_returns{nifty,banknifty,asml,nvidia} (≤500 pts),
+             correlation_matrix{}"""
+
+def portfolio_backtest(instruments, allocations_eur, start_date, end_date) -> dict:
+    """Per instrument: load → filter → whole-share fraction → run_episode() (or B&H fallback).
+    Combines with EUR weights; calls compute_all_metrics().
+    Returns: flat KPIs + instruments[] + daily[] + instrument_series{}"""
+```
+
+### `drift_detector.py`
+
+```python
+class DriftDetector:
+    """5 DB-backed checks: data_freshness, model_age, sharpe_trend, backtest_count, db_connectivity"""
+    def run(self, db: Session) -> dict:
+        """Returns: {summary: {overall: "ok"|"warn"|"err"}, checks: {name: {status, message}}}"""
+```
+
+### `classifier.py`
+
+```python
+# 20 intents grouped into:
+# return_Xm/Xy (return estimation), market_sentiment, trend_direction,
+# rsi_reading, volatility_check, invest_now, allocation_level,
+# conservative_strategy, aggressive_strategy,
+# stress_crash_10/20, stress_rally_10, stress_flat,
+# backtest_performance, portfolio_compare, explain_decision
+
+def classify_intent(query: str) -> tuple[str, float]:
+    """Returns (intent_name, confidence). SentenceTransformer, cosine similarity."""
+
+def dispatch(intent: str, confidence: float, db: Session) -> dict:
+    """Routes to handler based on intent. Returns structured response."""
+```
+
+---
+
+## 11. Config (`src/rita/config.py`)
+
+Uses `pydantic-settings` with YAML hierarchy: `config/base.yaml` → `config/{env}.yaml` → env vars.
+
+Key settings:
+- `settings.app.name`, `settings.app.version`
+- `settings.database.database_url` → `"sqlite:///./rita_output/rita.db"`
+- `settings.security.cors_origins`, `settings.security.jwt_secret`
+- `settings.data.input_dir`, `settings.data.output_dir`
+- `settings.model.path`
+- `settings.instruments.nifty.lot_size` (default 75), `settings.instruments.banknifty.lot_size` (default 30)
+
+**Never hardcode lot sizes** — always read from `get_settings().instruments`.
+
+---
+
+## 12. Database Setup (`src/rita/database.py`)
+
+```python
+engine = create_engine(settings.database.database_url, ...)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+def get_db() -> Generator[Session, None, None]:
+    """FastAPI dependency. Yields a session; closes on exit."""
+```
+
+---
+
+## 13. Startup Seeding (`src/rita/main.py` `lifespan()`)
+
+On every startup (idempotent — skip if table already populated):
+
+1. `Base.metadata.create_all(bind=engine)` — creates new tables
+2. **Column migrations** — `ALTER TABLE ... ADD COLUMN ...` for new columns (swallows error if already exists)
+3. **Instruments seed** — 4 rows: NIFTY (lot 75), BANKNIFTY (lot 30), NVIDIA, ASML; one-time rename NVDA→NVIDIA
+4. **Market data seed** — all 4 instruments, year 2025+2026, `db.add_all()` bulk insert (< 2 sec each)
+5. **Paper positions seed** — 2 ASML paper options: ASML26MAY1300CE (short, EUR) and ASML26JUN1300CE (short, EUR); upsert on startup (updates ltp/pnl/pct_change each restart)
+
+---
+
+## 14. AI Agent Directives
+
+1. **Always maintain the 3-tier separation.** System: one repo. Workflow: services only. Experience: read-only aggregation.
+2. **Never inject a repository directly into a workflow router.** Use service classes.
+3. **Experience tier has zero writes.** `db.commit()` in experience routers = bug.
+4. **`_get_active_instrument_id(db)`** is defined independently in both `rita.py` and `pipeline_wizard.py`. Do not import across these files.
+5. **LangGraph dependency** — `agent_panel.py` imports `langgraph`. Do not import it in core or system routers.
+6. **Don't add `print()` statements** — use `structlog.get_logger()`.
+7. **Don't hardcode lot sizes** — always use `get_settings().instruments`.
+8. **Don't make external API calls** — all data is local CSV or DB.
+9. **Paper positions** live in `paper_positions` table, not in `positions`. Route via `/api/v1/portfolio/positions?mode=paper`.

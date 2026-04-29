@@ -128,6 +128,10 @@ export async function loadPerfSummary() {
     document.getElementById('kpi-mdd').className = 'kpi-value ' + (Math.abs(parseFloat(d.max_drawdown_pct)) < 10 ? 'pos' : 'neg');
     setEl('kpi-winrate', fmtPct(d.win_rate_pct));
     setEl('kpi-days', `${d.total_days} days`);
+    if (d.backtest_start_date && d.backtest_end_date) {
+      setEl('kpi-bt-range', `${d.backtest_start_date} → ${d.backtest_end_date}`);
+      setEl('kpi-bt-days', `${d.total_days} days`);
+    }
 
     // Re-render constraints using the same performance data that drives the KPIs.
     // loadMetrics() may use a different (stale) source — performance-summary wins.

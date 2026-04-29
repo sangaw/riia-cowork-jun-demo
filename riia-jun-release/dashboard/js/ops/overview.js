@@ -5,7 +5,7 @@ import { fmt, badge, stepName } from './utils.js';
 export async function loadOverview() {
   const [health, metrics, progress] = await Promise.all([
     apiFetch('/health'),
-    apiFetch('/api/v1/metrics/summary'),
+    apiFetch('/api/experience/ops/metrics/summary'),
     apiFetch('/progress'),
   ]);
 
@@ -71,6 +71,9 @@ export async function loadOverview() {
     document.getElementById('mdl-sharpe').textContent = fmt(t.latest_backtest_sharpe);
     document.getElementById('mdl-mdd').textContent = fmt(t.latest_backtest_mdd_pct) + '%';
     document.getElementById('mdl-cagr').textContent = fmt(t.latest_backtest_cagr_pct) + '%';
+    if (t.backtest_start_date && t.backtest_end_date) {
+      document.getElementById('mdl-bt-range').textContent = `${t.backtest_start_date} → ${t.backtest_end_date}`;
+    }
 
     const sharpePct = Math.min(100, (t.latest_backtest_sharpe / 1.5) * 100);
     document.getElementById('bar-sharpe').style.width = sharpePct + '%';
@@ -106,7 +109,7 @@ export async function loadOverview() {
   }
 
   // Recent activity from step log
-  const stepLog = await apiFetch('/api/v1/step-log');
+  const stepLog = await apiFetch('/api/experience/ops/step-log');
   const actEl = document.getElementById('overview-activity');
   if (stepLog && stepLog.length) {
     const recent = stepLog.slice(-4).reverse();

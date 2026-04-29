@@ -3,7 +3,7 @@ import { apiFetch } from './api.js';
 import { fmt, badge, stepName } from './utils.js';
 
 export async function loadCICD() {
-  const stepLog = await apiFetch('/api/v1/step-log');
+  const stepLog = await apiFetch('/api/experience/ops/step-log');
   const logEl = document.getElementById('cicd-steplog');
   if (stepLog && stepLog.length) {
     logEl.innerHTML = `<table>

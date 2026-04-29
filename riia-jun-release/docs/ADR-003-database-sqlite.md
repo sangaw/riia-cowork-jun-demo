@@ -61,11 +61,14 @@ No application code changes required — SQLAlchemy's dialect layer handles the 
 riia-jun-release/
 ├── src/rita/
 │   ├── database.py              ← engine, SessionLocal, Base, get_db() dependency
-│   └── models/                  ← SQLAlchemy ORM models (one per table, 15 total)
+│   └── models/                  ← SQLAlchemy ORM models (one per table, 17+ total)
 │       ├── __init__.py
 │       ├── positions.py
+│       ├── paper_positions.py   ← seeded ASML short calls (entry_date, expiry_date)
+│       ├── user.py              ← user accounts
+│       ├── model_registry.py    ← model version tracking
 │       ├── orders.py
-│       └── ... (15 files)
+│       └── ... (17+ files)
 ├── alembic/
 │   ├── env.py                   ← points to RITA Base metadata
 │   ├── versions/
@@ -79,10 +82,13 @@ riia-jun-release/
 ```
 src/rita/config.py               ← add DatabaseSettings (database_url)
 src/rita/repositories/base.py    ← rewrite: CsvRepository → SqlRepository[T, ModelT]
-src/rita/repositories/*.py       ← 15 files: update inheritance, add model_class attr
-src/rita/main.py                 ← add lifespan: run alembic upgrade head on startup
+src/rita/repositories/*.py       ← 17+ files: update inheritance, add model_class attr
+src/rita/main.py                 ← lifespan: Base.metadata.create_all + Alembic upgrade head
+                                    + inline ALTER TABLE ADD COLUMN for new columns (idempotent)
 pyproject.toml                   ← add sqlalchemy>=2.0, alembic>=1.13
 ```
+
+**Inline column migrations:** `main.py` `lifespan()` runs idempotent `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` statements for new columns added after the initial Alembic migration. This handles dev environments where Alembic is not run explicitly. Alembic is the authoritative source; the inline migrations are a safety net only.
 
 ### Repository base interface (unchanged externally)
 
@@ -112,12 +118,11 @@ def get_db() -> Generator[Session, None, None]:
 
 # repositories/base.py
 class SqlRepository(Generic[SchemaT, ModelT]):
-    def __init__(self, db: Session = Depends(get_db)):
+    def __init__(self, db: Session) -> None:   # ← db is required; no default
         self.db = db
 ```
 
-Replaces the current `threading.Lock` per-instance approach — SQLAlchemy handles
-session isolation per request.
+Replaces the Sprint 0 `threading.Lock` per-instance approach — SQLAlchemy handles session isolation per request. All repositories require `db: Session`; no default constructor exists.
 
 ---
 

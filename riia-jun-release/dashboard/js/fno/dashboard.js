@@ -36,8 +36,10 @@ export function renderDashKpis() {
 
 export function renderMarketSnapshot() {
   const grid = document.getElementById('mkt-grid');
-  const underlyings = state.currentUnd === 'ALL' ? ['NIFTY', 'BANKNIFTY'] :
-                      state.currentUnd === 'NIFTY' ? ['NIFTY'] : ['BANKNIFTY'];
+  const underlyings = state.currentUnd === 'ALL'
+    ? ['NIFTY', 'BANKNIFTY']
+    : state.marketData[state.currentUnd] ? [state.currentUnd] : [];
+  if (!underlyings.length) { grid.innerHTML = ''; return; }
   grid.className = `mkt-grid ${underlyings.length === 1 ? 'c1' : 'c2'}`;
 
   grid.innerHTML = underlyings.map(u => {
@@ -94,6 +96,8 @@ export function renderSegmentChart() {
     if (state.currentExpiry === 'ALL') { labels.push('Realized'); data.push(state.realizedPnl); }
   } else if (state.currentUnd === 'BANKNIFTY') {
     expiries.forEach(e => { labels.push(`BNKN ${e}`); data.push(sumPnl('BANKNIFTY', e)); });
+  } else if (state.currentUnd !== 'ALL') {
+    expiries.forEach(e => { labels.push(`${state.currentUnd} ${e}`); data.push(sumPnl(state.currentUnd, e)); });
   } else {
     expiries.forEach(e => {
       labels.push(`NIFTY ${e}`); data.push(sumPnl('NIFTY', e));
@@ -137,8 +141,10 @@ export function renderDailyProgress() {
 
   const base0N = history[0].nifty;
   const base0B = history[0].banknifty;
+  const base0A = history.find(h => h.asml)?.asml || null;
   const niftyPct = history.map(h => +((h.nifty  / base0N - 1) * 100).toFixed(2));
   const bnknPct  = history.map(h => +((h.banknifty / base0B - 1) * 100).toFixed(2));
+  const asmlPct  = base0A ? history.map(h => h.asml ? +((h.asml / base0A - 1) * 100).toFixed(2) : null) : null;
 
   const pnlColors  = netPnl.map(v => v >= 0 ? 'rgba(26,107,60,0.75)'  : 'rgba(155,28,28,0.75)');
   const pnlBorders = netPnl.map(v => v >= 0 ? '#1A6B3C' : '#9B1C1C');
@@ -162,6 +168,12 @@ export function renderDailyProgress() {
           borderColor: '#6B2FA0', backgroundColor: 'transparent',
           borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, yAxisID: 'yIdx', order: 1,
         },
+        ...(asmlPct ? [{
+          type: 'line', label: 'ASML %', data: asmlPct,
+          borderColor: '#92480A', backgroundColor: 'transparent',
+          borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, tension: 0.3, yAxisID: 'yIdx', order: 1,
+          spanGaps: true,
+        }] : []),
       ]
     },
     options: {

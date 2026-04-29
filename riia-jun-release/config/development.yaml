@@ -6,6 +6,6 @@ model:
   path: "C:\\Users\\Sandeep\\Documents\\Work\\code\\riia-cowork-jun\\riia-jun-release\\models"
 
 security:
-  cors_origins: ["http://localhost:3000", "http://localhost:8000"]
+  cors_origins: ["http://localhost:3000", "http://localhost:8000", "null"]
 
 

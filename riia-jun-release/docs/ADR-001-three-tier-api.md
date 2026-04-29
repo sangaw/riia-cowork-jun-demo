@@ -2,8 +2,9 @@
 
 | Field | Value |
 |---|---|
-| **Status** | Accepted |
+| **Status** | Accepted (updated Sprint 4) |
 | **Date** | 2026-03-30 |
+| **Last updated** | 2026-04-16 (Sprint 4 — full router inventory) |
 | **Sprint** | 0 |
 
 ---
@@ -26,37 +27,60 @@ Split all API routes into three tiers with strict rules about what each tier is 
 
 ### Tier 1 — System (`api/v1/system/`)
 
-Pure CRUD for individual CSV table resources. No business logic. Direct repository calls only.
+Pure CRUD for individual ORM-backed table resources. No business logic. Direct repository calls only.
 
-| Router | Prefix | Responsibility |
+| Router file | Prefix | Tables accessed |
 |---|---|---|
-| `PositionsRouter` | `/api/v1/system/positions/` | Create, read, update, delete position records |
-| `OrdersRouter` | `/api/v1/system/orders/` | Create, read, update, delete order records |
-| `SnapshotsRouter` | `/api/v1/system/snapshots/` | Create, read, update, delete snapshot records |
+| `system/positions.py` | `/api/v1/positions` | `positions` |
+| `system/orders.py` | `/api/v1/orders` | `orders` |
+| `system/snapshots.py` | `/api/v1/snapshots` | `snapshots` |
+| `system/trades.py` | `/api/v1/trades` | `trades` |
+| `system/alerts.py` | `/api/v1/alerts` | `alerts` |
+| `system/audit.py` | `/api/v1/audit` | `audit_log` |
+| `system/market_data.py` | `/api/v1/market-data` | `market_data_cache` |
+| `system/market_signals.py` | `/api/v1/market-signals` | `market_data_cache` (computes indicators) |
+| `system/config_overrides.py` | `/api/v1/config-overrides` | `config_overrides` |
+| `system/instruments.py` | `/api/v1/instruments` | `instruments` |
+| `system/training_runs.py` | `/api/v1/training-history`, `/api/v1/risk-timeline`, `/api/v1/split-dates`, `/api/v1/backtest-status/{id}` | `training_runs`, `backtest_runs`, `backtest_results` |
+| `system/drift.py` | `/api/v1/drift` | DB-backed DriftDetector |
+| `system/data_prep.py` | `/api/v1/data-prep/*`, `/api/v1/test-results`, `/api/v1/shap-values`, `/api/v1/data-understanding` | file system |
 
 **Rule:** A System router may call **one repository** only. It must never call a service or another router.
 
 ### Tier 2 — Business Process (`api/v1/workflow/`)
 
-Stateful workflows that orchestrate multiple services. Returns job status and results. These are long-running operations triggered by the user.
+Stateful workflows that orchestrate multiple services. Returns job status and results. Long-running operations triggered by the user. JWT-protected.
 
-| Router | Prefix | Responsibility |
+| Router file | Endpoints | Responsibility |
 |---|---|---|
-| `TrainRouter` | `/api/v1/workflow/train/` | Start, monitor, and retrieve DQN training runs |
-| `BacktestRouter` | `/api/v1/workflow/backtest/` | Start, monitor, and retrieve backtest results |
-| `EvaluateRouter` | `/api/v1/workflow/evaluate/` | Run model evaluation against live or historical data |
+| `workflow/train.py` | `POST /api/v1/train` | Start DQN training run, multi-seed via `train_best_of_n()` |
+| `workflow/backtest.py` | `POST /api/v1/backtest` | Start backtest, store results in `backtest_runs` + `backtest_results` |
+| `workflow/evaluate.py` | `POST /api/v1/evaluate` | Run model evaluation against live or historical data |
+| `workflow/pipeline.py` | `POST /api/v1/instrument/select`, `GET /api/v1/pipeline/progress`, `POST /api/v1/pipeline/quick-backtest` | Instrument switch + pipeline state |
+| `workflow/chat.py` | `POST /api/v1/chat`, `POST /api/v1/chat/warmup`, `GET /api/v1/chat/monitor` | Local intent classifier chat; logs to `alerts` table |
 
 **Rule:** A Workflow router calls **services only** — never repositories directly, never Experience Layer routers.
 
 ### Tier 3 — Experience Layer (`api/experience/`)
 
-Composes data from the System and Business Process tiers into a single, UI-optimised payload per view. Each router is shaped around what a specific screen needs — not around what the data model looks like. No business logic, no writes — composition only.
+Composes data from the System and Workflow tiers into single, UI-optimised payloads per view. Shaped around what a specific screen needs. No writes, no side effects — read-only composition only.
 
-| Router | Prefix | Responsibility |
+| Router file | Prefix | Purpose |
 |---|---|---|
-| `DashboardExperience` | `/api/experience/dashboard/` | RITA trading dashboard payload (positions + model state + alerts) |
-| `FnoExperience` | `/api/experience/fno/` | FnO portfolio view payload (manoeuvres + Greeks + P&L) |
-| `OpsExperience` | `/api/experience/ops/` | Ops dashboard payload (run history + metrics + health) |
+| `experience/dashboard.py` | `/api/experience` | Legacy RITA / FnO / Ops aggregated payloads |
+| `experience/fno.py` | `/api/experience/fno` | FnO aggregated payload (Greeks, P&L, manoeuvres) |
+| `experience/ops.py` | `/api/experience/ops` | Ops payload + metrics/summary + step-log + users |
+| `experience/rita.py` | `/api/v1` | RITA performance, risk, trade events, instrument selection endpoints |
+| `experience/pipeline_wizard.py` | `/api/v1` | Goal / Market / Strategy wizard steps for the onboarding flow |
+| `experience/ds.py` | `/api/experience/ds` | DS dashboard — instruments + training history + split dates |
+| `experience/agent_panel.py` | `/api/v1/agent-panel` | LangGraph 6-agent simulation; HITL run-day + plot endpoints |
+
+**Special routers (outside the 3-tier hierarchy):**
+
+| Router file | Prefix | Notes |
+|---|---|---|
+| `api/v1/auth.py` | `/auth/token` | JWT token issue — not CRUD, not ML, not a UI view |
+| `api/v1/portfolio.py` | `/api/v1/portfolio/*` | Cross-instrument portfolio + FnO positions; 11 endpoints |
 
 **Rule:** An Experience Layer router calls **System routers or services** to compose responses. It must never write data or trigger side effects.
 

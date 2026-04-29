@@ -37,10 +37,58 @@ This document outlines the architecture, design constraints, and purposes of the
   - **Phase 02 (Backtest)**: Scenarios to configure backtesting date boundaries.
   - **Phase 03 (Analyse)**: Performance (comparing returns against benchmarks), Trade Journal, and Model Explainability (SHAP values).
   - **Phase 04 (Monitor)**: Live Risk Views, Training Progress, and Observability.
-- **Interacts with**: `/api/experience/dashboard` endpoint and underlying `workflow` triggers.
+  - **Phase 05 (Agentic AI)**: Agent Panel + AI Compliance — multi-agent ASML simulation demo.
+- **Interacts with**: `/api/experience/dashboard`, `/api/v1/agent-panel`, and underlying `workflow` triggers.
 - **Trade Journal section (`#sec-trades`) layout:**
   - Phase legend row (`display:flex; justify-content:space-between`) contains the colour-coded phase labels on the left and `#trades-model-info` (Rounds · Algorithm · Timesteps · Model ver, injected by `trades.js`) on the right.
   - `#trades-kpi-strip` uses `grid-template-columns: 1fr 1fr 2fr` — Train (25%) | Test (25%) | Backtest (50% with 8 metrics in a 4-column inner grid).
+
+#### Agent Panel section (`#sec-agent-panel`)
+
+6-agent LangGraph simulation running on ASML April 2026 data (16 days). Driven by `agent-panel.js`.
+
+**Key DOM elements:**
+| Element | Purpose |
+|---|---|
+| `#ap-chart` | Dual-axis Chart.js — ASML price (right y) + capital (left y) |
+| `#ap-regime` | Current regime label |
+| `#ap-policy` | Dynamic stop/target policy |
+| `#ap-probability` | Historical success % |
+| `#ap-proposal` | Action (BUY/WAIT) + size |
+| `#ap-compliance` | Compliance status — green or red |
+| `#ap-audit-body` | tbody — one row per day run, newest first (6 columns: Date, Context, Strategy, Probability, Portfolio Mgr, Compliance) |
+| `#ap-narrator-title` | Narrator box title (typewriter animated) |
+| `#ap-narrator-text` | Narrator insight text (typewriter animated) |
+| `#ap-hitl-panel` | Human-in-the-Loop decision panel (hidden until BUY proposal) |
+| `#ap-hitl-summary` | Proposal summary shown in HITL panel |
+| `#ap-run-btn` | `onclick="agentPanelStep()"` — Run Day / Processing / Complete |
+| `#agent-panel-status` | Status badge |
+| Reset button | `onclick="resetAgentPanel()"` |
+| Approve button | `onclick="approveAgentProposal()"` (inside HITL panel) |
+| Reject button | `onclick="rejectAgentProposal()"` (inside HITL panel) |
+
+#### AI Compliance section (`#sec-ai-compliance`)
+
+Reads `riia_agent_history` from localStorage. Three sub-tabs. Driven by `ai-compliance.js`.
+
+**Tab structure:**
+| Tab button id | View id | Content |
+|---|---|---|
+| `ac-tab-governance` | `ac-view-governance` | KPIs + visual timeline of days |
+| `ac-tab-guardrails` | `ac-view-guardrails` | Static rules documentation |
+| `ac-tab-trace` | `ac-view-trace` | Trace inspector (per-day agent logs) |
+
+**Key DOM elements:**
+| Element | Purpose |
+|---|---|
+| `#ac-pass-rate` | Compliance pass rate % |
+| `#ac-veto-count` | Number of FLAGGED days |
+| `#ac-days-run` | Total days run |
+| `#ac-timeline` | Container for clickable `.ac-node` day circles |
+| `#ac-day-label` | Selected day label in trace inspector |
+| `#ac-violation-badge` | Compliance status badge (shown on veto days) |
+| Tab buttons | `.ac-tab` class + `onclick="switchAcTab(tabId, viewId)"` |
+| Tab views | `.ac-view` class, toggled visible/hidden by `switchAcTab()` |
 
 ### 3. `fno.html` (FnO Portfolio Manager)
 - **Purpose**: A specialized tracker for Futures and Options positions. Focuses heavily on Greeks, margin utilization, and hedging tools.

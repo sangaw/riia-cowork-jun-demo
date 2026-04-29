@@ -6,7 +6,7 @@ export async function loadAudit() {
   try {
     const [history, stepLog, metrics] = await Promise.all([
       api('/api/v1/training-history').catch(() => []),
-      api('/api/v1/step-log').catch(() => []),
+      api('/api/experience/ops/step-log').catch(() => []),
       api('/metrics').catch(() => ({})),
     ]);
 

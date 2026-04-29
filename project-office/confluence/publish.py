@@ -71,9 +71,11 @@ class ConfluenceClient:
         )
         try:
             with urllib.request.urlopen(req) as r:
-                return json.load(r), r.status
+                raw = r.read()
+                return (json.loads(raw) if raw.strip() else {}), r.status
         except urllib.error.HTTPError as e:
-            return json.loads(e.read().decode()), e.code
+            raw = e.read().decode()
+            return (json.loads(raw) if raw.strip() else {}), e.code
 
     def get_page(self, page_id: str, expand: str = "version,body.storage,ancestors"):
         result, status = self._request("GET", f"/content/{page_id}?expand={expand}")

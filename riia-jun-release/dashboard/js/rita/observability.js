@@ -5,9 +5,9 @@ import { badge, setEl } from './utils.js';
 export async function loadObservability() {
   try {
     const [metrics, drift, stepLog] = await Promise.all([
-      api('/api/v1/metrics/summary').catch(() => ({})),
+      api('/api/experience/ops/metrics/summary').catch(() => ({})),
       api('/api/v1/drift').catch(() => null),
-      api('/api/v1/step-log').catch(() => []),
+      api('/api/experience/ops/step-log').catch(() => []),
     ]);
 
     // Drift report — API returns { summary: {overall}, checks: {...} }

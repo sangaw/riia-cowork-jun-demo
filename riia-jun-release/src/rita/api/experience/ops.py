@@ -2,14 +2,21 @@
 
 ADR-001: Tier 3 (Experience Layer). Read-only composition. No writes, no side effects.
 Composes: training run history + backtest run history + recent audit log.
+Also provides Ops monitoring summaries (metrics/summary, step-log).
 """
 
+from collections import defaultdict
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
+from prometheus_client import REGISTRY
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.repositories.audit import AuditLogRepository
+from rita.repositories.training import TrainingRunsRepository
+from rita.repositories.backtest import BacktestRunsRepository
 from rita.schemas.audit import AuditLog
 from rita.schemas.backtest import BacktestRun
 from rita.schemas.training import TrainingRun
@@ -56,3 +63,143 @@ def get_ops(
         backtest_runs=backtest_runs,
         recent_audit=recent_audit,
     )
+
+
+# ── GET /api/v1/metrics/summary ───────────────────────────────────────────────
+
+def _collect_metrics_summary() -> dict[str, Any]:
+    """Read Prometheus REGISTRY and return a structured summary dict."""
+    total = 0
+    errors = 0
+    dur_sum = 0.0
+    endpoints: dict[str, dict[str, int]] = defaultdict(lambda: {"count": 0, "errors": 0})
+
+    try:
+        for mf in REGISTRY.collect():
+            if mf.name != "http_request_duration_seconds":
+                continue
+            for s in mf.samples:
+                handler  = s.labels.get("handler", "unknown")
+                sc       = str(s.labels.get("status_code", ""))
+                is_error = sc.startswith(("4", "5"))
+                if s.name.endswith("_count"):
+                    count = int(s.value)
+                    total += count
+                    endpoints[handler]["count"] += count
+                    if is_error:
+                        errors += count
+                        endpoints[handler]["errors"] += count
+                elif s.name.endswith("_sum"):
+                    dur_sum += s.value
+    except Exception:  # noqa: BLE001
+        pass
+
+    avg_ms         = round(dur_sum / total * 1000, 1) if total > 0 else None
+    error_rate_pct = round(errors / total * 100, 2) if total > 0 else 0.0
+    sorted_eps     = dict(sorted(endpoints.items(), key=lambda kv: kv[1]["count"], reverse=True)[:20])
+
+    return {
+        "total_requests": total,
+        "error_count": errors,
+        "error_rate_pct": error_rate_pct,
+        "avg_latency_ms": avg_ms,
+        "endpoints": sorted_eps,
+    }
+
+
+@router.get("/metrics/summary", summary="Structured API metrics summary", tags=["experience:ops"])
+def metrics_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Compose Prometheus live metrics + training KPIs for the Ops monitoring panel."""
+    api      = _collect_metrics_summary()
+    training: dict[str, Any] = {"rounds": 0}
+    pipeline: dict[str, Any] = {"completed_steps": 0, "failed_steps": 0, "step_timing": {}}
+
+    try:
+        train_repo = TrainingRunsRepository(db)
+        runs       = train_repo.read_all()
+        completed  = [r for r in runs if r.status in ("complete", "completed")]
+        failed     = [r for r in runs if r.status == "failed"]
+
+        training["rounds"]           = len(completed)
+        pipeline["completed_steps"]  = len(completed)
+        pipeline["failed_steps"]     = len(failed)
+
+        if completed:
+            latest = max(completed, key=lambda r: r.recorded_at)
+            sharpe = latest.backtest_sharpe
+            mdd    = latest.backtest_mdd
+            ret    = latest.backtest_return
+            training["latest_backtest_sharpe"]   = sharpe
+            training["latest_backtest_mdd_pct"]  = round(mdd * 100, 2) if mdd is not None else None
+            training["latest_backtest_cagr_pct"] = round(ret * 100, 2) if ret is not None else None
+            training["latest_constraints_met"]   = (
+                sharpe is not None and sharpe >= 1.0
+                and mdd is not None and abs(mdd * 100) < 10
+            )
+
+        bt_repo  = BacktestRunsRepository(db)
+        bt_runs  = [r for r in bt_repo.read_all() if r.status in ("complete", "completed")]
+        if bt_runs:
+            latest_bt = max(bt_runs, key=lambda r: r.recorded_at)
+            training["backtest_start_date"] = str(latest_bt.start_date)
+            training["backtest_end_date"]   = str(latest_bt.end_date)
+    except Exception:  # noqa: BLE001
+        pass
+
+    return {"api_requests": api, "pipeline": pipeline, "training": training}
+
+
+# ── GET /api/v1/step-log ──────────────────────────────────────────────────────
+
+@router.get("/step-log", summary="Pipeline step log", tags=["experience:ops"])
+def step_log(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+    """Compose the latest pipeline run as 4 logical steps for the monitoring table."""
+    train_repo = TrainingRunsRepository(db)
+    bt_repo    = BacktestRunsRepository(db)
+
+    all_trains = sorted(train_repo.read_all(), key=lambda r: r.recorded_at, reverse=True)
+    all_bts    = sorted(bt_repo.read_all(),   key=lambda r: r.recorded_at, reverse=True)
+
+    if not all_trains:
+        return []
+
+    latest    = all_trains[0]
+    latest_bt = all_bts[0] if all_bts else None
+
+    def _iso(dt: Any) -> Optional[str]:
+        return dt.isoformat() if dt else None
+
+    def _dur(start: Any, end: Any) -> Optional[float]:
+        if start and end:
+            return (end - start).total_seconds()
+        return None
+
+    return [
+        {
+            "step_num": 1, "step_name": "Load & Prepare Data", "status": "completed",
+            "duration_secs": None, "started_at": _iso(latest.started_at), "ended_at": None,
+            "run_id": latest.run_id,
+        },
+        {
+            "step_num": 2, "step_name": "Compute Indicators", "status": "completed",
+            "duration_secs": None, "started_at": _iso(latest.started_at), "ended_at": None,
+            "run_id": latest.run_id,
+        },
+        {
+            "step_num": 3, "step_name": f"Train Model ({latest.model_version})",
+            "status": latest.status,
+            "duration_secs": _dur(latest.started_at, latest.ended_at),
+            "started_at": _iso(latest.started_at), "ended_at": _iso(latest.ended_at),
+            "run_id": latest.run_id,
+            "sharpe": latest.backtest_sharpe,
+            "mdd": round(latest.backtest_mdd * 100, 2) if latest.backtest_mdd else None,
+        },
+        {
+            "step_num": 4, "step_name": "Backtest",
+            "status": latest_bt.status if latest_bt else "pending",
+            "duration_secs": _dur(latest_bt.started_at, latest_bt.ended_at) if latest_bt else None,
+            "started_at": _iso(latest_bt.started_at) if latest_bt else None,
+            "ended_at":   _iso(latest_bt.ended_at)   if latest_bt else None,
+            "run_id": latest_bt.run_id if latest_bt else None,
+        },
+    ]

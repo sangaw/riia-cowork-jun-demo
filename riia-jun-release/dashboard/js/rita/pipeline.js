@@ -72,7 +72,7 @@ export function renderGoalResult(containerId, d) {
 }
 
 export function renderMarketResult(d) {
-  const r = d.result || d;
+  const r = (d.result && d.result.latest) ? d.result.latest : (d.result || d);
   const fv = (v, dec=2) => (v != null && !isNaN(parseFloat(v))) ? parseFloat(v).toFixed(dec) : '—';
 
   const trendCls = {uptrend:'pos', sideways:'neu', downtrend:'neg'};

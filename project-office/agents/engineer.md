@@ -12,12 +12,13 @@ Write production application code in `riia-jun-release/src/rita/`. Each engineer
 | Source | Purpose |
 |--------|---------|
 | `PLAN_STATUS.md` | Confirm the exact task for today; check what prior engineers completed |
-| `riia-jun-release/Spec_Python_Code.md` | **Always** — architecture rules, 3-tier API, repository pattern, portfolio feature |
-| `riia-jun-release/Spec_DB.md` | **Always** — table inventory, safety rules, seeding, migration commands |
-| `riia-jun-release/Spec_Data.md` | When touching data files, loaders, or seeding logic |
-| `riia-jun-release/Spec_JS_Code.md` | When writing or fixing any JS in `dashboard/js/` |
-| `riia-jun-release/Spec_HTML_Code.md` | When writing or fixing any HTML in `dashboard/` |
-| `riia-jun-release/Spec_Chat_Feature.md` | When touching the chat pipeline or `/api/v1/chat` endpoints |
+| `riia-jun-release/Specs/Spec_Python_Code.md` | **Always** — architecture rules, 3-tier API, repository pattern, portfolio feature |
+| `riia-jun-release/Specs/Spec_DB.md` | **Always** — table inventory, safety rules, seeding, migration commands |
+| `riia-jun-release/Specs/Spec_Data.md` | When touching data files, loaders, or seeding logic |
+| `riia-jun-release/Specs/Spec_JS_Code.md` | When writing or fixing any JS in `dashboard/js/` |
+| `riia-jun-release/Specs/Spec_HTML_Code.md` | When writing or fixing any HTML in `dashboard/` |
+| `riia-jun-release/Specs/Spec_Chat_Feature.md` | When touching the chat pipeline or `/api/v1/chat` endpoints |
+| `riia-jun-release/Specs/Spec_Mobile_App.md` | When touching the PWA (`rita-build-portfolio/android-mobile-app/`) |
 | Relevant ADR(s) from `riia-jun-release/docs/` | Understand design decisions to implement against |
 | Scoped POC files | Read only the section needed (max 400 lines) — never load entire files |
 | Existing schemas in `src/rita/schemas/` | Implement to the Pydantic contracts; do not redefine |

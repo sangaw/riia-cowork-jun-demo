@@ -133,6 +133,15 @@ class SecuritySettings(BaseSettings):
     jwt_expiry_minutes: int = 60
     cors_origins: list[str] = ["http://localhost:8000"]
 
+    google_client_id: str = Field(
+        default="", 
+        validation_alias="RITA_GOOGLE_CLIENT_ID"
+    )
+    google_client_secret: SecretStr = Field(
+        default=SecretStr(""),
+        validation_alias="RITA_GOOGLE_CLIENT_SECRET",
+    )
+
 
 # ---------------------------------------------------------------------------
 # Root Settings

@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 class SnapshotBase(BaseModel):
     date: date
-    underlying: Literal["NIFTY", "BANKNIFTY"]
+    underlying: Literal["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]
     month: str                               # e.g. APR, MAY
     group_id: str                            # e.g. anchor, hedge1
     group_name: str                          # e.g. Monthly Anchor

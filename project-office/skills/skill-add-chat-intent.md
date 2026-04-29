@@ -156,7 +156,7 @@ Body:  {}
 Response: { "status": "ready" }
 ```
 
-The route handler logs every query to `chat_monitor.csv` (for observability). Do not remove this logging.
+The route handler logs every query to the `alerts` table via `AlertsRepository` (for observability). Do not remove this logging. The old `chat_monitor.csv` file no longer exists — all chat logging goes through the DB.
 
 ---
 
@@ -169,7 +169,7 @@ The route handler logs every query to `chat_monitor.csv` (for observability). Do
 5. **Write handler function** `_handle_my_new_intent(context)`
 6. **Wire into `dispatch()`** mapping
 7. **Add chat chip** in `chat.js` if it's a commonly-used query
-8. **Update spec** — add row to the intent table in `specs/Spec_Chat_Feature.md`
+8. **Update spec** — add row to the intent table in `Specs/Spec_Chat_Feature.md`
 
 ---
 
@@ -179,7 +179,7 @@ The route handler logs every query to `chat_monitor.csv` (for observability). Do
 |---|---|
 | `src/rita/core/classifier.py` | Edit — add to `INTENTS` dict, add handler fn, wire `dispatch()` |
 | `dashboard/js/rita/chat.js` | Edit — add chip to `CHIPS` array (if needed) |
-| `specs/Spec_Chat_Feature.md` | Edit — add row to intents table |
+| `Specs/Spec_Chat_Feature.md` | Edit — add row to intents table |
 
 ---
 
@@ -190,4 +190,4 @@ The route handler logs every query to `chat_monitor.csv` (for observability). Do
 - [ ] Intent wired into `dispatch()` — no `None` fallback for the new key
 - [ ] Handler is deterministic — no LLM calls, no external APIs
 - [ ] Chat chip added to `chat.js` if the intent is commonly used
-- [ ] `specs/Spec_Chat_Feature.md` intent table updated
+- [ ] `Specs/Spec_Chat_Feature.md` intent table updated

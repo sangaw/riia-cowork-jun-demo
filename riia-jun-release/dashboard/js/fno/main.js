@@ -1,5 +1,6 @@
 // ── FnO Dashboard — Entry Point ───────────────────────────────────────────────
-import { initApp, checkStatus } from './api.js';
+import { initApp, checkStatus, fetchPositions } from './api.js';
+import { state } from './state.js';
 import { initNav, setUnderlying, setExpiry } from './nav.js';
 import { filterPos } from './positions.js';
 import {
@@ -18,9 +19,15 @@ import {
 
 // ── Window bindings for inline onclick= attributes ────────────────────────────
 // Navigation / filter
-window.setUnderlying = setUnderlying;
-window.setExpiry     = setExpiry;
-window.filterPos     = filterPos;
+window.setUnderlying    = setUnderlying;
+window.setExpiry        = setExpiry;
+window.filterPos        = filterPos;
+window.togglePaperMode  = function(isPaper) {
+  state.paperMode = isPaper;
+  const lbl = document.getElementById('paper-mode-label');
+  if (lbl) lbl.textContent = isPaper ? 'Paper' : 'Live';
+  fetchPositions();
+};
 
 // Manoeuvre
 window.manSelectTile    = manSelectTile;

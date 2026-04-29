@@ -1,208 +1,116 @@
-ok# RITA Production Refactor — Project Guide for Claude
+# RITA Production Refactor — Project Guide for Claude
 
-This file is automatically loaded at the start of every Claude Code session.
-It gives all agents the essential context they need without re-reading the codebase.
+Auto-loaded every session. Navigation map only — detail lives in `project-office/context/`.
 
 ---
 
 ## What This Project Is
 
-**RITA** (Risk Informed Investment Approach) — a Nifty 50 Double DQN reinforcement learning trading system + FnO portfolio manager being refactored from POC to production.
+**RITA** — Nifty 50 Double DQN RL trading system + FnO portfolio manager, POC → production refactor.
 
-- **POC source:** `../poc/rita-cowork-demo` (local — not in this repo)
-- **Production target:** `.` (this repo)
-- **Assessment:** `rita-cowork-demo/production_ready.md` (v2.0, pre-digested — do NOT re-read in full)
-- **Daily status:** `PLAN_STATUS.md` — read this at the start of every session
+- **Daily status:** `PLAN_STATUS.md` — read this first every session
+- **POC source:** `../poc/rita-cowork-demo` (local, not in repo)
+- **Assessment:** `rita-cowork-demo/production_ready.md` — never read in full; use targeted excerpts only
 
-## The Agent Team
+## Agent Team
 
 | Role | Invoke as | Scope |
 |---|---|---|
 | Project Manager | `general-purpose` | Reads PLAN_STATUS.md; outputs task list and risk updates |
 | Architect | `Plan` agent | Reads targeted POC files + ADR excerpts; outputs design docs to `docs/` |
-| Design & Code Reviewer | `general-purpose` | Reads ADRs + git diffs; outputs review reports |
-| Engineer | `general-purpose` + `isolation: "worktree"` | Reads scoped file slice + ADR; writes code to `src/` |
+| Engineer | `general-purpose` + `isolation: "worktree"` | Reads scoped spec + source slice; writes code to `src/` |
 | QA Tester | `general-purpose` | Reads new code; writes tests to `tests/` |
-| Ops Engineer | `general-purpose` | Reads pyproject.toml + existing config; writes Dockerfile, CI, k8s/ |
-| Technical Writer | `general-purpose` | Reads sprint artifacts; publishes to Confluence via `publish_confluence.py` |
+| Ops Engineer | `general-purpose` | Reads pyproject.toml + config; writes Dockerfile, CI, k8s/ |
+| Technical Writer | `general-purpose` | Reads sprint artifacts; publishes via `publish_confluence.py` |
 
-**Full agent rules (guardrails, inputs, outputs, ADR references):** `project-office/agents/` — one card per role.
+Full agent cards: `project-office/agents/`
 
 ## Spec Files — Read Before Touching Code
 
-All spec files live in `riia-jun-release/specs/`. **Read the relevant spec before reading any source code.**
-Specs are pre-digested summaries — reading them first avoids loading large source files and cuts token usage significantly.
+All specs: `riia-jun-release/Specs/` — read spec first, source file second.
 
-| Spec file | Read when... |
+| Spec | Read when... |
 |---|---|
-| `specs/Spec_Python_Code.md` | Writing or reviewing any Python (routes, services, repos, core) |
-| `specs/Spec_DB.md` | Touching the database, migrations, ORM models, seeding, or any repository class |
-| `specs/Spec_Data.md` | Reading or writing data files; touching data_loader, seeding, or output paths |
-| `specs/Spec_JS_Code.md` | Writing or reviewing any JS in `dashboard/js/` |
-| `specs/Spec_HTML_Code.md` | Writing or reviewing any HTML in `dashboard/` |
-| `specs/Spec_Chat_Feature.md` | Touching the chat pipeline, classifier, or `/api/v1/chat` endpoints |
-| `specs/Spec_RITA_App.md` | General app overview and architecture |
+| `Spec_RITA_App.md` | General app overview, API inventory, key flows, agent panel |
+| `Spec_Python_Code.md` | Any Python (routes, services, repos, core) |
+| `Spec_DB.md` | Database, migrations, ORM models, repository classes |
+| `Spec_Data.md` | Data files, data_loader, seeding, output paths |
+| `Spec_JS_Code.md` | Any JS in `dashboard/js/` |
+| `Spec_HTML_Code.md` | Any HTML in `dashboard/` |
+| `Spec_Chat_Feature.md` | Chat pipeline, classifier, `/api/v1/chat` |
+| `Spec-Agent-Workflow.md` | Agent intent coverage, agentic AI architecture |
+| `Spec_Mobile_App.md` | PWA at `rita-build-portfolio/android-mobile-app/index.html` |
 
-**Maintenance rule (Definition of Done):** If a code change alters an API contract, data schema, data file layout, or architectural pattern, the relevant spec file **must be updated in the same commit**. A change is not done until the spec reflects it.
+**Definition of Done:** Any change to an API contract, data schema, or architectural pattern must update the relevant spec in the same commit.
 
----
+## Token Efficiency Rules
 
-## Token Efficiency Rules (ALL agents must follow)
-
-1. **Never read `production_ready.md` in full.** Pass only the relevant section as an excerpt.
-2. **Read spec files first, source files second** — specs are in `riia-jun-release/specs/`; use them to orient before touching code.
-3. **Read large files in slices** — max 400 lines at a time, targeted at the section being modified.
-   - `rest_api.py` = 1,533 lines | `rita.html` = 4,000 lines | `fno.html` = 3,500 lines
-4. **Read `PLAN_STATUS.md` first** — it tells you what's done and what's next. Don't re-explore.
-5. **Engineer agents use worktree isolation** — `isolation: "worktree"` for all code-writing agents.
-6. **Max 4 agent invocations per session** to stay within 80% of the Claude Pro quota.
-7. **Write outputs to files immediately** — agents must persist artifacts before the session ends.
+1. Read spec files first, source files second.
+2. Read large files in slices — max 400 lines. (`rest_api.py` = 1,533 | `rita.html` = 4,000 | `fno.html` = 3,500)
+3. Read `PLAN_STATUS.md` first — don't re-explore what's already tracked.
+4. Engineer agents use `isolation: "worktree"` for all code-writing tasks.
+5. Max 4 agent invocations per session (80% Claude Pro quota).
 
 ## Workspace Structure
 
 ```
-riia-cowork-jun/                    ← project workspace root (this repo)
-├── CLAUDE.md                       ← THIS FILE — auto-loaded every session
-├── PLAN_STATUS.md                  ← daily status tracker (read first every session)
-├── confluence-api-key.txt          ← TEMP: move to env var in Sprint 1
-│
-├── project-office/                 ← ALL cowork management code (not app code)
-│   ├── confluence/
-│   │   ├── publish.py              ← reusable ConfluenceClient class
-│   │   ├── setup_hierarchy.py      ← one-time hierarchy setup (already run)
-│   │   └── pages/                  ← one script per published section
-│   ├── sprint-boards/              ← sprint board Confluence scripts (one per sprint)
-│   └── scripts/                    ← utility scripts (reporting, cleanup, etc.)
-│
-└── riia-jun-release/               ← RITA APPLICATION CODE (what engineers build)
+riia-cowork-jun/
+├── CLAUDE.md                    ← this file
+├── PLAN_STATUS.md               ← daily tracker
+├── project-office/
+│   ├── agents/                  ← agent role cards
+│   ├── confluence/              ← ConfluenceClient + page scripts
+│   ├── context/                 ← detail files (constraints, confluence, domain)
+│   ├── sprint-boards/           ← one script per sprint board
+│   └── scripts/                 ← utility scripts
+└── riia-jun-release/            ← RITA APPLICATION CODE
     ├── src/rita/
-    │   ├── api/v1/system/          ← pure CRUD routers
-    │   ├── api/v1/workflow/        ← business process routers
-    │   ├── api/experience/                ← Experience Layer routers
-    │   ├── services/               ← business logic
-    │   ├── repositories/           ← CSV access layer (one class per table)
-    │   ├── schemas/                ← Pydantic data contracts
-    │   ├── core/                   ← pure calculation/ML logic
-    │   └── config.py               ← Pydantic Settings
+    │   ├── api/v1/system/       ← pure CRUD routers
+    │   ├── api/v1/workflow/     ← business process routers
+    │   ├── api/experience/      ← Experience Layer routers
+    │   ├── services/            ← business logic
+    │   ├── repositories/        ← data access (one class per table)
+    │   ├── schemas/             ← Pydantic contracts
+    │   └── core/                ← calculation/ML logic
     ├── config/{base,development,staging,production}.yaml
     ├── tests/{unit,integration,e2e}/
-    ├── dashboard/js/{rita,fno,ops}/ ← ES modules
-    ├── dashboard/css/responsive.css
-    ├── k8s/                        ← Kubernetes manifests
-    └── docs/                       ← ADRs (ADR-001 through ADR-005)
+    ├── dashboard/js/{rita,fno,ops}/
+    └── docs/                    ← ADRs (ADR-001 through ADR-005)
 ```
 
-**Rule for Engineer agents:** All application code goes in `riia-jun-release/`.
-**Rule for TechWriter/PM/Ops agents:** All management scripts go in `project-office/`.
+- Engineer agents: all app code → `riia-jun-release/`
+- TechWriter/PM/Ops agents: all management scripts → `project-office/`
 
-## Sprint 2.5+ Codebase Constraints (read before writing any service or router code)
+## Key Design Decisions
 
-> These facts are NOT obvious from the folder structure. Agents that miss them produce broken code.
-
-**1. All repositories require `db: Session` — no default constructor exists.**
-```python
-# CORRECT
-from rita.database import SessionLocal, get_db
-repo = TrainingRunsRepository(db)          # db is a sqlalchemy Session
-
-# WRONG — will raise TypeError at runtime
-repo = TrainingRunsRepository()
-```
-Every concrete repo class (`TrainingRunsRepository`, `ManoeuvresRepository`, `PortfolioRepository`, `BacktestRunsRepository`, etc.) inherits from `SqlRepository[T, M]` and has `def __init__(self, db: Session)`.
-
-**2. Service classes must accept `db: Session`, not optional repos.**
-```python
-# CORRECT
-class MyService:
-    def __init__(self, db: Session) -> None:
-        self._repo = MyRepository(db)
-
-# WRONG
-class MyService:
-    def __init__(self, repo: MyRepository | None = None) -> None:
-        self._repo = repo or MyRepository()   # MyRepository() won't work
-```
-
-**3. FastAPI dependency injection pattern (all routers since Day 16).**
-```python
-from rita.database import get_db
-
-def get_my_service(db: Session = Depends(get_db)) -> MyService:
-    return MyService(db)
-```
-
-**4. Background threads must open their own session.**
-```python
-from rita.database import SessionLocal
-
-def _background_worker(run_id: str) -> None:
-    db = SessionLocal()
-    try:
-        repo = MyRepository(db)
-        # ... do work ...
-    finally:
-        db.close()
-```
-Never pass a request-scoped `db` into a thread — sessions are not thread-safe.
-
-**5. `SqlRepository.upsert()` already calls `db.commit()` — do not commit again.**
-
-## Key Design Decisions (ADRs)
-
-- **ADR-001:** Three-tier API (Experience Layer / Business Process / System). All routes split accordingly.
-- **ADR-002:** Repository pattern for all data access. No direct DB/file I/O in routes or services — repos only.
-- **v1 target:** SQLite via SQLAlchemy 2.x ORM, cloud-native, stateless API, JWT-secured.
-- **v2 future:** PostgreSQL replaces SQLite (change one `database_url` config value — zero code changes).
-
-## Confluence Publishing
-
-```python
-# Credentials — set via environment variables (see .env.example)
-EMAIL = os.environ.get("CONFLUENCE_EMAIL", "")
-TOKEN = os.environ.get("CONFLUENCE_API_TOKEN") or open("confluence-api-key.txt").read().strip()
-SPACE = os.environ.get("CONFLUENCE_SPACE_KEY", "RIIAProjec")
-
-# Section parent IDs (hierarchy set up 2026-03-30)
-SECTION = {
-    "homepage":           "65110332",
-    "project_management": "65273887",   # Master Plan, Sprint Planning, Sprint Boards
-    "sprint_boards":      "65077274",   # one sub-page per sprint
-    "how_we_work":        "65241125",   # Cowork guides, token budget
-    "architecture":       "65339419",   # ADRs, schemas (Sprint 0+)
-    "engineering":        "65404944",   # API ref, service guide (Sprint 1-3)
-    "quality_testing":    "65404959",   # test strategy, coverage reports
-    "operations":         "65339434",   # runbooks, k8s, alerting
-    "release_notes":      "65208341",   # v1.0 release notes
-}
-
-# Publisher: project-office/confluence/publish.py (ConfluenceClient class)
-```
-
-**Rule:** Use plain HTML only in Confluence pages — no `ac:structured-macro` tags (returns HTTP 400 on this instance).
-**Rule:** New pages for Architecture ADRs go under `SECTION["architecture"]`. New sprint boards go under `SECTION["sprint_boards"]`.
+- **ADR-001:** Three-tier API — Experience Layer / Business Process / System CRUD
+- **ADR-002:** Repository pattern — no direct DB/file I/O in routes or services
+- **v1:** SQLite + SQLAlchemy 2.x ORM, stateless API, JWT-secured
+- **v2:** PostgreSQL replaces SQLite via one config change — zero code changes
 
 ## Daily Commands
 
-| User says | What to do |
+| User says | Action |
 |---|---|
 | `Start Day N` | Read PLAN_STATUS.md → confirm tasks → launch agents |
-| `End day` | 1. Update PLAN_STATUS.md (mark day done) → 2. Update `project-office/program-roadmap.html` (progress bars + badges) → 3. Run `publish_sprint{N}_board.py` to update Confluence sprint board → 4. git commit |
+| `End day` | 1. Update PLAN_STATUS.md → 2. Update `project-office/program-roadmap.html` → 3. Run sprint board Confluence script → 4. git commit |
 | `What's next?` | Read PLAN_STATUS.md → report current day and tasks |
 | `Show blockers` | Read PLAN_STATUS.md → list blocked items |
 
-## Financial Domain Notes
+## Context Detail Files (load on demand)
 
-- **Instrument:** Nifty 50 index (NSE)
-- **Lot sizes:** NIFTY = 75 (changed from 50 in 2024), BANKNIFTY = 30 — must be config-driven, NOT hardcoded
-- **Greeks:** Delta, Gamma, Theta, Vega — test against Black-Scholes reference before and after any core/ changes
-- **CSV data:** `rita_input/` is read-only source; `rita_output/` is written by the API
-- **Model files:** `.zip` format (stable-baselines3); stored alongside rita_output/
+| File | Load when... |
+|---|---|
+| `project-office/context/codebase-constraints.md` | Writing any new service, router, or repository |
+| `project-office/context/confluence-guide.md` | Running any Confluence publish script |
+| `project-office/context/domain-notes.md` | Touching `core/`, lot sizes, Greeks, or data paths |
 
 ## What NOT to Do
 
-- Do not delete or overwrite files in `rita_input/` (source data)
-- Do not modify `core/` modules without QA running Greeks reference tests first
+- Do not read `rita.html`, `fno.html`, or `rita-build-portfolio/android-mobile-app/index.html` directly — use specs
+- Do not delete or overwrite files in `rita_input/`
+- Do not modify `core/` without QA running Greeks reference tests first
 - Do not commit `confluence-api-key.txt` or `.env` files
-- Do not add `print()` statements — use `structlog` (Sprint 3+)
-- Do not make API calls to external data providers — all data is local CSV
-- Do not change an API contract, schema, or data layout without updating the corresponding `Spec_*.md` file in the same commit
+- Do not add `print()` statements — use `structlog`
+- Do not call external data providers — all data is local CSV
+- Do not change an API contract, schema, or data layout without updating the spec in the same commit

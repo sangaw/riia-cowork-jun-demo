@@ -102,6 +102,62 @@ def run_portfolio_backtest(req: PortfolioBacktestRequest) -> dict[str, Any]:
 
 # ── FnO Dashboard endpoints ────────────────────────────────────────────────────
 
+_CURRENCY_SYMBOL = {"EUR": "€", "USD": "$", "INR": "₹"}
+
+
+def _position_to_row(r: Any) -> dict[str, Any]:
+    """Transform a Position or PaperPosition ORM/schema row into the JS-ready shape."""
+    side = "Short" if r.quantity < 0 else "Long"
+    qty  = abs(r.quantity)
+    exp  = (r.expiry[:3].upper() if r.expiry and len(r.expiry) >= 3 else "---")
+    currency = getattr(r, "currency", "INR") or "INR"
+    lot_size = getattr(r, "lot_size", 1) or 1
+    if r.option_type:
+        strike_str = str(int(r.strike)) if r.strike and r.strike == int(r.strike) else str(r.strike)
+        full = f"{r.underlying} {strike_str} {r.option_type} {exp}"
+    else:
+        full = f"{r.underlying} FUT {exp}"
+    return {
+        "instrument":   r.instrument,
+        "full":         full,
+        "und":          r.underlying,
+        "exp":          exp,
+        "type":         r.option_type or "FUT",
+        "strike":       r.strike,
+        "side":         side,
+        "qty":          qty,
+        "avg":          r.avg_price,
+        "ltp":          r.last_traded_price,
+        "chg":          r.pct_change or 0.0,
+        "pnl":          r.pnl,
+        "currency":     currency,
+        "lot_size":     lot_size,
+        "sl_price":     getattr(r, "sl_price", None),
+        "target_price": getattr(r, "target_price", None),
+        "entry_date":   str(getattr(r, "entry_date", None) or ""),
+        "expiry_date":  str(getattr(r, "expiry_date", None) or ""),
+    }
+
+
+@router.get("/positions")
+def portfolio_positions(mode: str = "paper", db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+    """Return positions in the shape the FnO dashboard JS expects.
+
+    mode=paper  → reads paper_positions table (dummy / study data)
+    mode=live   → reads positions table (real broker data)
+    """
+    try:
+        if mode == "paper":
+            from rita.repositories.paper_positions import PaperPositionsRepository
+            rows = PaperPositionsRepository(db).read_all()
+        else:
+            from rita.repositories.positions import PositionsRepository
+            rows = PositionsRepository(db).read_all()
+        return [_position_to_row(r) for r in rows]
+    except Exception as exc:
+        log.error("portfolio_positions.error", mode=mode, error=str(exc))
+        return []
+
 @router.get("/summary")
 def portfolio_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     """KPI summary cards for the FnO overview dashboard.
@@ -123,6 +179,47 @@ def portfolio_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     nifty_spot = next((r.nifty_spot for r in reversed(records) if r.nifty_spot), None)
     banknifty_spot = next((r.banknifty_spot for r in reversed(records) if r.banknifty_spot), None)
 
+    asml_close = nvidia_close = None
+    market: dict[str, Any] = {}
+    try:
+        from rita.repositories.market_data import MarketDataCacheRepository
+        mdc = MarketDataCacheRepository(db)
+        mdc_all = mdc.read_all()
+
+        def _latest_close(sym: str) -> float | None:
+            rows = sorted((r for r in mdc_all if r.underlying == sym), key=lambda r: r.date)
+            return rows[-1].close if rows else None
+
+        asml_close   = _latest_close("ASML")
+        nvidia_close = _latest_close("NVIDIA")
+        if not nifty_spot:
+            nifty_spot = _latest_close("NIFTY")
+        if not banknifty_spot:
+            banknifty_spot = _latest_close("BANKNIFTY")
+
+        for sym in ("NIFTY", "BANKNIFTY", "ASML", "NVIDIA"):
+            rows = sorted((r for r in mdc_all if r.underlying == sym), key=lambda r: r.date)
+            if not rows:
+                continue
+            today = rows[-1]
+            prev  = rows[-2] if len(rows) >= 2 else None
+            chg_open = round((today.close - today.open) / today.open * 100, 2) if today.open else 0.0
+            chg_prev = round((today.close - prev.close) / prev.close * 100, 2) if prev and prev.close else None
+            market[sym] = {
+                "date":        str(today.date),
+                "open":        today.open,
+                "high":        today.high,
+                "low":         today.low,
+                "close":       today.close,
+                "prevClose":   prev.close if prev else None,
+                "chgFromOpen": chg_open,
+                "chgFromPrev": chg_prev,
+                "shares":      today.shares_traded or 0,
+                "turnover":    round(today.turnover_cr, 2) if today.turnover_cr else 0,
+            }
+    except Exception:
+        pass
+
     return {
         "total_groups": len({r.group_name for r in records if r.group_name}),
         "total_pnl": round(total_pnl, 2),
@@ -130,6 +227,9 @@ def portfolio_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
         "last_date": last_date,
         "nifty_spot": nifty_spot,
         "banknifty_spot": banknifty_spot,
+        "asml_close": asml_close,
+        "nvidia_close": nvidia_close,
+        "market": market,
     }
 
 

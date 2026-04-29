@@ -1,5 +1,6 @@
 """RITA SQLAlchemy ORM models — imports all model classes to register with Base.metadata."""
 from .positions import PositionModel
+from .paper_positions import PaperPositionModel
 from .orders import OrderModel
 from .snapshots import SnapshotModel
 from .trades import TradeModel
@@ -14,9 +15,11 @@ from .market_data import MarketDataCacheModel
 from .config_overrides import ConfigOverrideModel
 from .risk import RiskTimelineModel
 from .instrument import InstrumentModel
+from .user import UserModel
 
 __all__ = [
     "PositionModel",
+    "PaperPositionModel",
     "OrderModel",
     "SnapshotModel",
     "TradeModel",
@@ -33,4 +36,5 @@ __all__ = [
     "ConfigOverrideModel",
     "RiskTimelineModel",
     "InstrumentModel",
+    "UserModel",
 ]

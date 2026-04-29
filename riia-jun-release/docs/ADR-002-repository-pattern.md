@@ -1,10 +1,11 @@
-# ADR-002: Repository Pattern for CSV Data Access
+# ADR-002: Repository Pattern for Data Access
 
 | Field | Value |
 |---|---|
-| **Status** | Accepted |
+| **Status** | Accepted (updated Sprint 2.5) |
 | **Date** | 2026-03-30 |
-| **Sprint** | 0 |
+| **Last updated** | 2026-04-02 (Sprint 2.5 — CSV backend replaced by SQLAlchemy ORM) |
+| **Sprint** | 0 → 2.5 |
 
 ---
 
@@ -17,88 +18,163 @@ The POC scattered `pd.read_csv()` and `df.to_csv()` calls throughout `rest_api.p
 - **Untestable I/O** — tests had to set up real CSV files or monkey-patch pandas in-place.
 - **Tight coupling** — migrating to PostgreSQL in v2 would require touching every caller.
 
+Sprint 0 introduced a `BaseRepository` with `threading.Lock` over CSV files. Sprint 2.5 replaced the entire CSV backend with SQLite via SQLAlchemy 2.x ORM (see ADR-003). The repository interface is unchanged externally — callers (routes, services) were unaffected by the migration.
+
 ---
 
 ## Decision
 
-Implement a repository layer (`repositories/`) with the following rules:
+All data access is through a repository class. No route, service, or core module may query the database or read/write CSV output files directly.
 
-### BaseRepository Interface
+### SqlRepository Base Interface
 
-Every table gets one class that inherits from `BaseRepository`. No other code may read or write CSV files directly.
+Every ORM-backed table has one class that inherits from `SqlRepository[SchemaT, ModelT]`. The two generic parameters are:
+- `SchemaT` — the Pydantic schema returned to callers
+- `ModelT` — the SQLAlchemy ORM model class
 
 ```python
-from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, Optional
+# src/rita/repositories/base.py
+from typing import Generic, TypeVar, Optional
+from sqlalchemy.orm import Session
 
-T = TypeVar("T")
+SchemaT = TypeVar("SchemaT")
+ModelT  = TypeVar("ModelT")
 
-class BaseRepository(ABC, Generic[T]):
-    @abstractmethod
-    def read_all(self) -> list[T]: ...
+class SqlRepository(Generic[SchemaT, ModelT]):
+    model_class:  type[ModelT]
+    schema_class: type[SchemaT]
 
-    @abstractmethod
-    def write_all(self, records: list[T]) -> None: ...
+    def __init__(self, db: Session) -> None:
+        self.db = db
 
-    @abstractmethod
-    def find_by_id(self, id: str) -> Optional[T]: ...
-
-    @abstractmethod
-    def upsert(self, record: T) -> T: ...
-
-    @abstractmethod
+    def read_all(self) -> list[SchemaT]: ...
+    def find_by_id(self, id: str) -> SchemaT | None: ...
+    def upsert(self, record: SchemaT) -> SchemaT: ...    # calls db.commit() internally
     def delete(self, id: str) -> bool: ...
 ```
 
-### File Locking
+**Critical:** `upsert()` calls `db.commit()` internally. Never commit again after calling it.
 
-Each repository instance holds a `threading.Lock`. All `read_all` and `write_all` calls acquire the lock. CSV is not concurrent-safe — this prevents corruption under FastAPI's async/threaded request handling.
+### Concrete Repository Example
 
-### Schema Validation
+```python
+# src/rita/repositories/positions.py
+from rita.repositories.base import SqlRepository
+from rita.models.positions import PositionModel
+from rita.schemas.positions import Position
 
-All records are validated through Pydantic models on both read and write. A row that fails validation raises a `RepositoryValidationError` — it never silently passes through.
+class PositionsRepository(SqlRepository[Position, PositionModel]):
+    def __init__(self, db: Session) -> None:
+        super().__init__(db, PositionModel, Position)
+```
+
+### Session Injection
+
+All repositories require a `db: Session`. No default constructor exists.
+
+```python
+# CORRECT — always inject db
+from rita.database import SessionLocal, get_db
+
+db = SessionLocal()
+repo = PositionsRepository(db)
+
+# WRONG — will raise TypeError at runtime
+repo = PositionsRepository()
+```
+
+Session injection follows the FastAPI dependency injection pattern in all routers:
+
+```python
+from rita.database import get_db
+
+def _get_repo(db: Session = Depends(get_db)) -> PositionsRepository:
+    return PositionsRepository(db)
+```
+
+### Background Thread Sessions
+
+Background threads must open their own session. Never pass a request-scoped `db` into a thread — sessions are not thread-safe.
+
+```python
+from rita.database import SessionLocal
+
+def _background_worker(run_id: str) -> None:
+    db = SessionLocal()
+    try:
+        repo = TrainingRunsRepository(db)
+        # ... do work ...
+    finally:
+        db.close()
+```
 
 ### v2 Migration Path
 
-Only the repository layer changes to swap in PostgreSQL. Services, routes, and schemas are untouched. Implementations are swapped via dependency injection — no call sites change.
+Only the repository layer changes to swap in PostgreSQL. Services, routes, and schemas are untouched. Change one config value:
+
+```
+# v1 (SQLite)
+database_url = "sqlite:///./rita_output/rita.db"
+
+# v2 (PostgreSQL — Sprint 5 or later)
+database_url = "postgresql+asyncpg://user:pass@host/rita"
+```
 
 ---
 
-## CSV Tables in Scope (v1) — 15 Tables
+## ORM-Backed Tables — 17+ Models
 
-| Repository Class | CSV File | Primary Key |
-|---|---|---|
-| `PositionsRepository` | `positions.csv` | `position_id` |
-| `OrdersRepository` | `orders.csv` | `order_id` |
-| `SnapshotsRepository` | `snapshots.csv` | `snapshot_id` |
-| `TradesRepository` | `trades.csv` | `trade_id` |
-| `PortfolioRepository` | `portfolio.csv` | `portfolio_id` |
-| `ManoeuvresRepository` | `manoeuvres.csv` | `manoeuvre_id` |
-| `BacktestRunsRepository` | `backtest_runs.csv` | `run_id` |
-| `BacktestResultsRepository` | `backtest_results.csv` | `result_id` |
-| `TrainingRunsRepository` | `training_runs.csv` | `run_id` |
-| `TrainingMetricsRepository` | `training_metrics.csv` | `metric_id` |
-| `ModelRegistryRepository` | `model_registry.csv` | `model_id` |
-| `AlertsRepository` | `alerts.csv` | `alert_id` |
-| `AuditLogRepository` | `audit_log.csv` | `log_id` |
-| `MarketDataCacheRepository` | `market_data_cache.csv` | `cache_id` |
-| `ConfigOverridesRepository` | `config_overrides.csv` | `override_id` |
+| Repository Class | ORM Model | Primary Key | Notes |
+|---|---|---|---|
+| `PositionsRepository` | `PositionModel` | `position_id` | Live broker positions |
+| `PaperPositionsRepository` | `PaperPositionModel` | `position_id` | Seeded ASML paper options; `entry_date`, `expiry_date` columns |
+| `OrdersRepository` | `OrderModel` | `order_id` | |
+| `SnapshotsRepository` | `SnapshotModel` | `snapshot_id` | |
+| `TradesRepository` | `TradeModel` | `trade_id` | |
+| `PortfolioRepository` | `PortfolioModel` | `portfolio_id` | |
+| `ManoeuvresRepository` | `ManoeuvreModel` | `manoeuvre_id` | |
+| `BacktestRunsRepository` | `BacktestRunModel` | `run_id` | |
+| `BacktestResultsRepository` | `BacktestResultModel` | `result_id` | |
+| `TrainingRunsRepository` | `TrainingRunModel` | `run_id` | val_sharpe/mdd/return/trades nullable for historical runs |
+| `RiskTimelineRepository` | `RiskTimelineModel` | (composite) | Day-by-day allocation/drawdown/regime |
+| `ModelRegistryRepository` | `ModelRegistryModel` | `model_id` | |
+| `AlertsRepository` | `AlertModel` | `alert_id` | Chat query log (replaces old `chat_monitor.csv`) |
+| `AuditLogRepository` | `AuditLogModel` | `log_id` | API call audit trail |
+| `MarketDataCacheRepository` | `MarketDataCacheModel` | `cache_id` | ~1,064 rows across 4 instruments |
+| `ConfigOverridesRepository` | `ConfigOverrideModel` | `override_id` | Includes `active_instrument_id` key |
+| `InstrumentsRepository` | `InstrumentModel` | `instrument_id` | 4 instruments: NIFTY, BANKNIFTY, ASML, NVIDIA |
+| `UsersRepository` | `UserModel` | `user_id` | `username, email, hashed_password, is_active, is_admin` |
 
-`rita_input/` is **read-only** source data. All write operations target `rita_output/`.
+`rita_input/` is **read-only** source data for ML (CSV files). It is not accessed via repositories.
+`rita_output/rita.db` is the SQLite database file — all ORM tables live here.
+
+---
+
+## What Was Dropped in Sprint 2.5
+
+The following Sprint 0 mechanisms were **removed** when the CSV backend was replaced:
+
+| Removed | Replacement |
+|---|---|
+| `BaseRepository(ABC)` with `write_all()` | `SqlRepository[T, M]` with SQLAlchemy ORM |
+| `threading.Lock` per repository instance | SQLAlchemy session isolation per request |
+| CSV files in `rita_output/*.csv` | `rita_output/rita.db` (SQLite) |
+| `pd.read_csv()` / `df.to_csv()` in repos | `db.query(Model)...` / `db.add()` / `db.commit()` |
 
 ---
 
 ## Consequences
 
 **Positive:**
-- All data access is testable — repositories can be mocked or replaced with in-memory implementations in tests.
-- File locking prevents CSV corruption under concurrent load.
-- Schema validation catches data quality issues at the boundary.
-- v2 database migration is mechanical — one new implementation class per table, zero route/service changes.
+- ACID transactions — no more partial-write corruption risk.
+- All data access is testable — repositories can be mocked or replaced with `sqlite:///:memory:` in tests.
+- SQLAlchemy sessions handle concurrency — file locking code deleted.
+- Single `database_url` change upgrades to PostgreSQL.
+- Schema validation at the Pydantic boundary; ORM models are minimal (columns only, no business logic).
 
 **Negative:**
-- 15 repository classes is more boilerplate than direct pandas calls.
-- File locking adds latency on high-frequency writes (acceptable for v1 CSV-backed system).
+- ORM models are a second representation of the data alongside Pydantic schemas — mitigated by keeping models minimal.
+- 17+ repository classes is more boilerplate than direct DB calls — offset by testability and the clean migration path.
 
 ---
 
@@ -106,6 +182,7 @@ Only the repository layer changes to swap in PostgreSQL. Services, routes, and s
 
 | Option | Reason Rejected |
 |---|---|
-| SQLAlchemy ORM on CSV | No CSV dialect; wrong abstraction layer for flat files |
+| Keep CSV with `BaseRepository` | No transactions, file locking fragile under concurrent load |
+| Direct SQLAlchemy in routes | Untestable, violates ADR-001 separation of concerns |
+| SQLModel (combined ORM+Pydantic) | Adds a layer over SQLAlchemy that constrains our v2 migration flexibility |
 | Pandas-native access | No locking, no schema enforcement, untestable |
-| TinyDB / SQLite | Additional dependency; CSV is the agreed v1 storage format |

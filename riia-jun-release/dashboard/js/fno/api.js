@@ -19,6 +19,22 @@ import { saveToday, syncPriceHistory, renderScenarios } from './rr.js';
 import { renderHedgeRadar } from './hedge.js';
 import { initManoeuvre } from './manoeuvre.js';
 
+export async function fetchPositions() {
+  const mode = state.paperMode ? 'paper' : 'live';
+  try {
+    const resp = await fetch(apiBase() + `/api/v1/portfolio/positions?mode=${mode}`,
+      RITA_API_KEY ? { headers: { 'X-API-Key': RITA_API_KEY } } : {});
+    if (!resp.ok) throw new Error(`API ${resp.status}`);
+    state.positions = await resp.json();
+  } catch (e) {
+    console.error('fetchPositions error:', e);
+    state.positions = [];
+  }
+  buildExpiryPills();
+  renderPositionsKpis();
+  renderPositionsTable();
+}
+
 // window.RITA_API_BASE can be set by the host page to point at a non-origin
 // API server (e.g. staging). Defaults to '' = same origin.
 export const apiBase = () => (window.RITA_API_BASE || '').replace(/\/$/, '');
@@ -49,19 +65,26 @@ export async function initApp() {
     state.hedgeQuality    = d.hedge_quality || {};
 
     // Update sidebar
-    const asOf = d.as_of || '';
+    const asOf = d.last_date || d.as_of || '';
     document.getElementById('sidebar-as-of').textContent = asOf ? `As of ${asOf}` : '';
-    const nClose = (state.marketData.NIFTY || {}).close;
-    const bClose = (state.marketData.BANKNIFTY || {}).close;
-    if (nClose) document.getElementById('spot-nifty').textContent =
-      `NIFTY  ${nClose.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-    if (bClose) document.getElementById('spot-banknifty').textContent =
-      `BNKN  ${bClose.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    const sidePrices = [
+      ['sideprice-nifty',     d.nifty_spot,    'en-IN'],
+      ['sideprice-banknifty', d.banknifty_spot, 'en-IN'],
+      ['sideprice-asml',      d.asml_close,     'en-US'],
+      ['sideprice-nvidia',    d.nvidia_close,   'en-US'],
+    ];
+    for (const [id, val, locale] of sidePrices) {
+      const el = document.getElementById(id);
+      if (el && val != null) el.textContent = val.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
   } catch (e) {
     console.error('Portfolio API error:', e);
     document.getElementById('sidebar-as-of').textContent = 'API error — check server';
   }
+
+  // Fetch positions (paper or live depending on state.paperMode)
+  await fetchPositions();
 
   // Render all sections
   saveToday();

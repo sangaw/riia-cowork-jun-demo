@@ -25,7 +25,7 @@ export function saveToday() {
   const existing  = history.find(h => h.date === todayStr);
   if (!existing || !existing.nifty) {
     const idx = history.findIndex(h => h.date === todayStr);
-    const entry = { date: todayStr, nifty: state.marketData.NIFTY.close, banknifty: (state.marketData.BANKNIFTY || {}).close, niftyPnl, bnknPnl };
+    const entry = { date: todayStr, nifty: state.marketData.NIFTY.close, banknifty: (state.marketData.BANKNIFTY || {}).close, asml: (state.marketData.ASML || {}).close || null, niftyPnl, bnknPnl };
     if (idx >= 0) history[idx] = entry; else history.push(entry);
     if (history.length > 30) history.shift();
     try { localStorage.setItem('rrHistory', JSON.stringify(history)); } catch {}

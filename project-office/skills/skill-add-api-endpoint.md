@@ -152,7 +152,7 @@ Never pass a request-scoped `db` into a thread — sessions are not thread-safe.
 | `src/rita/services/<resource>_service.py` | Create — if Workflow or Experience tier |
 | `src/rita/api/<tier>/<resource>.py` | Create or edit — router + handler |
 | `src/rita/main.py` | Edit — `app.include_router(...)` |
-| `specs/Spec_Python_Code.md` | Edit — update API table if contract changed |
+| `Specs/Spec_Python_Code.md` | Edit — update API table if contract changed |
 
 ---
 
@@ -164,4 +164,4 @@ Never pass a request-scoped `db` into a thread — sessions are not thread-safe.
 - [ ] Handler's `return` dict includes every field the JS consumer reads
 - [ ] `ruff check src/` passes with no errors
 - [ ] Router is registered in `main.py`
-- [ ] `specs/Spec_Python_Code.md` updated if API contract changed
+- [ ] `Specs/Spec_Python_Code.md` updated if API contract changed

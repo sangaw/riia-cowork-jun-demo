@@ -9,6 +9,7 @@ import { loadChat } from './chat.js';
 import { loadDailyOps, triggerSnapshot, loadInstruments, toggleInstrument, saveInstruments } from './daily-ops.js';
 import { refreshSidebar } from './sidebar.js';
 import { loadTestResults } from './test-results.js';
+import { loadUsers, saveUserRoles } from './users.js';
 
 // ── Populate section loader registry ─────────────────────────────────────────
 sectionLoaders['overview']      = loadOverview;
@@ -19,6 +20,7 @@ sectionLoaders['deploy']        = loadDeploy;
 sectionLoaders['observability'] = loadObservability;
 sectionLoaders['chat']          = loadChat;
 sectionLoaders['dailyops']      = () => { loadDailyOps(); loadInstruments(); };
+sectionLoaders['users']         = loadUsers;
 
 // ── Window bindings for inline onclick= attributes ────────────────────────────
 window.nav                = nav;
@@ -28,6 +30,8 @@ window.loadChat           = loadChat;
 window.loadDailyOps       = loadDailyOps;
 window.toggleInstrument   = toggleInstrument;
 window.saveInstruments    = saveInstruments;
+window.loadUsers          = loadUsers;
+window.saveUserRoles      = saveUserRoles;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {

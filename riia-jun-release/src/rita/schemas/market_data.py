@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict
 
 class MarketDataCacheBase(BaseModel):
     date: date
-    underlying: Literal["NIFTY", "BANKNIFTY"]
+    underlying: Literal["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]
     open: float
     high: float
     low: float

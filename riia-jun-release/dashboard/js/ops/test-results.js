@@ -22,6 +22,7 @@ const _ST = {
   e2e:         { label: 'E2E',         color: 'var(--sense)',      bg: 'var(--sense-bg)',      bd: 'var(--sense-bd)'      },
   integration: { label: 'Integration', color: 'var(--accelerate)', bg: 'var(--accelerate-bg)', bd: 'var(--accelerate-bd)' },
   unit:        { label: 'Unit',        color: 'var(--optimize)',   bg: 'var(--optimize-bg)',   bd: 'var(--optimize-bd)'   },
+  'chrome-extension': { label: 'Chrome UI', color: 'var(--accent)', bg: 'var(--accent-bg)', bd: 'var(--accent-bd)' },
 };
 
 export async function loadTestResults() {
@@ -205,8 +206,8 @@ function _renderRunHistory(data) {
 
   const history = [];
 
-  // Unit and integration
-  for (const type of ['unit', 'integration']) {
+  // Unit, integration, and chrome-extension
+  for (const type of ['unit', 'integration', 'chrome-extension']) {
     const cfg  = _ST[type];
     const runs = data.suite_summary?.[type]?.runs || [];
     for (const r of runs) {

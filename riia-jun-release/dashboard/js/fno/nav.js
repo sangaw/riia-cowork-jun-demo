@@ -27,10 +27,12 @@ export function initNav() {
   });
 }
 
-export function setUnderlying(und, btn) {
+export function setUnderlying(und) {
   state.currentUnd = und;
-  document.querySelectorAll('.und-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  // Update sidebar market items active state
+  document.querySelectorAll('.mkt-price-item[data-und]').forEach(el => {
+    el.classList.toggle('active', el.dataset.und === und);
+  });
   buildExpiryPills();
   renderDashboard();
   renderPositionsKpis();

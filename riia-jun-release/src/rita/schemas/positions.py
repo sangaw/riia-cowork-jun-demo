@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class PositionBase(BaseModel):
     instrument: str = Field(max_length=64)   # e.g. BANKNIFTY26APR52000CE
-    underlying: Literal["NIFTY", "BANKNIFTY"]
+    underlying: Literal["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]
     product: Literal["NRML", "MIS", "CNC"] = "NRML"
     option_type: Optional[Literal["CE", "PE"]] = None
     strike: Optional[float] = Field(default=None, ge=0)

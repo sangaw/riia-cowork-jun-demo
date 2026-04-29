@@ -63,8 +63,8 @@ Both formats are handled automatically by `load_nifty_csv()` in `src/rita/core/d
 
 | File | Rows | Date range | Purpose |
 |---|---|---|---|
-| `data/raw/ASML/asml_2001-2026.csv` | 6,420 | 2001-03-09 → 2026-03-03 | Full historical OHLCV — source of truth |
-| `data/input/ASML/asml_2001-2026.csv` | 6,420 | 2001-03-09 → 2026-03-03 | Mirror copy (same content) |
+| `data/raw/ASML/asml_2001-2026.csv` | 6,457 | 2001-03-09 → 2026-04-24 | Full historical OHLCV — source of truth |
+| `data/input/ASML/asml_2001-2026.csv` | 6,457 | 2001-03-09 → 2026-04-24 | Mirror copy (same content) |
 
 **Note:** `data/raw/ASML/asml_daily_25yr_rounded.csv` was removed — it contained NVIDIA data by mistake. `find_instrument_csv("ASML")` now correctly picks `data/raw/ASML/asml_2001-2026.csv`.
 
@@ -121,28 +121,31 @@ df = load_nifty_csv("data/raw/NIFTY/merged.csv")
 
 ## 5. DB Seeding — What Goes In and Why
 
-Only NIFTY data is seeded into the DB at startup. Other instruments are not seeded because only NIFTY is the active trading instrument.
+All 4 instruments are seeded into `market_data_cache` at startup (2025+2026 window). This enables the `/api/v1/portfolio/summary` endpoint to return spot prices for ASML, NVIDIA, BANKNIFTY, and NIFTY without CSV fallback.
 
 **Seeding window: 2025 + 2026 only**
 
-| Source | Year filter | Rows | Reason |
+| Instrument | Source file | Year filter | Rows (approx) |
 |---|---|---|---|
-| `data/raw/NIFTY/merged.csv` | year == 2025 | 249 | Full year of recent history |
-| `data/input/DAILY-DATA/nifty_manual.csv` | year == 2026 | ~17 | Current year data |
-| **Total** | | **~266** | |
+| NIFTY | `data/raw/NIFTY/merged.csv` + `data/input/DAILY-DATA/nifty_manual.csv` | 2025 + 2026 | ~266 |
+| BANKNIFTY | `data/raw/BANKNIFTY/banknifty_daily_25yr_rounded.csv` | 2025 + 2026 | ~300 |
+| ASML | `data/raw/ASML/asml_2001-2026.csv` | 2025 + 2026 | ~260 |
+| NVIDIA | `data/raw/NVIDIA/nvda_daily_25yr_rounded.csv` | 2025 + 2026 | ~260 |
+
+Each instrument is skipped if already present in `market_data_cache` (keyed by `underlying` column). Uses **single `db.add_all()` + one commit** per instrument — completes in < 2 seconds each.
 
 **Why not the full 25-year history?**
-Seeding 6,594 rows row-by-row (one `upsert()` = one `commit()`) took 78 seconds at startup. The new bulk insert is < 2 seconds. 266 rows is sufficient for all technical indicators:
+Seeding 6,594 rows row-by-row (one `upsert()` = one `commit()`) took 78 seconds at startup. The bulk insert is < 2 seconds. 260–300 rows is sufficient for all technical indicators:
 
 | Indicator | Bars needed | Available |
 |---|---|---|
-| RSI-14 | 14 | 266 |
-| MACD (12, 26, 9) | 26 | 266 |
-| Bollinger Bands (20, 2σ) | 20 | 266 |
-| EMA-50 | 50 | 266 |
-| ATR-14 | 14 | 266 |
+| RSI-14 | 14 | ~266 |
+| MACD (12, 26, 9) | 26 | ~266 |
+| Bollinger Bands (20, 2σ) | 20 | ~266 |
+| EMA-50 | 50 | ~266 |
+| ATR-14 | 14 | ~266 |
 
-**Adding new year data:** When 2026 ends, update the seed filter in `main.py` to `year >= 2025` → `year >= 2026`, and move 2026 data from `nifty_manual.csv` into `merged.csv` (or create a new `merged_2026.csv`).
+**Adding new year data:** When 2026 ends, update the seed filter in `main.py` to `year >= 2025` → `year >= 2026`, and move 2026 data from `nifty_manual.csv` into `merged.csv`.
 
 ---
 
@@ -167,7 +170,26 @@ data/output/NIFTY/
 
 ---
 
-## 8. AI Agent Directives
+## 8. Paper Positions Seeding
+
+Paper positions are seeded in `main.py` lifespan (update-or-insert per instrument on every startup).
+
+**Current seed data (2 ASML short call positions):**
+
+| Instrument | Underlying | Type | Strike | Expiry | Qty | Avg | Currency |
+|---|---|---|---|---|---|---|---|
+| `ASML26MAY1300CE` | ASML | CE | 1300.0 | MAY26 | -1 (short) | 24.15 | EUR |
+| `ASML26JUN1300CE` | ASML | CE | 1300.0 | JUN26 | -1 (short) | 115.00 | EUR |
+
+Mutable fields updated on each restart: `last_traded_price`, `pnl`, `pct_change`, `entry_date`, `expiry_date`.
+
+These are study/demo positions. The `positions` table holds real broker data. Access via:
+- `GET /api/v1/portfolio/positions?mode=paper` → `paper_positions` table
+- `GET /api/v1/portfolio/positions?mode=live` → `positions` table
+
+---
+
+## 9. AI Agent Directives
 
 1. **Never write to `data/raw/`** — it is the immutable source of truth.
 2. **Never call `pd.read_csv()` directly on OHLCV files** — always use `load_nifty_csv()`. It handles all date formats and column normalisation.

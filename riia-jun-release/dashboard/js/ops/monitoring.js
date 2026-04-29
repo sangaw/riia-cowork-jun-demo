@@ -4,8 +4,8 @@ import { fmt, badge, stepName } from './utils.js';
 
 export async function loadMonitoring() {
   const [metrics, stepLog] = await Promise.all([
-    apiFetch('/api/v1/metrics/summary'),
-    apiFetch('/api/v1/step-log'),
+    apiFetch('/api/experience/ops/metrics/summary'),
+    apiFetch('/api/experience/ops/step-log'),
   ]);
 
   if (metrics) {

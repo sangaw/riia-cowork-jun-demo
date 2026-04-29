@@ -47,8 +47,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .hero-sub{font-size:14px;color:var(--t2);line-height:1.65;max-width:420px;margin:0 auto;}
 
 /* ── Tiles ───────────────────────────────────────────────── */
-.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;max-width:1160px;width:100%;}
-
 .tile{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:28px 26px 24px;box-shadow:var(--sh);cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:box-shadow .18s,transform .18s,border-color .18s;position:relative;overflow:hidden;}
 .tile:hover{box-shadow:var(--shl);transform:translateY(-3px);}
 
@@ -131,70 +129,144 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
     <p class="hero-sub">Choose your path to get started.</p>
   </div>
 
-  <!-- Tiles -->
-  <div class="tiles">
-
-    <!-- Tile 1: My Own Research -->
-    <a class="tile research" href="ds.html">
-      <div class="tile-accent"></div>
-      <div class="tile-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
-        </svg>
+  <!-- Split Zones -->
+  <div class="zones" style="display:flex; gap:20px; max-width:1160px; width:100%; align-items: stretch; flex-wrap: wrap;">
+    
+    <!-- Left Zone: Open Access -->
+    <div class="zone open-access" style="flex:1; min-width:260px; border: 2.5px dashed var(--build-bd); border-radius:12px; padding:20px; display:flex; flex-direction:column; background: linear-gradient(180deg, var(--build-bg) 0%, transparent 100%);">
+      <div style="font-family:var(--fm); font-size:12px; font-weight:600; text-transform:uppercase; color:var(--build); margin-bottom:15px; letter-spacing:.08em; display:flex; align-items:center; gap:8px;">
+        <span style="display:inline-block; width:9px; height:9px; background:var(--build); border-radius:50%; box-shadow: 0 0 6px var(--build);"></span> Open Access
       </div>
-      <span class="tile-tag">Research</span>
-      <div class="tile-title">Assist in My Own Research</div>
-      <p class="tile-desc">Explore RITA's AI signals, backtests, and market insights to inform your own investment thesis. Run scenarios and review model explainability.</p>
-      <span class="tile-cta">Open Research <span class="tile-arrow">→</span></span>
-    </a>
-
-    <!-- Tile 2: Build a Portfolio -->
-    <a class="tile build" href="rita.html">
-      <div class="tile-accent"></div>
-      <div class="tile-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
-          <line x1="12" y1="12" x2="12" y2="17"/><line x1="9" y1="14.5" x2="15" y2="14.5"/>
-        </svg>
+      
+      <div class="tiles" style="grid-template-columns: 1fr; gap:20px; display:grid;">
+        <!-- Tile : Build a Portfolio -->
+        <a class="tile build" href="rita.html" style="margin-bottom:0; height:100%">
+          <div class="tile-accent"></div>
+          <div class="tile-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+              <line x1="12" y1="12" x2="12" y2="17"/><line x1="9" y1="14.5" x2="15" y2="14.5"/>
+            </svg>
+          </div>
+          <span class="tile-tag">Portfolio Builder</span>
+          <div class="tile-title">Create a Portfolio</div>
+          <p class="tile-desc">Train and evaluate the Double DQN model on Nifty 50 data. Run the full pipeline natively using standard session auth.</p>
+          <span class="tile-cta">Start Building <span class="tile-arrow">→</span></span>
+        </a>
       </div>
-      <span class="tile-tag">Portfolio Builder</span>
-      <div class="tile-title">Build a Portfolio</div>
-      <p class="tile-desc">Train and evaluate the Double DQN model on Nifty 50 data. Run the full pipeline, review performance, backtest results, and SHAP explainability.</p>
-      <span class="tile-cta">Start Building <span class="tile-arrow">→</span></span>
-    </a>
+    </div>
 
-    <!-- Tile 3: Review My Portfolio -->
-    <a class="tile review" href="fno.html#positions">
-      <div class="tile-accent"></div>
-      <div class="tile-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-        </svg>
+    <!-- Right Zone: Google Auth Protected -->
+    <div class="zone sso-protected" style="flex:3; min-width:600px; border: 2.5px dashed var(--run-bd); border-radius:12px; padding:20px; display:flex; flex-direction:column; background: linear-gradient(180deg, var(--run-bg) 0%, transparent 100%);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <div style="font-family:var(--fm); font-size:12px; font-weight:600; text-transform:uppercase; color:var(--run); letter-spacing:.08em; display:flex; align-items:center; gap:8px;">
+          <span style="display:inline-block; width:9px; height:9px; background:var(--run); border-radius:50%; box-shadow: 0 0 6px var(--run);"></span> Google Auth Protected
+        </div>
+
+        <!-- Dev Sandbox Flip Switch -->
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;" title="If disabled, clicking tiles navigates directly without auth limits">
+          <span style="font-family:var(--fm); font-size:10px; color:var(--t3); text-transform:uppercase; letter-spacing:0.08em; font-weight: 600;">Auth</span>
+          <div style="position:relative; width:34px; height:18px;">
+            <input type="checkbox" id="auth-enforcer-toggle" style="opacity:0; width:0; height:0; position:absolute;">
+            <span class="auth-slider" style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; transition:.2s ease; border-radius:20px;"></span>
+            <style>
+              #auth-enforcer-toggle + .auth-slider { background-color: var(--border2); }
+              #auth-enforcer-toggle:checked + .auth-slider { background-color: var(--run); }
+              .auth-slider::before { content:''; position:absolute; height:14px; width:14px; left:2px; bottom:2px; background-color:white; transition:.2s ease; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+              #auth-enforcer-toggle:checked + .auth-slider::before { transform: translateX(16px); }
+            </style>
+          </div>
+        </label>
       </div>
-      <span class="tile-tag">Portfolio Review</span>
-      <div class="tile-title">Review My Portfolio</div>
-      <p class="tile-desc">Check live Greeks, P&amp;L, risk exposure, and manoeuvre recommendations for your existing positions. Monitor margin utilisation and alerts.</p>
-      <span class="tile-cta">View Portfolio <span class="tile-arrow">→</span></span>
-    </a>
+      
+      <div class="tiles" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px; display:grid; height:100%">
+        <!-- Tile : Review My Portfolio -->
+        <a class="tile review protected-route" href="fno.html#positions">
+          <div class="tile-accent"></div>
+          <div class="tile-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <span class="tile-tag">Portfolio Review</span>
+          <div class="tile-title">Review Portfolio</div>
+          <p class="tile-desc">Check live Greeks, P&amp;L, risk exposure, and manoeuvre recommendations. Monitor margin utilisation.</p>
+          <span class="tile-cta">View Portfolio <span class="tile-arrow">→</span></span>
+        </a>
 
-    <!-- Tile 4: Observe the Action -->
-    <a class="tile ops" href="ops.html">
-      <div class="tile-accent"></div>
-      <div class="tile-icon">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-        </svg>
+        <!-- Tile : Assist Research -->
+        <a class="tile research protected-route" href="ds.html">
+          <div class="tile-accent"></div>
+          <div class="tile-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              <line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </div>
+          <span class="tile-tag">Research</span>
+          <div class="tile-title">Assist in Research</div>
+          <p class="tile-desc">Explore AI signals, backtests, and market insights to inform your own investment thesis.</p>
+          <span class="tile-cta">Open Research <span class="tile-arrow">→</span></span>
+        </a>
+
+        <!-- Tile : Operations -->
+        <a class="tile ops protected-route" href="ops.html">
+          <div class="tile-accent"></div>
+          <div class="tile-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </div>
+          <span class="tile-tag">Operations</span>
+          <div class="tile-title">Ops Console</div>
+          <p class="tile-desc">Monitor system health, deployment pipelines, CI/CD status, and active users across the platform.</p>
+          <span class="tile-cta">Open Ops <span class="tile-arrow">→</span></span>
+        </a>
       </div>
-      <span class="tile-tag">Operations</span>
-      <div class="tile-title">Observe the Action</div>
-      <p class="tile-desc">Monitor system health, deployment pipelines, CI/CD status, and live observability dashboards for the RITA platform in real time.</p>
-      <span class="tile-cta">Open Ops <span class="tile-arrow">→</span></span>
-    </a>
-
+    </div>
   </div>
 
 </main>
+
+<script>
+  // Save JWT token if arriving from Google Callback
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  if (token) {
+    localStorage.setItem('auth_token', token);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  // Intercept clicks on Google Auth Protected modules
+  document.addEventListener("DOMContentLoaded", function() {
+    const protectedTiles = document.querySelectorAll('.protected-route');
+    const enforcerToggle = document.getElementById('auth-enforcer-toggle');
+
+    protectedTiles.forEach(tile => {
+      tile.addEventListener('click', function(e) {
+        
+        // Return immediately if enforcer is switched off (Sandbox mode)
+        if (!enforcerToggle || !enforcerToggle.checked) {
+          return;
+        }
+
+        e.preventDefault();
+        const targetUrl = this.getAttribute('href');
+        
+        // Check if user holds a token, otherwise boot them to Google SSO
+        const authToken = localStorage.getItem('auth_token');
+        if (!authToken || authToken === 'null') {
+          // Stash the destination so we can route back to it eventually if desired (optional)
+          sessionStorage.setItem('return_url', targetUrl);
+          window.location.href = "/auth/google/login";
+        } else {
+          // Permitted routing
+          window.location.href = targetUrl;
+        }
+      });
+    });
+  });
+</script>
 
 <!-- Footer -->
 <footer class="footer">

@@ -62,7 +62,8 @@ cp rita_output/rita.db rita_output/rita.db.bak-$(date +%Y%m%d-%H%M)
 | Table | Model file | PK | Seeded from | Rows (typical) |
 |---|---|---|---|---|
 | `instruments` | `models/instrument.py` | `instrument_id` | `main.py` lifespan | 4 |
-| `market_data_cache` | `models/market_data.py` | `cache_id` | `main.py` lifespan | ~266 |
+| `market_data_cache` | `models/market_data.py` | `cache_id` | `main.py` lifespan | ~1,064 (4 instruments × ~266 each) |
+| `paper_positions` | `models/paper_positions.py` | `position_id` | `main.py` lifespan | 2 (ASML paper options) |
 
 ### Pipeline run history (NOT recoverable)
 
@@ -77,7 +78,8 @@ cp rita_output/rita.db rita_output/rita.db.bak-$(date +%Y%m%d-%H%M)
 
 | Table | Model file | Source CSVs |
 |---|---|---|
-| `positions` | `models/positions.py` | `data/input/DAILY-DATA/positions-*.csv` |
+| `positions` | `models/positions.py` | `data/input/DAILY-DATA/positions-*.csv` (live broker data) |
+| `paper_positions` | `models/paper_positions.py` | Seeded by `main.py` — ASML short calls for study/demo |
 | `orders` | `models/orders.py` | `data/input/DAILY-DATA/orders-*.csv` |
 | `snapshots` | `models/snapshots.py` | — |
 | `trades` | `models/trades.py` | — |
@@ -88,9 +90,11 @@ cp rita_output/rita.db rita_output/rita.db.bak-$(date +%Y%m%d-%H%M)
 
 | Table | Model file | Contains |
 |---|---|---|
-| `config_overrides` | `models/config_overrides.py` | Runtime config key/value overrides |
+| `config_overrides` | `models/config_overrides.py` | Runtime config key/value overrides — including `active_instrument_id` |
 | `audit_log` | `models/audit.py` | API call audit trail |
 | `alerts` | `models/alerts.py` | Chat/query confidence log |
+| `users` | `models/user.py` | User accounts: `user_id, username, email, hashed_password, is_active, is_admin, created_at` |
+| `model_registry` | `models/model_registry.py` | Model version tracking |
 
 ---
 
@@ -103,14 +107,21 @@ Seeding runs in `main.py` `lifespan()` on every startup. Each seed block checks 
 - Skipped if `instruments` table already has rows
 - Also handles one-time rename `NVDA → NVIDIA`
 
-### Market data seed
-- Seeds NIFTY OHLCV data from two sources combined:
-  1. `data/raw/NIFTY/merged.csv` — filters to **year == 2025** (249 rows)
-  2. `data/input/DAILY-DATA/nifty_manual.csv` — filters to **year == 2026** (~17 rows)
-- Combined: ~266 rows, 2025-01-01 → latest 2026 date
-- Uses **single `db.add_all()` + one commit** — completes in < 2 seconds
-- Skipped if `market_data_cache` table already has rows
-- **Why 2025 only from merged.csv:** full 25-year history (6,594 rows) took 78 seconds with row-by-row upserts. 2025+ is sufficient for all technical indicators (RSI-14, MACD-26, BB-20, EMA-50 all warm up within the first 50 bars).
+### Market data seed (ALL 4 instruments)
+- Seeds OHLCV data for **each instrument** from `load_instrument_data(id)` — filters to years 2025+2026
+- Per instrument: `db.add_all(records); db.commit()` — bulk insert < 2 seconds each
+- Skipped per-instrument if that `underlying` is already present in `market_data_cache`
+- **NIFTY source:** `data/raw/NIFTY/merged.csv` + `data/input/DAILY-DATA/nifty_manual.csv` (~266 rows)
+- **BANKNIFTY source:** `data/raw/BANKNIFTY/banknifty_daily_25yr_rounded.csv` (~300 rows)
+- **ASML source:** `data/raw/ASML/asml_2001-2026.csv` (~260 rows)
+- **NVIDIA source:** `data/raw/NVIDIA/nvda_daily_25yr_rounded.csv` (~260 rows)
+- Total market_data_cache rows: ~1,064
+
+### Paper positions seed
+- Seeds 2 ASML paper positions on every startup (update-or-insert)
+- If `instrument` already exists → updates `last_traded_price`, `pnl`, `pct_change`, `entry_date`, `expiry_date`
+- If `instrument` is new → inserts full record with UUID `position_id`
+- Current positions: `ASML26MAY1300CE` (short CE, €24.15 avg) and `ASML26JUN1300CE` (short CE, €115.00 avg)
 
 ---
 
