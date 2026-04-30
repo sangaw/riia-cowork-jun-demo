@@ -41,6 +41,7 @@ export async function loadMarketSignals() {
     const rows = await api(`/api/v1/market-signals?timeframe=${_msTimeframe}&periods=${periods}&instrument=${inst}`);
     if (!rows || !rows.length) {
       setEl('ms-data-range', `No data available for ${inst}`);
+      setEl('ms-last-updated', '—');
       return;
     }
 
@@ -51,6 +52,7 @@ export async function loadMarketSignals() {
     const firstDate = rows.find(r => r.date)?.date || '—';
     const tfLabel = _msTimeframe === 'monthly' ? 'Monthly' : _msTimeframe === 'weekly' ? 'Weekly' : 'Daily';
     setEl('ms-data-range', `${tfLabel} · ${firstDate} → ${last.date || '—'} &nbsp;|&nbsp; ${rows.length} bars`);
+    setEl('ms-last-updated', last.date ? 'Last updated: ' + new Date(last.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
     const pvSub = document.getElementById('ms-pv-subtitle');
     if (pvSub) pvSub.textContent = `— close price · ${tfLabel.toLowerCase()} volume`;
 
@@ -382,5 +384,6 @@ export async function loadMarketSignals() {
     console.warn('market signals error', e);
     setEl('ms-loading', `<div class="empty" style="color:var(--danger)">Error: ${e.message}</div>`);
     document.getElementById('ms-loading').style.display = '';
+    setEl('ms-last-updated', '—');
   }
 }
