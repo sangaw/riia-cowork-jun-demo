@@ -52,7 +52,11 @@ export async function loadMarketSignals() {
     const firstDate = rows.find(r => r.date)?.date || '—';
     const tfLabel = _msTimeframe === 'monthly' ? 'Monthly' : _msTimeframe === 'weekly' ? 'Weekly' : 'Daily';
     setEl('ms-data-range', `${tfLabel} · ${firstDate} → ${last.date || '—'} &nbsp;|&nbsp; ${rows.length} bars`);
-    setEl('ms-last-updated', last.date ? 'Last updated: ' + new Date(last.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—');
+    const _luRaw = last.date ? new Date(last.date + 'T00:00:00') : null;
+    setEl('ms-last-updated', (_luRaw && !isNaN(_luRaw.getTime()))
+      ? 'Last updated: ' + _luRaw.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+        + ' ' + _luRaw.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+      : '—');
     const pvSub = document.getElementById('ms-pv-subtitle');
     if (pvSub) pvSub.textContent = `— close price · ${tfLabel.toLowerCase()} volume`;
 
