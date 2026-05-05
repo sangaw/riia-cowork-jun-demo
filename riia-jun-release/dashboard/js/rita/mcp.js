@@ -52,6 +52,23 @@ export async function loadMcp() {
       }
     });
 
+    const total = counts.reduce((a, b) => a + b, 0);
+    mkChart('chart-mcp-share', {
+      type: 'bar',
+      data: { labels: tools, datasets: [{ label: 'Calls', data: counts, backgroundColor: tools.map((_, i) => palette[i % palette.length] + 'AA'), borderRadius: 3 }] },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} (${total ? Math.round(ctx.parsed.y / total * 100) : 0}%)` } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 } } },
+          y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { font: { family: C.mono, size: 10 } } }
+        }
+      }
+    });
+
     setEl('mcp-table-wrap', `
       <table>
         <thead><tr><th>Timestamp</th><th>Tool</th><th>Status</th><th>Duration</th><th>Args</th><th>Result</th></tr></thead>
