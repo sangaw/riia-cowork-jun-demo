@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-04-16 (Day 42 — Release)
+**Last updated:** 2026-05-06 (Post-v1.0 — invest-game Phase 3)
 
 ---
 
@@ -116,3 +116,4 @@ _None_
 - 2026-03-30: Sprint 0 complete (Days 1-3). ADR-001, ADR-002, 16 Pydantic schemas, full folder structure. ADR pages live on Confluence. Config YAML hierarchy created. Git repo initialised, remote pointed to github.com/sangaw/riia-cowork-jun-demo.git — not yet pushed.
 - 2026-03-31: Terraform deployment scaffolded. Local deployment uses kreuzwerker/docker provider. Files in riia-jun-release/terraform/. rita_input/ read-only, rita_output/ writable. Sprint 5 Day 33 scoped for cloud.
 - 2026-04-02: Sprint 2.5 added — SQLite via SQLAlchemy 2.x replaces CSV backend. ADR-003 written to docs/. Repository interface unchanged; zero impact on routers/services/schemas. Project extends to 34 days total. PostgreSQL upgrade path: change database_url in v2.
+- 2026-05-06: invest-game Phase 3 complete — Ops Agent Builds verified, Game AI Compliance page added to Ops dashboard, auto-regenerate metrics.json on game complete, 18 ruff errors fixed, retrospective build run logs created, Spec_RITA_App.md + Spec_JS_Code.md updated. Commits: 8f7c738, a7a093d.
