@@ -10,7 +10,7 @@ from typing import Any, Optional
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -48,6 +48,7 @@ from rita.api.v1.system.market_signals import router as market_signals_router
 from rita.api.v1.system.training_runs import router as training_runs_router
 from rita.api.v1.system.drift import router as drift_router
 from rita.api.v1.system.data_prep import router as data_prep_router
+from rita.api.v1.system.mcp_calls import router as mcp_calls_router
 from rita.api.v1.workflow.train import router as train_router
 from rita.api.v1.workflow.backtest import router as backtest_router
 from rita.api.v1.workflow.evaluate import router as evaluate_router
@@ -59,6 +60,7 @@ from rita.api.experience.rita import router as rita_experience_router
 from rita.api.experience.pipeline_wizard import router as pipeline_wizard_router
 from rita.api.experience.ds import router as ds_router
 from rita.api.experience.agent_panel import router as agent_panel_router
+from rita.api.experience.invest_game import router as invest_game_router
 from rita.api.v1.workflow.chat import router as chat_router
 from rita.api.v1.portfolio import router as portfolio_router
 
@@ -299,6 +301,7 @@ app.include_router(market_signals_router)
 app.include_router(training_runs_router)
 app.include_router(drift_router)
 app.include_router(data_prep_router)
+app.include_router(mcp_calls_router)
 
 # -- Workflow tier -- JWT-protected business process routers ------------------
 app.include_router(train_router, dependencies=[Depends(get_current_user)])
@@ -314,6 +317,7 @@ app.include_router(rita_experience_router)
 app.include_router(pipeline_wizard_router)
 app.include_router(ds_router)
 app.include_router(agent_panel_router)
+app.include_router(invest_game_router)
 
 # -- Chat -- local intent classifier + OHLCV dispatch (no external API) -------
 app.include_router(chat_router)
@@ -328,6 +332,16 @@ instrument_app(app)
 _dashboard_dir = Path(__file__).parent.parent.parent / "dashboard"
 if _dashboard_dir.exists():
     app.mount("/dashboard", StaticFiles(directory=_dashboard_dir, html=True), name="dashboard")
+
+_agent_ops_dir = Path(__file__).parent.parent.parent.parent / "riia-ai-org" / "agent-ops"
+if _agent_ops_dir.exists():
+    app.mount("/agent-ops-data", StaticFiles(directory=_agent_ops_dir), name="agent-ops-data")
+
+
+@app.get("/onboarding", include_in_schema=False)
+def onboarding():
+    _path = Path(__file__).parent.parent.parent.parent / "rita-build-portfolio" / "investor-flow" / "v2" / "invest-dashboard.html"
+    return FileResponse(_path)
 
 
 @app.get("/health", tags=["observability"])
