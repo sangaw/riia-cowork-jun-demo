@@ -181,7 +181,6 @@ class GoalRequest(BaseModel):
 
 @router.post("/goal", summary="Step 1 — Financial Goal feasibility analysis")
 def wizard_goal(req: GoalRequest, db: Session = Depends(get_db)) -> dict[str, Any]:
-    import numpy as np
     from rita.repositories.market_data import MarketDataCacheRepository
 
     annualised_target = req.target_return_pct * (365 / max(req.time_horizon_days, 1))

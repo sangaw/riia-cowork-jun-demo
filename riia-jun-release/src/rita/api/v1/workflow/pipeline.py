@@ -21,7 +21,6 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from rita.auth import get_current_user
-from rita.config import get_settings
 from rita.database import get_db, SessionLocal
 from rita.repositories.instrument import InstrumentRepository
 from rita.repositories.config_overrides import ConfigOverridesRepository
@@ -122,7 +121,6 @@ def _run_pipeline_job(
     req: PipelineRequest,
 ) -> None:
     """Background thread: run full train → backtest pipeline."""
-    from rita.services.workflow_service import WorkflowService
     from rita.schemas.training import TrainingRunCreate, TrainingRun
     from rita.schemas.backtest import BacktestRunCreate, BacktestRun
     from rita.repositories.training import TrainingRunsRepository

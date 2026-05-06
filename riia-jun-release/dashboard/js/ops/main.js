@@ -10,6 +10,8 @@ import { loadDailyOps, triggerSnapshot, loadInstruments, toggleInstrument, saveI
 import { refreshSidebar } from './sidebar.js';
 import { loadTestResults } from './test-results.js';
 import { loadUsers, saveUserRoles } from './users.js';
+import { loadAgentBuilds } from './agent-builds.js';
+import { loadGameCompliance, toggleGcDetail } from './game-compliance.js';
 
 // ── Populate section loader registry ─────────────────────────────────────────
 sectionLoaders['overview']      = loadOverview;
@@ -21,6 +23,8 @@ sectionLoaders['observability'] = loadObservability;
 sectionLoaders['chat']          = loadChat;
 sectionLoaders['dailyops']      = () => { loadDailyOps(); loadInstruments(); };
 sectionLoaders['users']         = loadUsers;
+sectionLoaders['agent-builds']    = loadAgentBuilds;
+sectionLoaders['game-compliance'] = loadGameCompliance;
 
 // ── Window bindings for inline onclick= attributes ────────────────────────────
 window.nav                = nav;
@@ -32,6 +36,9 @@ window.toggleInstrument   = toggleInstrument;
 window.saveInstruments    = saveInstruments;
 window.loadUsers          = loadUsers;
 window.saveUserRoles      = saveUserRoles;
+window.loadAgentBuilds    = loadAgentBuilds;
+window.loadGameCompliance = loadGameCompliance;
+window.toggleGcDetail     = toggleGcDetail;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {

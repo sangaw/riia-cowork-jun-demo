@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500&family=Epilogue:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -75,6 +76,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .ni.on.n-obs{border-left-color:var(--data);color:var(--data);}
 .ni.on.n-chat{border-left-color:var(--chat);color:var(--chat);}
 .ni.on.n-users{border-left-color:var(--user);color:var(--user);}
+.ni.on.n-agent-builds{border-left-color:var(--accelerate);color:var(--accelerate);}
+.ni.on.n-game-compliance{border-left-color:var(--ok);color:var(--ok);}
 .ni-ic{width:15px;height:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .ng-hdr{display:flex;align-items:center;gap:7px;padding:10px 18px 4px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);}
 .ng-dot{width:7px;height:7px;border-radius:1.5px;flex-shrink:0;}
@@ -99,6 +102,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .sec{display:none;animation:fi .22s ease;}
 .sec.on{display:block;}
 @keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.ab-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh);}
+.ab-sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:4px;}
+.ab-sc{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;}
+.ab-sc-role{font-family:var(--fm);font-size:11px;font-weight:700;color:var(--accelerate);text-transform:capitalize;margin-bottom:8px;}
+.ab-sc-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:5px;gap:8px;}
+.ab-sc-lbl{color:var(--t3);}
+.ab-sc-val{font-weight:600;color:var(--t2);font-family:var(--fm);white-space:nowrap;}
+.ab-bar-wrap{background:var(--border);border-radius:3px;height:5px;overflow:hidden;width:52px;display:inline-block;vertical-align:middle;}
+.ab-bar{background:var(--accelerate);height:100%;border-radius:3px;transition:width .4s;}
+.ab-heatmap th{text-align:center;}
+.ab-heatmap td{text-align:center;min-width:58px;font-family:var(--fm);font-size:11px;}
+.heat-0{background:var(--surface);color:var(--t4);}
+.heat-1{background:var(--warn-bg);color:var(--warn);font-weight:600;}
+.heat-2{background:var(--danger-bg);color:var(--danger);font-weight:600;}
+.heat-3{background:rgba(155,28,28,.22);color:var(--danger);font-weight:700;}
+.ab-chart-wrap{position:relative;height:180px;margin-top:4px;}
 
 /* ── Page header ── */
 .ph{display:flex;align-items:flex-start;gap:13px;padding-bottom:17px;border-bottom:1.5px solid var(--border);margin-bottom:20px;}
@@ -317,6 +337,28 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       </svg>
     </div>
     CI / CD Pipeline
+  </div>
+
+  <div class="ni n-agent-builds" onclick="nav(this,'agent-builds')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="3" cy="7" r="1.8" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <circle cx="11" cy="3" r="1.8" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <circle cx="11" cy="11" r="1.8" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M4.8 6.3L9.2 3.7M4.8 7.7L9.2 10.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    Agent Builds
+  </div>
+
+  <div class="ni n-game-compliance" onclick="nav(this,'game-compliance')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M7 1.5L2 4v3.5c0 2.8 2.1 4.8 5 5.5 2.9-.7 5-2.7 5-5.5V4L7 1.5z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+        <path d="M4.5 7l1.8 1.8 3.2-3.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    Game AI Compliance
   </div>
 
   <div class="ng-hdr" style="margin-top:4px">
@@ -658,6 +700,34 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       <div class="tbl-wrap" id="cicd-steplog">
         <div class="loading">Loading…</div>
       </div>
+    </div>
+  </section>
+
+  <!-- ══ AGENT BUILDS ══ -->
+  <section class="sec" id="sec-agent-builds">
+    <div class="ph">
+      <div class="ph-badge" style="background:var(--accelerate-bg,rgba(251,146,60,.12));color:var(--accelerate);border-color:var(--accelerate)">Build</div>
+      <div>
+        <div class="ph-t">Agent Builds</div>
+        <div class="ph-g">AgentOps run history, scorecards, grounding trend, failure heatmap, token usage, skill versions</div>
+      </div>
+    </div>
+    <div id="ab-grid" class="ab-grid">
+      <div class="loading">Loading…</div>
+    </div>
+  </section>
+
+  <!-- ══ GAME AI COMPLIANCE ══ -->
+  <section class="sec" id="sec-game-compliance">
+    <div class="ph">
+      <div class="ph-badge" style="background:rgba(22,163,74,.12);color:var(--ok);border-color:var(--ok)">Compliance</div>
+      <div>
+        <div class="ph-t">Game AI Compliance</div>
+        <div class="ph-g">Per-session compliance audit — flagged days, AI decisions, compliance gate results</div>
+      </div>
+    </div>
+    <div id="gc-grid" class="ab-grid">
+      <div class="loading">Loading…</div>
     </div>
   </section>
 

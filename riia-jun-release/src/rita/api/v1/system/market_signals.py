@@ -33,7 +33,6 @@ def market_signals(
     """
     import numpy as np
     import pandas as pd
-    from rita.config import get_settings
 
     inst = instrument.upper()
     records = MarketDataCacheRepository(db).read_all()

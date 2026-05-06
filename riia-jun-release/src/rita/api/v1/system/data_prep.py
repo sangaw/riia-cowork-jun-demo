@@ -10,11 +10,9 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter
 
 from rita.config import get_settings
-from rita.database import get_db
 
 router = APIRouter(prefix="/api/v1", tags=["system:data-prep"])
 
@@ -140,14 +138,6 @@ def data_prep_status() -> dict[str, Any]:
             overall = "warn"
 
     return {"status": overall, "stages": stages}
-
-
-# ── GET /api/v1/mcp-calls ─────────────────────────────────────────────────────
-
-@router.get("/mcp-calls", summary="MCP tool call log")
-def mcp_calls() -> list[dict[str, Any]]:
-    """Always empty — no external MCP servers in this deployment."""
-    return []
 
 
 # ── GET /api/v1/test-results ──────────────────────────────────────────────────

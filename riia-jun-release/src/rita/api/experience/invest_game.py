@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import random
+import subprocess
+import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -328,10 +330,30 @@ def _write_run_log(game_id: str, session: dict) -> None:
             "agents": agents,
         }
 
+        payload["day_log"] = [
+            {
+                "date": d.get("date", ""),
+                "user_action": d.get("user_action", ""),
+                "ai_action": d.get("ai_action", ""),
+                "compliance_status": d.get("compliance_status", ""),
+                "compliance_rule": d.get("compliance_rule", ""),
+                "ai_insight": d.get("ai_insight", ""),
+            }
+            for d in day_log
+        ]
+
         _AGENT_OPS_RUNS.mkdir(parents=True, exist_ok=True)
         run_file = _AGENT_OPS_RUNS / f"run-{run_id}.json"
         run_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         log.info("invest_game.run_log_written", run_id=run_id, path=str(run_file))
+
+        aggregate_script = _AGENT_OPS_RUNS.parent / "aggregate_metrics.py"
+        if aggregate_script.exists():
+            subprocess.run(
+                [sys.executable, str(aggregate_script)],
+                check=False,
+                capture_output=True,
+            )
 
     except Exception as exc:
         log.error("invest_game.run_log_failed", error=str(exc))
@@ -430,6 +452,8 @@ async def run_day(req: RunDayRequest) -> RunDayResponse:
             "user_action": req.user_action,
             "ai_action": chain_result["ai_action"],
             "compliance_status": chain_result["compliance_status"],
+            "compliance_rule": chain_result["compliance_rule"],
+            "ai_insight": chain_result["ai_insight"],
         }
     )
 

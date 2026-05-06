@@ -167,7 +167,10 @@ def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
     log.info("ml_dispatch.training_complete", run_id=config.run_id, model_path=model_path)
 
     # ── 5. Validation episode → real performance metrics ──────────────────────
-    sharpe = 0.0; mdd = 0.0; total_return = 0.0; val_trades = 0
+    sharpe = 0.0
+    mdd = 0.0
+    total_return = 0.0
+    val_trades = 0
     try:
         val_result = run_episode(model, val_df)
         perf = val_result["performance"]
@@ -180,7 +183,10 @@ def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
     log.info("ml_dispatch.validation_complete", run_id=config.run_id, sharpe=round(sharpe, 3), mdd=round(mdd, 4))
 
     # ── 5b. Training episode → train-phase metrics ────────────────────────────
-    train_sharpe = 0.0; train_mdd = 0.0; train_return = 0.0; train_trades = 0
+    train_sharpe = 0.0
+    train_mdd = 0.0
+    train_return = 0.0
+    train_trades = 0
     try:
         train_result = run_episode(model, train_df)
         tp = train_result["performance"]
