@@ -331,6 +331,10 @@ _dashboard_dir = Path(__file__).parent.parent.parent / "dashboard"
 if _dashboard_dir.exists():
     app.mount("/dashboard", StaticFiles(directory=_dashboard_dir, html=True), name="dashboard")
 
+_ops_dir = Path(__file__).parent.parent.parent / "ops"
+if _ops_dir.exists():
+    app.mount("/ops", StaticFiles(directory=_ops_dir), name="ops")
+
 
 @app.get("/health", tags=["observability"])
 def health(db: Session = Depends(get_db)) -> dict:
