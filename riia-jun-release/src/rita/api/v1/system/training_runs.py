@@ -7,12 +7,16 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from rita.database import get_db
+from rita.logging_config import log_event
 from rita.repositories.training import TrainingRunsRepository
 from rita.repositories.backtest import BacktestRunsRepository
+
+log = structlog.get_logger()
 
 router = APIRouter(prefix="/api/v1", tags=["system:training-runs"])
 
@@ -103,7 +107,7 @@ def training_split(
         result["val_start"]   = str(val_df.index[0].date())
         result["val_end"]     = str(val_df.index[-1].date())
     except Exception:
-        pass
+        log_event(log, "error", "training_run.error", exc_info=True)
 
     try:
         runs_repo = BacktestRunsRepository(db)
@@ -116,7 +120,7 @@ def training_split(
             result["backtest_start"] = str(latest.start_date)
             result["backtest_end"]   = str(latest.end_date)
     except Exception:
-        pass
+        log_event(log, "error", "training_run.error", exc_info=True)
 
     return result
 
