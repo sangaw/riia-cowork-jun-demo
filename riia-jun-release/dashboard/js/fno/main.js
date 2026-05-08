@@ -1,5 +1,21 @@
 // ── FnO Dashboard — Entry Point ───────────────────────────────────────────────
 import { initApp, checkStatus, fetchPositions } from './api.js';
+
+const SESSION_TRACE_ID = crypto.randomUUID();
+
+async function apiFetch(url, opts = {}) {
+    try {
+        const res = await fetch(url, {
+            ...opts,
+            headers: { ...opts.headers, 'X-Request-ID': SESSION_TRACE_ID }
+        });
+        if (!res.ok) console.error('[RITA] fetch error', url, res.status, SESSION_TRACE_ID);
+        return res.ok ? res.json() : null;
+    } catch (e) {
+        console.error('[RITA] fetch failed', url, e, SESSION_TRACE_ID);
+        return null;
+    }
+}
 import { state } from './state.js';
 import { initNav, setUnderlying, setExpiry } from './nav.js';
 import { filterPos } from './positions.js';

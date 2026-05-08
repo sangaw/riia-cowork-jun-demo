@@ -48,6 +48,7 @@ from rita.api.v1.system.market_signals import router as market_signals_router
 from rita.api.v1.system.training_runs import router as training_runs_router
 from rita.api.v1.system.drift import router as drift_router
 from rita.api.v1.system.data_prep import router as data_prep_router
+from rita.api.v1.system.client_errors import router as client_errors_router
 from rita.api.v1.workflow.train import router as train_router
 from rita.api.v1.workflow.backtest import router as backtest_router
 from rita.api.v1.workflow.evaluate import router as evaluate_router
@@ -299,6 +300,7 @@ app.include_router(market_signals_router)
 app.include_router(training_runs_router)
 app.include_router(drift_router)
 app.include_router(data_prep_router)
+app.include_router(client_errors_router)
 
 # -- Workflow tier -- JWT-protected business process routers ------------------
 app.include_router(train_router, dependencies=[Depends(get_current_user)])
