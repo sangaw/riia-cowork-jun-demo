@@ -68,7 +68,7 @@ log = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    configure_logging()
+    configure_logging(settings.server.log_level)
     log.info("app.startup", name=settings.app.name, version=settings.app.version)
     Base.metadata.create_all(bind=engine)
 
