@@ -49,6 +49,7 @@ from rita.api.v1.system.training_runs import router as training_runs_router
 from rita.api.v1.system.drift import router as drift_router
 from rita.api.v1.system.data_prep import router as data_prep_router
 from rita.api.v1.system.mcp_calls import router as mcp_calls_router
+from rita.api.v1.system.client_errors import router as client_errors_router
 from rita.api.v1.workflow.train import router as train_router
 from rita.api.v1.workflow.backtest import router as backtest_router
 from rita.api.v1.workflow.evaluate import router as evaluate_router
@@ -70,7 +71,7 @@ log = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    configure_logging()
+    configure_logging(settings.server.log_level)
     log.info("app.startup", name=settings.app.name, version=settings.app.version)
     Base.metadata.create_all(bind=engine)
 
@@ -302,6 +303,7 @@ app.include_router(training_runs_router)
 app.include_router(drift_router)
 app.include_router(data_prep_router)
 app.include_router(mcp_calls_router)
+app.include_router(client_errors_router)
 
 # -- Workflow tier -- JWT-protected business process routers ------------------
 app.include_router(train_router, dependencies=[Depends(get_current_user)])
@@ -336,6 +338,10 @@ if _dashboard_dir.exists():
 _agent_ops_dir = Path(__file__).parent.parent.parent.parent / "riia-ai-org" / "agent-ops"
 if _agent_ops_dir.exists():
     app.mount("/agent-ops-data", StaticFiles(directory=_agent_ops_dir), name="agent-ops-data")
+
+_ops_dir = Path(__file__).parent.parent.parent / "ops"
+if _ops_dir.exists():
+    app.mount("/ops", StaticFiles(directory=_ops_dir), name="ops")
 
 
 @app.get("/onboarding", include_in_schema=False)

@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+window.onerror = function(msg, src, line, col, err) {
+    console.error('[RITA-PWA] onerror', msg, src, line, col, err);
+    fetch('/api/v1/client-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: String(msg), source: src, lineno: line, colno: col, stack: err ? err.stack : null, url: location.href })
+    }).catch(function(e) { console.error('[RITA-PWA] failed to send error', e); });
+    return false;
+};
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('[RITA-PWA] unhandledrejection', e.reason);
+    fetch('/api/v1/client-error', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: String(e.reason), url: location.href })
+    }).catch(function(f) { console.error('[RITA-PWA] failed to send rejection', f); });
+});
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>RITA</title>

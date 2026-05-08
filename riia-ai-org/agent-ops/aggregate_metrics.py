@@ -1,8 +1,11 @@
 import json
+import logging
 import subprocess
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+
+log = logging.getLogger(__name__)
 
 
 def load_runs(runs_dir: Path) -> list:
@@ -124,20 +127,25 @@ def compute_skill_version_history(repo_root: Path) -> list:
     result = []
     for sf in skill_files:
         try:
-            log = subprocess.check_output(
+            proc = subprocess.run(
                 ["git", "log", "--oneline", "-5", "--", sf],
                 cwd=repo_root,
+                capture_output=True,
                 text=True,
-                stderr=subprocess.DEVNULL,
             )
-            commits = []
-            for line in log.strip().splitlines():
-                if line:
-                    hash_part, *rest = line.split(" ", 1)
-                    commits.append(
-                        {"hash": hash_part, "message": rest[0] if rest else ""}
-                    )
+            if proc.returncode != 0:
+                log.error("subprocess failed", extra={"stderr": proc.stderr})
+                commits = []
+            else:
+                commits = []
+                for line in proc.stdout.strip().splitlines():
+                    if line:
+                        hash_part, *rest = line.split(" ", 1)
+                        commits.append(
+                            {"hash": hash_part, "message": rest[0] if rest else ""}
+                        )
         except Exception:
+            log.error("git log failed", exc_info=True)
             commits = []
         result.append(
             {
@@ -158,7 +166,7 @@ def main() -> None:
     runs = load_runs(runs_dir)
 
     if not runs:
-        print("No run-*.json files found in runs/ — writing empty metrics.")
+        log.info("No run-*.json files found in runs/ — writing empty metrics.")
 
     metrics = {
         "generated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
@@ -175,8 +183,7 @@ def main() -> None:
     with open(output_path, "w") as f:
         json.dump(metrics, f, indent=2)
 
-    print(f"OK: metrics.json written -- {len(runs)} run(s) aggregated")
-    print(f"  Output: {output_path}")
+    log.info("metrics.json written", runs=len(runs), output=str(output_path))
 
 
 if __name__ == "__main__":

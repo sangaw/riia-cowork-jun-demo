@@ -5,15 +5,18 @@ Composes: training run history + backtest run history + recent audit log.
 Also provides Ops monitoring summaries (metrics/summary, step-log).
 """
 
+import time
 from collections import defaultdict
 from typing import Any, Optional
 
+import structlog
 from fastapi import APIRouter, Depends, Query
 from prometheus_client import REGISTRY
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from rita.database import get_db
+from rita.logging_config import log_event
 from rita.repositories.audit import AuditLogRepository
 from rita.repositories.training import TrainingRunsRepository
 from rita.repositories.backtest import BacktestRunsRepository
@@ -22,6 +25,8 @@ from rita.schemas.backtest import BacktestRun
 from rita.schemas.training import TrainingRun
 from rita.services.backtest_service import BacktestService
 from rita.services.workflow_service import WorkflowService
+
+log = structlog.get_logger()
 
 router = APIRouter(prefix="/api/experience/ops", tags=["experience:ops"])
 
@@ -52,17 +57,84 @@ def get_ops(
     audit_repo: AuditLogRepository = Depends(get_audit_repo),
 ) -> OpsPayload:
     """Return a single aggregated payload for the Ops dashboard."""
-    training_runs = workflow_svc.list_runs()
-    backtest_runs = backtest_svc.list_runs()
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
 
-    audit = audit_repo.read_all()
-    recent_audit = sorted(audit, key=lambda e: e.timestamp, reverse=True)[:audit_limit]
+    t0 = time.monotonic()
+    try:
+        training_runs = workflow_svc.list_runs()
+        sources["training_runs"] = {
+            "status": "ok" if training_runs else "empty",
+            "record_count": len(training_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        training_runs = []
+        sources["training_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
 
-    return OpsPayload(
+    t0 = time.monotonic()
+    try:
+        backtest_runs = backtest_svc.list_runs()
+        sources["backtest_runs"] = {
+            "status": "ok" if backtest_runs else "empty",
+            "record_count": len(backtest_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        backtest_runs = []
+        sources["backtest_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    t0 = time.monotonic()
+    try:
+        audit = audit_repo.read_all()
+        recent_audit = sorted(audit, key=lambda e: e.timestamp, reverse=True)[:audit_limit]
+        sources["recent_audit"] = {
+            "status": "ok" if recent_audit else "empty",
+            "record_count": len(recent_audit),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        recent_audit = []
+        sources["recent_audit"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    response = OpsPayload(
         training_runs=training_runs,
         backtest_runs=backtest_runs,
         recent_audit=recent_audit,
     )
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="get_ops",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=["training_runs", "backtest_runs", "recent_audit"],
+        sources=sources,
+    )
+    return response
 
 
 # ── GET /api/v1/metrics/summary ───────────────────────────────────────────────
@@ -110,10 +182,30 @@ def _collect_metrics_summary() -> dict[str, Any]:
 @router.get("/metrics/summary", summary="Structured API metrics summary", tags=["experience:ops"])
 def metrics_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     """Compose Prometheus live metrics + training KPIs for the Ops monitoring panel."""
-    api      = _collect_metrics_summary()
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
+    t0 = time.monotonic()
+    try:
+        api = _collect_metrics_summary()
+        sources["prometheus_metrics"] = {
+            "status": "ok",
+            "record_count": api.get("total_requests", 0),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        api = {"total_requests": 0, "error_count": 0, "error_rate_pct": 0.0, "avg_latency_ms": None, "endpoints": {}}
+        sources["prometheus_metrics"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     training: dict[str, Any] = {"rounds": 0}
     pipeline: dict[str, Any] = {"completed_steps": 0, "failed_steps": 0, "step_timing": {}}
 
+    t0 = time.monotonic()
     try:
         train_repo = TrainingRunsRepository(db)
         runs       = train_repo.read_all()
@@ -143,10 +235,39 @@ def metrics_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
             latest_bt = max(bt_runs, key=lambda r: r.recorded_at)
             training["backtest_start_date"] = str(latest_bt.start_date)
             training["backtest_end_date"]   = str(latest_bt.end_date)
-    except Exception:  # noqa: BLE001
-        pass
 
-    return {"api_requests": api, "pipeline": pipeline, "training": training}
+        sources["training_kpis"] = {
+            "status": "ok" if completed else "empty",
+            "record_count": len(completed),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:  # noqa: BLE001
+        sources["training_kpis"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    response = {"api_requests": api, "pipeline": pipeline, "training": training}
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="metrics_summary",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=list(response.keys()),
+        sources=sources,
+    )
+    return response
 
 
 # ── GET /api/v1/step-log ──────────────────────────────────────────────────────
@@ -154,13 +275,38 @@ def metrics_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
 @router.get("/step-log", summary="Pipeline step log", tags=["experience:ops"])
 def step_log(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     """Compose the latest pipeline run as 4 logical steps for the monitoring table."""
-    train_repo = TrainingRunsRepository(db)
-    bt_repo    = BacktestRunsRepository(db)
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
 
-    all_trains = sorted(train_repo.read_all(), key=lambda r: r.recorded_at, reverse=True)
-    all_bts    = sorted(bt_repo.read_all(),   key=lambda r: r.recorded_at, reverse=True)
+    t0 = time.monotonic()
+    try:
+        train_repo = TrainingRunsRepository(db)
+        bt_repo    = BacktestRunsRepository(db)
+        all_trains = sorted(train_repo.read_all(), key=lambda r: r.recorded_at, reverse=True)
+        all_bts    = sorted(bt_repo.read_all(),   key=lambda r: r.recorded_at, reverse=True)
+        sources["pipeline_runs"] = {
+            "status": "ok" if all_trains else "empty",
+            "record_count": len(all_trains),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_trains, all_bts = [], []
+        sources["pipeline_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
 
     if not all_trains:
+        log_event(
+            log, "info", "experience.compose",
+            handler="step_log",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="empty",
+            response_keys=[],
+            sources=sources,
+        )
         return []
 
     latest    = all_trains[0]
@@ -174,7 +320,7 @@ def step_log(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
             return (end - start).total_seconds()
         return None
 
-    return [
+    response = [
         {
             "step_num": 1, "step_name": "Load & Prepare Data", "status": "completed",
             "duration_secs": None, "started_at": _iso(latest.started_at), "ended_at": None,
@@ -203,3 +349,21 @@ def step_log(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
             "run_id": latest_bt.run_id if latest_bt else None,
         },
     ]
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="step_log",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=[],
+        sources=sources,
+    )
+    return response

@@ -26,6 +26,7 @@ from rita.repositories.instrument import InstrumentRepository
 from rita.repositories.config_overrides import ConfigOverridesRepository
 from rita.schemas.config_overrides import ConfigOverride
 from rita.services.workflow_service import get_live_progress
+from rita.logging_config import log_event
 
 log = structlog.get_logger()
 
@@ -42,7 +43,7 @@ def _get_active_instrument_id(db: Session) -> str:
         if cfg and cfg.value:
             return cfg.value.upper()
     except Exception:
-        pass
+        log_event(log, "error", "pipeline.error", stage="read_active_instrument_id", exc_info=True)
     return "NIFTY"
 
 

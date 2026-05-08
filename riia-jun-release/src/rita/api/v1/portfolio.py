@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from rita.database import get_db
+from rita.logging_config import log_event
 
 log = structlog.get_logger()
 
@@ -218,7 +219,7 @@ def portfolio_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
                 "turnover":    round(today.turnover_cr, 2) if today.turnover_cr else 0,
             }
     except Exception:
-        pass
+        log_event(log, "error", "portfolio.error", endpoint="portfolio_summary", exc_info=True)
 
     return {
         "total_groups": len({r.group_name for r in records if r.group_name}),

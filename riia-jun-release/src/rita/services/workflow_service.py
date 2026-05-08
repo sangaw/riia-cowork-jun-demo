@@ -19,10 +19,11 @@ from sqlalchemy.orm import Session
 
 from rita.core.ml_dispatch import TrainingConfig, load_instrument_defaults, train
 from rita.database import SessionLocal
+from rita.logging_config import log_event
 from rita.repositories.training import TrainingMetricsRepository, TrainingRunsRepository
 from rita.schemas.training import TrainingMetric, TrainingRun, TrainingRunCreate
 
-log = structlog.get_logger()
+log = structlog.get_logger(__name__)
 
 # ---------------------------------------------------------------------------
 # Live training progress — in-memory, per run_id
@@ -62,7 +63,7 @@ def _run_training_job(config: TrainingConfig) -> None:
             **{**run.model_dump(), "status": "running", "started_at": datetime.now(timezone.utc)}
         )
         runs_repo.upsert(run)
-        log.info("training.running", run_id=config.run_id)
+        log_event(log, "info", "training.running", run_id=config.run_id)
 
         # Set up live progress tracking
         global _current_run_id
@@ -74,8 +75,8 @@ def _run_training_job(config: TrainingConfig) -> None:
 
         try:
             outcome = train(config, progress_fn=_push_progress)
-        except Exception:
-            log.error("training.failed", run_id=config.run_id, exc_info=True)
+        except Exception as _exc:
+            log_event(log, "error", "training.failed", run_id=config.run_id, error=str(_exc))
             run = runs_repo.find_by_id(config.run_id)
             if run is not None:
                 runs_repo.upsert(
@@ -114,7 +115,8 @@ def _run_training_job(config: TrainingConfig) -> None:
             }
         )
         runs_repo.upsert(complete_run)
-        log.info("training.complete", run_id=config.run_id, model_path=outcome.model_path)
+        duration_s = round((ended_at - run.started_at).total_seconds(), 1) if run.started_at else None
+        log_event(log, "info", "training.complete", run_id=config.run_id, duration_s=duration_s)
 
         try:
             from rita.core.training_tracker import TrainingTracker
@@ -185,11 +187,10 @@ class WorkflowService:
             recorded_at=now,
         )
         self._runs.upsert(run)
-        log.info("training.submitted", run_id=run_id)
-
         from rita.core.data_loader import model_dir
         settings = body.model_dump()
         instrument = settings.get("instrument", "NIFTY")
+        log_event(log, "info", "training.submitted", run_id=run_id, model=settings.get("model_version"), instrument=instrument)
         inst_defaults = load_instrument_defaults(instrument)
         config = TrainingConfig(
             run_id=run_id,

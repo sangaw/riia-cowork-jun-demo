@@ -1,5 +1,21 @@
 // ── RITA Dashboard — main.js (entry point) ─────────────────
 import { api } from './api.js';
+
+const SESSION_TRACE_ID = crypto.randomUUID();
+
+async function apiFetch(url, opts = {}) {
+    try {
+        const res = await fetch(url, {
+            ...opts,
+            headers: { ...opts.headers, 'X-Request-ID': SESSION_TRACE_ID }
+        });
+        if (!res.ok) console.error('[RITA] fetch error', url, res.status, SESSION_TRACE_ID);
+        return res.ok ? res.json() : null;
+    } catch (e) {
+        console.error('[RITA] fetch failed', url, e, SESSION_TRACE_ID);
+        return null;
+    }
+}
 import { show, warmupChat, _sectionLoaders, getCurrentSection } from './nav.js';
 import { loadHealth, loadPerfSummary, loadDrift, loadProgress } from './health.js';
 import { switchMsTab, loadMarketSignals, loadGoalHint } from './market-signals.js';
@@ -96,7 +112,7 @@ async function selectInstrumentTab(id) {
   document.querySelectorAll('.inst-tab').forEach(t =>
     t.classList.toggle('active', t.id === 'itab-' + id)
   );
-  try { await api('/api/v1/instrument/select', 'POST', { instrument_id: id }).catch(() => {}); } catch (_) {}
+  try { await api('/api/v1/instrument/select', 'POST', { instrument_id: id }).catch(e => console.error('[RITA] instrument select failed', e)); } catch (_) {}
   const section = getCurrentSection();
   if (section === 'market') {
     clearChat();
