@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import math as _math
 import statistics as _stats
+import time
 from typing import Any, Optional
 
 import structlog
@@ -16,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from rita.config import get_settings
 from rita.database import get_db
+from rita.logging_config import log_event
 from rita.repositories.instrument import InstrumentRepository
 from rita.repositories.config_overrides import ConfigOverridesRepository
 from rita.repositories.backtest import BacktestRunsRepository, BacktestResultsRepository
@@ -90,37 +92,95 @@ def _load_latest_backtest_df(db: Session) -> tuple[Any, list, Any]:
 
 @router.get("/instrument/active", summary="Currently active instrument")
 def active_instrument(db: Session = Depends(get_db)) -> dict[str, Any]:
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
     active_id = _get_active_instrument_id(db)
-    repo      = InstrumentRepository(db)
-    inst      = repo.find_by_id(active_id)
+
+    t0 = time.monotonic()
+    try:
+        repo = InstrumentRepository(db)
+        inst = repo.find_by_id(active_id)
+        sources["active_instrument"] = {
+            "status": "ok" if inst else "empty",
+            "record_count": 1 if inst else 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        inst = None
+        sources["active_instrument"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if inst is None:
         cfg = get_settings()
-        return {
+        response = {
             "id": "NIFTY", "name": "Nifty 50", "flag": "\U0001f1ee\U0001f1f3",
             "exchange": "NSE", "lot_size": cfg.instruments.nifty.lot_size,
         }
-    return {
-        "id":       inst.instrument_id,
-        "name":     inst.name,
-        "flag":     _COUNTRY_FLAG.get(inst.country_code, ""),
-        "exchange": inst.exchange,
-        "lot_size": inst.lot_size,
-    }
+    else:
+        response = {
+            "id":       inst.instrument_id,
+            "name":     inst.name,
+            "flag":     _COUNTRY_FLAG.get(inst.country_code, ""),
+            "exchange": inst.exchange,
+            "lot_size": inst.lot_size,
+        }
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="active_instrument",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=list(response.keys()),
+        sources=sources,
+    )
+    return response
 
 
 # ── GET /api/v1/performance-summary ──────────────────────────────────────────
 
 @router.get("/performance-summary", summary="Latest backtest performance KPIs")
 def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
-    active_id  = _get_active_instrument_id(db)
-    runs_repo  = BacktestRunsRepository(db)
-    results_repo = BacktestResultsRepository(db)
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
 
-    all_runs = [
-        r for r in runs_repo.read_all()
-        if r.status in ("complete", "completed")
-        and (r.instrument or "NIFTY").upper() == active_id
-    ]
+    active_id  = _get_active_instrument_id(db)
+
+    t0 = time.monotonic()
+    try:
+        runs_repo  = BacktestRunsRepository(db)
+        results_repo = BacktestResultsRepository(db)
+        all_runs = [
+            r for r in runs_repo.read_all()
+            if r.status in ("complete", "completed")
+            and (r.instrument or "NIFTY").upper() == active_id
+        ]
+        sources["backtest_runs"] = {
+            "status": "ok" if all_runs else "empty",
+            "record_count": len(all_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_runs = []
+        sources["backtest_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     run_instrument = active_id if all_runs else "NONE"
 
     _empty = {
@@ -133,14 +193,51 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     }
 
     if not all_runs:
+        statuses = [s["status"] for s in sources.values()]
+        overall = "ok" if all(s == "ok" for s in statuses) else ("partial" if any(s == "ok" for s in statuses) else "error")
+        log_event(
+            log, "info", "experience.compose",
+            handler="performance_summary",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status=overall,
+            response_keys=list(_empty.keys()),
+            sources=sources,
+        )
         return _empty
 
     latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
-    results    = sorted(
-        [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
-        key=lambda r: r.date,
-    )
+
+    t0 = time.monotonic()
+    try:
+        results = sorted(
+            [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
+            key=lambda r: r.date,
+        )
+        sources["backtest_results"] = {
+            "status": "ok" if results else "empty",
+            "record_count": len(results),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        results = []
+        sources["backtest_results"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if not results:
+        statuses = [s["status"] for s in sources.values()]
+        overall = "ok" if all(s == "ok" for s in statuses) else ("partial" if any(s == "ok" for s in statuses) else "error")
+        log_event(
+            log, "info", "experience.compose",
+            handler="performance_summary",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status=overall,
+            response_keys=list(_empty.keys()),
+            sources=sources,
+        )
         return _empty
 
     port_final      = results[-1].portfolio_value
@@ -192,7 +289,7 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     win_rate_pct = round(wins / (len(results) - 1) * 100, 1) if len(results) > 1 else None
     constraints_met = sharpe is not None and sharpe >= 1.0 and abs(max_dd_pct) < 10
 
-    return {
+    response = {
         "portfolio_total_return_pct": port_return_pct,
         "benchmark_total_return_pct": bench_return_pct,
         "portfolio_cagr_pct": port_cagr,
@@ -209,29 +306,91 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
         "_active_instrument_id": active_id,
     }
 
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="performance_summary",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=list(response.keys()),
+        sources=sources,
+    )
+    return response
+
 
 # ── GET /api/v1/backtest-daily ────────────────────────────────────────────────
 
 @router.get("/backtest-daily", summary="Daily backtest results for charting")
 def backtest_daily(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
-    active_id  = _get_active_instrument_id(db)
-    runs_repo  = BacktestRunsRepository(db)
-    results_repo = BacktestResultsRepository(db)
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
 
-    all_runs = [
-        r for r in runs_repo.read_all()
-        if r.status in ("complete", "completed")
-        and (r.instrument or "NIFTY").upper() == active_id
-    ]
+    active_id = _get_active_instrument_id(db)
+
+    t0 = time.monotonic()
+    try:
+        runs_repo  = BacktestRunsRepository(db)
+        results_repo = BacktestResultsRepository(db)
+        all_runs = [
+            r for r in runs_repo.read_all()
+            if r.status in ("complete", "completed")
+            and (r.instrument or "NIFTY").upper() == active_id
+        ]
+        sources["backtest_runs"] = {
+            "status": "ok" if all_runs else "empty",
+            "record_count": len(all_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_runs = []
+        sources["backtest_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if not all_runs:
+        log_event(
+            log, "info", "experience.compose",
+            handler="backtest_daily",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="empty",
+            response_keys=[],
+            sources=sources,
+        )
         return []
 
     latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
-    results    = sorted(
-        [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
-        key=lambda r: r.date,
-    )
-    return [{
+
+    t0 = time.monotonic()
+    try:
+        results = sorted(
+            [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
+            key=lambda r: r.date,
+        )
+        sources["backtest_results"] = {
+            "status": "ok" if results else "empty",
+            "record_count": len(results),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        results = []
+        sources["backtest_results"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    response = [{
         "date":            str(r.date),
         "portfolio_value": r.portfolio_value,
         "benchmark_value": r.benchmark_value,
@@ -239,13 +398,58 @@ def backtest_daily(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
         "close_price":     r.close_price,
     } for r in results]
 
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="backtest_daily",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=[],
+        sources=sources,
+    )
+    return response
+
 
 # ── GET /api/v1/performance-feedback ─────────────────────────────────────────
 
 @router.get("/performance-feedback", summary="Performance feedback for latest backtest")
 def performance_feedback(db: Session = Depends(get_db)) -> dict[str, Any]:
-    latest_run, daily_results, backtest_df = _load_latest_backtest_df(db)
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
+    t0 = time.monotonic()
+    try:
+        latest_run, daily_results, backtest_df = _load_latest_backtest_df(db)
+        sources["backtest_df"] = {
+            "status": "ok" if backtest_df is not None else "empty",
+            "record_count": len(daily_results) if daily_results else 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        latest_run, daily_results, backtest_df = None, [], None
+        sources["backtest_df"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if backtest_df is None:
+        log_event(
+            log, "info", "experience.compose",
+            handler="performance_feedback",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="error",
+            response_keys=["error"],
+            sources=sources,
+        )
         return {"error": "No completed backtest run found"}
 
     total_days = len(daily_results)
@@ -272,16 +476,69 @@ def performance_feedback(db: Session = Depends(get_db)) -> dict[str, Any]:
         "drawdown_constraint_met": abs(mdd_pct) < 10,
         "constraints_met": sharpe >= 1.0 and abs(mdd_pct) < 10,
     }
-    train_repo      = TrainingRunsRepository(db)
-    training_rounds = len([r for r in train_repo.read_all() if r.status in ("complete", "completed")])
 
+    t0 = time.monotonic()
+    try:
+        train_repo      = TrainingRunsRepository(db)
+        training_rounds = len([r for r in train_repo.read_all() if r.status in ("complete", "completed")])
+        sources["training_rounds"] = {
+            "status": "ok",
+            "record_count": training_rounds,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        training_rounds = 0
+        sources["training_rounds"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    t0 = time.monotonic()
     try:
         result = build_performance_feedback(backtest_df, perf_metrics, training_rounds)
+        sources["performance_feedback_build"] = {
+            "status": "ok",
+            "record_count": len(result) if isinstance(result, dict) else 1,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
         log.info("performance_feedback.served", run_id=latest_run.run_id, training_rounds=training_rounds)
-        return result
-    except Exception:
+    except Exception as exc:
+        sources["performance_feedback_build"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
         log.error("performance_feedback.failed", run_id=latest_run.run_id, exc_info=True)
+        log_event(
+            log, "info", "experience.compose",
+            handler="performance_feedback",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="error",
+            response_keys=["error"],
+            sources=sources,
+        )
         return {"error": "Failed to compute performance feedback"}
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="performance_feedback",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=list(result.keys()) if isinstance(result, dict) else [],
+        sources=sources,
+    )
+    return result
 
 
 # ── GET /api/v1/portfolio-comparison ─────────────────────────────────────────
@@ -291,16 +548,81 @@ def portfolio_comparison(
     portfolio_inr: float = 1_000_000,
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    latest_run, _daily_results, backtest_df = _load_latest_backtest_df(db)
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
+    t0 = time.monotonic()
+    try:
+        latest_run, _daily_results, backtest_df = _load_latest_backtest_df(db)
+        sources["backtest_df"] = {
+            "status": "ok" if backtest_df is not None else "empty",
+            "record_count": len(_daily_results) if _daily_results else 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        latest_run, backtest_df = None, None
+        sources["backtest_df"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if backtest_df is None:
+        log_event(
+            log, "info", "experience.compose",
+            handler="portfolio_comparison",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="error",
+            response_keys=["error"],
+            sources=sources,
+        )
         return {"error": "No completed backtest run found"}
+
+    t0 = time.monotonic()
     try:
         result = build_portfolio_comparison(backtest_df, portfolio_inr)
+        sources["portfolio_comparison_build"] = {
+            "status": "ok",
+            "record_count": len(result) if isinstance(result, dict) else 1,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
         log.info("portfolio_comparison.served", run_id=latest_run.run_id, portfolio_inr=portfolio_inr)
-        return result
-    except Exception:
+    except Exception as exc:
+        sources["portfolio_comparison_build"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
         log.error("portfolio_comparison.failed", run_id=latest_run.run_id, exc_info=True)
+        log_event(
+            log, "info", "experience.compose",
+            handler="portfolio_comparison",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="error",
+            response_keys=["error"],
+            sources=sources,
+        )
         return {"error": "Failed to compute portfolio comparison"}
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="portfolio_comparison",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=list(result.keys()) if isinstance(result, dict) else [],
+        sources=sources,
+    )
+    return result
 
 
 # ── GET /api/v1/risk-timeline ─────────────────────────────────────────────────
@@ -311,21 +633,63 @@ def risk_timeline(
     instrument: str = "NIFTY",
     db: Session = Depends(get_db),
 ) -> list[dict[str, Any]]:
-    runs_repo    = BacktestRunsRepository(db)
-    results_repo = BacktestResultsRepository(db)
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
 
-    all_runs = [
-        r for r in runs_repo.read_all()
-        if r.status in ("complete", "completed") and (r.instrument or "NIFTY") == instrument
-    ]
+    t0 = time.monotonic()
+    try:
+        runs_repo    = BacktestRunsRepository(db)
+        results_repo = BacktestResultsRepository(db)
+        all_runs = [
+            r for r in runs_repo.read_all()
+            if r.status in ("complete", "completed") and (r.instrument or "NIFTY") == instrument
+        ]
+        sources["backtest_runs"] = {
+            "status": "ok" if all_runs else "empty",
+            "record_count": len(all_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_runs = []
+        sources["backtest_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if not all_runs:
+        log_event(
+            log, "info", "experience.compose",
+            handler="risk_timeline",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="empty",
+            response_keys=[],
+            sources=sources,
+        )
         return []
 
     latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
-    results    = sorted(
-        [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
-        key=lambda r: r.date,
-    )
+
+    t0 = time.monotonic()
+    try:
+        results = sorted(
+            [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
+            key=lambda r: r.date,
+        )
+        sources["backtest_results"] = {
+            "status": "ok" if results else "empty",
+            "record_count": len(results),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        results = []
+        sources["backtest_results"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
 
     port_values  = [r.portfolio_value if r.portfolio_value is not None else 1.0 for r in results]
     bench_values = [r.benchmark_value if r.benchmark_value is not None else 1.0 for r in results]
@@ -363,7 +727,7 @@ def risk_timeline(
 
     _ = phase  # accepted for forward-compatibility, not yet used for filtering
 
-    return [{
+    response = [{
         "date":                  str(r.date),
         "portfolio_value":       r.portfolio_value,
         "portfolio_value_norm":  r.portfolio_value,
@@ -381,24 +745,93 @@ def risk_timeline(
         "run_id":                r.run_id,
     } for i, r in enumerate(results)]
 
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="risk_timeline",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=[],
+        sources=sources,
+    )
+    return response
+
 
 # ── GET /api/v1/trade-events ──────────────────────────────────────────────────
 
 @router.get("/trade-events", summary="Trade entry/exit events derived from backtest allocation changes")
 def trade_events(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
-    runs_repo    = BacktestRunsRepository(db)
-    results_repo = BacktestResultsRepository(db)
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
 
-    all_runs = [r for r in runs_repo.read_all() if r.status in ("complete", "completed")]
+    t0 = time.monotonic()
+    try:
+        runs_repo    = BacktestRunsRepository(db)
+        results_repo = BacktestResultsRepository(db)
+        all_runs = [r for r in runs_repo.read_all() if r.status in ("complete", "completed")]
+        sources["backtest_runs"] = {
+            "status": "ok" if all_runs else "empty",
+            "record_count": len(all_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_runs = []
+        sources["backtest_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if not all_runs:
+        log_event(
+            log, "info", "experience.compose",
+            handler="trade_events",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="empty",
+            response_keys=[],
+            sources=sources,
+        )
         return []
 
     latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
-    results    = sorted(
-        [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
-        key=lambda r: r.date,
-    )
+
+    t0 = time.monotonic()
+    try:
+        results = sorted(
+            [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
+            key=lambda r: r.date,
+        )
+        sources["backtest_results"] = {
+            "status": "ok" if results else "empty",
+            "record_count": len(results),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        results = []
+        sources["backtest_results"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
     if not results:
+        log_event(
+            log, "info", "experience.compose",
+            handler="trade_events",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="empty",
+            response_keys=[],
+            sources=sources,
+        )
         return []
 
     port_values   = [r.portfolio_value if r.portfolio_value is not None else 1.0 for r in results]
@@ -470,6 +903,22 @@ def trade_events(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
             "regime": _trade_regime(cur_alloc), "sharpe_at_trade": _rolling_sharpe(i),
         })
 
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="trade_events",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=[],
+        sources=sources,
+    )
     return events
 
 
@@ -481,5 +930,50 @@ def stress_scenarios(
     rita_allocation_pct: float = 50.0,
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
     market_moves = [-20, -10, -5, 5, 10, 20]
-    return simulate_stress_scenarios(portfolio_inr, market_moves, rita_allocation_pct)
+
+    t0 = time.monotonic()
+    try:
+        result = simulate_stress_scenarios(portfolio_inr, market_moves, rita_allocation_pct)
+        sources["stress_scenarios"] = {
+            "status": "ok" if result else "empty",
+            "record_count": len(result) if isinstance(result, dict) else 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        sources["stress_scenarios"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+        log_event(
+            log, "info", "experience.compose",
+            handler="stress_scenarios",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="error",
+            response_keys=["error"],
+            sources=sources,
+        )
+        return {"error": str(exc)}
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="stress_scenarios",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=list(result.keys()) if isinstance(result, dict) else [],
+        sources=sources,
+    )
+    return result
