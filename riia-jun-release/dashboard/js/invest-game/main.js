@@ -11,6 +11,7 @@ const gameState = {
   warmupDays: [],
   gameDays: [],
   currentDayIndex: 0,
+  nextRowToReveal: 3,
   started: false,
   user: { position: 'flat', cash: 5000, shares: 0, entryPrice: 0, portfolio: 0, cumCosts: 0, cumTax: 0, netValue: 5000, prevNetValue: 5000 },
   ai:   { position: 'flat', cash: 5000, shares: 0, entryPrice: 0, portfolio: 0, cumCosts: 0, cumTax: 0, netValue: 5000, prevNetValue: 5000 }
@@ -198,8 +199,9 @@ async function handleUserAction(n, action) {
   renderComplianceRow(n, result);
 
   if (n < 12) {
-    unlockRow(n + 1);
+    document.getElementById('btn-next-day').disabled = false;
   } else {
+    document.getElementById('btn-next-day').disabled = true;
     await endGame();
   }
 }
@@ -228,7 +230,7 @@ async function endGame() {
   else if (winner === 'ai') { badge.textContent = 'AI Wins';   badge.className = 'ai-wins'; }
   else                    { badge.textContent = "It's a Draw"; badge.className = 'tie'; }
 
-  document.getElementById('winner-section').style.display = '';
+  document.getElementById('winner-banner').style.display = '';
 }
 
 function resetGame() {
@@ -237,7 +239,7 @@ function resetGame() {
 
   Object.assign(gameState, {
     gameId: null, instrument: 'ASML', currency: 'EUR', startingCapital: cap,
-    warmupDays: [], gameDays: [], currentDayIndex: 0, started: false,
+    warmupDays: [], gameDays: [], currentDayIndex: 0, nextRowToReveal: 3, started: false,
     user: freshActor(), ai: freshActor()
   });
 
@@ -269,7 +271,7 @@ function resetGame() {
   document.getElementById('ai-tax').textContent         = '−' + s + '0.00';
   const aNet = document.getElementById('ai-net');
   aNet.textContent = s + '5,000.00'; aNet.className = 'pnl-value';
-  document.getElementById('winner-section').style.display = 'none';
+  document.getElementById('winner-banner').style.display = 'none';
   document.getElementById('winner-badge').textContent = '—';
   document.getElementById('winner-badge').className   = '';
   document.getElementById('progress-fill').style.width      = '0%';
@@ -281,9 +283,13 @@ function resetGame() {
     ['date', 'instrument', 'price'].forEach(f => { document.getElementById(`row${n}-${f}`).textContent = '—'; });
   });
 
+  document.getElementById('btn-next-day').disabled = true;
+
   // Active rows
   for (let n = 3; n <= 12; n++) {
-    document.getElementById(`game-row-${n}`).classList.add('locked');
+    const activeRow = document.getElementById(`game-row-${n}`);
+    activeRow.classList.add('locked');
+    activeRow.style.display = 'none';
     ['buy', 'sell', 'hold'].forEach(a => {
       const b = document.getElementById(`${a}-${n}`);
       b.disabled = true; b.classList.remove('selected'); b.onclick = null;
@@ -366,11 +372,23 @@ function initControls() {
     document.getElementById('progress-label-text').textContent = 'Day 0 of 10';
     renderPnLCards();
 
+    gameState.nextRowToReveal = 3;
     renderWarmupRows();
-    unlockRow(3);
+    document.getElementById('btn-next-day').disabled = false;
   });
 
   document.getElementById('btn-new-game').addEventListener('click', resetGame);
+
+  document.getElementById('btn-next-day').addEventListener('click', () => {
+    const n = gameState.nextRowToReveal;
+    if (n > 12) return;
+    const row = document.getElementById(`game-row-${n}`);
+    row.style.display = '';
+    unlockRow(n);
+    gameState.nextRowToReveal = n + 1;
+    document.getElementById('btn-next-day').disabled = true;
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
 }
 
 document.addEventListener('DOMContentLoaded', initControls);

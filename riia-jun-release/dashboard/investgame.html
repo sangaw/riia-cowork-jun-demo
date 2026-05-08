@@ -44,8 +44,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .t-nav-link:hover{color:var(--text);border-color:var(--border2);}
 
 /* ── Game Layout ── */
-.game-main{max-width:1100px;margin:0 auto;padding:28px 24px 60px;}
-.game-row{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:22px 24px;margin-bottom:18px;box-shadow:var(--sh);}
+.game-main{max-width:100%;padding:20px 28px 60px;}
+.game-row{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:16px;box-shadow:var(--sh);}
+.top-row-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.top-row-grid .game-row{margin-bottom:0;}
 .row-hdr{display:flex;align-items:center;gap:10px;margin-bottom:18px;}
 .row-hdr h2{font-family:var(--fs);font-size:18px;font-weight:400;color:var(--text);}
 .row-badge{font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;padding:2px 9px;border-radius:100px;background:var(--game-bg);border:1px solid var(--game-bd);color:var(--game);}
@@ -120,29 +122,34 @@ tr.active-day:not(.locked) td{color:var(--text);}
 .selected-range-info{display:flex;align-items:center;gap:8px;margin-top:12px;font-family:var(--fm);font-size:11px;color:var(--ok);background:var(--ok-bg);border:1px solid var(--ok-bd);border-radius:var(--r);padding:6px 14px;}
 .selected-range-info .range-label{color:var(--t3);font-size:10px;text-transform:uppercase;letter-spacing:.08em;margin-right:4px;}
 
-/* ── Row 2: P&L Two-Column ── */
-.pnl-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:14px;}
-.pnl-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:14px 16px;}
-.pnl-card-header{font-family:var(--fm);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;font-weight:500;}
-.pnl-card-header.user-hdr{color:var(--info);}
-.pnl-card-header.ai-hdr{color:var(--game);}
-.pnl-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;}
-.pnl-field{display:flex;flex-direction:column;gap:2px;}
-.pnl-field.pnl-net{grid-column:1/-1;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;}
-.pnl-label{font-family:var(--fm);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
-.pnl-value{font-family:var(--fm);font-size:13px;color:var(--text);font-weight:500;}
-.pnl-net .pnl-value{font-size:15px;}
+/* ── Row 2: P&L Table ── */
+.pnl-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;}
+.pnl-table th{font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;padding:6px 12px;text-align:left;border-bottom:1.5px solid var(--border);background:var(--surface2);}
+.pnl-table td{padding:6px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.pnl-metric-col{width:110px;}
+.pnl-you-hdr{color:var(--info);}
+.pnl-ai-hdr{color:var(--game);}
+.pnl-row-label{font-family:var(--fm);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;}
+.pnl-sep{color:var(--t4);margin:0 5px;font-family:var(--fm);font-size:10px;}
+.pnl-value{font-family:var(--fm);font-size:12px;color:var(--text);font-weight:500;}
 .pnl-value.pos{color:var(--ok);}
 .pnl-value.neg{color:var(--danger);}
 .pnl-value.cost{color:var(--t3);}
+.pnl-net-row td{background:var(--surface2);border-top:1.5px solid var(--border);border-bottom:none;}
+.pnl-net-row .pnl-value{font-size:14px;font-weight:700;}
 
-/* ── Winner section ── */
-.winner-section{margin-top:14px;padding:16px;border-radius:8px;border:2px solid var(--game-bd);background:var(--game-bg);display:flex;align-items:center;justify-content:center;gap:14px;}
-.winner-section h3{font-family:var(--fs);font-size:17px;color:var(--game);font-weight:400;}
-#winner-badge{display:inline-block;padding:6px 24px;border-radius:100px;font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:.02em;}
+/* ── Winner banner ── */
+.winner-banner{position:sticky;top:52px;z-index:150;display:flex;align-items:center;justify-content:center;gap:14px;padding:10px 28px;border-bottom:2px solid var(--game-bd);background:var(--game-bg);}
+.winner-banner-label{font-family:var(--fs);font-size:16px;color:var(--game);font-weight:400;}
+#winner-badge{display:inline-block;padding:5px 22px;border-radius:100px;font-family:var(--fd);font-size:13px;font-weight:700;letter-spacing:.02em;}
 #winner-badge.you-win{background:var(--ok);color:#fff;}
 #winner-badge.ai-wins{background:var(--danger);color:#fff;}
 #winner-badge.tie{background:var(--game);color:#fff;}
+
+/* ── Scrollable journal table ── */
+#row-game-table .table-wrap{max-height:265px;overflow:auto;}
+#game-table thead th{position:sticky;top:0;z-index:1;background:var(--surface2);box-shadow:0 1px 0 var(--border);}
+.btn-next-day{margin-left:auto;padding:5px 16px;font-size:12px;}
 
 /* ── Row 4: Compliance ── */
 .status-badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--fm);font-size:10px;padding:2px 9px;border-radius:100px;border:1px solid;}
@@ -173,7 +180,15 @@ tr.active-day:not(.locked) td{color:var(--text);}
   </div>
 </header>
 
+<div id="winner-banner" class="winner-banner" style="display:none">
+  <span class="winner-banner-label">Game Over</span>
+  <div id="winner-badge">—</div>
+</div>
+
 <main class="game-main">
+
+  <!-- ── Top row: Configure + Portfolio side by side ── -->
+  <div class="top-row-grid">
 
   <!-- ── Row 1: Controls ── -->
   <section id="row-controls" class="game-row">
@@ -214,84 +229,46 @@ tr.active-day:not(.locked) td{color:var(--text);}
 
   <!-- ── Row 2: P&L Dashboard ── -->
   <section id="row-performance" class="game-row" style="display:none">
-    <div class="pnl-two-col">
-
-      <!-- User P&L -->
-      <div class="pnl-card">
-        <div class="pnl-card-header user-hdr">You</div>
-        <div class="pnl-fields">
-          <div class="pnl-field">
-            <span class="pnl-label">Cash</span>
-            <span id="user-cash" class="pnl-value">€5,000.00</span>
-          </div>
-          <div class="pnl-field">
-            <span class="pnl-label">Portfolio</span>
-            <span id="user-portfolio" class="pnl-value">€0.00</span>
-          </div>
-          <div class="pnl-field">
-            <span class="pnl-label">Transaction Costs</span>
-            <span id="user-costs" class="pnl-value cost">−€0.00</span>
-          </div>
-          <div class="pnl-field">
-            <span class="pnl-label">Tax</span>
-            <span id="user-tax" class="pnl-value cost">−€0.00</span>
-          </div>
-          <div class="pnl-field pnl-net">
-            <span class="pnl-label">Net Value</span>
-            <span id="user-net" class="pnl-value">€5,000.00</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- AI P&L -->
-      <div class="pnl-card">
-        <div class="pnl-card-header ai-hdr">AI Agent</div>
-        <div class="pnl-fields">
-          <div class="pnl-field">
-            <span class="pnl-label">Cash</span>
-            <span id="ai-cash" class="pnl-value">€5,000.00</span>
-          </div>
-          <div class="pnl-field">
-            <span class="pnl-label">Portfolio</span>
-            <span id="ai-portfolio" class="pnl-value">€0.00</span>
-          </div>
-          <div class="pnl-field">
-            <span class="pnl-label">Transaction Costs</span>
-            <span id="ai-costs" class="pnl-value cost">−€0.00</span>
-          </div>
-          <div class="pnl-field">
-            <span class="pnl-label">Tax</span>
-            <span id="ai-tax" class="pnl-value cost">−€0.00</span>
-          </div>
-          <div class="pnl-field pnl-net">
-            <span class="pnl-label">Net Value</span>
-            <span id="ai-net" class="pnl-value">€5,000.00</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Winner (shown after game ends) -->
-    <div id="winner-section" class="winner-section" style="display:none">
-      <h3>Game Over</h3>
-      <div id="winner-badge">—</div>
-    </div>
-
-    <!-- Progress -->
+    <table class="pnl-table">
+      <thead>
+        <tr>
+          <th class="pnl-metric-col"></th>
+          <th class="pnl-you-hdr">You</th>
+          <th class="pnl-ai-hdr">AI Agent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="pnl-row-label">Cash / Portfolio</td>
+          <td><span id="user-cash" class="pnl-value">€5,000.00</span><span class="pnl-sep">/</span><span id="user-portfolio" class="pnl-value">€0.00</span></td>
+          <td><span id="ai-cash" class="pnl-value">€5,000.00</span><span class="pnl-sep">/</span><span id="ai-portfolio" class="pnl-value">€0.00</span></td>
+        </tr>
+        <tr>
+          <td class="pnl-row-label">Costs / Tax</td>
+          <td><span id="user-costs" class="pnl-value cost">−€0.00</span><span class="pnl-sep">/</span><span id="user-tax" class="pnl-value cost">−€0.00</span></td>
+          <td><span id="ai-costs" class="pnl-value cost">−€0.00</span><span class="pnl-sep">/</span><span id="ai-tax" class="pnl-value cost">−€0.00</span></td>
+        </tr>
+        <tr class="pnl-net-row">
+          <td class="pnl-row-label">Net Value</td>
+          <td><span id="user-net" class="pnl-value">€5,000.00</span></td>
+          <td><span id="ai-net" class="pnl-value">€5,000.00</span></td>
+        </tr>
+      </tbody>
+    </table>
     <div class="progress-wrap">
-      <div class="progress-bar">
-        <div id="progress-fill" style="width:0%"></div>
-      </div>
+      <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
       <span id="progress-label-text">Day 0 of 10</span>
     </div>
   </section>
 
+  </div><!-- /top-row-grid -->
+
   <!-- ── Row 3: Game Table ── -->
   <section id="row-game-table" class="game-row">
     <div class="row-hdr">
-      <h2>Trading Journal</h2>
+      <h2>Investing Journal</h2>
       <span id="game-status-badge" class="row-badge" style="display:none"></span>
+      <button id="btn-next-day" class="btn btn-primary btn-next-day" disabled>Next Day &#9654;</button>
     </div>
     <div class="table-wrap">
       <table id="game-table">
@@ -331,8 +308,8 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td>—</td>
           </tr>
 
-          <!-- Active rows 3–12 -->
-          <tr id="game-row-3" class="active-day locked" data-day="3">
+          <!-- Active rows 3–12 (hidden until Next Day is clicked) -->
+          <tr id="game-row-3" class="active-day locked" data-day="3" style="display:none">
             <td class="day-num">3</td>
             <td id="row3-date">—</td>
             <td id="row3-instrument">—</td>
@@ -346,7 +323,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row3-user-delta" class="pnl-cell">—</td>
             <td id="row3-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-4" class="active-day locked" data-day="4">
+          <tr id="game-row-4" class="active-day locked" data-day="4" style="display:none">
             <td class="day-num">4</td>
             <td id="row4-date">—</td>
             <td id="row4-instrument">—</td>
@@ -360,7 +337,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row4-user-delta" class="pnl-cell">—</td>
             <td id="row4-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-5" class="active-day locked" data-day="5">
+          <tr id="game-row-5" class="active-day locked" data-day="5" style="display:none">
             <td class="day-num">5</td>
             <td id="row5-date">—</td>
             <td id="row5-instrument">—</td>
@@ -374,7 +351,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row5-user-delta" class="pnl-cell">—</td>
             <td id="row5-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-6" class="active-day locked" data-day="6">
+          <tr id="game-row-6" class="active-day locked" data-day="6" style="display:none">
             <td class="day-num">6</td>
             <td id="row6-date">—</td>
             <td id="row6-instrument">—</td>
@@ -388,7 +365,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row6-user-delta" class="pnl-cell">—</td>
             <td id="row6-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-7" class="active-day locked" data-day="7">
+          <tr id="game-row-7" class="active-day locked" data-day="7" style="display:none">
             <td class="day-num">7</td>
             <td id="row7-date">—</td>
             <td id="row7-instrument">—</td>
@@ -402,7 +379,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row7-user-delta" class="pnl-cell">—</td>
             <td id="row7-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-8" class="active-day locked" data-day="8">
+          <tr id="game-row-8" class="active-day locked" data-day="8" style="display:none">
             <td class="day-num">8</td>
             <td id="row8-date">—</td>
             <td id="row8-instrument">—</td>
@@ -416,7 +393,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row8-user-delta" class="pnl-cell">—</td>
             <td id="row8-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-9" class="active-day locked" data-day="9">
+          <tr id="game-row-9" class="active-day locked" data-day="9" style="display:none">
             <td class="day-num">9</td>
             <td id="row9-date">—</td>
             <td id="row9-instrument">—</td>
@@ -430,7 +407,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row9-user-delta" class="pnl-cell">—</td>
             <td id="row9-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-10" class="active-day locked" data-day="10">
+          <tr id="game-row-10" class="active-day locked" data-day="10" style="display:none">
             <td class="day-num">10</td>
             <td id="row10-date">—</td>
             <td id="row10-instrument">—</td>
@@ -444,7 +421,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row10-user-delta" class="pnl-cell">—</td>
             <td id="row10-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-11" class="active-day locked" data-day="11">
+          <tr id="game-row-11" class="active-day locked" data-day="11" style="display:none">
             <td class="day-num">11</td>
             <td id="row11-date">—</td>
             <td id="row11-instrument">—</td>
@@ -458,7 +435,7 @@ tr.active-day:not(.locked) td{color:var(--text);}
             <td id="row11-user-delta" class="pnl-cell">—</td>
             <td id="row11-ai-delta" class="pnl-cell">—</td>
           </tr>
-          <tr id="game-row-12" class="active-day locked" data-day="12">
+          <tr id="game-row-12" class="active-day locked" data-day="12" style="display:none">
             <td class="day-num">12</td>
             <td id="row12-date">—</td>
             <td id="row12-instrument">—</td>
