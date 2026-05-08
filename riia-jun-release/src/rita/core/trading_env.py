@@ -26,8 +26,9 @@ from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.monitor import Monitor
 
 from rita.core.performance import compute_all_metrics
+from rita.logging_config import log_event
 
-log = structlog.get_logger()
+log = structlog.get_logger(__name__)
 
 
 # ── Reward hyper-params ───────────────────────────────────────────────────────
@@ -174,11 +175,20 @@ class RIIATradingEnv(gym.Env):
         truncated = False
 
         obs = self._get_obs() if not terminated else np.zeros(self._n_features, dtype=np.float32)
+        price = float(row["Close"]) if "Close" in row.index else None
         info = {
             "portfolio_value": self._portfolio_value,
             "allocation":      self._current_allocation,
             "drawdown":        current_dd,
         }
+        log_event(
+            log, "info", "trade.executed",
+            symbol="NIFTY",
+            action=int(action),
+            qty=self._current_allocation,
+            price=price,
+            portfolio_value=round(self._portfolio_value, 6),
+        )
         return obs, reward, terminated, truncated, info
 
 

@@ -22,8 +22,9 @@ from sqlalchemy.orm import Session
 
 from rita.config import get_settings
 from rita.database import get_db
+from rita.logging_config import log_event
 
-log = structlog.get_logger()
+log = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api/v1/chat", tags=["Chat"])
 
@@ -226,7 +227,10 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)) -> dict:
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Failed to load market data: {exc}") from exc
 
+    log_event(log, "info", "chat.request", msg_len=len(req.query))
+
     try:
+        t_classify = _time.perf_counter()
         result = classify(req.query)
         response_text = dispatch(
             result, df,
@@ -235,8 +239,16 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)) -> dict:
             target_return_pct=req.target_return_pct,
             time_horizon_days=req.time_horizon_days,
         )
+        classify_ms = (_time.perf_counter() - t_classify) * 1000
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Classification error: {exc}") from exc
+
+    log_event(
+        log, "info", "chat.response",
+        intent=result.intent.name,
+        confidence=round(result.confidence, 3),
+        duration_ms=round(classify_ms, 1),
+    )
 
     latency_ms = (_time.perf_counter() - t0) * 1000
     status = "low_confidence" if result.low_confidence else "success"
