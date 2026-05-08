@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-05-08T15:18:53.137609+00:00",
+  "period": {
+    "from": "2026-05-07T15:18:53.137609+00:00",
+    "to": "2026-05-08T15:18:53.137609+00:00"
+  },
+  "operational": {
+    "request_count": 0,
+    "error_rate_pct": 0.0,
+    "p95_latency_ms": 0.0,
+    "top_failing_endpoints": [],
+    "background_job_failures": 0
+  },
+  "functional": {
+    "training_success_rate_pct": 0.0,
+    "backtest_success_rate_pct": 0.0,
+    "chat_low_confidence_pct": 0.0,
+    "drift_warn_count": 0,
+    "drift_alert_count": 0,
+    "data_freshness_days": 99.0,
+    "experience_all_ok_pct": 0.0,
+    "experience_partial_pct": 0.0,
+    "experience_error_pct": 0.0
+  },
+  "source_availability": {}
+}
