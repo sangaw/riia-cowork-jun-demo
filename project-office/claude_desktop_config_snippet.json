@@ -1,0 +1,27 @@
+{
+  "_readme": [
+    "Paste the 'mcpServers' block into your Claude Desktop config at:",
+    "  C:\\Users\\Sandeep\\AppData\\Roaming\\Claude\\claude_desktop_config.json",
+    "",
+    "If the file already has other MCP servers, merge the 'rita' key into",
+    "the existing 'mcpServers' object — do not replace the whole file.",
+    "",
+    "One-time setup (run once from riia-jun-release/):",
+    "  pip install -e .[interfaces]",
+    "",
+    "If you prefer not to install, the PYTHONPATH env var below makes",
+    "the rita package importable without installation.",
+    "",
+    "Restart Claude Desktop after saving the config."
+  ],
+  "mcpServers": {
+    "rita": {
+      "command": "python",
+      "args": ["-m", "rita.interfaces.rita_mcp_server"],
+      "cwd": "C:\\Users\\Sandeep\\Documents\\Work\\code\\riia-cowork-jun\\riia-jun-release",
+      "env": {
+        "PYTHONPATH": "C:\\Users\\Sandeep\\Documents\\Work\\code\\riia-cowork-jun\\riia-jun-release\\src"
+      }
+    }
+  }
+}

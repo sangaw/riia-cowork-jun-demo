@@ -16,6 +16,7 @@ from .config_overrides import ConfigOverrideModel
 from .risk import RiskTimelineModel
 from .instrument import InstrumentModel
 from .user import UserModel
+from .mcp_call import MCPCallModel
 
 __all__ = [
     "PositionModel",
@@ -37,4 +38,5 @@ __all__ = [
     "RiskTimelineModel",
     "InstrumentModel",
     "UserModel",
+    "MCPCallModel",
 ]

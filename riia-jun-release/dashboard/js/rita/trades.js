@@ -52,8 +52,11 @@ export async function loadTrades() {
       const btLabel    = document.getElementById('tj-label-bt');
       if (trainLabel && split.train_start && split.train_end)
         trainLabel.textContent = `Train (${_lbl(split.train_start)} – ${_lbl(split.train_end)})`;
-      if (valLabel && split.val_start && split.val_end)
-        valLabel.textContent = `Validation (${_lbl(split.val_start)} – ${_lbl(split.val_end)})`;
+      if (valLabel && split.val_start) {
+        const valDisplayEnd = split.backtest_start || split.val_end;
+        if (valDisplayEnd)
+          valLabel.textContent = `Validation (${_lbl(split.val_start)} – ${_lbl(valDisplayEnd)})`;
+      }
       if (btLabel && split.backtest_start && split.backtest_end)
         btLabel.textContent = `Backtest (${_lbl(split.backtest_start)} – ${_lbl(split.backtest_end)})`;
     }

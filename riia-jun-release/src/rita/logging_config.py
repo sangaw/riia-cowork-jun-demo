@@ -17,19 +17,31 @@ import structlog
 
 
 def log_event(logger, level: str, event: str, **kwargs) -> None:
-    """Emit a structured log event with trace_id and UTC timestamp attached."""
-    from rita.middleware import get_trace_id  # local import to avoid circular
+    """Emit a structured log event to both structlog (console) and stdlib JSONL files."""
+    import json as _json
+    import logging as _std
 
     try:
-        trace_id = get_trace_id()
+        from rita.middleware import trace_id_var
+        trace_id = trace_id_var.get("")
     except Exception:
-        trace_id = None
-    logger.bind(
-        event=event,
-        trace_id=trace_id,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        trace_id = ""
+
+    data = _json.dumps({
+        "event": event,
+        "trace_id": trace_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         **kwargs,
-    ).log(level, event)
+    })
+    std_level = getattr(_std, level.upper(), _std.INFO)
+    _std.getLogger("rita.events").log(std_level, data, extra={"rita_event": event})
+
+    # Also emit to structlog for console visibility
+    try:
+        bound = logger.bind(event=event, trace_id=trace_id, **kwargs)
+        getattr(bound, level)(event)
+    except Exception:
+        pass
 
 
 class _PrefixFilter(logging.Filter):
@@ -40,8 +52,8 @@ class _PrefixFilter(logging.Filter):
         self._prefixes = prefixes
 
     def filter(self, record: logging.LogRecord) -> bool:
-        msg = record.getMessage()
-        return any(msg.startswith(p) for p in self._prefixes)
+        event = getattr(record, "rita_event", record.getMessage())
+        return any(event.startswith(p) for p in self._prefixes)
 
 
 def configure_logging(log_level: str = "info") -> None:
@@ -84,7 +96,7 @@ def configure_logging(log_level: str = "info") -> None:
             handler.addFilter(_PrefixFilter(prefixes))
         root.addHandler(handler)
 
-    logging.basicConfig(level=level)
+    root.setLevel(level)
 
     try:
         structlog.configure(

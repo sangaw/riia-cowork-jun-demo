@@ -1,0 +1,19 @@
+{
+  "run_id": "sample",
+  "app": "rita",
+  "request": "Sample run — placeholder shown when no real runs are recorded yet",
+  "skill_file": "project-office/skills/skill-add-rita-feature.md",
+  "agents": [
+    { "role": "pm",         "status": "pass", "token_estimate": 0 },
+    { "role": "architect",  "status": "pass", "token_estimate": 0 },
+    { "role": "engineer",   "status": "pass", "token_estimate": 0 },
+    { "role": "qa",         "status": "pass", "token_estimate": 0 },
+    { "role": "techwriter", "status": "pass", "token_estimate": 0 }
+  ],
+  "overall_status": "pass",
+  "total_tokens_estimated": 0,
+  "duration_minutes": 0,
+  "branch": "sample-branch",
+  "merge_status": "merged",
+  "merge_commit": null
+}

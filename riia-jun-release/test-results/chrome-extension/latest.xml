@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="Chrome UI Tests" errors="0" failures="0" skipped="0" tests="9" time="0" timestamp="2026-04-25T09:20:46.091Z" hostname="chrome-plugin">
+    <testcase classname="ui" name="[RITA] Hamburger visible on desktop" time="0">
+    </testcase>
+    <testcase classname="ui" name="[RITA] Sidebar rendered and visible" time="0">
+    </testcase>
+    <testcase classname="ui" name="[RITA] KPI elements present" time="0">
+    </testcase>
+    <testcase classname="ui" name="[FNO] Hamburger visible on desktop" time="0">
+    </testcase>
+    <testcase classname="ui" name="[FNO] Sidebar rendered and visible" time="0">
+    </testcase>
+    <testcase classname="ui" name="[FNO] KPI elements present" time="0">
+    </testcase>
+    <testcase classname="ui" name="[OPS] Hamburger visible on desktop" time="0">
+    </testcase>
+    <testcase classname="ui" name="[OPS] Sidebar rendered and visible" time="0">
+    </testcase>
+    <testcase classname="ui" name="[OPS] KPI elements present" time="0">
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -318,6 +318,9 @@ def run_episode(model: DQN, df: pd.DataFrame) -> dict:
     bench_arr = np.array(benchmark_values)
     perf = compute_all_metrics(port_arr, bench_arr)
 
+    alloc_arr = np.array(allocations)
+    perf["total_trades"] = int((np.abs(np.diff(alloc_arr)) > 0).sum()) if len(alloc_arr) > 1 else 0
+
     return {
         "portfolio_values": portfolio_values,
         "benchmark_values": benchmark_values,

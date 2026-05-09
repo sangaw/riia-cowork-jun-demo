@@ -289,6 +289,9 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
     win_rate_pct = round(wins / (len(results) - 1) * 100, 1) if len(results) > 1 else None
     constraints_met = sharpe is not None and sharpe >= 1.0 and abs(max_dd_pct) < 10
 
+    allocs = [r.allocation for r in results if r.allocation is not None]
+    total_trades = sum(1 for i in range(1, len(allocs)) if abs(allocs[i] - allocs[i - 1]) > 0) if len(allocs) > 1 else 0
+
     response = {
         "portfolio_total_return_pct": port_return_pct,
         "benchmark_total_return_pct": bench_return_pct,
@@ -299,6 +302,7 @@ def performance_summary(db: Session = Depends(get_db)) -> dict[str, Any]:
         "annual_volatility_pct": vol_pct,
         "win_rate_pct": win_rate_pct,
         "total_days": total_days,
+        "total_trades": total_trades,
         "backtest_start_date": str(results[0].date),
         "backtest_end_date": str(results[-1].date),
         "constraints_met": constraints_met,

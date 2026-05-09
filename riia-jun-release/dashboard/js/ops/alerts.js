@@ -15,7 +15,7 @@ export async function loadAlerts() {
       return;
     }
 
-    const active = data.alerts.filter(a => !a.resolved);
+    const active = data.alerts.filter(a => a.status === 'active');
     const critical = active.filter(a => (a.severity || '').toLowerCase() === 'critical').length;
     const warning  = active.filter(a => (a.severity || '').toLowerCase() === 'warning').length;
 

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Sandeep/Documents/Work/code/riia-cowork-jun/riia-jun-release/dashboard/**)",
+      "Read(//c/Users/Sandeep/Documents/Work/code/riia-cowork-jun/riia-jun-release/dashboard/js/**)"
+    ]
+  }
+}

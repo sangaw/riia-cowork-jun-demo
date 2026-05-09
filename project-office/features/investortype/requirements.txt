@@ -1,0 +1,38 @@
+
+Instead of welcome, change it to Disclaimer: This platform is intended solely for research and informational purposes. It should not be considered financial, investment, or trading advice or recommendations.
+We use only essential functional cookies to improve user experience and platform performance respecting privacy and data protection regulations.
+
+Change all the button to light blue instead of dark black. Same goes for highlighted options
+
+1. Get Started
+	a. Instead of Know what you actually keep to Plan for future....with eyes open
+	b. Plan an investment....to Tell us about your goals, we will show you real return after ecosystem cost.
+	c. Inseatd of bulleted 1, 2, 3, 4 to Goal --> Timelines --> Ecosystem costs --> Real returns
+2. Type of investor
+	a. Defect - When I select I can take risk, I do not see the tickmark on the option selected
+3. What's money is for
+	a. Add an option as Next Purchase and show phone, music system or vacation (1yr)
+	b. Then show Education (5 to 10yr)
+	c. Then show retirement (20 yr)
+4. Your timelines and numbers
+	a. defect - This should change based on tenure selected. If user selects 1 yr, then show 4 dots as quarter, for second optoin, show as 5, 6, 7, 8, 9, 10 
+	b. monthly goal is ok
+	c. target goal - for 1 years, mention is as 5000, 10 yr as 15000, 20 yrs as 30,000
+5. remove tell us your number screen. it is redundant
+6. ok with fine-tune assumptions
+7. Results screen 
+	a. Change you need to earn to To earn the target.
+	b. Move gross return and what you keep to one row up, same as target %
+	c. Show Ecosystem Costs, Tax and Inflation as stack chart in second row. and then show you keep % as rest of the stack chart bu in third row.
+8. Final scree
+	a. Show Plan as per previous screen data / calcutaions and not hardcoded numbers
+	b. On Adjust Plan, take user back to Step 2, Type of Investor
+	c. Remove recalculate scenario
+	d. Try the Invest Game - Experience the Market volatility and make your choices
+	e. Change the next button to RITA Start research with RIIA, an AI assisted research platform. 
+	f. Show the back button but change Start Investing to Close 
+	
+	
+	
+	
+	

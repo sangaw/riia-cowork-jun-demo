@@ -27,7 +27,7 @@ Full agent cards: `project-office/agents/`
 
 ## Spec Files — Read Before Touching Code
 
-All specs: `riia-jun-release/Specs/` — read spec first, source file second.
+All specs: `project-office/specs/` — read spec first, source file second.
 
 | Spec | Read when... |
 |---|---|
@@ -40,6 +40,7 @@ All specs: `riia-jun-release/Specs/` — read spec first, source file second.
 | `Spec_Chat_Feature.md` | Chat pipeline, classifier, `/api/v1/chat` |
 | `Spec-Agent-Workflow.md` | Agent intent coverage, agentic AI architecture |
 | `Spec_Mobile_App.md` | PWA at `rita-build-portfolio/android-mobile-app/index.html` |
+| `Spec_MCP_Server.md` | MCP server, mcp_logger, `/api/v1/mcp-calls`, Claude Desktop config |
 
 **Definition of Done:** Any change to an API contract, data schema, or architectural pattern must update the relevant spec in the same commit.
 
@@ -61,6 +62,7 @@ riia-cowork-jun/
 │   ├── agents/                  ← agent role cards
 │   ├── confluence/              ← ConfluenceClient + page scripts
 │   ├── context/                 ← detail files (constraints, confluence, domain)
+│   ├── specs/                   ← all Spec_*.md files (moved here 2026-04-29)
 │   ├── sprint-boards/           ← one script per sprint board
 │   └── scripts/                 ← utility scripts
 └── riia-jun-release/            ← RITA APPLICATION CODE

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-06T19:05:41",
-  "total_runs": 8,
+  "generated_at": "2026-05-07T07:57:25",
+  "total_runs": 11,
   "per_role": {
     "pm": {
       "run_count": 5,
@@ -41,8 +41,8 @@
       "fail": 0
     },
     "invest-game": {
-      "run_count": 5,
-      "pass": 3,
+      "run_count": 8,
+      "pass": 6,
       "pass_with_warnings": 1,
       "fail": 1
     }
@@ -129,6 +129,30 @@
     }
   ],
   "game_sessions": [
+    {
+      "run_id": "20260507-0557",
+      "request": "Invest game: ASML over 10 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.6,
+      "day_count": 10,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260507-0551",
+      "request": "Invest game: ASML over 10 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.6,
+      "day_count": 10,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260507-0545",
+      "request": "Invest game: ASML over 10 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.9,
+      "day_count": 10,
+      "flagged_count": 0
+    },
     {
       "run_id": "20260506-1316",
       "request": "Invest game: ASML over 10 days",
