@@ -129,7 +129,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 
 ### Flow 1: Instrument Tab Click → Metrics
 
-Entry: `rita.html` buttons NIFTY/BANKNIFTY/ASML/NVIDIA each call `onclick="selectInstrumentTab('NIFTY')`
+Entry: `rita.html` instrument selector buttons (NIFTY/BANKNIFTY/ASML/NVIDIA) in `sec-market-signals` (the landing "Overview" page) call `onclick="selectInstrumentTab('NIFTY')`
 
 Call chain (`main.js`):
 ```
@@ -340,10 +340,30 @@ Endpoints:
 
 ## 12. Dashboard UI Panel Notes
 
+### Nav Order (sidebar)
+
+| Position | Section ID | Nav Label | Phase |
+|---|---|---|---|
+| 1 (landing) | `sec-market-signals` | Overview | Phase 01 — Plan (first item) |
+| — | `sec-goal` | Financial Goal | Phase 01 — Plan |
+| — | `sec-market` | Market Analysis | Phase 01 — Plan |
+| — | `sec-strategy` | Strategy | Phase 01 — Plan |
+| — | `sec-scenarios` | Scenarios | Phase 02 — Backtest |
+| — | `sec-agent-panel` | Agent Panel | Phase 02 — Backtest |
+| — | `sec-performance` | Performance | Phase 03 — Analyse |
+| — | `sec-trades` | Trade Journal | Phase 03 — Analyse |
+| — | `sec-diagnostics` | Trade Diagnostics | Phase 03 — Analyse |
+| — | `sec-explain` | Explainability | Phase 03 — Analyse |
+| — | `sec-home` | Model Overview | Phase 03 — Analyse |
+
+**Note:** `sec-market-signals` is the landing section (has `active` class on load). `_currentSection` default in `nav.js` is `'market-signals'`. `loadMarketSignals()` fires on `window.load`. Instrument selector tabs (`.inst-tab`) live inside `sec-market-signals`.
+
+### Element ID Formats
+
 | Panel | Element ID | Format | Notes |
 |---|---|---|---|
-| Market Signals | `ms-last-updated` | `Last updated: D MMM YYYY HH:MM` | Shows date **and** time (en-GB locale). Null/invalid date → `—`. Set to `—` on empty rows or API error. |
-| Market Signals | `ms-data-range` | `Timeframe · firstDate → lastDate \| N bars` | Date-only; unchanged. |
+| Market Signals (Overview) | `ms-last-updated` | `Last updated: D MMM YYYY HH:MM` | Shows date **and** time (en-GB locale). Null/invalid date → `—`. Set to `—` on empty rows or API error. |
+| Market Signals (Overview) | `ms-data-range` | `Timeframe · firstDate → lastDate \| N bars` | Date-only; unchanged. |
 
 ---
 

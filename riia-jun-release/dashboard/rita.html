@@ -263,7 +263,7 @@ tr:hover td{background:var(--surface2);}
 .phase-step-badge.p6{background:var(--ds-bg);color:var(--ds);border:1px solid var(--ds-bd);}
 .phase-name{font-size:11px;font-weight:600;color:var(--t2);}
 
-/* ── Instrument buttons (Overview) ──────────────────────────── */
+/* ── Instrument buttons ──────────────────────────────────────── */
 .inst-tab{background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:6px 14px;font-family:var(--fd);font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;transition:all .12s;}
 .inst-tab:hover{border-color:var(--run);color:var(--run);}
 .inst-tab.active{background:var(--run);color:#fff;border-color:var(--run);}
@@ -311,21 +311,15 @@ tr:hover td{background:var(--surface2);}
 <nav class="sidebar">
 
   <div class="nav-section">
-    <div class="nav-item p00 active" data-s="home" onclick="show('home',this)">
-      <span class="nav-icon">◈</span> Overview
-    </div>
-  </div>
-
-  <div class="nav-section">
     <div class="nav-label" style="color:var(--build)">Phase 01 — Plan</div>
+    <div class="nav-item p01 active" data-s="market-signals" onclick="show('market-signals',this)">
+      <span class="nav-icon">◎</span> Overview
+    </div>
 <div class="nav-item p01" data-s="goal" onclick="show('goal',this)">
       <span class="nav-icon">◎</span> Financial Goal
     </div>
     <div class="nav-item p01" data-s="market" onclick="show('market',this)">
       <span class="nav-icon">◎</span> Market Analysis
-    </div>
-    <div class="nav-item p01" data-s="market-signals" onclick="show('market-signals',this)">
-      <span class="nav-icon">◎</span> Market Signals
     </div>
     <div class="nav-item p01" data-s="strategy" onclick="show('strategy',this)">
       <span class="nav-icon">◎</span> Strategy
@@ -355,6 +349,9 @@ tr:hover td{background:var(--surface2);}
     </div>
     <div class="nav-item p03" data-s="explain" onclick="show('explain',this)">
       <span class="nav-icon">◎</span> Explainability
+    </div>
+    <div class="nav-item p03" data-s="home" onclick="show('home',this)">
+      <span class="nav-icon">◈</span> Model Overview
     </div>
   </div>
 
@@ -396,21 +393,13 @@ tr:hover td{background:var(--surface2);}
 <!-- ── Main Content ─────────────────────────────────────────── -->
 <main class="main">
 
-<!-- ════════════════ OVERVIEW ════════════════ -->
-<section class="section active" id="sec-home">
+<!-- ════════════════ MODEL OVERVIEW ════════════════ -->
+<section class="section" id="sec-home">
   <div class="page-hdr">
     <div>
-      <div class="page-title">Overview</div>
+      <div class="page-title">Model Overview</div>
       <div class="page-sub">RITA system status &amp; latest backtest performance</div>
     </div>
-  </div>
-
-  <!-- Instrument selector -->
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-    <button class="inst-tab active" id="itab-NIFTY"     onclick="selectInstrumentTab('NIFTY')"    >NIFTY 50</button>
-    <button class="inst-tab"        id="itab-BANKNIFTY"  onclick="selectInstrumentTab('BANKNIFTY')" >BANKNIFTY</button>
-    <button class="inst-tab"        id="itab-ASML"       onclick="selectInstrumentTab('ASML')"      >ASML</button>
-    <button class="inst-tab"        id="itab-NVIDIA"     onclick="selectInstrumentTab('NVIDIA')"    >NVIDIA</button>
   </div>
 
   <!-- Step progress bar -->
@@ -461,17 +450,25 @@ tr:hover td{background:var(--surface2);}
   </div>
 </section>
 
-<!-- ════════════════ MARKET SIGNALS ════════════════ -->
-<section class="section" id="sec-market-signals">
+<!-- ════════════════ OVERVIEW (Market Signals) ════════════════ -->
+<section class="section active" id="sec-market-signals">
   <div class="page-hdr">
     <div>
-      <div class="page-title">Market Signals</div>
+      <div class="page-title">Overview</div>
       <div class="page-sub" id="ms-page-sub">Technical indicators across timeframes</div>
     </div>
     <div class="hdr-actions">
       <span id="ms-last-updated" style="font-size:0.75rem;color:var(--t3);margin-right:0.5rem">—</span>
       <button class="btn btn-ghost btn-sm" onclick="loadMarketSignals()">↺ Refresh</button>
     </div>
+  </div>
+
+  <!-- Instrument selector -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
+    <button class="inst-tab active" id="itab-NIFTY"     onclick="selectInstrumentTab('NIFTY')"    >NIFTY 50</button>
+    <button class="inst-tab"        id="itab-BANKNIFTY"  onclick="selectInstrumentTab('BANKNIFTY')" >BANKNIFTY</button>
+    <button class="inst-tab"        id="itab-ASML"       onclick="selectInstrumentTab('ASML')"      >ASML</button>
+    <button class="inst-tab"        id="itab-NVIDIA"     onclick="selectInstrumentTab('NVIDIA')"    >NVIDIA</button>
   </div>
 
   <!-- Timeframe tabs -->

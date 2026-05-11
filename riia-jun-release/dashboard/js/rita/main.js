@@ -99,7 +99,7 @@ async function refresh() {
 // Expose refresh so export.js can call it via window._ritaRefresh
 window._ritaRefresh = refresh;
 
-// ── Instrument tab selection (Overview) ───────────────────
+// ── Instrument tab selection ───────────────────────────────
 function _initInstrumentTabs() {
   const saved = localStorage.getItem('ritaInstrument') || 'NIFTY';
   document.querySelectorAll('.inst-tab').forEach(t =>
@@ -142,4 +142,4 @@ async function loadActiveInstrument() {
 }
 
 // ── Init ───────────────────────────────────────────────────
-window.addEventListener('load', () => { _initInstrumentTabs(); refresh(); loadActiveInstrument(); });
+window.addEventListener('load', () => { _initInstrumentTabs(); refresh(); loadActiveInstrument(); loadMarketSignals(); });
