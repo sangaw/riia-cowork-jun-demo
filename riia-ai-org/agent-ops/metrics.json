@@ -1,42 +1,42 @@
 {
-  "generated_at": "2026-05-07T07:57:25",
-  "total_runs": 11,
+  "generated_at": "2026-05-11T11:28:42",
+  "total_runs": 14,
   "per_role": {
     "pm": {
-      "run_count": 5,
+      "run_count": 8,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 10920
+      "avg_token_cost": 7612
     },
     "architect": {
-      "run_count": 5,
+      "run_count": 8,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 13920
+      "avg_token_cost": 9975
     },
     "engineer": {
-      "run_count": 5,
-      "avg_adherence_score": 0.835,
-      "first_pass_rate": 0.4,
-      "avg_token_cost": 44100
+      "run_count": 8,
+      "avg_adherence_score": 0.872,
+      "first_pass_rate": 0.5,
+      "avg_token_cost": 31112
     },
     "qa": {
-      "run_count": 5,
-      "avg_adherence_score": 0.95,
-      "first_pass_rate": 0.8,
-      "avg_token_cost": 16400
+      "run_count": 8,
+      "avg_adherence_score": 0.969,
+      "first_pass_rate": 0.875,
+      "avg_token_cost": 11300
     },
     "techwriter": {
-      "run_count": 5,
-      "avg_adherence_score": 0.8,
-      "first_pass_rate": 0.6,
-      "avg_token_cost": 9500
+      "run_count": 8,
+      "avg_adherence_score": 0.875,
+      "first_pass_rate": 0.75,
+      "avg_token_cost": 6650
     }
   },
   "per_app": {
     "rita": {
-      "run_count": 3,
-      "pass": 2,
+      "run_count": 4,
+      "pass": 3,
       "pass_with_warnings": 1,
       "fail": 0
     },
@@ -45,6 +45,12 @@
       "pass": 6,
       "pass_with_warnings": 1,
       "fail": 1
+    },
+    "ops": {
+      "run_count": 2,
+      "pass": 1,
+      "pass_with_warnings": 1,
+      "fail": 0
     }
   },
   "grounding_trend": [
@@ -82,13 +88,34 @@
       "grounding_score": 0.591,
       "checks_passed": 13,
       "checks_total": 22
+    },
+    {
+      "run_id": "20260507-0717",
+      "app": "ops",
+      "grounding_score": 0.95,
+      "checks_passed": 19,
+      "checks_total": 20
+    },
+    {
+      "run_id": "20260508-improve-observability",
+      "app": "ops",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
+    },
+    {
+      "run_id": "20260511-1046",
+      "app": "rita",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
     }
   ],
   "failure_modes": {
     "FC-001": {
-      "total": 5,
+      "total": 6,
       "by_role": {
-        "engineer": 3,
+        "engineer": 4,
         "techwriter": 2
       }
     },
@@ -114,18 +141,33 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "unknown",
-      "recent_commits": []
+      "last_updated": "979df5f",
+      "recent_commits": [
+        {
+          "hash": "979df5f",
+          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
+        }
+      ]
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "unknown",
-      "recent_commits": []
+      "last_updated": "979df5f",
+      "recent_commits": [
+        {
+          "hash": "979df5f",
+          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
+        }
+      ]
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "unknown",
-      "recent_commits": []
+      "last_updated": "979df5f",
+      "recent_commits": [
+        {
+          "hash": "979df5f",
+          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
+        }
+      ]
     }
   ],
   "game_sessions": [
