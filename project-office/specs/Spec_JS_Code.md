@@ -24,7 +24,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `utils.js` | DOM helpers | `setEl(id, html)`, `badge(status)`, `fmt(v, dec)`, `fmtPct(v)` |
 | `charts.js` | Chart.js registry + defaults | `mkChart(id, config)`, `destroyChart(id)`, `C` (color palette), `chartOpts()` |
 | `chart-modal.js` | Zoom-on-click modal for charts | `openChartModal(id, title)`, `closeChartModal()` |
-| `nav.js` | Section navigation, loader registry | `show(section)`, `_sectionLoaders` map, `getCurrentSection()` |
+| `nav.js` | Section navigation, loader registry | `show(section)`, `_sectionLoaders` map, `getCurrentSection()`. `_currentSection` defaults to `'market-signals'` (landing page). |
 | `main.js` | Entry point — wires everything | Registers `_sectionLoaders`, binds `window.*` |
 | `health.js` | Home KPI strip + model status | `loadHealth()`, `loadMetrics()`, `loadPerfSummary()`, `loadDrift()`, `loadProgress()` |
 | `market-signals.js` | Market Signals section + timeframe tabs | `loadMarketSignals()`, `switchMsTab(tf)`, `loadGoalHint()`. `ms-last-updated` label shows date **and** time (`D MMM YYYY HH:MM` en-GB); null/invalid → `—`. |
@@ -117,6 +117,7 @@ _sectionLoaders['ai-compliance']  = loadAiCompliance;
 - Section id in HTML is `sec-X`. Loader key is `X` (without `sec-`).
 - `show(section)` in `nav.js` calls `_sectionLoaders[section]()` on first navigation.
 - **Adding a new section**: (1) `<section id="sec-NAME">` in HTML, (2) loader function, (3) register in `_sectionLoaders`, (4) `window.*` binding if needed.
+- **Landing section**: `_sectionLoaders['market-signals']` fires on `window.load` (called directly in the load handler in `main.js`). `_currentSection` starts as `'market-signals'`. The `sec-market-signals` section carries the `active` CSS class in HTML.
 
 ---
 

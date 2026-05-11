@@ -2,7 +2,7 @@
 // API base — reads window.RITA_API_BASE if set (staging/cross-origin), otherwise same origin.
 const API = (window.RITA_API_BASE || '').replace(/\/$/, '');
 
-export let _currentSection = 'home';
+export let _currentSection = 'market-signals';
 export let _mcpPollTimer = null;
 let _chatWarmedUp = false;
 

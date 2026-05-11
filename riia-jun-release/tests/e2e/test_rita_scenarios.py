@@ -37,11 +37,11 @@ def pace():
 
 
 # ---------------------------------------------------------------------------
-# UC-01  Overview (home) — system health card
+# UC-01  Model Overview (home) — system health card
 # ---------------------------------------------------------------------------
 
 def test_overview_health(base_url):
-    """health.js: GET /health — status card on Overview page."""
+    """health.js: GET /health — status card on Model Overview page."""
     r = requests.get(f"{base_url}/health", timeout=TIMEOUT)
     assert r.status_code == 200
     body = r.json()
@@ -50,14 +50,14 @@ def test_overview_health(base_url):
 
 
 def test_overview_readiness(base_url):
-    """health.js: GET /readyz — DB connectivity shown on Overview."""
+    """health.js: GET /readyz — DB connectivity shown on Model Overview."""
     r = requests.get(f"{base_url}/readyz", timeout=TIMEOUT)
     assert r.status_code == 200
     assert r.json().get("status") == "ready"
 
 
 def test_overview_metrics(base_url):
-    """health.js: GET /api/v1/metrics/summary — API counters on Overview."""
+    """health.js: GET /api/v1/metrics/summary — API counters on Model Overview."""
     r = requests.get(f"{base_url}/api/v1/metrics/summary", timeout=TIMEOUT)
     assert r.status_code == 200
     body = r.json()
