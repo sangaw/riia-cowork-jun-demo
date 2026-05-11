@@ -252,37 +252,32 @@ export async function loadAgentBuilds() {
   if (!grid) return;
   grid.innerHTML = '<div class="loading">Loading…</div>';
 
-  const m = await apiFetch('/agent-ops-data/metrics.json');
-  if (!m) {
+  try {
+    const data = await apiFetch('/api/experience/ops/agent-builds');
+    const runs = data.runs;
+    const m = data.metrics;
+
+    if (!data) {
+      grid.innerHTML = '<div class="empty">Could not load agent-ops metrics</div>';
+      return;
+    }
+
+    // Render HTML panels (charts need canvas in DOM first)
+    grid.innerHTML = [
+      renderRunHistory(runs),
+      renderScorecards(m),
+      renderGroundingPanel(m),
+      renderFailureHeatmap(m),
+      renderTokenPanel(runs),
+      renderSkillVersions(m),
+    ].join('');
+
+    // Mount Chart.js after DOM is ready
+    if (window.Chart) {
+      mountGroundingChart(m);
+      mountTokenChart(runs);
+    }
+  } catch (e) {
     grid.innerHTML = '<div class="empty">Could not load agent-ops metrics</div>';
-    return;
-  }
-
-  // Fetch run JSONs; fall back to run-sample if no real runs yet
-  let runIds = (m.grounding_trend || []).map(t => t.run_id).filter(Boolean);
-  if (!runIds.length) runIds = ['sample'];
-
-  const runResults = await Promise.all(
-    runIds.map(id => {
-      const path = id === 'sample' ? '/agent-ops-data/run-sample.json' : `/agent-ops-data/runs/run-${id}.json`;
-      return apiFetch(path);
-    })
-  );
-  const runs = runResults.filter(Boolean).sort((a, b) => (a.run_id ?? '').localeCompare(b.run_id ?? ''));
-
-  // Render HTML panels (charts need canvas in DOM first)
-  grid.innerHTML = [
-    renderRunHistory(runs),
-    renderScorecards(m),
-    renderGroundingPanel(m),
-    renderFailureHeatmap(m),
-    renderTokenPanel(runs),
-    renderSkillVersions(m),
-  ].join('');
-
-  // Mount Chart.js after DOM is ready
-  if (window.Chart) {
-    mountGroundingChart(m);
-    mountTokenChart(runs);
   }
 }

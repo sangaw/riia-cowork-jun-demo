@@ -17,9 +17,20 @@ from sqlalchemy.orm import Session
 
 from rita.database import get_db
 from rita.logging_config import log_event
+from rita.repositories.agent_builds import AgentBuildRepository
 from rita.repositories.audit import AuditLogRepository
 from rita.repositories.training import TrainingRunsRepository
 from rita.repositories.backtest import BacktestRunsRepository
+from rita.schemas.agent_builds import (
+    AgentBuildMetrics,
+    AgentBuildRunOut,
+    AgentBuildsResponse,
+    AgentOut,
+    FailureEntry,
+    GroundingPoint,
+    RoleMetrics,
+    SkillVersion,
+)
 from rita.schemas.audit import AuditLog
 from rita.schemas.backtest import BacktestRun
 from rita.schemas.training import TrainingRun
@@ -367,3 +378,113 @@ def step_log(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
         sources=sources,
     )
     return response
+
+
+# ── GET /api/experience/ops/agent-builds ─────────────────────────────────────
+
+@router.get("/agent-builds", response_model=AgentBuildsResponse)
+def get_agent_builds(
+    limit: int = Query(default=20, ge=1, le=200),
+    app: Optional[str] = Query(default=None),
+    db: Session = Depends(get_db),
+) -> AgentBuildsResponse:
+    """Return agent build run history and aggregated metrics from the database."""
+    run_repo = AgentBuildRepository(db)
+    runs = run_repo.list_with_agents(limit=limit, app_filter=app)
+    all_agents = run_repo.list_all_agents()
+
+    # Build per_role metrics
+    role_data: dict[str, list] = defaultdict(list)
+    for agent in all_agents:
+        role_data[agent.role].append(agent)
+
+    per_role: dict[str, RoleMetrics] = {}
+    for role, agents in role_data.items():
+        scores = [a.adherence_score for a in agents if a.adherence_score is not None]
+        tokens = [a.token_estimate for a in agents if a.token_estimate is not None]
+        first_pass = [a for a in agents if a.status == "pass"]
+        per_role[role] = RoleMetrics(
+            run_count=len(agents),
+            avg_adherence_score=sum(scores) / len(scores) if scores else None,
+            first_pass_rate=len(first_pass) / len(agents) if agents else None,
+            avg_token_cost=sum(tokens) / len(tokens) if tokens else None,
+        )
+
+    # Build grounding trend (one point per run, all agents in that run)
+    all_runs_for_trend = run_repo.list_with_agents(limit=200)
+    grounding_trend: list[GroundingPoint] = []
+    for run in reversed(all_runs_for_trend):
+        agents_for_run = [a for a in all_agents if a.run_id == run.run_id]
+        checks_passed = 0
+        checks_total = 0
+        for a in agents_for_run:
+            gc = a.grounding_checks or {}
+            checks_passed += sum(1 for v in gc.values() if v is True)
+            checks_total += len(gc)
+        score = checks_passed / checks_total if checks_total > 0 else 0.0
+        grounding_trend.append(
+            GroundingPoint(
+                run_id=run.run_id,
+                app=run.app,
+                grounding_score=score,
+                checks_passed=checks_passed,
+                checks_total=checks_total,
+            )
+        )
+
+    # Build failure_modes
+    failure_map: dict[str, dict] = defaultdict(lambda: {"total": 0, "by_role": defaultdict(int)})
+    for agent in all_agents:
+        for code in (agent.failure_modes or []):
+            failure_map[code]["total"] += 1
+            failure_map[code]["by_role"][agent.role] += 1
+    failure_modes: dict[str, FailureEntry] = {
+        code: FailureEntry(total=v["total"], by_role=dict(v["by_role"]))
+        for code, v in failure_map.items()
+    }
+
+    # Skill version history — distinct skill files
+    skill_files = list({r.skill_file for r in all_runs_for_trend if r.skill_file})
+    skill_version_history = [
+        SkillVersion(skill_file=sf, last_updated=None, recent_commits=[])
+        for sf in skill_files
+    ]
+
+    runs_out: list[AgentBuildRunOut] = []
+    for run in runs:
+        agents_for_run = [a for a in all_agents if a.run_id == run.run_id]
+        agents_out = [
+            AgentOut(
+                role=a.role,
+                status=a.status,
+                token_estimate=a.token_estimate,
+                adherence_score=a.adherence_score,
+                steps_required=a.steps_required,
+                steps_completed=a.steps_completed,
+                grounding_checks=a.grounding_checks,
+                failure_modes=a.failure_modes,
+            )
+            for a in agents_for_run
+        ]
+        runs_out.append(
+            AgentBuildRunOut(
+                run_id=run.run_id,
+                app=run.app,
+                request=run.request,
+                overall_status=run.overall_status,
+                duration_minutes=run.duration_minutes,
+                branch=run.branch,
+                agents=agents_out,
+            )
+        )
+
+    return AgentBuildsResponse(
+        runs=runs_out,
+        metrics=AgentBuildMetrics(
+            total_runs=len(all_runs_for_trend),
+            per_role=per_role,
+            grounding_trend=grounding_trend,
+            failure_modes=failure_modes,
+            skill_version_history=skill_version_history,
+        ),
+    )

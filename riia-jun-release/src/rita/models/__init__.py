@@ -17,6 +17,7 @@ from .risk import RiskTimelineModel
 from .instrument import InstrumentModel
 from .user import UserModel
 from .mcp_call import MCPCallModel
+from .agent_builds import AgentBuildRunModel, AgentBuildAgentModel
 
 __all__ = [
     "PositionModel",
@@ -39,4 +40,6 @@ __all__ = [
     "InstrumentModel",
     "UserModel",
     "MCPCallModel",
+    "AgentBuildRunModel",
+    "AgentBuildAgentModel",
 ]

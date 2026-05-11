@@ -78,12 +78,23 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 |---|---|---|
 | `experience/dashboard.py` | `/api/experience` | Legacy RITA/FnO/Ops aggregated payloads |
 | `experience/fno.py` | `/api/experience/fno` | FnO aggregated payload |
-| `experience/ops.py` | `/api/experience/ops` | Ops payload + metrics/summary + step-log + users |
+| `experience/ops.py` | `/api/experience/ops` | Ops payload + metrics/summary + step-log + users + agent-builds |
 | `experience/rita.py` | `/api/v1` | RITA performance, risk, trade, instrument-selection |
 | `experience/pipeline_wizard.py` | `/api/v1` | Goal/Market/Strategy wizard steps |
 | `experience/ds.py` | `/api/experience/ds` | DS dashboard instruments + training history + split dates |
 | `experience/agent_panel.py` | `/api/v1/agent-panel` | LangGraph 6-agent simulation for ASML |
 | `experience/invest_game.py` | `/api/experience/invest-game` | User-vs-AI investing game — session management, agent chain per day, run log writer |
+
+### Ops Experience Endpoints (`/api/experience/ops`)
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/experience/ops/` | Aggregated Ops payload (training runs + backtest runs + recent audit) |
+| `GET` | `/api/experience/ops/metrics/summary` | API request counts, latency, error rate, pipeline stats |
+| `GET` | `/api/experience/ops/step-log` | Pipeline step log entries |
+| `GET` | `/api/experience/ops/users` | User list for Ops view |
+| `GET` | `/api/experience/ops/agent-builds` | Returns agent build run history + aggregated metrics from DB |
+
 
 ### Invest Game Endpoints (`/api/experience/invest-game`)
 

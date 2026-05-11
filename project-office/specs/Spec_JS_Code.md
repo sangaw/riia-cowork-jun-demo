@@ -85,7 +85,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `deploy.js` | Deployment management | `loadDeploy()` |
 | `chat.js` | Ops chat | `sendOpsChat()` |
 | **`users.js`** | **User management table** | `loadUsers()`, `createUser()`, `deleteUser()` |
-| `agent-builds.js` | Agent Builds pipeline runs | `loadAgentBuilds()` |
+| `agent-builds.js` | Agent Builds pipeline runs — single API call to `/api/experience/ops/agent-builds` (replaced static JSON reads) | `loadAgentBuilds()` |
 
 ---
 
