@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import structlog
 from rita.logging_config import log_event
 
@@ -8,11 +8,11 @@ log = structlog.get_logger(__name__)
 
 
 class ClientErrorPayload(BaseModel):
-    message: str
+    message: str = Field(..., max_length=2000)
     source: str | None = None
     lineno: int | None = None
     colno: int | None = None
-    stack: str | None = None
+    stack: str | None = Field(default=None, max_length=8000)
     url: str | None = None
     trace_id: str | None = None
 

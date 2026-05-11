@@ -61,6 +61,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `system/training_runs.py` | `/api/v1/training-history`, `/api/v1/risk-timeline` (legacy), `/api/v1/split-dates`, `/api/v1/backtest-status/{id}` | `training_runs`, `backtest_runs`, `backtest_results` |
 | `system/drift.py` | `/api/v1/drift` | DB-backed DriftDetector |
 | `system/data_prep.py` | `/api/v1/data-prep/*`, `/api/v1/test-results`, `/api/v1/shap-values`, `/api/v1/data-understanding` | File system |
+| `system/client_error.py` | `POST /api/v1/client-error` | No auth; accepts JS error payload (type, message, stack, url, trace_id); returns 204; writes to `logs/client-errors.jsonl` |
 
 ### Workflow Tier — JWT-protected
 

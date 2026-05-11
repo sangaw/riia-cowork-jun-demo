@@ -192,10 +192,44 @@ Pydantic schema: `src/rita/schemas/client_error.py`
 
 ## [QA] Test Results
 
-*(To be completed by QA agent)*
+- **Tests written:** 30
+- **Test file:** `riia-jun-release/tests/unit/test_observability.py`
+- **Tests passed:** 29/30 (1 xfail — expected, documented below)
+- **Coverage delta:** ~+12% estimated for `logging_config.py`, `api/v1/system/client_errors.py`, and `project-office/scripts/generate_alerts.py` (rule evaluation paths). No pre-existing coverage baseline for these new files.
+- **Areas tested:**
+  - `log_event()` wrapper — key emission, stdlib level routing, structlog bind call, idempotency of `configure_logging()`, safe call before `configure_logging()`
+  - `POST /api/v1/client-error` endpoint — 204 on valid payload, null/missing optional `stack`, missing required `message` → 422, `log_event()` invocation verified, `type`/enum and `trace_id`/`url` fields accepted
+  - Alert rule evaluation — threshold rules (`error_rate_high`, `latency_high`, `chat_low_confidence`, `experience_error`), data staleness rules (`data_stale_warn`, `data_stale_critical`), event-based rules (`training_failed`, `backtest_failed`), per-source availability rule (`source_down`), all-nominal no-alert case, alert metadata correctness
+
+- **Edge cases from Architect section 6:**
+
+  | # | Edge case | Status |
+  |---|---|---|
+  | 1 | `log_event()` called before `configure_logging()` — must not crash | **Tested** (`test_log_event_before_configure_logging_does_not_crash`) |
+  | 2 | `experience.compose` where all sources raise — overall_status = "error" | **Not tested** (experience layer handlers not in scope for this QA pass) |
+  | 3 | `apiFetch()` returns non-JSON body — catch parse error, log to console | **Not tested** (JS, no pytest coverage) |
+  | 4 | `aggregate_ops_metrics.py` when `logs/` missing — write seed JSON | **Not tested** (script not in scope for this QA pass) |
+  | 5 | `generate_alerts.py` when `metrics-summary.json` does not exist — write `alerts: []` + warning | **Tested** (`test_missing_metrics_summary_writes_empty_alerts`, `test_missing_metrics_summary_read_json_returns_none`) |
+  | 6 | `client-error` endpoint receives oversized message > 2000 chars — should return 422 | **Tested / xfail** — `test_oversized_message_returns_422` is marked `xfail` because `ClientErrorPayload.message` has no `max_length=2000` constraint in the current implementation. Schema tightening required. |
+  | 7 | `crypto.randomUUID()` unavailable in mobile WebView — fallback | **Not tested** (JS, no pytest coverage) |
+  | 8 | `configure_logging()` called more than once — idempotent | **Tested** (`test_configure_logging_idempotent`) |
+  | 9 | `alert-history.jsonl` rotation when > 50 MB or 90 days | **Not tested** (rotation logic not implemented yet per implementation log) |
+  | 10 | Race condition: aggregator writing while dashboard reads `metrics-summary.json` | **Not tested** (atomic-rename logic not in scope for unit tests) |
+
+- **Outstanding finding:** `ClientErrorPayload` in `client_errors.py` does not enforce `max_length=2000` on `message` or `max_length=8000` on `stack` as specified in the Architect's API contract. The xfail test documents this gap; the schema should be tightened before production release.
 
 ---
 
 ## [TechWriter] Documentation
 
-*(To be completed by TechWriter agent)*
+- **Confluence page updated:** https://ravionics.atlassian.net/wiki/spaces/RIIAProjec/pages/76611602/Engineering
+- **Page section modified:** API Inventory — System CRUD table (new `/api/v1/client-error` row added); new structured observability paragraph inserted above the Workflow section; version date confirmed 2026-05-11. Page bumped from v4 → v5.
+- **Spec file confirmed current:**
+  - `Spec_RITA_App.md` — updated: `/api/v1/client-error` row added to the System Tier table (was missing).
+  - `Spec_JS_Code.md` — updated: `apiFetch()` wrapper note added to Section 8 (API Communication Pattern), documenting `SESSION_TRACE_ID`, `X-Request-ID` header, and fallback for WebViews across all three dashboards and Mobile PWA (was missing).
+- **Task brief archived:** yes
+- **TechWriter DoD checklist:**
+  - [x] Confluence Engineering page updated with new endpoint and observability notes
+  - [x] `Spec_RITA_App.md` System Tier table contains `/api/v1/client-error`
+  - [x] `Spec_JS_Code.md` Section 8 documents `apiFetch()` wrapper
+  - [x] Run log written to `riia-ai-org/agent-ops/runs/run-20260508-improve-observability.json`

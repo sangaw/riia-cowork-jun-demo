@@ -214,6 +214,9 @@ const result = await api('/api/v1/goal', 'POST', { target_return_pct: 15 });
 - Base URL from `window.RITA_API_BASE` (set in HTML `<script>` block).
 - **Never** hardcode `http://localhost:8000`.
 
+**apiFetch() wrapper (added 2026-05-08 — Improve Observability):**
+All three dashboards (`dashboard/js/rita/main.js`, `dashboard/js/fno/main.js`, `dashboard/js/ops/main.js`) and the Mobile PWA now use a shared `apiFetch(url, options)` wrapper. It attaches an `X-Request-ID` header (derived from `SESSION_TRACE_ID = crypto.randomUUID()`, with a `Math.random()` hex fallback for WebViews that lack `crypto.randomUUID`). Use `apiFetch()` for all new fetch calls; do not use bare `fetch()` directly. On non-JSON or error responses, `apiFetch()` logs to console with the trace_id and returns `null`.
+
 ---
 
 ## 9. API Endpoints → JS Consumers

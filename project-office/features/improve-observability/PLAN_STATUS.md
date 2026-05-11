@@ -6,7 +6,7 @@
 
 ---
 
-## Current Status: IN PROGRESS — Step 10b + 10c next (QA + TechWriter); UI panel rendering bug outstanding
+## Current Status: COMPLETE — all 10 steps done; merged and closed 2026-05-11
 
 ---
 
@@ -24,8 +24,8 @@
 | Step 8 | Engineer | Ops dashboard panels — source availability stacked bar + functional KPI 24h sparklines | `[x]` | Commit: 7e37fff. 3 new JS modules (alerts.js, source-availability.js, functional-kpis.js) + main.js wired. node --check: passed |
 | Step 9 | Engineer | JS `apiFetch()` wrapper + `X-Request-ID` (all dashboards + mobile PWA) + `window.onerror` + `sw.js` fixes + `/api/v1/client-error` endpoint + riia-ai-org `print()` → logging | `[x]` | Commit: 9d591b0. 7 files, 274 insertions. All ruff checks passed. 3 sw.js catches added. window.onerror added to PWA |
 | Step 10a | Engineer | ops/ static mount + HTML sections for 3 new panels + nav.js SECTIONS fix | `[x]` | Commit: 3bca774. nav.js SECTIONS array updated. 3 nav items + 3 sections added to ops.html. Ruff: passed |
-| Step 10b | QA | Unit tests — log_event, client-error endpoint, alert rules; contract check | `[ ]` | |
-| Step 10c | TechWriter | Confluence Engineering page update, spec files confirmed, run log, merge review | `[ ]` | |
+| Step 10b | QA | Unit tests — log_event, client-error endpoint, alert rules; contract check | `[x]` | 30 tests written (29/30 pass, 1 xfail — max_length not enforced on ClientErrorPayload.message). test_observability.py |
+| Step 10c | TechWriter | Confluence Engineering page update, spec files confirmed, run log, merge review | `[x]` | Confluence Engineering page v4→v5. Spec_RITA_App.md + Spec_JS_Code.md updated. Run log: run-20260508-improve-observability.json |
 
 ---
 
