@@ -454,6 +454,21 @@ def get_agent_builds(
         for sf in skill_files
     ]
 
+    # Read metrics.json for the 7 extended metric sections
+    _metrics_extra: dict[str, Any] = {}
+    _runs_dir = Path(__file__).parents[5] / "riia-ai-org" / "agent-ops"
+    _metrics_path = _runs_dir / "metrics.json"
+    if _metrics_path.exists():
+        try:
+            with _metrics_path.open() as _f:
+                _m = json.load(_f)
+            for _key in ("task_completion", "quality", "token_forecasting",
+                         "efficiency", "reliability", "hitl", "agentic"):
+                if _key in _m:
+                    _metrics_extra[_key] = _m[_key]
+        except Exception:
+            pass
+
     runs_out: list[AgentBuildRunOut] = []
     for run in runs:
         agents_for_run = [a for a in all_agents if a.run_id == run.run_id]
@@ -470,6 +485,15 @@ def get_agent_builds(
             )
             for a in agents_for_run
         ]
+        # Load per-run JSON for v2 fields not stored in DB
+        _run_json: dict[str, Any] = {}
+        _run_json_path = _runs_dir / "runs" / f"run-{run.run_id}.json"
+        if _run_json_path.exists():
+            try:
+                with _run_json_path.open() as _f:
+                    _run_json = json.load(_f)
+            except Exception:
+                pass
         runs_out.append(
             AgentBuildRunOut(
                 run_id=run.run_id,
@@ -479,6 +503,9 @@ def get_agent_builds(
                 duration_minutes=run.duration_minutes,
                 branch=run.branch,
                 agents=agents_out,
+                token_forecast=_run_json.get("token_forecast"),
+                total_tokens_estimated=_run_json.get("total_tokens_estimated"),
+                hitl_events=_run_json.get("hitl_events"),
             )
         )
 
@@ -490,6 +517,7 @@ def get_agent_builds(
             grounding_trend=grounding_trend,
             failure_modes=failure_modes,
             skill_version_history=skill_version_history,
+            **_metrics_extra,
         ),
     )
 
