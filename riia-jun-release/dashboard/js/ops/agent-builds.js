@@ -520,50 +520,57 @@ export function renderTokenEstimateWidget() {
     const form = document.getElementById('ab-estimate-form');
     if (!form) return;
 
+    const selStyle = 'width:100%;font-size:11px;padding:3px 5px;background:var(--bg2);color:var(--t1);border:1px solid var(--border);border-radius:4px';
+    const lblStyle = 'display:block;font-size:10px;color:var(--t3);margin-bottom:3px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
     form.innerHTML = `
-      <div class="ab-est-row">
-        <label class="ab-est-lbl">Feature type</label>
-        <select id="ab-estimate-feature-type" class="ab-est-sel">
-          <option value="rita">RITA</option>
-          <option value="ops">Ops</option>
-          <option value="fno">FnO</option>
-          <option value="invest-game">Invest Game</option>
-        </select>
-      </div>
-      <div class="ab-est-row">
-        <label class="ab-est-lbl">Files to change</label>
-        <select id="ab-estimate-files" class="ab-est-sel">
-          <option value="small">Small (1–3 files)</option>
-          <option value="medium">Medium (4–8 files)</option>
-          <option value="large">Large (9+ files)</option>
-        </select>
-      </div>
-      <div class="ab-est-row">
-        <label class="ab-est-lbl">New endpoint / model</label>
-        <select id="ab-estimate-endpoint" class="ab-est-sel">
-          <option value="none">None</option>
-          <option value="one">One</option>
-          <option value="both">Both</option>
-        </select>
-      </div>
-      <div class="ab-est-row">
-        <label class="ab-est-lbl">Frontend scope</label>
-        <select id="ab-estimate-frontend" class="ab-est-sel">
-          <option value="none">None</option>
-          <option value="panel">Panel</option>
-          <option value="page">Page</option>
-        </select>
-      </div>
-      <div class="ab-est-row">
-        <label class="ab-est-lbl">Integration type</label>
-        <select id="ab-estimate-integration" class="ab-est-sel">
-          <option value="additive">Additive</option>
-          <option value="extends">Extends existing</option>
-          <option value="cross-cutting">Cross-cutting</option>
-        </select>
-      </div>
-      <div class="ab-est-row" style="margin-top:12px">
-        <button id="ab-estimate-btn" class="ab-est-btn" onclick="submitTokenEstimate()">Estimate</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 10px;align-items:end">
+        <div>
+          <label style="${lblStyle}">Feature type</label>
+          <select id="ab-estimate-feature-type" style="${selStyle}">
+            <option value="rita">RITA</option>
+            <option value="ops">Ops</option>
+            <option value="fno">FnO</option>
+            <option value="invest-game">Invest Game</option>
+          </select>
+        </div>
+        <div>
+          <label style="${lblStyle}">Files to change</label>
+          <select id="ab-estimate-files" style="${selStyle}">
+            <option value="small">Small (1–3)</option>
+            <option value="medium">Medium (4–8)</option>
+            <option value="large">Large (9+)</option>
+          </select>
+        </div>
+        <div>
+          <label style="${lblStyle}">Endpoint / model</label>
+          <select id="ab-estimate-endpoint" style="${selStyle}">
+            <option value="none">None</option>
+            <option value="one">One</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div>
+          <label style="${lblStyle}">Frontend scope</label>
+          <select id="ab-estimate-frontend" style="${selStyle}">
+            <option value="none">None</option>
+            <option value="panel">Panel</option>
+            <option value="page">Page</option>
+          </select>
+        </div>
+        <div>
+          <label style="${lblStyle}">Integration</label>
+          <select id="ab-estimate-integration" style="${selStyle}">
+            <option value="additive">Additive</option>
+            <option value="extends">Extends</option>
+            <option value="cross-cutting">Cross-cutting</option>
+          </select>
+        </div>
+        <div>
+          <button id="ab-estimate-btn" onclick="submitTokenEstimate()"
+            style="width:100%;padding:5px 0;font-size:11px;background:var(--accelerate);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600">
+            Estimate
+          </button>
+        </div>
       </div>
     `;
   } catch (e) {
