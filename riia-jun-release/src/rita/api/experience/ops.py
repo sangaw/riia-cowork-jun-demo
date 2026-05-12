@@ -17,7 +17,6 @@ from prometheus_client import REGISTRY
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from rita.auth import get_current_user
 from rita.database import get_db
 from rita.logging_config import log_event
 from rita.repositories.agent_builds import AgentBuildRepository
@@ -531,7 +530,6 @@ def get_token_forecast(
     new_endpoint_or_model: str,
     frontend_scope: str,
     integration_type: str,
-    current_user: dict = Depends(get_current_user),
 ) -> TokenForecastResponse:
     """Return a pre-run token budget forecast based on 4 complexity signals."""
     # Resolve metrics.json path at call time — never at module level
