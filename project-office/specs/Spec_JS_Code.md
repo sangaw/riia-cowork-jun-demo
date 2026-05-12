@@ -85,7 +85,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `deploy.js` | Deployment management | `loadDeploy()` |
 | `chat.js` | Ops chat | `sendOpsChat()` |
 | **`users.js`** | **User management table** | `loadUsers()`, `createUser()`, `deleteUser()` |
-| `agent-builds.js` | Agent Builds pipeline runs — single API call to `/api/experience/ops/agent-builds` (replaced static JSON reads) | `loadAgentBuilds()` |
+| `agent-builds.js` | Agent Builds pipeline runs + performance metrics panels — API calls to `/api/experience/ops/agent-builds` and `/api/experience/ops/token-forecast` | `loadAgentBuilds()`, `renderTokenEstimateWidget()`, `submitTokenEstimate()`, `toggleEstimateWidget()` |
 
 ---
 
@@ -324,6 +324,19 @@ modules[], suites[]
 ### `GET /api/v1/trade-events`
 **Consumer:** Mobile PWA `fetchTradeEvents()`, `trades.js`
 **Response (per event):** `{date, phase, event_type, trade_type, risk_action, allocation, delta_allocation, price, pnl, portfolio_var_95, delta_var, regime, sharpe_at_trade}`
+
+### `GET /api/experience/ops/agent-builds`
+**Consumer:** `ops/agent-builds.js` → `loadAgentBuilds()`
+**Response:** `{ runs: AgentBuildRunOut[], metrics: AgentBuildMetrics }`
+**Metrics shape (new fields):** `task_completion` (tsr, first_attempt_success_rate, partial_completion_rate, abandonment_rate), `quality` (avg_accuracy_score, avg_relevance_score, avg_csat, planning_accuracy_rate, grounding_pass_rate), `token_forecasting` (avg_forecast_error_pct, by_complexity, by_feature_type), `efficiency`, `reliability`, `hitl` (escalation_rate, avg_corrections_per_run, total_hitl_events), `agentic`
+**Runs shape (new fields per run):** `hitl_events[]`, `token_forecast` (total_forecast, per_role, complexity, confidence, basis_runs), `human_score` (accuracy, relevance, planning_ok, csat, time_saved_hours)
+
+### `GET /api/experience/ops/token-forecast`
+**Consumer:** `ops/agent-builds.js` → `submitTokenEstimate()`
+**Query params:** `feature_type` (rita|ops|fno|invest-game), `files_to_change` (small|medium|large), `new_endpoint_or_model` (none|one|both), `frontend_scope` (none|panel|page), `integration_type` (additive|extends|cross-cutting)
+**Response (`TokenForecastResponse`):** `{ complexity, complexity_score, feature_type, per_role: {pm, architect, engineer, qa, techwriter}, total_forecast, confidence, basis_runs }`
+**DOM targets:** `ab-estimate-result`, `ab-estimate-btn`
+**Auth:** JWT required
 
 ---
 

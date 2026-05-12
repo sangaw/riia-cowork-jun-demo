@@ -10,7 +10,7 @@ import { loadDailyOps, triggerSnapshot, loadInstruments, toggleInstrument, saveI
 import { refreshSidebar } from './sidebar.js';
 import { loadTestResults } from './test-results.js';
 import { loadUsers, saveUserRoles } from './users.js';
-import { loadAgentBuilds } from './agent-builds.js';
+import { loadAgentBuilds, submitTokenEstimate, toggleEstimateWidget } from './agent-builds.js';
 import { loadGameCompliance, toggleGcDetail } from './game-compliance.js';
 import { loadAlerts } from './alerts.js';
 import { loadSourceAvailability } from './source-availability.js';
@@ -43,6 +43,8 @@ window.saveInstruments        = saveInstruments;
 window.loadUsers              = loadUsers;
 window.saveUserRoles          = saveUserRoles;
 window.loadAgentBuilds        = loadAgentBuilds;
+window.submitTokenEstimate    = submitTokenEstimate;
+window.toggleEstimateWidget   = toggleEstimateWidget;
 window.loadGameCompliance     = loadGameCompliance;
 window.toggleGcDetail         = toggleGcDetail;
 window.loadAlerts             = loadAlerts;

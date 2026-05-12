@@ -118,6 +118,191 @@ def compute_game_sessions(runs: list) -> list:
     return sorted(sessions, key=lambda s: s["run_id"], reverse=True)
 
 
+def compute_task_completion(runs: list) -> dict:
+    total = len(runs)
+    if total == 0:
+        return {
+            "tsr": None,
+            "first_attempt_success_rate": None,
+            "partial_completion_rate": None,
+            "abandonment_rate": None,
+        }
+    passed = sum(1 for r in runs if r.get("overall_status") == "pass")
+    first_attempt = sum(
+        1 for r in runs
+        if r.get("retry_count", 0) == 0 and r.get("overall_status") == "pass"
+    )
+    partial = sum(1 for r in runs if r.get("overall_status") == "pass_with_warnings")
+    abandoned = sum(1 for r in runs if r.get("abandoned", False))
+    return {
+        "tsr": round(passed / total, 3),
+        "first_attempt_success_rate": round(first_attempt / total, 3),
+        "partial_completion_rate": round(partial / total, 3),
+        "abandonment_rate": round(abandoned / total, 3),
+    }
+
+
+def compute_quality(runs: list) -> dict:
+    accuracy = [
+        r["human_score"]["accuracy"]
+        for r in runs
+        if r.get("human_score") and r["human_score"].get("accuracy") is not None
+    ]
+    relevance = [
+        r["human_score"]["relevance"]
+        for r in runs
+        if r.get("human_score") and r["human_score"].get("relevance") is not None
+    ]
+    csat = [
+        r["human_score"]["csat"]
+        for r in runs
+        if r.get("human_score") and r["human_score"].get("csat") is not None
+    ]
+    planning = [
+        r["human_score"]["planning_ok"]
+        for r in runs
+        if r.get("human_score") and r["human_score"].get("planning_ok") is not None
+    ]
+    grounding_scores = []
+    for r in runs:
+        for agent in r.get("agents", []):
+            checks = agent.get("grounding_checks", {})
+            if checks:
+                vals = [v for v in checks.values() if isinstance(v, bool)]
+                if vals:
+                    grounding_scores.append(sum(vals) / len(vals))
+    return {
+        "avg_accuracy_score": round(sum(accuracy) / len(accuracy), 2) if accuracy else None,
+        "avg_relevance_score": round(sum(relevance) / len(relevance), 2) if relevance else None,
+        "avg_csat": round(sum(csat) / len(csat), 2) if csat else None,
+        "planning_accuracy_rate": (
+            round(sum(1 for p in planning if p) / len(planning), 3) if planning else None
+        ),
+        "grounding_pass_rate": (
+            round(sum(grounding_scores) / len(grounding_scores), 3) if grounding_scores else None
+        ),
+    }
+
+
+def compute_token_forecasting(runs: list) -> dict:
+    errors = []
+    by_complexity: dict[str, list] = {"small": [], "medium": [], "large": []}
+    by_feature_type: dict[str, list] = {
+        "rita": [], "ops": [], "fno": [], "invest-game": []
+    }
+    for r in runs:
+        tf = r.get("token_forecast")
+        actual = r.get("total_tokens_estimated")
+        if tf and actual and tf.get("total_forecast"):
+            err = abs(actual - tf["total_forecast"]) / tf["total_forecast"] * 100
+            errors.append(err)
+            c = tf.get("complexity")
+            if c in by_complexity:
+                by_complexity[c].append(actual)
+            ft = tf.get("feature_type")
+            if ft in by_feature_type:
+                by_feature_type[ft].append(actual)
+    multipliers = {"small": 0.7, "medium": 1.0, "large": 1.5}
+    modifiers = {"rita": 1.0, "ops": 0.6, "fno": 0.8, "invest-game": 1.1}
+    return {
+        "avg_forecast_error_pct": round(sum(errors) / len(errors), 1) if errors else None,
+        "by_complexity": {
+            k: {
+                "avg_actual": round(sum(v) / len(v)) if v else None,
+                "multiplier": multipliers[k],
+            }
+            for k, v in by_complexity.items()
+        },
+        "by_feature_type": {
+            k: {
+                "run_count": len(v),
+                "avg_tokens": round(sum(v) / len(v)) if v else None,
+                "modifier": modifiers[k],
+            }
+            for k, v in by_feature_type.items()
+        },
+    }
+
+
+def compute_efficiency(runs: list) -> dict:
+    durations = [r["duration_minutes"] for r in runs if r.get("duration_minutes") is not None]
+    tokens = [r["total_tokens_estimated"] for r in runs if r.get("total_tokens_estimated") is not None]
+    retries = [r.get("retry_count", 0) for r in runs]
+    time_saved = [
+        r["human_score"]["time_saved_hours"]
+        for r in runs
+        if r.get("human_score") and r["human_score"].get("time_saved_hours") is not None
+    ]
+    return {
+        "avg_duration_minutes": round(sum(durations) / len(durations)) if durations else None,
+        "avg_tokens_per_run": round(sum(tokens) / len(tokens)) if tokens else None,
+        "avg_retry_count": round(sum(retries) / len(retries), 2) if retries else None,
+        "avg_time_saved_hours": round(sum(time_saved) / len(time_saved), 1) if time_saved else None,
+    }
+
+
+def compute_reliability(runs: list) -> dict:
+    total_fc = 0
+    recovered = 0
+    pw_warnings = sum(1 for r in runs if r.get("overall_status") == "pass_with_warnings")
+    fails = sum(1 for r in runs if r.get("overall_status") == "fail")
+    loop_total = sum(r.get("loop_events", 0) for r in runs)
+    for r in runs:
+        for agent in r.get("agents", []):
+            fms = agent.get("failure_modes", [])
+            if fms:
+                total_fc += len(fms)
+                if agent.get("status") != "fail":
+                    recovered += len(fms)
+    denom = pw_warnings + fails
+    return {
+        "error_recovery_rate": round(recovered / total_fc, 3) if total_fc > 0 else None,
+        "graceful_degradation_rate": round(pw_warnings / denom, 3) if denom > 0 else None,
+        "loop_event_total": loop_total,
+    }
+
+
+def compute_hitl(runs: list) -> dict:
+    total = len(runs)
+    if total == 0:
+        return {"escalation_rate": None, "avg_corrections_per_run": None, "total_hitl_events": 0}
+    escalated = sum(1 for r in runs if r.get("hitl_events"))
+    corrections = sum(
+        sum(1 for e in r.get("hitl_events", []) if e.get("type") == "correction")
+        for r in runs
+    )
+    total_events = sum(len(r.get("hitl_events", [])) for r in runs)
+    return {
+        "escalation_rate": round(escalated / total, 3),
+        "avg_corrections_per_run": round(corrections / total, 2),
+        "total_hitl_events": total_events,
+    }
+
+
+def compute_agentic(runs: list) -> dict:
+    context_scores = []
+    memory_used_flags = []
+    for r in runs:
+        for agent in r.get("agents", []):
+            checks = agent.get("grounding_checks", {})
+            if "plan_status_read" in checks and "spec_reference_valid" in checks:
+                both = int(checks["plan_status_read"]) + int(checks["spec_reference_valid"])
+                context_scores.append(both / 2)
+            if agent.get("role") == "engineer" and "memory_used" in checks:
+                memory_used_flags.append(bool(checks["memory_used"]))
+    loop_total = sum(r.get("loop_events", 0) for r in runs)
+    total_runs = len(runs)
+    return {
+        "context_adherence_rate": (
+            round(sum(context_scores) / len(context_scores), 3) if context_scores else None
+        ),
+        "memory_utilization_rate": (
+            round(sum(memory_used_flags) / len(memory_used_flags), 3) if memory_used_flags else None
+        ),
+        "loop_detection_rate": round(loop_total / total_runs, 3) if total_runs > 0 else None,
+    }
+
+
 def compute_skill_version_history(repo_root: Path) -> list:
     skill_files = [
         "project-office/skills/skill-add-rita-feature.md",
@@ -168,6 +353,13 @@ def main() -> None:
     if not runs:
         log.info("No run-*.json files found in runs/ — writing empty metrics.")
 
+    skill_version_history = compute_skill_version_history(repo_root)
+    # Add optional fields to each skill_version_history entry if not already present
+    for entry in skill_version_history:
+        entry.setdefault("improvement_applied", None)
+        entry.setdefault("before_first_pass_rate", None)
+        entry.setdefault("after_first_pass_rate", None)
+
     metrics = {
         "generated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
         "total_runs": len(runs),
@@ -175,8 +367,15 @@ def main() -> None:
         "per_app": compute_per_app(runs),
         "grounding_trend": compute_grounding_trend(runs),
         "failure_modes": compute_failure_modes(runs),
-        "skill_version_history": compute_skill_version_history(repo_root),
+        "skill_version_history": skill_version_history,
         "game_sessions": compute_game_sessions(runs),
+        "task_completion": compute_task_completion(runs),
+        "quality": compute_quality(runs),
+        "token_forecasting": compute_token_forecasting(runs),
+        "efficiency": compute_efficiency(runs),
+        "reliability": compute_reliability(runs),
+        "hitl": compute_hitl(runs),
+        "agentic": compute_agentic(runs),
     }
 
     output_path = script_dir / "metrics.json"
@@ -184,6 +383,33 @@ def main() -> None:
         json.dump(metrics, f, indent=2)
 
     log.info("metrics.json written", runs=len(runs), output=str(output_path))
+
+    # Threshold alerts
+    fc_counts = metrics.get("failure_modes", {})
+    for fc_code, fc_data in fc_counts.items():
+        count = fc_data.get("total") if isinstance(fc_data, dict) else fc_data
+        if isinstance(count, int) and count > 3:
+            print(f"[ALERT] {fc_code} has fired {count} times — review skill file rule")
+
+    for role_name, role_data in metrics.get("per_role", {}).items():
+        if isinstance(role_data, dict):
+            fpr = role_data.get("first_pass_rate")
+            if fpr is not None and fpr < 0.70:
+                print(
+                    f"[ALERT] {role_name} first-pass rate {round(fpr * 100)}%"
+                    " — grounding checks need review"
+                )
+
+    avg_csat = metrics.get("quality", {}).get("avg_csat")
+    if avg_csat is not None and avg_csat < 3.5:
+        print(f"[ALERT] CSAT {avg_csat}/5 below threshold — review last 3 runs")
+
+    avg_forecast_err = metrics.get("token_forecasting", {}).get("avg_forecast_error_pct")
+    if avg_forecast_err is not None and avg_forecast_err > 35:
+        print(
+            f"[ALERT] Token forecast off by {avg_forecast_err}%"
+            " on average — recalibrate multipliers"
+        )
 
 
 if __name__ == "__main__":

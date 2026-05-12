@@ -95,6 +95,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/experience/ops/step-log` | Pipeline step log entries |
 | `GET` | `/api/experience/ops/users` | User list for Ops view |
 | `GET` | `/api/experience/ops/agent-builds` | Returns agent build run history + aggregated metrics from DB |
+| `GET` | `/api/experience/ops/token-forecast` | Pre-run token budget estimate — query params: `feature_type`, `files_to_change`, `new_endpoint_or_model`, `frontend_scope`, `integration_type`. Returns `TokenForecastResponse` (complexity, per_role, total_forecast, confidence, basis_runs). Auth required. |
 
 
 ### Invest Game Endpoints (`/api/experience/invest-game`)

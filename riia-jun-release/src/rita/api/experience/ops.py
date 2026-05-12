@@ -5,16 +5,19 @@ Composes: training run history + backtest run history + recent audit log.
 Also provides Ops monitoring summaries (metrics/summary, step-log).
 """
 
+import json
 import time
 from collections import defaultdict
+from pathlib import Path
 from typing import Any, Optional
 
 import structlog
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from prometheus_client import REGISTRY
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from rita.auth import get_current_user
 from rita.database import get_db
 from rita.logging_config import log_event
 from rita.repositories.agent_builds import AgentBuildRepository
@@ -33,6 +36,7 @@ from rita.schemas.agent_builds import (
 )
 from rita.schemas.audit import AuditLog
 from rita.schemas.backtest import BacktestRun
+from rita.schemas.token_forecast import TokenForecastResponse
 from rita.schemas.training import TrainingRun
 from rita.services.backtest_service import BacktestService
 from rita.services.workflow_service import WorkflowService
@@ -487,4 +491,81 @@ def get_agent_builds(
             failure_modes=failure_modes,
             skill_version_history=skill_version_history,
         ),
+    )
+
+
+# ── GET /api/experience/ops/token-forecast ────────────────────────────────────
+
+@router.get("/token-forecast", response_model=TokenForecastResponse)
+def get_token_forecast(
+    feature_type: str,
+    files_to_change: str,
+    new_endpoint_or_model: str,
+    frontend_scope: str,
+    integration_type: str,
+    current_user: dict = Depends(get_current_user),
+) -> TokenForecastResponse:
+    """Return a pre-run token budget forecast based on 4 complexity signals."""
+    # Resolve metrics.json path at call time — never at module level
+    # __file__ = riia-jun-release/src/rita/api/experience/ops.py
+    # .parents[5] = riia-cowork-jun/
+    repo_root = Path(__file__).parents[5]
+    metrics_path = repo_root / "riia-ai-org" / "agent-ops" / "metrics.json"
+
+    if not metrics_path.exists():
+        raise HTTPException(status_code=503, detail="metrics.json unavailable")
+
+    with open(metrics_path) as f:
+        metrics = json.load(f)
+
+    # Resolve complexity from 4 signals
+    signal_map = {
+        "files_to_change": {"small": 0.7, "medium": 1.0, "large": 1.5},
+        "new_endpoint_or_model": {"none": 0.7, "one": 1.0, "both": 1.5},
+        "frontend_scope": {"none": 0.7, "panel": 1.0, "page": 1.5},
+        "integration_type": {"additive": 0.7, "extends": 1.0, "cross-cutting": 1.5},
+    }
+    scores = [
+        signal_map["files_to_change"].get(files_to_change, 1.0),
+        signal_map["new_endpoint_or_model"].get(new_endpoint_or_model, 1.0),
+        signal_map["frontend_scope"].get(frontend_scope, 1.0),
+        signal_map["integration_type"].get(integration_type, 1.0),
+    ]
+    complexity_score = sum(scores) / len(scores)
+    if complexity_score <= 0.85:
+        complexity = "small"
+    elif complexity_score <= 1.25:
+        complexity = "medium"
+    else:
+        complexity = "large"
+
+    # Feature type modifier
+    modifiers = {"rita": 1.0, "ops": 0.6, "fno": 0.8, "invest-game": 1.1}
+    modifier = modifiers.get(feature_type, 1.0)
+
+    # Per-role averages from metrics.json (fall back to hardcoded historical averages)
+    per_role_avgs: dict[str, int] = metrics.get(
+        "per_role_avg_tokens",
+        {"pm": 7612, "architect": 9975, "engineer": 31112, "qa": 11300, "techwriter": 6650},
+    )
+
+    per_role = {
+        role: round(avg * complexity_score * modifier)
+        for role, avg in per_role_avgs.items()
+    }
+    total_forecast = sum(per_role.values())
+
+    # basis_runs: how many historical runs exist for this feature_type
+    ft_data = metrics.get("token_forecasting", {}).get("by_feature_type", {})
+    basis_runs = ft_data.get(feature_type, {}).get("run_count", 0)
+    confidence = "±25%" if basis_runs >= 5 else "±40%"
+
+    return TokenForecastResponse(
+        complexity=complexity,
+        complexity_score=round(complexity_score, 2),
+        feature_type=feature_type,
+        per_role=per_role,
+        total_forecast=total_forecast,
+        confidence=confidence,
+        basis_runs=basis_runs,
     )

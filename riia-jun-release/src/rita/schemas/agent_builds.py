@@ -23,6 +23,9 @@ class AgentBuildRunOut(BaseModel):
     duration_minutes: Optional[float] = None
     branch: Optional[str] = None
     agents: list[AgentOut]
+    token_forecast: Optional[dict] = None
+    total_tokens_estimated: Optional[int] = None
+    hitl_events: Optional[list] = None
 
 
 class RoleMetrics(BaseModel):
@@ -49,6 +52,9 @@ class SkillVersion(BaseModel):
     skill_file: str
     last_updated: Optional[str] = None
     recent_commits: list[str]
+    improvement_applied: Optional[str] = None
+    before_first_pass_rate: Optional[float] = None
+    after_first_pass_rate: Optional[float] = None
 
 
 class AgentBuildMetrics(BaseModel):
@@ -57,6 +63,13 @@ class AgentBuildMetrics(BaseModel):
     grounding_trend: list[GroundingPoint]
     failure_modes: dict[str, FailureEntry]
     skill_version_history: list[SkillVersion]
+    task_completion: Optional[dict] = None
+    quality: Optional[dict] = None
+    token_forecasting: Optional[dict] = None
+    efficiency: Optional[dict] = None
+    reliability: Optional[dict] = None
+    hitl: Optional[dict] = None
+    agentic: Optional[dict] = None
 
 
 class AgentBuildsResponse(BaseModel):
