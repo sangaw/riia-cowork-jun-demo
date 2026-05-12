@@ -118,15 +118,4 @@ _None_
 - 2026-04-02: Sprint 2.5 added — SQLite via SQLAlchemy 2.x replaces CSV backend. ADR-003 written to docs/. Repository interface unchanged; zero impact on routers/services/schemas. Project extends to 34 days total. PostgreSQL upgrade path: change database_url in v2.
 - 2026-05-06: invest-game Phase 3 complete — Ops Agent Builds verified, Game AI Compliance page added to Ops dashboard, auto-regenerate metrics.json on game complete, 18 ruff errors fixed, retrospective build run logs created, Spec_RITA_App.md + Spec_JS_Code.md updated. Commits: 8f7c738, a7a093d.
 - 2026-05-11: RITA page swap feature complete — Market Signals becomes Overview landing page (Phase 01, instrument selector); previous Overview content moved to "Model Overview" (Phase 03); nav.js _currentSection default changed; .inst-tab moved into sec-market-signals; 17 unit tests added (17/17 pass); Confluence Engineering page updated; merged at 666c16a.
-- 2026-05-12: Agent Performance Metrics feature built and merged (f23f74b, 79f1bbd, cd79570). All code complete. 3 post-merge HITL corrections required (Engineer partial impl, endpoint wiring gap, missing DB seed). **2 tasks pending for next session — see below.**
-
-## Pending — Agent Performance Metrics (pick up next session)
-
-| # | Task | Owner | Notes |
-|---|---|---|---|
-| 1 | **Browser verify** — restart server, confirm Ops > Agent Builds panels render with data (4 KPI cards, forecast chart, trend lines, FC table columns) and estimate widget returns a forecast on submit | Manual (user) | DB is seeded (16 runs). Server must be restarted to pick up commits 79f1bbd + cd79570. Hard-refresh browser after restart. |
-| 2 | **Human score run-20260512-0730** — score the Agent Performance Metrics run once panels are verified. Reply with scores for: accuracy (1–5), relevance (1–5), planning correct first time (y/n), CSAT (1–5), hours saved (float). Update `riia-ai-org/agent-ops/runs/run-20260512-0730.json` human_score fields; re-run `aggregate_metrics.py`; commit. | User + Engineer | human_score fields all null currently |
-
-**Also note for next session:**
-- Run Requirements.md DoD checklist — tick off all 10 items once browser verify is done (file: `project-office/features/agent-performance-metrics/Requirements.md`)
-- Run end-of-day: PLAN_STATUS + roadmap HTML + Confluence sprint board + git commit
+- 2026-05-12: Agent Performance Metrics feature built and merged (f23f74b, 79f1bbd, cd79570). 2 tasks pending. See `project-office/features/agent-performance-metrics/PLAN_STATUS.md`.
