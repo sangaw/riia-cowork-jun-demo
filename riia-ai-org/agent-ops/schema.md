@@ -20,6 +20,37 @@ One file per `/enhance` run. Stored at `riia-ai-org/agent-ops/runs/run-{YYYYMMDD
 
 ---
 
+## New Top-Level Run Log Fields (v2)
+
+Added by `backfill_metrics.py` for all existing runs; included by default in new runs.
+
+| Field | Type | Description |
+|---|---|---|
+| `retry_count` | integer | Number of times the run was retried after an initial failure |
+| `abandoned` | boolean | `true` if the run was abandoned before completion |
+| `loop_events` | integer | Count of agentic loop cycles detected during the run |
+| `hitl_events` | array of objects | Human-in-the-loop interventions; empty array if none |
+| `hitl_events[].step` | string | Agent role/step where the intervention occurred |
+| `hitl_events[].type` | string | `"correction"` or `"override"` |
+| `hitl_events[].description` | string | Free-text description of the human action |
+| `hitl_events[].timestamp` | string | ISO 8601 timestamp of the intervention |
+| `token_forecast` | object | Pre-run token budget forecast (see sub-fields below) |
+| `token_forecast.complexity` | string | `"small"` / `"medium"` / `"large"` |
+| `token_forecast.complexity_score` | float | Weighted average of 4 complexity signals (0.7–1.5) |
+| `token_forecast.feature_type` | string | `"rita"` / `"ops"` / `"fno"` / `"invest-game"` |
+| `token_forecast.per_role` | object | Keys: pm, architect, engineer, qa, techwriter; values: integer token estimates |
+| `token_forecast.total_forecast` | integer | Sum of all per-role forecast values |
+| `token_forecast.confidence` | string | `"±25%"` if `basis_runs >= 5`, else `"±40%"` |
+| `token_forecast.basis_runs` | integer | Number of prior runs for the same `feature_type` used to calibrate the forecast |
+| `human_score` | object or null | Post-run human quality score (null until scored) |
+| `human_score.accuracy` | integer (1–5) or null | How accurately the agents implemented the spec |
+| `human_score.relevance` | integer (1–5) or null | How relevant the output was to the original request |
+| `human_score.planning_ok` | boolean or null | Whether the PM / Architect plan was sound |
+| `human_score.csat` | integer (1–5) or null | Overall customer satisfaction score |
+| `human_score.time_saved_hours` | float or null | Estimated developer hours saved by the run |
+
+---
+
 ## Agent Object Fields (`agents[]`)
 
 | Field | Type | Description |
@@ -61,6 +92,8 @@ One file per `/enhance` run. Stored at `riia-ai-org/agent-ops/runs/run-{YYYYMMDD
 | `spec_updated` | Relevant spec file updated in same task |
 | `ruff_passed` | Python linter passed (or N/A for JS-only changes) |
 | `contract_matches_architect` | Implemented API matches Architect-defined contract |
+| `memory_used` | Engineer read `eng-context.md` during the run |
+| `tool_error_handled` | FC code present but status not `"fail"` (self-recovered) |
 
 ### QA (`qa`)
 | Check | Description |
