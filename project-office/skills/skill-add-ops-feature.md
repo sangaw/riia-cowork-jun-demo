@@ -144,6 +144,23 @@ File: `project-office/specs/Spec_RITA_App.md`
 
 **This step is mandatory. Do not mark the task complete without it.**
 
+### Step 7 — TechWriter: Confluence + Human Score Prompt
+
+After updating Confluence and confirming spec files, emit the following prompt to the user:
+
+```
+=== Agent Run Complete — Please score this run ===
+Output accuracy (1–5, where 5 = exactly what was needed): _
+Relevance to stated intent (1–5): _
+Did PM + Architect decompose the task correctly first time? (y/n): _
+Overall satisfaction / CSAT (1–5): _
+Estimated hours this would have taken manually: _
+Press Enter to skip any field.
+=========================================
+```
+
+Record responses as `human_score{}` in the run JSON: `accuracy`, `relevance`, `planning_ok` (y→true), `csat`, `time_saved_hours`. Skipped fields default to `null`.
+
 ---
 
 ## Guardrails

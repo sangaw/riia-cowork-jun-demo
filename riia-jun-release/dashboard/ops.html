@@ -748,6 +748,27 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
     <div id="ab-grid" class="ab-grid">
       <div class="loading">Loading…</div>
     </div>
+
+    <!-- KPI cards — populated by renderKpiCards() -->
+    <div class="ab-kpi-strip" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
+      <div id="ab-kpi-tsr" class="ab-kpi-card"></div>
+      <div id="ab-kpi-csat" class="ab-kpi-card"></div>
+      <div id="ab-kpi-forecast-err" class="ab-kpi-card"></div>
+      <div id="ab-kpi-hitl" class="ab-kpi-card"></div>
+    </div>
+
+    <!-- Token estimate widget — form populated by renderTokenEstimateWidget() -->
+    <div id="ab-estimate-widget" class="card mt-3" style="margin-top:16px">
+      <div id="ab-estimate-toggle" class="card-header cursor-pointer"
+           onclick="toggleEstimateWidget()"
+           style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)">
+        <h6 class="mb-0" style="margin:0;font-size:13px;font-weight:600">Estimate Token Budget</h6>
+      </div>
+      <div id="ab-estimate-form" class="card-body" style="display:none;padding:14px">
+        <!-- populated by renderTokenEstimateWidget() -->
+      </div>
+      <div id="ab-estimate-result" class="card-body pt-0" style="padding:0 14px 14px"></div>
+    </div>
   </section>
 
   <!-- ══ GAME AI COMPLIANCE ══ -->
