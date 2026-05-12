@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-05-11T11:28:42",
-  "total_runs": 14,
+  "generated_at": "2026-05-12T10:47:35",
+  "total_runs": 16,
   "per_role": {
     "pm": {
-      "run_count": 8,
+      "run_count": 9,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 7612
+      "avg_token_cost": 7000
     },
     "architect": {
-      "run_count": 8,
-      "avg_adherence_score": 1.0,
-      "first_pass_rate": 1.0,
-      "avg_token_cost": 9975
+      "run_count": 9,
+      "avg_adherence_score": 0.972,
+      "first_pass_rate": 0.889,
+      "avg_token_cost": 9244
     },
     "engineer": {
-      "run_count": 8,
-      "avg_adherence_score": 0.872,
-      "first_pass_rate": 0.5,
-      "avg_token_cost": 31112
+      "run_count": 9,
+      "avg_adherence_score": 0.842,
+      "first_pass_rate": 0.444,
+      "avg_token_cost": 28811
     },
     "qa": {
-      "run_count": 8,
-      "avg_adherence_score": 0.969,
-      "first_pass_rate": 0.875,
-      "avg_token_cost": 11300
+      "run_count": 9,
+      "avg_adherence_score": 0.972,
+      "first_pass_rate": 0.889,
+      "avg_token_cost": 10356
     },
     "techwriter": {
-      "run_count": 8,
-      "avg_adherence_score": 0.875,
-      "first_pass_rate": 0.75,
-      "avg_token_cost": 6650
+      "run_count": 9,
+      "avg_adherence_score": 0.889,
+      "first_pass_rate": 0.778,
+      "avg_token_cost": 6122
     }
   },
   "per_app": {
@@ -41,15 +41,15 @@
       "fail": 0
     },
     "invest-game": {
-      "run_count": 8,
-      "pass": 6,
+      "run_count": 9,
+      "pass": 7,
       "pass_with_warnings": 1,
       "fail": 1
     },
     "ops": {
-      "run_count": 2,
+      "run_count": 3,
       "pass": 1,
-      "pass_with_warnings": 1,
+      "pass_with_warnings": 2,
       "fail": 0
     }
   },
@@ -57,65 +57,72 @@
     {
       "run_id": "20260430-1315",
       "app": "rita",
-      "grounding_score": 1.0,
+      "grounding_score": 0.917,
       "checks_passed": 22,
-      "checks_total": 22
+      "checks_total": 24
     },
     {
       "run_id": "20260430-1415",
       "app": "rita",
-      "grounding_score": 0.95,
+      "grounding_score": 0.864,
       "checks_passed": 19,
-      "checks_total": 20
+      "checks_total": 22
     },
     {
       "run_id": "20260430-1809",
       "app": "rita",
-      "grounding_score": 1.0,
+      "grounding_score": 0.917,
       "checks_passed": 22,
-      "checks_total": 22
+      "checks_total": 24
     },
     {
       "run_id": "20260505-1000",
       "app": "invest-game",
-      "grounding_score": 0.636,
+      "grounding_score": 0.583,
       "checks_passed": 14,
-      "checks_total": 22
+      "checks_total": 24
     },
     {
       "run_id": "20260506-0830",
       "app": "invest-game",
-      "grounding_score": 0.591,
+      "grounding_score": 0.542,
       "checks_passed": 13,
-      "checks_total": 22
+      "checks_total": 24
     },
     {
       "run_id": "20260507-0717",
       "app": "ops",
-      "grounding_score": 0.95,
+      "grounding_score": 0.864,
       "checks_passed": 19,
-      "checks_total": 20
+      "checks_total": 22
     },
     {
       "run_id": "20260508-improve-observability",
       "app": "ops",
-      "grounding_score": 1.0,
+      "grounding_score": 0.909,
       "checks_passed": 20,
-      "checks_total": 20
+      "checks_total": 22
     },
     {
       "run_id": "20260511-1046",
       "app": "rita",
-      "grounding_score": 1.0,
+      "grounding_score": 0.909,
       "checks_passed": 20,
-      "checks_total": 20
+      "checks_total": 22
+    },
+    {
+      "run_id": "20260512-0730",
+      "app": "ops",
+      "grounding_score": 0.773,
+      "checks_passed": 17,
+      "checks_total": 22
     }
   ],
   "failure_modes": {
     "FC-001": {
-      "total": 6,
+      "total": 7,
       "by_role": {
-        "engineer": 4,
+        "engineer": 5,
         "techwriter": 2
       }
     },
@@ -136,41 +143,82 @@
       "by_role": {
         "engineer": 1
       }
+    },
+    "FC-MISSING-DELIVERABLE": {
+      "total": 1,
+      "by_role": {
+        "architect": 1
+      }
+    },
+    "FC-PARTIAL-IMPL": {
+      "total": 1,
+      "by_role": {
+        "engineer": 1
+      }
     }
   },
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "979df5f",
+      "last_updated": "1790af4",
       "recent_commits": [
+        {
+          "hash": "1790af4",
+          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
+        },
         {
           "hash": "979df5f",
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
-      ]
+      ],
+      "improvement_applied": null,
+      "before_first_pass_rate": null,
+      "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "979df5f",
+      "last_updated": "1790af4",
       "recent_commits": [
+        {
+          "hash": "1790af4",
+          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
+        },
         {
           "hash": "979df5f",
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
-      ]
+      ],
+      "improvement_applied": null,
+      "before_first_pass_rate": null,
+      "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "979df5f",
+      "last_updated": "1790af4",
       "recent_commits": [
+        {
+          "hash": "1790af4",
+          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
+        },
         {
           "hash": "979df5f",
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
-      ]
+      ],
+      "improvement_applied": null,
+      "before_first_pass_rate": null,
+      "after_first_pass_rate": null
     }
   ],
   "game_sessions": [
+    {
+      "run_id": "20260511-1317",
+      "request": "Invest game: ASML over 10 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.6,
+      "day_count": 10,
+      "flagged_count": 0
+    },
     {
       "run_id": "20260507-0557",
       "request": "Invest game: ASML over 10 days",
@@ -219,5 +267,78 @@
       "day_count": 0,
       "flagged_count": 0
     }
-  ]
+  ],
+  "task_completion": {
+    "tsr": 0.688,
+    "first_attempt_success_rate": 0.688,
+    "partial_completion_rate": 0.25,
+    "abandonment_rate": 0.0
+  },
+  "quality": {
+    "avg_accuracy_score": null,
+    "avg_relevance_score": null,
+    "avg_csat": null,
+    "planning_accuracy_rate": null,
+    "grounding_pass_rate": 0.893
+  },
+  "token_forecasting": {
+    "avg_forecast_error_pct": 4.1,
+    "by_complexity": {
+      "small": {
+        "avg_actual": 8673,
+        "multiplier": 0.7
+      },
+      "medium": {
+        "avg_actual": null,
+        "multiplier": 1.0
+      },
+      "large": {
+        "avg_actual": 95880,
+        "multiplier": 1.5
+      }
+    },
+    "by_feature_type": {
+      "rita": {
+        "run_count": 4,
+        "avg_tokens": 78600,
+        "modifier": 1.0
+      },
+      "ops": {
+        "run_count": 3,
+        "avg_tokens": 21400,
+        "modifier": 0.6
+      },
+      "fno": {
+        "run_count": 0,
+        "avg_tokens": null,
+        "modifier": 0.8
+      },
+      "invest-game": {
+        "run_count": 9,
+        "avg_tokens": 21800,
+        "modifier": 1.1
+      }
+    }
+  },
+  "efficiency": {
+    "avg_duration_minutes": 30,
+    "avg_tokens_per_run": 35925,
+    "avg_retry_count": 0.12,
+    "avg_time_saved_hours": null
+  },
+  "reliability": {
+    "error_recovery_rate": 0.692,
+    "graceful_degradation_rate": 0.8,
+    "loop_event_total": 0
+  },
+  "hitl": {
+    "escalation_rate": 0.062,
+    "avg_corrections_per_run": 0.12,
+    "total_hitl_events": 2
+  },
+  "agentic": {
+    "context_adherence_rate": null,
+    "memory_utilization_rate": 0.0,
+    "loop_detection_rate": 0.0
+  }
 }
