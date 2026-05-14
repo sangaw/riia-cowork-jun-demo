@@ -205,9 +205,9 @@ export async function loadMarketSignals() {
   }
 }
 
-function _geoSignalClass(signal) {
-  if (signal === 'bullish') return 'ok';
-  if (signal === 'bearish') return 'err';
+function _geoKpiClass(signal) {
+  if (signal === 'bullish') return 'pos';
+  if (signal === 'bearish') return 'neg';
   return 'neu';
 }
 
@@ -227,19 +227,15 @@ export async function loadGeoPanels() {
         <div class="card-hdr">
           <span class="card-title">${r.flag || ''} ${r.region}</span>
         </div>
-        <table>
-          <thead><tr><th>Instrument</th><th>Close</th><th>Return</th><th>Signal</th></tr></thead>
-          <tbody>
-            ${r.instruments.map(i => `
-              <tr>
-                <td>${i.name}</td>
-                <td class="td-mono">${i.close != null ? i.close.toFixed(2) : '—'}</td>
-                <td class="td-mono">${i.daily_return_pct != null ? (i.daily_return_pct > 0 ? '+' : '') + i.daily_return_pct.toFixed(2) + '%' : '—'}</td>
-                <td><span class="badge ${_geoSignalClass(i.signal)}">${i.signal}</span></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:4px 0">
+          ${r.instruments.map(i => `
+            <div class="kpi">
+              <div class="kpi-label">${i.name}</div>
+              <div class="kpi-value ${_geoKpiClass(i.signal)}">${i.close != null ? i.close.toFixed(2) : '—'}</div>
+              <div class="kpi-delta">${i.signal.charAt(0).toUpperCase() + i.signal.slice(1)}</div>
+            </div>
+          `).join('')}
+        </div>
       </div>
     `).join('');
   } catch (e) {
