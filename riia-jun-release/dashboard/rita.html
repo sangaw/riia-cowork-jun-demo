@@ -385,6 +385,13 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
+  <div class="nav-section">
+    <div class="nav-label" style="color:var(--t3)">Learn</div>
+    <div class="nav-item p00" data-s="learnings" onclick="show('learnings',this)">
+      <span class="nav-icon">◎</span> Learnings
+    </div>
+  </div>
+
   <div class="sidebar-footer">
     <div class="lbl" id="sb-data-info">Nifty 50 · 1999–2025</div>
     <div class="lbl" style="margin-top:2px" id="sb-model-info">Model: checking...</div>
@@ -1279,6 +1286,62 @@ tr:hover td{background:var(--surface2);}
       </div>
     </div>
   </div>
+</section>
+
+<!-- ════════════════ LEARNINGS ════════════════ -->
+<section class="section" id="sec-learnings">
+  <div class="page-hdr">
+    <div>
+      <div class="page-title">Learnings</div>
+      <div class="page-sub">Concepts, model architecture, and market analysis</div>
+    </div>
+  </div>
+
+  <!-- Card 1: Technical Indicators -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-hdr" style="cursor:pointer" onclick="toggleLearnCard('indicators')">
+      <span class="card-title">Technical Indicators</span>
+      <span id="learn-chevron-indicators">▼</span>
+    </div>
+    <div id="learn-body-indicators" class="card-body" style="font-size:13px;line-height:1.7;color:var(--t2)">
+      <p style="color:var(--t3);font-style:italic">Content coming soon.</p>
+    </div>
+  </div>
+
+  <!-- Card 2: Model Building -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-hdr" style="cursor:pointer" onclick="toggleLearnCard('model')">
+      <span class="card-title">Model Building — Double DQN</span>
+      <span id="learn-chevron-model">▼</span>
+    </div>
+    <div id="learn-body-model" class="card-body" style="font-size:13px;line-height:1.7;color:var(--t2)">
+      <p style="color:var(--t3);font-style:italic">Content coming soon.</p>
+    </div>
+  </div>
+
+  <!-- Card 3: Sharpe Ratio -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-hdr" style="cursor:pointer" onclick="toggleLearnCard('sharpe')">
+      <span class="card-title">Sharpe Ratio</span>
+      <span id="learn-chevron-sharpe">▼</span>
+    </div>
+    <div id="learn-body-sharpe" class="card-body" style="font-size:13px;line-height:1.7;color:var(--t2)">
+      <p style="color:var(--t3);font-style:italic">Content coming soon.</p>
+    </div>
+  </div>
+
+  <!-- Card 4: Market Trends (live charts) -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-hdr" style="cursor:pointer" onclick="toggleLearnCard('trends')">
+      <span class="card-title">Market Trends</span>
+      <span id="learn-chevron-trends">▼</span>
+    </div>
+    <div id="learn-body-trends" class="card-body">
+      <div style="height:220px;margin-bottom:16px"><canvas id="chart-learn-price"></canvas></div>
+      <div style="height:160px"><canvas id="chart-learn-rsi"></canvas></div>
+    </div>
+  </div>
+
 </section>
 
 </main><!-- /main -->
