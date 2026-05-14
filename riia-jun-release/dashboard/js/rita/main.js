@@ -33,6 +33,7 @@ import { loadAgentPanel, agentPanelStep, resetAgentPanel, approveAgentProposal, 
 import { loadAiCompliance, switchAcTab } from './ai-compliance.js';
 import { loadTechnicalAnalysis } from './technical-analysis.js';
 import { loadAudit } from './audit.js';
+import { loadLearnings, toggleLearnCard } from './learnings.js';
 import { useChip, sendChatMsg, clearChat, updateChips, showAlerts, refreshChatChips } from './chat.js';
 import { openChartModal, closeChartModal } from './chart-modal.js';
 
@@ -54,6 +55,7 @@ _sectionLoaders.mcp               = loadMcp;
 _sectionLoaders.export            = loadExport;
 _sectionLoaders.audit             = loadAudit;
 _sectionLoaders['technical-analysis'] = loadTechnicalAnalysis;
+_sectionLoaders.learnings         = loadLearnings;
 
 // ── Expose to window for inline HTML onclick attributes ────
 window.show               = show;
@@ -92,6 +94,8 @@ window.loadObservability  = loadObservability;
 window.loadMcp            = loadMcp;
 window.loadAudit          = loadAudit;
 window.loadTechnicalAnalysis = loadTechnicalAnalysis;
+window.loadLearnings      = loadLearnings;
+window.toggleLearnCard    = toggleLearnCard;
 
 // ── Refresh all home KPIs & active section ─────────────────
 async function refresh() {
@@ -124,7 +128,7 @@ async function selectInstrumentTab(id) {
     if (data) { updateChips(data.chips); showAlerts(data.alerts); }
   }
   await loadActiveInstrument();
-  const instrumentSections = new Set(['trades', 'performance', 'scenarios', 'risk', 'market-signals', 'diagnostics', 'explain', 'technical-analysis']);
+  const instrumentSections = new Set(['trades', 'performance', 'scenarios', 'risk', 'market-signals', 'diagnostics', 'explain', 'technical-analysis', 'learnings']);
   await Promise.all([
     loadHealth(), loadPerfSummary(), loadDrift(), loadProgress(), loadMarketSignals(),
     ...(instrumentSections.has(section) && _sectionLoaders[section] ? [_sectionLoaders[section]()] : []),
