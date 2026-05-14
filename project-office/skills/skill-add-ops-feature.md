@@ -139,13 +139,13 @@ window.loadMyOpsFeature = loadMyOpsFeature;
 
 ### Step 6 — Update the Spec
 
-> **STOP — do not run `git add` until this step is complete.**
+> **STOP — do not run `git add` until this step is complete. This is a blocking gate — spec not updated = orchestrator will re-invoke you to fix it before QA runs.**
 
 File: `project-office/specs/Spec_RITA_App.md`
 - Add the new endpoint to Section 3, Experience Tier (Ops row)
 - Add the new JS module to `Spec_JS_Code.md` Section 4 (Ops module structure)
 
-Open each spec file, make the edit, save, confirm the line is present — then proceed to commit. Skipping this step is logged as FC-001 and reduces the engineer first-pass rate.
+Open each spec file. Read the relevant table. Add the new row. **Report the exact line you added to each file** (e.g. `| GET | /api/experience/ops/my-feature | MyOpsFeatureResponse |`). Only after reporting the exact lines may you proceed to commit.
 
 ### Step 7 — TechWriter: Confluence + Human Score Prompt
 

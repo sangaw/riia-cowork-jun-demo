@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-14T19:49:41",
+  "generated_at": "2026-05-14T20:00:39",
   "total_runs": 18,
   "per_role": {
     "pm": {
@@ -134,6 +134,7 @@
   "failure_modes": {
     "FC-001": {
       "total": 7,
+      "recent_fires": 2,
       "by_role": {
         "engineer": 5,
         "techwriter": 2
@@ -141,36 +142,42 @@
     },
     "FC-006": {
       "total": 1,
+      "recent_fires": 0,
       "by_role": {
         "engineer": 1
       }
     },
     "FC-005": {
       "total": 2,
+      "recent_fires": 0,
       "by_role": {
         "techwriter": 2
       }
     },
     "FC-003": {
       "total": 1,
+      "recent_fires": 0,
       "by_role": {
         "engineer": 1
       }
     },
     "FC-MISSING-DELIVERABLE": {
       "total": 1,
+      "recent_fires": 1,
       "by_role": {
         "architect": 1
       }
     },
     "FC-PARTIAL-IMPL": {
       "total": 1,
+      "recent_fires": 1,
       "by_role": {
         "engineer": 1
       }
     },
     "FC-004": {
       "total": 2,
+      "recent_fires": 2,
       "by_role": {
         "engineer": 1,
         "qa": 1
@@ -195,8 +202,8 @@
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
-      "improvement_applied": "FC-001",
-      "before_first_pass_rate": 0.444,
+      "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
+      "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
     },
     {
@@ -216,8 +223,8 @@
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
-      "improvement_applied": "FC-001",
-      "before_first_pass_rate": 0.444,
+      "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
+      "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
     },
     {
@@ -237,14 +244,14 @@
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
-      "improvement_applied": "FC-001",
-      "before_first_pass_rate": 0.444,
+      "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
+      "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
     },
     {
       "skill_file": ".claude/commands/enhance.md",
-      "improvement_applied": "FC-PARTIAL-IMPL",
-      "before_first_pass_rate": 0.444,
+      "improvement_applied": "FC-001 blocking gate (spec-not-updated now re-invokes Engineer, not a warning) + Step 4 confirmation pause before advancing to QA",
+      "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
     }
   ],

@@ -313,10 +313,41 @@ Read `{BRIEF_PATH}` — find the `[Engineer] Implementation Log` section. Check:
 - If **branch is master**: report error and stop — `Engineer agent wrote to master instead of a worktree branch. Do not proceed. Check worktree isolation.`
 - If **commit hash missing**: report error and stop — `Engineer agent did not commit. Changes may be lost. Check worktree and commit manually.`
 - If **ruff failed**: report as warning — `⚠ Engineer Agent — ruff errors present. Review before merging.` — add `"FC-003"` to Engineer failure_modes
-- If **spec not updated**: report as warning — `⚠ Engineer Agent — spec not updated.` — add `"FC-001"` to Engineer failure_modes
+- If **spec not updated**: **BLOCKING GATE** — do not advance to QA. Re-invoke the Engineer agent with this prompt:
+  ```
+  Your spec files were not updated. Fix this now before QA can proceed:
+  1. Open project-office/specs/Spec_RITA_App.md — find the {APP} tier table — add the new endpoint row.
+  2. Open project-office/specs/Spec_JS_Code.md — find the {APP} module structure section — add the new JS module row.
+  3. Run: git add project-office/specs/Spec_RITA_App.md project-office/specs/Spec_JS_Code.md
+  4. Commit: git commit -m "fix({APP}): update spec files for new endpoint"
+  5. Report the exact line you added to each spec file.
+  ```
+  After re-invocation, add `"FC-001"` to Engineer failure_modes. Only then advance to QA.
 - Otherwise: report `✓ Engineer Agent — implementation complete. Branch: {branch}. Commit: {hash}`
 
 Set `RUN_BRANCH` = branch name from the Engineer section.
+
+**Step 4 confirmation pause — wait for user before advancing to QA:**
+
+Report the Engineer summary and wait for confirmation:
+
+```
+── Step 4 Complete — Engineer Agent ──────────────────────
+  Branch:             {RUN_BRANCH}
+  Commit:             {hash from Engineer section}
+  Files changed:      {N_actual} (Architect expected: {N_expected})
+    {list each file, one per line, indented}
+  Spec updated:       {yes/no}
+  Ruff:               {passed/failed}
+  DoD items passed:   {n}/8
+
+  Reply "ok" to advance to QA, or "stop" to halt and review.
+─────────────────────────────────────────────────────────
+```
+
+**Wait for user reply before proceeding to Step 5.**
+- If user replies **"stop"**: write run log as partial (`overall_status = "partial"`) and halt.
+- If user replies **"ok"** (or any other reply): proceed to Step 5.
 
 **Record Engineer agent result** (append to `AGENT_RESULTS`):
 ```json
