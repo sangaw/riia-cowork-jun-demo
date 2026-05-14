@@ -1109,9 +1109,9 @@ _GEO_REGIONS: list[dict] = [
         "flag": "\U0001f1fa\U0001f1f8",
         "instruments": [
             {"id": "AAPL",    "name": "Apple"},
-            {"id": "MSFT",    "name": "Microsoft"},
+            {"id": "NVDA",    "name": "Nvidia"},
             {"id": "GOOGL",   "name": "Alphabet"},
-            {"id": "AMZN",    "name": "Amazon"},
+            {"id": "TRU",     "name": "TransUnion"},
         ],
     },
     {

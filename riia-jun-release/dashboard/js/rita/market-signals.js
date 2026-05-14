@@ -227,7 +227,7 @@ export async function loadGeoPanels() {
         <div class="card-hdr">
           <span class="card-title">${r.flag || ''} ${r.region}</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:4px 0">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:4px 0">
           ${r.instruments.map(i => `
             <div class="kpi">
               <div class="kpi-label">${i.name}</div>
