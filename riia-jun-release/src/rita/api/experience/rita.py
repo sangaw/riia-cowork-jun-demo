@@ -981,3 +981,119 @@ def stress_scenarios(
         sources=sources,
     )
     return result
+
+
+# ── GET /api/experience/rita/technical-commentary ─────────────────────────────
+
+@router.get("/experience/rita/technical-commentary", summary="Technical commentary + signal summary")
+def technical_commentary(
+    instrument: str = "NIFTY",
+    db: Session = Depends(get_db),
+) -> dict:
+    """Return a short technical commentary and signal summary for the active instrument.
+
+    Reads the latest market-signals data from MarketDataCacheRepository (CSV fallback
+    if DB empty) and derives commentary from RSI-14, ATR%, and trend score.
+    Read-only — no db.commit().
+    """
+    import math
+    import numpy as np
+    import pandas as pd
+
+    from rita.repositories.market_data import MarketDataCacheRepository
+    from rita.schemas.technical import TechnicalCommentaryResponse, SignalSummaryItem
+
+    inst = instrument.upper()
+
+    # ── Fetch price data (same path as market_signals router) ─────────────────
+    records = MarketDataCacheRepository(db).read_all()
+    nifty = sorted([r for r in records if r.underlying == inst], key=lambda r: r.date)
+
+    if not nifty:
+        try:
+            from rita.core.data_loader import load_nifty_csv
+            from rita.core.data_understanding import find_instrument_csv
+            csv_path = find_instrument_csv(inst)
+            _df = load_nifty_csv(str(csv_path))
+            close  = _df["Close"].astype(float)
+            high   = _df["High"].astype(float)
+            low    = _df["Low"].astype(float)
+        except Exception:
+            return TechnicalCommentaryResponse(
+                instrument=inst,
+                commentary="No data available.",
+                signal_summary=[],
+            ).model_dump()
+    else:
+        close  = pd.Series([r.close for r in nifty], dtype=float)
+        high   = pd.Series([getattr(r, "high", r.close) for r in nifty], dtype=float)
+        low    = pd.Series([getattr(r, "low",  r.close) for r in nifty], dtype=float)
+
+    # ── Compute indicators ─────────────────────────────────────────────────────
+    # RSI-14
+    delta    = close.diff()
+    gain     = delta.clip(lower=0)
+    loss     = -delta.clip(upper=0)
+    avg_gain = gain.ewm(com=13, adjust=False).mean()
+    avg_loss = loss.ewm(com=13, adjust=False).mean()
+    rs       = avg_gain / avg_loss.replace(0, np.nan)
+    rsi_series = 100 - (100 / (1 + rs))
+
+    # ATR-14
+    tr       = pd.concat([high - low, (high - close.shift()).abs(), (low - close.shift()).abs()], axis=1).max(axis=1)
+    atr_series = tr.ewm(com=13, adjust=False).mean()
+
+    # Trend score (simple EMA crossover composite)
+    ema5_s  = close.ewm(span=5,  adjust=False).mean()
+    ema13_s = close.ewm(span=13, adjust=False).mean()
+    ema26_s = close.ewm(span=26, adjust=False).mean()
+    raw_trend = (0.4 * (ema5_s > ema13_s).astype(float)
+                 + 0.3 * (ema13_s > ema26_s).astype(float)
+                 + 0.3 * (close > ema26_s).astype(float))
+    trend_score_series = (raw_trend - 0.5) * 2
+
+    # ── Latest values ──────────────────────────────────────────────────────────
+    rsi_val    = float(rsi_series.iloc[-1])   if not rsi_series.empty    else float("nan")
+    atr_val    = float(atr_series.iloc[-1])   if not atr_series.empty    else float("nan")
+    price_val  = float(close.iloc[-1])        if not close.empty         else float("nan")
+    trend_val  = float(trend_score_series.iloc[-1]) if not trend_score_series.empty else float("nan")
+
+    atr_pct = (atr_val / price_val * 100) if (math.isfinite(atr_val) and math.isfinite(price_val) and price_val) else float("nan")
+
+    # ── Derive labels ──────────────────────────────────────────────────────────
+    rsi_valid  = math.isfinite(rsi_val)
+    atr_valid  = math.isfinite(atr_pct)
+    trend_valid = math.isfinite(trend_val)
+
+    rsi_state  = ("bearish" if rsi_val > 70 else "bullish" if rsi_val < 30 else "neutral") if rsi_valid else "neutral"
+    atr_state  = ("bearish" if atr_pct > 1.5 else "bullish" if atr_pct < 0.8 else "normal") if atr_valid else "normal"
+    trend_state = ("up" if trend_val > 0.2 else "down" if trend_val < -0.2 else "neutral") if trend_valid else "neutral"
+
+    rsi_label  = "Overbought" if rsi_val > 70 else "Oversold" if rsi_val < 30 else "Neutral"
+    atr_label  = "High volatility" if atr_pct > 1.5 else "Compressed" if atr_pct < 0.8 else "Normal range"
+    trend_label = "Strong uptrend" if trend_val > 0.5 else "Mild uptrend" if trend_val > 0.2 else "Strong downtrend" if trend_val < -0.5 else "Mild downtrend" if trend_val < -0.2 else "Sideways"
+
+    # ── Commentary string ──────────────────────────────────────────────────────
+    parts = []
+    if rsi_valid:
+        parts.append(f"RSI at {rsi_val:.1f} — {rsi_label}.")
+    if atr_valid:
+        parts.append(f"ATR% at {atr_pct:.2f}% — {atr_label}.")
+    if trend_valid:
+        parts.append(f"Trend score {trend_val:.2f} — {trend_label}.")
+    commentary = " ".join(parts) if parts else "Insufficient data for commentary."
+
+    # ── Signal summary items ───────────────────────────────────────────────────
+    signal_summary = []
+    if rsi_valid:
+        signal_summary.append(SignalSummaryItem(label="RSI-14", value=f"{rsi_val:.1f}", state=rsi_state))
+    if atr_valid:
+        signal_summary.append(SignalSummaryItem(label="ATR%", value=f"{atr_pct:.2f}%", state=atr_state))
+    if trend_valid:
+        signal_summary.append(SignalSummaryItem(label="Trend", value=f"{trend_val:.2f}", state=trend_state))
+
+    return TechnicalCommentaryResponse(
+        instrument=inst,
+        commentary=commentary,
+        signal_summary=signal_summary,
+    ).model_dump()

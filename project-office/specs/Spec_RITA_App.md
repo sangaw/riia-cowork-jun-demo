@@ -98,6 +98,12 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/experience/ops/token-forecast` | Pre-run token budget estimate — query params: `feature_type`, `files_to_change`, `new_endpoint_or_model`, `frontend_scope`, `integration_type`. Returns `TokenForecastResponse` (complexity, per_role, total_forecast, confidence, basis_runs). Auth required. |
 
 
+### RITA Experience Endpoints (`/api/experience/rita` and `/api/v1` via `experience/rita.py`)
+
+| Method | Path | Description | Router file |
+|---|---|---|---|
+| `GET` | `/api/experience/rita/technical-commentary` | Technical commentary + signal summary for active instrument | `rita.py` |
+
 ### Invest Game Endpoints (`/api/experience/invest-game`)
 
 | Method | Path | Description | Response fields |
@@ -349,6 +355,7 @@ Endpoints:
 | 1 (landing) | `sec-market-signals` | Overview | Phase 01 — Plan (first item) |
 | — | `sec-goal` | Financial Goal | Phase 01 — Plan |
 | — | `sec-market` | Market Analysis | Phase 01 — Plan |
+| — | `sec-technical-analysis` | Technical Analysis | Phase 01 — Plan |
 | — | `sec-strategy` | Strategy | Phase 01 — Plan |
 | — | `sec-scenarios` | Scenarios | Phase 02 — Backtest |
 | — | `sec-agent-panel` | Agent Panel | Phase 02 — Backtest |

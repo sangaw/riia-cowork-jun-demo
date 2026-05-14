@@ -145,33 +145,6 @@ export async function loadMarketSignals() {
       }
     });
 
-    // ── RSI chart ───────────────────────────────────────────
-    mkChart('chart-ms-rsi', {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          { label: 'RSI-14', data: rows.map(r => r.rsi_14), borderColor: C.run, backgroundColor: 'rgba(0,86,184,0.06)', fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2 },
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          annotation: { annotations: {
-            ob:  { type: 'line', yMin: 70, yMax: 70, borderColor: C.danger,          borderWidth: 1,   borderDash: [4,3] },
-            obz: { type: 'line', yMin: 60, yMax: 60, borderColor: 'rgba(180,40,40,0.4)', borderWidth: 1, borderDash: [2,4] },
-            os:  { type: 'line', yMin: 30, yMax: 30, borderColor: C.build,           borderWidth: 1,   borderDash: [4,3] },
-            osz: { type: 'line', yMin: 40, yMax: 40, borderColor: 'rgba(26,107,60,0.4)', borderWidth: 1, borderDash: [2,4] },
-          }}
-        },
-        scales: {
-          x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
-          y: { min: 0, max: 100, grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v, font: { family: C.mono, size: 10 } } }
-        }
-      }
-    });
-
     // ── MACD chart ──────────────────────────────────────────
     const macdHist = rows.map(r => r.macd_hist);
     mkChart('chart-ms-macd', {
@@ -260,37 +233,6 @@ export async function loadMarketSignals() {
         scales: {
           x: { grid: { color: 'rgba(0,0,0,.03)' }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
           y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(0), font: { family: C.mono, size: 10 } } }
-        }
-      }
-    });
-
-    // ── ATR% chart ──────────────────────────────────────────
-    const atrPctData = rows.map(r => {
-      const a = parseFloat(r.atr_14), c = parseFloat(r.Close);
-      return (!isNaN(a) && !isNaN(c) && c) ? +(a / c * 100).toFixed(3) : null;
-    });
-    mkChart('chart-ms-atr', {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          { label: 'ATR%', data: atrPctData,
-            borderColor: C.warn, backgroundColor: 'rgba(146,72,10,0.07)',
-            fill: true, tension: 0.2, pointRadius: 0, borderWidth: 2 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          annotation: { annotations: {
-            hiLine: { type: 'line', yMin: 1.5, yMax: 1.5, borderColor: 'rgba(155,28,28,0.55)', borderWidth: 1, borderDash: [4,3] },
-            loLine: { type: 'line', yMin: 0.8, yMax: 0.8, borderColor: 'rgba(26,107,60,0.45)',  borderWidth: 1, borderDash: [4,3] },
-          }}
-        },
-        scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: _xTicks, callback: _xFmt, font: { family: C.mono, size: 10 } } },
-          y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(1)+'%', font: { family: C.mono, size: 10 } } }
         }
       }
     });
