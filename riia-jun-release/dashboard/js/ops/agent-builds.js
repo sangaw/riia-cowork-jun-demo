@@ -520,57 +520,61 @@ export function renderTokenEstimateWidget() {
     const form = document.getElementById('ab-estimate-form');
     if (!form) return;
 
-    const selStyle = 'width:100%;font-size:11px;padding:3px 5px;background:var(--bg2);color:var(--t1);border:1px solid var(--border);border-radius:4px';
-    const lblStyle = 'display:block;font-size:10px;color:var(--t3);margin-bottom:3px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+    const sel = 'width:100%;font-size:11px;padding:4px 6px;background:var(--bg2);color:var(--t1);border:1px solid var(--border);border-radius:4px;box-sizing:border-box';
+    const lbl = 'display:block;font-size:10px;color:var(--t3);margin-bottom:3px;font-weight:500';
+    const cell = 'background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:8px 10px;min-height:52px;display:flex;flex-direction:column;justify-content:center';
     form.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 10px;align-items:end">
-        <div>
-          <label style="${lblStyle}">Feature type</label>
-          <select id="ab-estimate-feature-type" style="${selStyle}">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div style="${cell}">
+          <label style="${lbl}">Feature type</label>
+          <select id="ab-estimate-feature-type" style="${sel}">
             <option value="rita">RITA</option>
             <option value="ops">Ops</option>
             <option value="fno">FnO</option>
             <option value="invest-game">Invest Game</option>
           </select>
         </div>
-        <div>
-          <label style="${lblStyle}">Files to change</label>
-          <select id="ab-estimate-files" style="${selStyle}">
-            <option value="small">Small (1–3)</option>
-            <option value="medium">Medium (4–8)</option>
-            <option value="large">Large (9+)</option>
+        <div style="${cell}">
+          <label style="${lbl}">Files to change</label>
+          <select id="ab-estimate-files" style="${sel}">
+            <option value="small">Small (1–3 files)</option>
+            <option value="medium">Medium (4–8 files)</option>
+            <option value="large">Large (9+ files)</option>
           </select>
         </div>
-        <div>
-          <label style="${lblStyle}">Endpoint / model</label>
-          <select id="ab-estimate-endpoint" style="${selStyle}">
+        <div style="${cell}">
+          <label style="${lbl}">Endpoint / model</label>
+          <select id="ab-estimate-endpoint" style="${sel}">
             <option value="none">None</option>
             <option value="one">One</option>
             <option value="both">Both</option>
           </select>
         </div>
-        <div>
-          <label style="${lblStyle}">Frontend scope</label>
-          <select id="ab-estimate-frontend" style="${selStyle}">
+        <div style="${cell}">
+          <label style="${lbl}">Frontend scope</label>
+          <select id="ab-estimate-frontend" style="${sel}">
             <option value="none">None</option>
             <option value="panel">Panel</option>
             <option value="page">Page</option>
           </select>
         </div>
-        <div>
-          <label style="${lblStyle}">Integration</label>
-          <select id="ab-estimate-integration" style="${selStyle}">
+        <div style="${cell}">
+          <label style="${lbl}">Integration</label>
+          <select id="ab-estimate-integration" style="${sel}">
             <option value="additive">Additive</option>
-            <option value="extends">Extends</option>
+            <option value="extends">Extends existing</option>
             <option value="cross-cutting">Cross-cutting</option>
           </select>
         </div>
-        <div>
+        <div style="${cell};justify-content:flex-end">
           <button id="ab-estimate-btn" onclick="submitTokenEstimate()"
-            style="width:100%;padding:5px 0;font-size:11px;background:var(--accelerate);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600">
+            style="width:100%;padding:6px 0;font-size:11px;background:var(--accelerate);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;margin-top:auto">
             Estimate
           </button>
         </div>
+        <div id="ab-res-complexity" style="${cell};border-color:var(--accelerate)"></div>
+        <div id="ab-res-total"      style="${cell};border-color:var(--accelerate)"></div>
+        <div id="ab-res-confidence" style="${cell};border-color:var(--accelerate)"></div>
       </div>
     `;
   } catch (e) {
@@ -681,6 +685,8 @@ export async function loadAgentBuilds() {
         `<div class="ab-chart-wrap"><canvas id="ab-chart-forecast"></canvas></div>`),
       panel('trends', 'Metric Trend Lines',
         `<div class="ab-chart-wrap"><canvas id="ab-chart-trends"></canvas></div>`),
+      panel('estimate', 'Estimate Token Budget',
+        `<div id="ab-estimate-form"></div><div id="ab-estimate-result" style="margin-top:8px"></div>`),
     ].join('');
 
     // Mount Chart.js after DOM is ready

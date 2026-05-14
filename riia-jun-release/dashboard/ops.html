@@ -64,8 +64,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .sidebar{background:var(--surface);border-right:1.5px solid var(--border);padding:16px 0;display:flex;flex-direction:column;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;}
 .sidebar::-webkit-scrollbar{width:3px;}
 .sidebar::-webkit-scrollbar-thumb{background:var(--border);}
-.ns-lbl{font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.14em;padding:14px 18px 5px;}
-.ni{display:flex;align-items:center;gap:9px;padding:8px 18px;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--t3);border-left:2.5px solid transparent;transition:all .12s;user-select:none;}
+.ns-lbl{font-family:var(--fm);font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:.14em;padding:8px 16px 4px;}
+.ni{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;font-size:12px;font-weight:500;color:var(--t3);border-left:2px solid transparent;transition:all .12s;user-select:none;}
 .ni:hover{color:var(--t2);background:var(--bg);}
 .ni.on{color:var(--text);background:var(--bg);}
 .ni.on.n-overview{border-left-color:var(--ops);color:var(--ops);}
@@ -78,7 +78,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .ni.on.n-users{border-left-color:var(--user);color:var(--user);}
 .ni.on.n-agent-builds{border-left-color:var(--accelerate);color:var(--accelerate);}
 .ni.on.n-game-compliance{border-left-color:var(--ok);color:var(--ok);}
-.ni-ic{width:15px;height:15px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.ni-ic{width:14px;height:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
 .ng-hdr{display:flex;align-items:center;gap:7px;padding:10px 18px 4px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);}
 .ng-dot{width:7px;height:7px;border-radius:1.5px;flex-shrink:0;}
 
@@ -96,14 +96,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .mc-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--ops),var(--sense));}
 
 /* ── Main content ── */
-.main{padding:26px 28px;overflow-y:auto;background:var(--bg);}
+.main{padding:24px 28px;overflow-y:auto;background:var(--bg);}
 
 /* ── Sections ── */
 .sec{display:none;animation:fi .22s ease;}
 .sec.on{display:block;}
 @keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.ab-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.ab-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh);}
+.ab-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.ab-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh);min-width:0;overflow:hidden;}
 .ab-sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:4px;}
 .ab-sc{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;}
 .ab-sc-role{font-family:var(--fm);font-size:11px;font-weight:700;color:var(--accelerate);text-transform:capitalize;margin-bottom:8px;}
@@ -757,18 +757,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       <div id="ab-kpi-hitl" class="ab-kpi-card"></div>
     </div>
 
-    <!-- Token estimate widget — form populated by renderTokenEstimateWidget() -->
-    <div id="ab-estimate-widget" class="card mt-3" style="margin-top:16px;max-width:33.333%;min-width:300px">
-      <div id="ab-estimate-toggle" class="card-header cursor-pointer"
-           onclick="toggleEstimateWidget()"
-           style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border)">
-        <h6 class="mb-0" style="margin:0;font-size:13px;font-weight:600">Estimate Token Budget</h6>
-      </div>
-      <div id="ab-estimate-form" class="card-body" style="display:none;padding:14px">
-        <!-- populated by renderTokenEstimateWidget() -->
-      </div>
-      <div id="ab-estimate-result" class="card-body pt-0" style="padding:0 14px 14px"></div>
-    </div>
   </section>
 
   <!-- ══ GAME AI COMPLIANCE ══ -->
