@@ -440,12 +440,12 @@ skill file rule updated → next run improves → forecast multiplier calibrated
 - [x] `aggregate_metrics.py` runs without error and produces all 7 new metric sections
 - [x] `metrics.json` regenerated with new sections present and values plausible
 - [x] Token forecast endpoint returns JSON with per-role breakdown (`GET /api/experience/ops/token-forecast`)
-- [ ] Agent Builds page renders all 4 new panels without JS errors — **PENDING: browser verify after server restart (commits 79f1bbd + cd79570)**
-- [ ] Pre-run estimate widget submits and renders forecast inline — **PENDING: browser verify**
+- [x] Agent Builds page renders all 4 new panels without JS errors — verified 2026-05-14
+- [x] Pre-run estimate widget submits and renders forecast inline — verified 2026-05-14
 - [x] TechWriter skill prompts for human scores at close (added to all 3 skill files)
 - [x] Unit tests pass: 30/30 (backend endpoint, schema, complexity, confidence, contract)
 - [x] Both spec files updated — Spec_RITA_App.md + Spec_JS_Code.md + Spec-Agent-Workflow.md (commit 1790af4)
 
-**Status:** 8/10 DoD items complete. 2 pending browser verification next session.
-**Run log:** `riia-ai-org/agent-ops/runs/run-20260512-0730.json` — human_score null, needs scoring after verify.
+**Status:** 10/10 DoD items complete. Feature closed 2026-05-14.
+**Run log:** `riia-ai-org/agent-ops/runs/run-20260512-0730.json` — human_score recorded (accuracy 3, relevance 4, planning_ok false, csat 2, time_saved_hours 32.0).
 **DB:** seeded via `seed_agent_builds.py` (16 runs, 80 agent rows in `rita_output/rita.db`).

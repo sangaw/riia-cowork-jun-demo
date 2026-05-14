@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-12T10:47:35",
+  "generated_at": "2026-05-14T13:47:08",
   "total_runs": 16,
   "per_role": {
     "pm": {
@@ -275,10 +275,10 @@
     "abandonment_rate": 0.0
   },
   "quality": {
-    "avg_accuracy_score": null,
-    "avg_relevance_score": null,
-    "avg_csat": null,
-    "planning_accuracy_rate": null,
+    "avg_accuracy_score": 3.0,
+    "avg_relevance_score": 4.0,
+    "avg_csat": 2.0,
+    "planning_accuracy_rate": 0.0,
     "grounding_pass_rate": 0.893
   },
   "token_forecasting": {
@@ -324,7 +324,7 @@
     "avg_duration_minutes": 30,
     "avg_tokens_per_run": 35925,
     "avg_retry_count": 0.12,
-    "avg_time_saved_hours": null
+    "avg_time_saved_hours": 32.0
   },
   "reliability": {
     "error_recovery_rate": 0.692,

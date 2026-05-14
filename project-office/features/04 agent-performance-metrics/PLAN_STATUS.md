@@ -1,23 +1,18 @@
 # Agent Performance Metrics — Feature Plan Status
-**Last updated:** 2026-05-12
-**Overall status:** Code complete — 2 tasks pending (browser verify + human score)
+**Last updated:** 2026-05-14
+**Overall status:** Complete
 
 ---
 
-## Pending Tasks (next session)
+## Pending Tasks
 
-| # | Task | Who | Details |
-|---|---|---|---|
-| 1 | **Browser verify** | User | Restart server → hard-refresh Ops > Agent Builds. Confirm: 4 KPI cards have values, forecast chart renders bars, trend lines draw, run table has FC/HITL/Forecast Δ columns, estimate widget returns forecast on submit. Commits to pick up: `79f1bbd` (endpoint wiring) + `cd79570` (DB seed). |
-| 2 | **Human score run** | User + Engineer | Once panels verified, score run-20260512-0730. Provide: accuracy (1–5), relevance (1–5), planning ok (y/n), CSAT (1–5), hours saved (float). Engineer updates `riia-ai-org/agent-ops/runs/run-20260512-0730.json` human_score fields, re-runs `aggregate_metrics.py`, commits. |
+None — feature complete.
 
 ---
 
-## DoD Status (8/10)
+## DoD Status (10/10)
 
-See `Requirements.md` § 8 for full checklist. Two items remain:
-- [ ] Agent Builds page renders all 4 panels without JS errors
-- [ ] Pre-run estimate widget submits and renders forecast inline
+All items complete as of 2026-05-14.
 
 ---
 

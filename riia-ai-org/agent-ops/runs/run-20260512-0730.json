@@ -36,11 +36,11 @@
     "basis_runs": 2
   },
   "human_score": {
-    "accuracy": null,
-    "relevance": null,
-    "planning_ok": null,
-    "csat": null,
-    "time_saved_hours": null
+    "accuracy": 3,
+    "relevance": 4,
+    "planning_ok": false,
+    "csat": 2,
+    "time_saved_hours": 32.0
   },
   "agents": [
     {

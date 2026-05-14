@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-06 (Post-v1.0 — invest-game Phase 3)
+**Last updated:** 2026-05-14 (Post-v1.0 — Agent Performance Metrics closed)
 
 ---
 
@@ -119,3 +119,4 @@ _None_
 - 2026-05-06: invest-game Phase 3 complete — Ops Agent Builds verified, Game AI Compliance page added to Ops dashboard, auto-regenerate metrics.json on game complete, 18 ruff errors fixed, retrospective build run logs created, Spec_RITA_App.md + Spec_JS_Code.md updated. Commits: 8f7c738, a7a093d.
 - 2026-05-11: RITA page swap feature complete — Market Signals becomes Overview landing page (Phase 01, instrument selector); previous Overview content moved to "Model Overview" (Phase 03); nav.js _currentSection default changed; .inst-tab moved into sec-market-signals; 17 unit tests added (17/17 pass); Confluence Engineering page updated; merged at 666c16a.
 - 2026-05-12: Agent Performance Metrics feature built and merged (f23f74b, 79f1bbd, cd79570). 2 tasks pending. See `project-office/features/agent-performance-metrics/PLAN_STATUS.md`.
+- 2026-05-14: Agent Performance Metrics closed — 10/10 DoD. Browser verify passed. Human score recorded (accuracy 3, relevance 4, planning_ok false, csat 2, time_saved 32h). aggregate_metrics.py re-run. 3 threshold alerts fired: FC-001 ×7, engineer first-pass rate 44%, CSAT 2.0/5. program-roadmap.html retired from end-of-day routine.
