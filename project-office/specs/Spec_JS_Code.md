@@ -89,7 +89,46 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 ---
 
-## 5. Module Structure — `dashboard/js/invest-game/`
+## 5. Module Structure — `dashboard/js/ds/`
+
+**IMPORTANT: ds.html uses inline `<script>` blocks — NOT ES modules.** There is no `dashboard/js/ds/` directory. All JS logic lives inside `<script>` tags at the bottom of `riia-jun-release/dashboard/ds.html`.
+
+Script loading: Chart.js + annotation plugin loaded via CDN. Navigation via inline `show(section, el)` function. No `_sectionLoaders` registry — section switching is direct DOM show/hide.
+
+### Current ds.html Section Inventory
+
+| Section key (`data-s`) | Page title | Notes |
+|---|---|---|
+| `understand` | Understand Data | Landing page (active by default) |
+| `dashboard` | Dashboard | Build overview KPIs |
+| `pipeline` | — | Build pipeline steps |
+| `performance` | Performance | Backtest results — DDQN vs Buy & Hold |
+| `risk` | Risk View | VaR, drawdown, trade risk, regime confidence |
+| `trades` | Trade Journal | Entry/exit signals overlaid on price |
+| `explain` | Explainability | SHAP feature importance charts |
+| `scenarios` | Portfolio Scenarios | Scenario runner |
+| `training` | Training Metrics | Round-by-round model improvement |
+| `changelog` | Model Changelog | Model improvement log |
+| `observability` | Observability | Pipeline timing, drift detection, system health |
+| `mcp` | MCP Calls | Live log of Claude Desktop → RITA MCP invocations |
+| `export` | Export & DevOps | Download results, API health, deployment info |
+
+### Planned additions (Phases 03 / 04 — rita-app-improve feature)
+
+| Section key | Page title | Source | Status |
+|---|---|---|---|
+| `experiment-results` | Experiment Results | RITA Trade Journal content moved here (renamed) — distinct from existing `trades` section | Not yet in ds.html |
+| `trade-diagnostics` | Trade Diagnostics | RITA Trade Diagnostics content moved here — new section | Not yet in ds.html |
+| `model-train-progress` | Training Progress | RITA Monitor copy — distinct from existing `training` section | Not yet in ds.html |
+| `model-observability` | Observability | RITA Monitor copy — distinct from existing `observability` section | Not yet in ds.html |
+| `model-mcp` | MCP Calls | RITA Monitor copy — distinct from existing `mcp` section | Not yet in ds.html |
+| `model-audit` | Audit | RITA Monitor copy — new section | Not yet in ds.html |
+
+> ⚠ Existing ds.html sections (`trades`, `observability`, `mcp`, `training`) have DIFFERENT content from RITA's equivalents. All additions use distinct section keys with `model-` prefix or different names to avoid collision. Do not modify existing ds.html sections when implementing Phases 03/04.
+
+---
+
+## 5a. Module Structure — `dashboard/js/invest-game/`
 
 Standalone page (`invest-game.html`) — not mounted inside the Ops/RITA/FnO shells.
 
