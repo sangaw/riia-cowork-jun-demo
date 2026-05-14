@@ -170,14 +170,6 @@ export async function loadMarketSignals() {
       else                      alerts.push(mkAlert('err', 'EMA5 < EMA13 Bearish'));
     }
 
-    // Recent crossover (within last 5 bars)
-    if (lastCrossIdx >= 0 && (n - 1 - lastCrossIdx) <= 5) {
-      const ago = n - 1 - lastCrossIdx;
-      const label = ago === 0 ? 'today' : `${ago}d ago`;
-      if (lastCrossDir === 'up')   alerts.push(mkAlert('ok',  `Fresh Bull Cross EMA5×EMA13 (${label})`));
-      else                         alerts.push(mkAlert('err', `Fresh Bear Cross EMA5×EMA13 (${label})`));
-    }
-
     // Price vs EMA26 trend
     if (!isNaN(ema26)) {
       if   (price > ema26) alerts.push(mkAlert('ok',  `Price > EMA26 Uptrend`));
