@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-14T15:55:10",
-  "total_runs": 17,
+  "generated_at": "2026-05-14T19:40:58",
+  "total_runs": 18,
   "per_role": {
     "pm": {
       "run_count": 10,
@@ -50,6 +50,12 @@
       "run_count": 3,
       "pass": 1,
       "pass_with_warnings": 2,
+      "fail": 0
+    },
+    "ds": {
+      "run_count": 1,
+      "pass": 1,
+      "pass_with_warnings": 0,
       "fail": 0
     }
   },
@@ -301,9 +307,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.647,
-    "first_attempt_success_rate": 0.647,
-    "partial_completion_rate": 0.294,
+    "tsr": 0.667,
+    "first_attempt_success_rate": 0.667,
+    "partial_completion_rate": 0.278,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -311,7 +317,7 @@
     "avg_relevance_score": 4.0,
     "avg_csat": 2.0,
     "planning_accuracy_rate": 0.0,
-    "grounding_pass_rate": 0.897
+    "grounding_pass_rate": 0.894
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 4.1,
@@ -353,9 +359,9 @@
     }
   },
   "efficiency": {
-    "avg_duration_minutes": 33,
-    "avg_tokens_per_run": 44888,
-    "avg_retry_count": 0.12,
+    "avg_duration_minutes": 31,
+    "avg_tokens_per_run": 42438,
+    "avg_retry_count": 0.11,
     "avg_time_saved_hours": 32.0
   },
   "reliability": {
@@ -364,8 +370,8 @@
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.059,
-    "avg_corrections_per_run": 0.12,
+    "escalation_rate": 0.056,
+    "avg_corrections_per_run": 0.11,
     "total_hitl_events": 2
   },
   "agentic": {

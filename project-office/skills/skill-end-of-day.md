@@ -17,31 +17,61 @@ File: `riia-cowork-jun/PLAN_STATUS.md`
 
 ---
 
-## Step 2 — Update program-roadmap.html
+## Step 2 — Session Run Log + Metrics Refresh
 
-File: `project-office/program-roadmap.html`
+After every session that touches feature work, ensure Agent Build data is current.
 
-The file is large (~800 lines). Use targeted grep to find each section — **never read the full file**.
+### 2a — Write a session run log if needed
 
-### Fields to update
+Check whether today's work already has a run log in `riia-ai-org/agent-ops/runs/`:
+- If the session was a full `/enhance` run, the orchestrator already wrote one — skip 2a.
+- If the session was a direct fix, cosmetic change, or multi-session continuation **without** a `/enhance` run log, write one now at:
+  `riia-ai-org/agent-ops/runs/run-{YYYYMMDD-HHMM}.json`
 
-| Field | How to find it | What to change |
-|---|---|---|
-| Overall % progress bar | `grep -n "overall-progress\|overall.*%" program-roadmap.html` | Update `width: X%` and the label text |
-| Current sprint progress bar | `grep -n "sprint.*progress\|sprint-bar" program-roadmap.html` | Update `width: X%` |
-| Days Done KPI | `grep -n "days-done\|Days Done" program-roadmap.html` | Increment the counter |
-| Activity feed | `grep -n "activity-feed\|activity-log" program-roadmap.html` | Prepend one new `<li>` entry |
-| Sprint badges | `grep -n "badge.*sprint\|sprint.*badge\|In Progress" program-roadmap.html` | Flip `In Progress` → `Done` if sprint just finished |
-
-### Activity feed entry format
-```html
-<li><strong>YYYY-MM-DD</strong> — Day N: [brief description of what was delivered]</li>
+Run log format for direct/manual work:
+```json
+{
+  "run_id": "{YYYYMMDD-HHMM}",
+  "app": "{rita|fno|ops|ds}",
+  "request": "{one-line description of what was done}",
+  "skill_file": "n/a",
+  "agents": [
+    {
+      "role": "engineer",
+      "status": "pass",
+      "steps_required": 3,
+      "steps_completed": 3,
+      "adherence_score": 1.0,
+      "token_estimate": {rough estimate},
+      "grounding_checks": {
+        "branch_created": false,
+        "code_changed": true,
+        "spec_updated": {true|false},
+        "ruff_passed": true,
+        "contract_matches_architect": true
+      },
+      "failure_modes": [],
+      "notes": "{what was changed and why, commit hash}"
+    }
+  ],
+  "overall_status": "pass",
+  "total_tokens_estimated": {same as token_estimate},
+  "duration_minutes": {estimate},
+  "branch": "master",
+  "merge_status": "merged",
+  "merge_commit": "{short hash from git log}"
+}
 ```
-Prepend to the top of the feed list — newest entry first.
 
-### Progress % calculation
-- Overall: `(days_completed / 42) * 100` — project is 42 days total
-- Sprint bar: `(sprint_days_done / sprint_total_days) * 100`
+### 2b — Regenerate metrics.json
+
+Always run this after writing or confirming a run log:
+```bash
+# Run from workspace root: riia-cowork-jun/
+python riia-ai-org/agent-ops/aggregate_metrics.py
+```
+
+Capture stdout. If any `[ALERT]` lines appear, note them in the session summary. The Agent Builds dashboard reads `metrics.json` on next load — no further action needed.
 
 ---
 
@@ -105,7 +135,8 @@ git log --oneline -3   # confirm commit appears
 
 ## Definition of Done
 
-- [ ] PLAN_STATUS.md: today's row is `[x]`, notes column filled, Last updated date correct
-- [ ] program-roadmap.html: overall %, sprint %, Days Done KPI, and activity feed all updated
-- [ ] Confluence sprint board: today's row shows `Done`, script ran without HTTP errors
+- [ ] PLAN_STATUS.md: notes entry added for today's work, Last updated date correct
+- [ ] Session run log: run log written to `riia-ai-org/agent-ops/runs/` (or confirmed existing from /enhance)
+- [ ] aggregate_metrics.py: run without errors, metrics.json refreshed
+- [ ] Confluence sprint board: script ran without HTTP errors (or skipped with blocker noted if no script exists)
 - [ ] Git: clean working tree, commit message matches format, no untracked files left
