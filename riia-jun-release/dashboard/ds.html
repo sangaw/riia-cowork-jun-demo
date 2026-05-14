@@ -364,6 +364,15 @@ tr:hover td{background:var(--surface2);}
       <span class="nav-icon">📥</span> Export &amp; DevOps
     </div>
   </div>
+  <div class="nav-section">
+    <div class="nav-label">Analyse</div>
+    <div class="nav-item c-build" data-s="experiment-results" onclick="show('experiment-results',this)">
+      <span class="nav-icon">📋</span> Experiment Results
+    </div>
+    <div class="nav-item c-build" data-s="trade-diagnostics" onclick="show('trade-diagnostics',this)">
+      <span class="nav-icon">🔎</span> Trade Diagnostics
+    </div>
+  </div>
   <div class="sidebar-footer">
     <div class="lbl" id="sb-data-info">Data: checking…</div>
     <div class="lbl" style="margin-top:2px" id="sb-model-info">Model: checking…</div>
@@ -1189,6 +1198,29 @@ tr:hover td{background:var(--surface2);}
   <div id="sc-result"></div>
 </div>
 
+<!-- ════════ EXPERIMENT RESULTS ════════ -->
+<div id="s-experiment-results" class="section">
+  <div class="page-hdr">
+    <div>
+      <div class="page-title">Experiment Results</div>
+      <div class="page-sub">Trade journal — executed trades and allocation timeline across training phases</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="downloadExperimentResults()">Download CSV</button>
+  </div>
+  <div id="exp-results-wrap"><div class="empty">Loading…</div></div>
+</div>
+
+<!-- ════════ TRADE DIAGNOSTICS ════════ -->
+<div id="s-trade-diagnostics" class="section">
+  <div class="page-hdr">
+    <div>
+      <div class="page-title">Trade Diagnostics</div>
+      <div class="page-sub">Entry/exit analysis and decision quality — allocation changes with market signals</div>
+    </div>
+  </div>
+  <div id="trade-diag-wrap"><div class="empty">Loading…</div></div>
+</div>
+
 </main>
 </div><!-- /shell -->
 
@@ -1720,7 +1752,9 @@ function show(sId, el) {
     trades:loadTrades, explain:loadExplain, training:loadTraining,
     observability:loadObservability, mcp:loadMCP,
     changelog:loadChangelog, export:loadExport,
-    scenarios:loadScenariosPage
+    scenarios:loadScenariosPage,
+    'experiment-results':loadExperimentResults,
+    'trade-diagnostics':loadTradeDiagnostics,
   };
   if (loaders[sId]) loaders[sId]();
 }
@@ -3092,6 +3126,248 @@ async function init() {
   loadUnderstand();  // default landing section
 }
 init();
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYSE — EXPERIMENT RESULTS
+// ═══════════════════════════════════════════════════════════════
+let _expRows = [];
+
+async function loadExperimentResults() {
+  const wrap = document.getElementById('exp-results-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    const instrument = (_activeInst?.id) || localStorage.getItem('ritaInstrument') || 'NIFTY';
+    const [rows, history, perf, split] = await Promise.all([
+      api(`/api/v1/risk-timeline?phase=all&instrument=${instrument}`),
+      api(`/api/v1/training-history?instrument=${instrument}`).catch(() => []),
+      api('/api/v1/performance-summary').catch(() => null),
+      api(`/api/v1/training-split?instrument=${instrument}`).catch(() => null),
+    ]);
+    if (!rows || !rows.length) {
+      wrap.innerHTML = '<div class="empty">No trade records found — run the pipeline first.</div>';
+      return;
+    }
+    _expRows = rows;
+    const runs = Array.isArray(history) ? history : [];
+    const latest = runs[0];
+    const _fv = v => (v != null && !isNaN(parseFloat(v))) ? parseFloat(v).toFixed(2) + '%' : '—';
+    const _fs = v => (v != null && !isNaN(parseFloat(v))) ? parseFloat(v).toFixed(3) : '—';
+    const _fi = v => (v != null && !isNaN(parseInt(v, 10))) ? parseInt(v, 10).toLocaleString() : '—';
+
+    const phaseColors = {
+      Train:      { color: '#1565C0', bg: 'rgba(21,101,192,0.10)' },
+      Validation: { color: '#6A1B9A', bg: 'rgba(106,27,154,0.10)' },
+      Backtest:   { color: '#2E7D32', bg: 'rgba(46,125,50,0.12)'  },
+    };
+
+    // KPI strip
+    const btRows = rows.filter(r => r.phase === 'Backtest');
+    const cfgTr = phaseColors['Train'];
+    const cfgVa = phaseColors['Validation'];
+    const cfgBt = phaseColors['Backtest'];
+    const kpiHtml = `
+      <div class="kpi-row kpi-row-3" style="margin-bottom:16px">
+        <div class="kpi" style="border-top:3px solid ${cfgTr.color};background:${cfgTr.bg}">
+          <div class="kpi-label">Train — Sharpe / MDD</div>
+          <div class="kpi-value">${_fs(latest?.train_sharpe)} / ${_fv(latest?.train_mdd_pct)}</div>
+          <div class="kpi-delta">${_fi(latest?.train_trades)} trades · Return ${_fv(latest?.train_return_pct)}</div>
+        </div>
+        <div class="kpi" style="border-top:3px solid ${cfgVa.color};background:${cfgVa.bg}">
+          <div class="kpi-label">Validation — Sharpe / MDD</div>
+          <div class="kpi-value">${_fs(latest?.val_sharpe)} / ${_fv(latest?.val_mdd_pct)}</div>
+          <div class="kpi-delta">${_fi(latest?.val_trades)} trades · Return ${_fv(latest?.val_return_pct)}</div>
+        </div>
+        <div class="kpi" style="border-top:3px solid ${cfgBt.color};background:${cfgBt.bg}">
+          <div class="kpi-label">Backtest — Sharpe / MDD</div>
+          <div class="kpi-value">${perf ? _fs(perf.sharpe_ratio) : '—'} / ${perf ? _fv(perf.max_drawdown_pct) : '—'}</div>
+          <div class="kpi-delta">${btRows.length} days · Return ${perf ? _fv(perf.portfolio_total_return_pct) : '—'}</div>
+        </div>
+      </div>`;
+
+    // Table
+    const tableHtml = `
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">Allocation Timeline</span><span class="card-sub">${rows.length} rows</span></div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Phase</th><th>Allocation</th>
+              <th>Portfolio (norm)</th><th>Drawdown %</th><th>Regime</th>
+            </tr></thead>
+            <tbody>${rows.map(r => {
+              const cfg = phaseColors[r.phase] || {};
+              const portPct = r.portfolio_value_norm != null ? ((parseFloat(r.portfolio_value_norm) - 1) * 100).toFixed(2) + '%' : '—';
+              const dd = r.current_drawdown_pct != null ? parseFloat(r.current_drawdown_pct).toFixed(2) + '%' : '—';
+              const ddStyle = parseFloat(r.current_drawdown_pct || 0) < -5 ? 'color:var(--danger);font-weight:600' : '';
+              const alloc = parseFloat(r.allocation || 0) * 100;
+              const allocBadge = alloc === 0 ? '<span class="badge warn">HOLD 0%</span>'
+                : alloc === 50 ? '<span class="badge run">HALF 50%</span>'
+                : alloc >= 99 ? '<span class="badge ok">FULL 100%</span>'
+                : `<span class="badge neu">${alloc.toFixed(0)}%</span>`;
+              return `<tr>
+                <td class="td-mono">${r.date || '—'}</td>
+                <td><span style="font-size:10px;font-weight:700;color:${cfg.color || ''}">${r.phase || '—'}</span></td>
+                <td>${allocBadge}</td>
+                <td class="td-mono">${portPct}</td>
+                <td class="td-mono" style="${ddStyle}">${dd}</td>
+                <td style="font-size:11px;color:var(--t3)">${r.regime || '—'}</td>
+              </tr>`;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+
+    wrap.innerHTML = kpiHtml + tableHtml;
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">Error loading experiment results: ${e.message}</div>`;
+  }
+}
+
+function downloadExperimentResults() {
+  if (!_expRows.length) { alert('No data loaded — navigate to Experiment Results first.'); return; }
+  const cols = ['date', 'phase', 'allocation', 'portfolio_value_norm', 'current_drawdown_pct', 'regime'];
+  const header = cols.join(',');
+  const body = _expRows.map(r => cols.map(c => r[c] ?? '').join(',')).join('\n');
+  const ts = new Date().toISOString().slice(0, 19).replace(/[T:]/g, c => c === 'T' ? '_' : c).replace(/-/g, '');
+  const blob = new Blob([header + '\n' + body], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `experiment_results_${ts}.csv`; a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANALYSE — TRADE DIAGNOSTICS
+// ═══════════════════════════════════════════════════════════════
+async function loadTradeDiagnostics() {
+  const wrap = document.getElementById('trade-diag-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    const [bRows, mRows] = await Promise.all([
+      api('/api/v1/backtest-daily'),
+      api('/api/v1/market-signals?timeframe=daily&periods=2000'),
+    ]);
+    if (!bRows?.length) {
+      wrap.innerHTML = '<div class="empty">No backtest data found — run the pipeline first.</div>';
+      return;
+    }
+
+    // Build date→signal lookup
+    const sigMap = {};
+    (mRows || []).forEach(r => { if (r.date) sigMap[r.date.slice(0, 10)] = r; });
+
+    // Detect allocation-change rows
+    const changes = [];
+    for (let i = 1; i < bRows.length; i++) {
+      const prev = bRows[i - 1], cur = bRows[i];
+      const pa = parseFloat(prev.allocation) || 0;
+      const ca = parseFloat(cur.allocation) || 0;
+      if (Math.abs(ca - pa) < 0.01) continue;
+      const sig = sigMap[cur.date.slice(0, 10)] || {};
+      const close = parseFloat(cur.close_price) || 0;
+      const atrRaw = parseFloat(sig.atr_14);
+      const atrPct = (!isNaN(atrRaw) && close) ? (atrRaw / close * 100) : NaN;
+      const type = ca > pa ? 'open' : ca === 0 ? 'close' : 'adjust';
+      changes.push({
+        idx: i, date: cur.date,
+        fromAlloc: pa, toAlloc: ca, type, close,
+        rsi: parseFloat(sig.rsi_14), macd: parseFloat(sig.macd),
+        macdSig: parseFloat(sig.macd_signal), atrPct,
+        trend: parseFloat(sig.trend_score), bbPct: parseFloat(sig.bb_pct_b),
+        holdDays: null, returnPct: null,
+      });
+    }
+
+    // Pair each open/adjust with the next change
+    for (let i = 0; i < changes.length; i++) {
+      const c = changes[i];
+      if (c.type === 'close') continue;
+      const next = changes[i + 1];
+      if (next) {
+        c.holdDays = next.idx - c.idx;
+        const exitClose = parseFloat(bRows[next.idx].close_price) || 0;
+        c.returnPct = c.close && exitClose ? (exitClose / c.close - 1) * c.toAlloc * 100 : null;
+      }
+    }
+
+    // KPIs
+    const entries  = changes.filter(c => c.type !== 'close');
+    const withRet  = entries.filter(c => c.returnPct !== null);
+    const wins     = withRet.filter(c => c.returnPct > 0);
+    const avgHold  = withRet.length ? (withRet.reduce((s, c) => s + (c.holdDays || 0), 0) / withRet.length) : 0;
+    const avgRet   = withRet.length ? (withRet.reduce((s, c) => s + c.returnPct, 0) / withRet.length) : 0;
+    const wr       = withRet.length ? (wins.length / withRet.length * 100) : 0;
+
+    const wrColor  = wr >= 50 ? 'var(--build)' : 'var(--danger)';
+    const retColor = avgRet >= 0 ? 'var(--build)' : 'var(--danger)';
+
+    const kpiHtml = `
+      <div class="kpi-row kpi-row-4" style="margin-bottom:16px">
+        <div class="kpi"><div class="kpi-label">Total Decisions</div><div class="kpi-value">${entries.length}</div></div>
+        <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-value" style="color:${wrColor}">${wr.toFixed(0)}%</div><div class="kpi-delta">${wins.length} of ${withRet.length} closed</div></div>
+        <div class="kpi"><div class="kpi-label">Avg Hold</div><div class="kpi-value">${avgHold.toFixed(1)}d</div></div>
+        <div class="kpi"><div class="kpi-label">Avg Return</div><div class="kpi-value" style="color:${retColor}">${(avgRet >= 0 ? '+' : '') + avgRet.toFixed(2)}%</div></div>
+      </div>`;
+
+    // Table
+    const fmtAlloc = v => `${Math.round(v * 100)}%`;
+    const fmtRsi   = v => isNaN(v) ? '—' : `<span style="color:${v > 70 ? 'var(--danger)' : v < 30 ? 'var(--build)' : 'var(--t2)'}">${v.toFixed(1)}</span>`;
+    const fmtAtr   = v => isNaN(v) ? '—' : `<span style="color:${v > 1.5 ? 'var(--danger)' : v < 0.8 ? 'var(--build)' : 'var(--t2)'}">${v.toFixed(2)}%</span>`;
+    const fmtTrend = v => isNaN(v) ? '—' : `<span style="color:${v > 0.2 ? 'var(--build)' : v < -0.2 ? 'var(--danger)' : 'var(--t2)'}">${v.toFixed(2)}</span>`;
+    const fmtBb    = v => isNaN(v) ? '—' : v.toFixed(2);
+    const fmtRet   = (v, type) => {
+      if (type === 'close') return '<span style="color:var(--t3)">exit</span>';
+      if (v === null) return '<span style="color:var(--t3)">open</span>';
+      const rc = v >= 0 ? 'var(--build)' : 'var(--danger)';
+      return `<span style="color:${rc};font-weight:600">${v >= 0 ? '+' : ''}${v.toFixed(2)}%</span>`;
+    };
+    const changeTag = c => {
+      if (c.type === 'open')   return `<span style="font-family:var(--fm);font-size:11px;padding:2px 7px;border-radius:3px;background:var(--build-bg);color:var(--build)">▲ ${fmtAlloc(c.fromAlloc)}→${fmtAlloc(c.toAlloc)}</span>`;
+      if (c.type === 'close')  return `<span style="font-family:var(--fm);font-size:11px;padding:2px 7px;border-radius:3px;background:var(--danger-bg);color:var(--danger)">▼ ${fmtAlloc(c.fromAlloc)}→${fmtAlloc(c.toAlloc)}</span>`;
+      return `<span style="font-family:var(--fm);font-size:11px;padding:2px 7px;border-radius:3px;background:var(--surface2);color:var(--t2)">⟳ ${fmtAlloc(c.fromAlloc)}→${fmtAlloc(c.toAlloc)}</span>`;
+    };
+
+    const tableHtml = `
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Allocation Changes with Market Signals</span>
+          <span class="card-sub">${changes.length} changes · ${entries.length} entries/adjustments · ${changes.length - entries.length} exits</span>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Date</th><th>Decision</th><th>Close</th>
+              <th>RSI</th><th>ATR%</th><th>Trend</th><th>BB%</th>
+              <th>Hold</th><th>Return</th>
+            </tr></thead>
+            <tbody>${changes.map((c, i) => {
+              const rowBg = c.returnPct != null && c.type !== 'close'
+                ? (c.returnPct >= 0 ? 'background:rgba(26,107,60,0.04)' : 'background:rgba(155,28,28,0.04)') : '';
+              return `<tr style="${rowBg}">
+                <td style="font-family:var(--fm);color:var(--t3)">${i + 1}</td>
+                <td style="font-family:var(--fm)">${c.date}</td>
+                <td>${changeTag(c)}</td>
+                <td style="font-family:var(--fm)">${c.close ? c.close.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}</td>
+                <td>${fmtRsi(c.rsi)}</td>
+                <td>${fmtAtr(c.atrPct)}</td>
+                <td>${fmtTrend(c.trend)}</td>
+                <td style="font-family:var(--fm)">${fmtBb(c.bbPct)}</td>
+                <td style="font-family:var(--fm)">${c.holdDays !== null ? c.holdDays : '—'}</td>
+                <td>${fmtRet(c.returnPct, c.type)}</td>
+              </tr>`;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+
+    wrap.innerHTML = kpiHtml + tableHtml;
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty">Error loading diagnostics: ${e.message}</div>`;
+  }
+}
 </script>
 
 <!-- ── Chart expand modal ───────────────────────────────── -->

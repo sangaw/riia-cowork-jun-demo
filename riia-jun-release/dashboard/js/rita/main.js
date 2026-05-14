@@ -20,8 +20,6 @@ import { show, warmupChat, _sectionLoaders, getCurrentSection } from './nav.js';
 import { loadHealth, loadPerfSummary, loadDrift, loadProgress } from './health.js';
 import { switchMsTab, loadMarketSignals, loadGoalHint, loadGeoPanels } from './market-signals.js';
 import { loadPerformance } from './performance.js';
-import { loadTrades, downloadTradeJournal } from './trades.js';
-import { loadDiagnostics } from './diagnostics.js';
 import { loadExplain } from './explainability.js';
 import { loadRisk } from './risk.js';
 import { loadTrainProgress } from './training.js';
@@ -45,8 +43,6 @@ _sectionLoaders.scenarios         = loadScenarios;
 _sectionLoaders['agent-panel']    = loadAgentPanel;
 _sectionLoaders['ai-compliance']  = loadAiCompliance;
 _sectionLoaders.performance       = loadPerformance;
-_sectionLoaders.trades            = loadTrades;
-_sectionLoaders.diagnostics       = loadDiagnostics;
 _sectionLoaders.explain           = loadExplain;
 _sectionLoaders.risk              = loadRisk;
 _sectionLoaders['train-progress'] = loadTrainProgress;
@@ -61,7 +57,6 @@ _sectionLoaders.learnings         = loadLearnings;
 window.show               = show;
 window.selectInstrumentTab = selectInstrumentTab;
 window.switchMsTab        = switchMsTab;
-window.downloadTradeJournal = downloadTradeJournal;
 window.runGoal            = runGoal;
 window.runMarket          = runMarket;
 window.runStrategy        = runStrategy;
@@ -85,8 +80,6 @@ window.loadMarketSignals  = loadMarketSignals;
 window.loadGoalHint       = loadGoalHint;
 window.loadGeoPanels      = loadGeoPanels;
 window.loadPerformance    = loadPerformance;
-window.loadTrades         = loadTrades;
-window.loadDiagnostics    = loadDiagnostics;
 window.loadExplain        = loadExplain;
 window.loadRisk           = loadRisk;
 window.loadTrainProgress  = loadTrainProgress;
@@ -128,7 +121,7 @@ async function selectInstrumentTab(id) {
     if (data) { updateChips(data.chips); showAlerts(data.alerts); }
   }
   await loadActiveInstrument();
-  const instrumentSections = new Set(['trades', 'performance', 'scenarios', 'risk', 'market-signals', 'diagnostics', 'explain', 'technical-analysis', 'learnings']);
+  const instrumentSections = new Set(['performance', 'scenarios', 'risk', 'market-signals', 'explain', 'technical-analysis', 'learnings']);
   await Promise.all([
     loadHealth(), loadPerfSummary(), loadDrift(), loadProgress(), loadMarketSignals(),
     ...(instrumentSections.has(section) && _sectionLoaders[section] ? [_sectionLoaders[section]()] : []),

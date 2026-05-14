@@ -342,20 +342,14 @@ tr:hover td{background:var(--surface2);}
 
   <div class="nav-section">
     <div class="nav-label" style="color:var(--run)">Phase 03 — Analyse</div>
+    <div class="nav-item p03" data-s="home" onclick="show('home',this)">
+      <span class="nav-icon">◈</span> Model Overview
+    </div>
     <div class="nav-item p03" data-s="performance" onclick="show('performance',this)">
       <span class="nav-icon">◎</span> Performance
     </div>
-    <div class="nav-item p03" data-s="trades" onclick="show('trades',this)">
-      <span class="nav-icon">◎</span> Trade Journal
-    </div>
-    <div class="nav-item p03" data-s="diagnostics" onclick="show('diagnostics',this)">
-      <span class="nav-icon">◎</span> Trade Diagnostics
-    </div>
     <div class="nav-item p03" data-s="explain" onclick="show('explain',this)">
       <span class="nav-icon">◎</span> Explainability
-    </div>
-    <div class="nav-item p03" data-s="home" onclick="show('home',this)">
-      <span class="nav-icon">◈</span> Model Overview
     </div>
   </div>
 
@@ -915,86 +909,6 @@ tr:hover td{background:var(--surface2);}
     <div class="chart-box"><canvas id="chart-drawdown"></canvas></div>
   </div>
 
-</section>
-
-<!-- ════════════════ TRADE JOURNAL ════════════════ -->
-<section class="section" id="sec-trades">
-  <div class="page-hdr">
-    <div><div class="page-title">Trade Journal</div><div class="page-sub">Allocation decisions across Train · Validation · Backtest periods</div></div>
-    <div class="hdr-actions">
-      <button class="btn btn-ghost btn-sm" id="btn-tj-download" onclick="downloadTradeJournal()" style="display:none">⬇ Snapshot</button>
-      <button class="btn btn-ghost btn-sm" onclick="loadTrades()">↺ Reload</button>
-    </div>
-  </div>
-
-  <!-- Phase legend + model info -->
-  <div style="margin-bottom:12px">
-    <div style="display:flex;gap:20px;align-items:center;font-size:12px;flex-wrap:nowrap;white-space:nowrap">
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#1565C0;flex-shrink:0;display:inline-block"></span><span id="tj-label-train">Train</span></span>
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#6A1B9A;flex-shrink:0;display:inline-block"></span><span id="tj-label-val">Validation</span></span>
-      <span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:2px;background:#2E7D32;flex-shrink:0;display:inline-block"></span><span id="tj-label-bt">Backtest</span></span>
-      <span style="color:var(--border,#ddd);margin:0 4px">|</span>
-      <div id="trades-model-info" style="display:flex;gap:14px;align-items:center;font-size:11px;color:var(--t2);flex-wrap:nowrap;white-space:nowrap"></div>
-    </div>
-  </div>
-
-  <!-- Phase summary KPIs -->
-  <div id="trades-kpi-strip" style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px;margin-bottom:14px"></div>
-
-  <div class="chart-wrap">
-    <div class="chart-title">Allocation Over Time — all phases (0% / 50% / 100% in Nifty)</div>
-    <div class="chart-box"><canvas id="chart-allocation"></canvas></div>
-  </div>
-
-  <div class="tbl-wrap" id="trades-table-wrap">
-    <div class="empty">Loading...</div>
-  </div>
-</section>
-
-<!-- ════════════════ TRADE DIAGNOSTICS ════════════════ -->
-<section class="section" id="sec-diagnostics">
-  <div class="page-hdr">
-    <div>
-      <div class="page-title">Trade Diagnostics</div>
-      <div class="page-sub">Every allocation change — market context at entry, hold duration, outcome</div>
-    </div>
-    <div class="hdr-actions">
-      <button class="btn btn-ghost btn-sm" onclick="loadDiagnostics()">↺ Reload</button>
-    </div>
-  </div>
-
-  <div class="kpi-row-4" id="diag-kpis">
-    <div class="kpi"><div class="kpi-label">Allocation Changes</div><div class="kpi-value neu" id="diag-total">—</div><div class="kpi-delta">entries + adjustments</div></div>
-    <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-value neu" id="diag-wr">—</div><div class="kpi-delta" id="diag-wr-sub">closed trades</div></div>
-    <div class="kpi"><div class="kpi-label">Avg Hold</div><div class="kpi-value neu" id="diag-hold">—</div><div class="kpi-delta">days per position</div></div>
-    <div class="kpi"><div class="kpi-label">Avg Return / Trade</div><div class="kpi-value neu" id="diag-ret">—</div><div class="kpi-delta">allocation-weighted</div></div>
-  </div>
-
-  <div class="chart-wrap">
-    <div class="chart-title">NIFTY Price &amp; Allocation — backtest period</div>
-    <div class="chart-box" style="height:200px"><canvas id="chart-diag-price"></canvas></div>
-  </div>
-
-  <div class="card" style="margin-top:18px">
-    <div class="card-hdr">
-      <span class="card-title">Allocation Change Log</span>
-      <span class="card-sub" id="diag-table-sub">All entries, exits &amp; adjustments · backtest period</span>
-    </div>
-    <div class="card-body" style="padding:0">
-      <div class="tbl-wrap">
-        <table id="diag-table">
-          <thead>
-            <tr>
-              <th>#</th><th>Date</th><th>Change</th><th>NIFTY</th>
-              <th>RSI</th><th>ATR%</th><th>Trend</th><th>BB %B</th>
-              <th>Hold (d)</th><th>Return</th>
-            </tr>
-          </thead>
-          <tbody id="diag-tbody"><tr><td colspan="10" class="empty">Loading…</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </section>
 
 <!-- ════════════════ EXPLAINABILITY ════════════════ -->
