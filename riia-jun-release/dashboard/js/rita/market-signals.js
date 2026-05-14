@@ -205,6 +205,12 @@ export async function loadMarketSignals() {
   }
 }
 
+function _geoSignalClass(signal) {
+  if (signal === 'bullish') return 'ok';
+  if (signal === 'bearish') return 'err';
+  return 'neu';
+}
+
 export async function loadGeoPanels() {
   const container = document.getElementById('geo-panels');
   if (!container) return;
@@ -213,25 +219,30 @@ export async function loadGeoPanels() {
     if (!res.ok) throw new Error(res.statusText);
     const data = await res.json();
     if (!data.regions || data.regions.length === 0) {
-      container.innerHTML = '<p class="no-data">No geography data configured</p>';
+      container.innerHTML = '<div class="card"><div class="empty">No geography data configured</div></div>';
       return;
     }
     container.innerHTML = data.regions.map(r => `
-      <div class="geo-panel">
-        <h4>${r.flag || ''} ${r.region}</h4>
-        <table class="geo-table">
-          ${r.instruments.map(i => `
-            <tr>
-              <td>${i.name}</td>
-              <td>${i.close != null ? i.close.toFixed(2) : '—'}</td>
-              <td>${i.daily_return_pct != null ? i.daily_return_pct.toFixed(2) + '%' : '—'}</td>
-              <td><span class="badge badge-${i.signal}">${i.signal}</span></td>
-            </tr>
-          `).join('')}
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">${r.flag || ''} ${r.region}</span>
+        </div>
+        <table>
+          <thead><tr><th>Instrument</th><th>Close</th><th>Return</th><th>Signal</th></tr></thead>
+          <tbody>
+            ${r.instruments.map(i => `
+              <tr>
+                <td>${i.name}</td>
+                <td class="td-mono">${i.close != null ? i.close.toFixed(2) : '—'}</td>
+                <td class="td-mono">${i.daily_return_pct != null ? (i.daily_return_pct > 0 ? '+' : '') + i.daily_return_pct.toFixed(2) + '%' : '—'}</td>
+                <td><span class="badge ${_geoSignalClass(i.signal)}">${i.signal}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
         </table>
       </div>
     `).join('');
   } catch (e) {
-    container.innerHTML = '<p class="no-data">—</p>';
+    container.innerHTML = '<div class="card"><div class="empty">—</div></div>';
   }
 }
