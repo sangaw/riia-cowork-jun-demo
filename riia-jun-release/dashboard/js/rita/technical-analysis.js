@@ -37,7 +37,7 @@ export async function loadTechnicalAnalysis() {
 
   // ── Commentary panel ────────────────────────────────────
   try {
-    const commentary = await api(`/api/experience/rita/technical-commentary?instrument=${inst}`);
+    const commentary = await api(`/api/v1/experience/rita/technical-commentary?instrument=${inst}`);
     if (commentary) {
       _renderCommentary(commentary);
     } else {
