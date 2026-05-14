@@ -299,13 +299,21 @@ Read `{BRIEF_PATH}` — find the `[Engineer] Implementation Log` section. Check:
 | Branch present | Not empty, not "master" |
 | Commit hash present | Not empty |
 | Files changed listed | At least 2 files |
+| Files count vs Architect | `N_actual >= N_expected × 0.7` |
 | Ruff result | "passed" |
 | Spec updated | "yes" |
+
+**Files-count cross-check (FC-PARTIAL-IMPL gate):**
+- Count rows in the Architect's "Files to touch" table from `{BRIEF_PATH}` → `N_expected`
+- Count files in the Engineer's "Files changed" list → `N_actual`
+- If `N_actual < N_expected × 0.7`: halt and report:
+  > `⚠ Engineer delivered {N_actual} files but Architect listed {N_expected}. Gap: {list missing files}. Do not advance to QA — send Engineer back to complete the missing files.`
+  Re-invoke the Engineer agent with the missing files list before proceeding.
 
 - If **branch is master**: report error and stop — `Engineer agent wrote to master instead of a worktree branch. Do not proceed. Check worktree isolation.`
 - If **commit hash missing**: report error and stop — `Engineer agent did not commit. Changes may be lost. Check worktree and commit manually.`
 - If **ruff failed**: report as warning — `⚠ Engineer Agent — ruff errors present. Review before merging.` — add `"FC-003"` to Engineer failure_modes
-- If **spec not updated**: report as warning — `⚠ Engineer Agent — spec not updated. Add rule to {SKILL_FILE}: "Always update spec in same task."` — add `"FC-001"` to Engineer failure_modes
+- If **spec not updated**: report as warning — `⚠ Engineer Agent — spec not updated.` — add `"FC-001"` to Engineer failure_modes
 - Otherwise: report `✓ Engineer Agent — implementation complete. Branch: {branch}. Commit: {hash}`
 
 Set `RUN_BRANCH` = branch name from the Engineer section.

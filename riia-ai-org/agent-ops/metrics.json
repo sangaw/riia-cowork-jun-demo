@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-14T13:47:08",
+  "generated_at": "2026-05-14T14:15:10",
   "total_runs": 16,
   "per_role": {
     "pm": {
@@ -171,8 +171,8 @@
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
-      "improvement_applied": null,
-      "before_first_pass_rate": null,
+      "improvement_applied": "FC-001",
+      "before_first_pass_rate": 0.444,
       "after_first_pass_rate": null
     },
     {
@@ -188,8 +188,8 @@
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
-      "improvement_applied": null,
-      "before_first_pass_rate": null,
+      "improvement_applied": "FC-001",
+      "before_first_pass_rate": 0.444,
       "after_first_pass_rate": null
     },
     {
@@ -205,8 +205,14 @@
           "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
-      "improvement_applied": null,
-      "before_first_pass_rate": null,
+      "improvement_applied": "FC-001",
+      "before_first_pass_rate": 0.444,
+      "after_first_pass_rate": null
+    },
+    {
+      "skill_file": ".claude/commands/enhance.md",
+      "improvement_applied": "FC-PARTIAL-IMPL",
+      "before_first_pass_rate": 0.444,
       "after_first_pass_rate": null
     }
   ],

@@ -148,15 +148,20 @@ window.loadMyFeature = loadMyFeature;
 ```
 
 ### Step 7 — Update the Spec
+
+> **STOP — do not run `git add` until this step is complete.**
+
 File: `project-office/specs/Spec_RITA_App.md`
 - Add the new endpoint to the Portfolio tier table in Section 3
 - Add the new JS module to `Spec_JS_Code.md` Section 3 (FnO module structure)
 
-**This step is mandatory. Do not mark the task complete without it.**
+Open each spec file, make the edit, save, confirm the line is present — then proceed to commit. Skipping this step is logged as FC-001 and reduces the engineer first-pass rate.
 
 ### Step 8 — TechWriter: Confluence + Human Score Prompt
 
-After updating Confluence and confirming spec files, emit the following prompt to the user:
+> **STOP — before closing the run, confirm `Spec_RITA_App.md` and `Spec_JS_Code.md` reflect the new endpoint and module. If the Engineer skipped Step 7, do it now before emitting the human score prompt.**
+
+After confirming spec files and updating Confluence, emit the following prompt to the user:
 
 ```
 === Agent Run Complete — Please score this run ===

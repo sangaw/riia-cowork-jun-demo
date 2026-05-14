@@ -348,17 +348,37 @@ def main() -> None:
     # script_dir = riia-ai-org/agent-ops/  →  parent.parent = riia-cowork-jun/
     repo_root = script_dir.parent.parent
 
+    output_path = script_dir / "metrics.json"
     runs = load_runs(runs_dir)
 
     if not runs:
         log.info("No run-*.json files found in runs/ — writing empty metrics.")
 
     skill_version_history = compute_skill_version_history(repo_root)
-    # Add optional fields to each skill_version_history entry if not already present
+    # Preserve improvement fields from existing metrics.json so manual entries survive re-runs
+    existing_improvements = {}
+    if output_path.exists():
+        try:
+            with open(output_path) as f:
+                existing = json.load(f)
+            for entry in existing.get("skill_version_history", []):
+                key = entry.get("skill_file")
+                if key:
+                    existing_improvements[key] = {
+                        k: entry[k] for k in ("improvement_applied", "before_first_pass_rate", "after_first_pass_rate") if k in entry
+                    }
+        except Exception:
+            pass
+    computed_keys = {e.get("skill_file") for e in skill_version_history}
     for entry in skill_version_history:
-        entry.setdefault("improvement_applied", None)
-        entry.setdefault("before_first_pass_rate", None)
-        entry.setdefault("after_first_pass_rate", None)
+        preserved = existing_improvements.get(entry.get("skill_file"), {})
+        entry.setdefault("improvement_applied", preserved.get("improvement_applied"))
+        entry.setdefault("before_first_pass_rate", preserved.get("before_first_pass_rate"))
+        entry.setdefault("after_first_pass_rate", preserved.get("after_first_pass_rate"))
+    # Carry over entries for files not in the computed list (e.g. enhance.md)
+    for key, preserved in existing_improvements.items():
+        if key not in computed_keys and preserved.get("improvement_applied"):
+            skill_version_history.append({"skill_file": key, **preserved})
 
     metrics = {
         "generated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
@@ -378,7 +398,6 @@ def main() -> None:
         "agentic": compute_agentic(runs),
     }
 
-    output_path = script_dir / "metrics.json"
     with open(output_path, "w") as f:
         json.dump(metrics, f, indent=2)
 
