@@ -22,15 +22,12 @@ import { switchMsTab, loadMarketSignals, loadGoalHint, loadGeoPanels } from './m
 import { loadPerformance } from './performance.js';
 import { loadExplain } from './explainability.js';
 import { loadRisk } from './risk.js';
-import { loadTrainProgress } from './training.js';
-import { loadObservability } from './observability.js';
-import { loadMcp } from './mcp.js';
 import { loadExport, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './export.js';
+import { loadTrades, downloadTradeJournal } from './trades.js';
 import { loadScenarios, runScenarioBacktest, setScenarioPeriod } from './scenarios.js';
 import { loadAgentPanel, agentPanelStep, resetAgentPanel, approveAgentProposal, rejectAgentProposal } from './agent-panel.js';
 import { loadAiCompliance, switchAcTab } from './ai-compliance.js';
 import { loadTechnicalAnalysis } from './technical-analysis.js';
-import { loadAudit } from './audit.js';
 import { loadLearnings, toggleLearnCard } from './learnings.js';
 import { useChip, sendChatMsg, clearChat, updateChips, showAlerts, refreshChatChips } from './chat.js';
 import { openChartModal, closeChartModal } from './chart-modal.js';
@@ -45,11 +42,8 @@ _sectionLoaders['ai-compliance']  = loadAiCompliance;
 _sectionLoaders.performance       = loadPerformance;
 _sectionLoaders.explain           = loadExplain;
 _sectionLoaders.risk              = loadRisk;
-_sectionLoaders['train-progress'] = loadTrainProgress;
-_sectionLoaders.observability     = loadObservability;
-_sectionLoaders.mcp               = loadMcp;
+_sectionLoaders.trades            = loadTrades;
 _sectionLoaders.export            = loadExport;
-_sectionLoaders.audit             = loadAudit;
 _sectionLoaders['technical-analysis'] = loadTechnicalAnalysis;
 _sectionLoaders.learnings         = loadLearnings;
 
@@ -62,6 +56,7 @@ window.runMarket          = runMarket;
 window.runStrategy        = runStrategy;
 window.runFullPipeline    = runFullPipeline;
 window.doReset            = doReset;
+window.downloadTradeJournal = downloadTradeJournal;
 window.setScenarioPeriod  = setScenarioPeriod;
 window.runScenarioBacktest = runScenarioBacktest;
 window.agentPanelStep        = agentPanelStep;
@@ -82,10 +77,7 @@ window.loadGeoPanels      = loadGeoPanels;
 window.loadPerformance    = loadPerformance;
 window.loadExplain        = loadExplain;
 window.loadRisk           = loadRisk;
-window.loadTrainProgress  = loadTrainProgress;
-window.loadObservability  = loadObservability;
-window.loadMcp            = loadMcp;
-window.loadAudit          = loadAudit;
+window.loadTrades         = loadTrades;
 window.loadTechnicalAnalysis = loadTechnicalAnalysis;
 window.loadLearnings      = loadLearnings;
 window.toggleLearnCard    = toggleLearnCard;
@@ -121,7 +113,7 @@ async function selectInstrumentTab(id) {
     if (data) { updateChips(data.chips); showAlerts(data.alerts); }
   }
   await loadActiveInstrument();
-  const instrumentSections = new Set(['performance', 'scenarios', 'risk', 'market-signals', 'explain', 'technical-analysis', 'learnings']);
+  const instrumentSections = new Set(['trades', 'performance', 'scenarios', 'risk', 'market-signals', 'diagnostics', 'explain', 'technical-analysis', 'learnings']);
   await Promise.all([
     loadHealth(), loadPerfSummary(), loadDrift(), loadProgress(), loadMarketSignals(),
     ...(instrumentSections.has(section) && _sectionLoaders[section] ? [_sectionLoaders[section]()] : []),

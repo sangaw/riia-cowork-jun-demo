@@ -670,6 +670,18 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
         <div class="loading">Loading…</div>
       </div>
     </div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Pipeline Utilities</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
+        <button class="btn-sm" onclick="runGoal()">Run Goal</button>
+        <button class="btn-sm" onclick="runMarket()">Run Market</button>
+        <button class="btn-sm" onclick="runStrategy()">Run Strategy</button>
+        <button class="btn-sm" onclick="runFullPipeline()">Run Full Pipeline</button>
+        <button class="btn-sm err" onclick="doReset()">Reset</button>
+        <span id="util-status" style="font-size:12px;color:var(--t3);margin-left:8px"></span>
+      </div>
+    </div>
   </section>
 
   <!-- ══ CI/CD ══ -->
