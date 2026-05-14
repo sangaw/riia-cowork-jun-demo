@@ -5,7 +5,7 @@
 
 ---
 
-## Current Status: PHASE 01 COMPLETE — resume next session at Phase 0 (Overview geography panels)
+## Current Status: PHASE 0 COMPLETE — resume next session at Phase 05 (Learnings)
 
 ---
 
@@ -17,9 +17,11 @@
 | Step 2 | PM | Sprint validation — confirm fit, flag risks, approve | `[x]` | Approved. Phase 01 + Overview ready; Phases 03/04 need Data Science app (separate brief); Phase 04 removals need QA regression |
 | Step 3 | Architect | Full technical design — phased plan across all requirements | `[x]` | 5-phase plan: Phase 01 → 0 → 05 → 03 → 04. Brief: task-brief-20260514-1030.md |
 | Step 4 | Engineer | Implement Phase 01 — Technical Analysis page | `[x]` | Branch: worktree-agent-afaa245ae7de4a431. Commit: daf7a72. DoD: 8/8. Ruff: passed |
-| Step 5 | QA | Unit tests + contract check | `[x]` | 21/21 passed. URL bug found + fixed (daf4ce6): JS path was /api/experience/ not /api/v1/experience/ |
-| Step 6 | TechWriter | Confluence update + spec files confirmed | `[x]` | Confluence page 76611602 updated to v9. Both specs confirmed current |
+| Step 5 | QA | Unit tests + contract check (Phase 01) | `[x]` | 21/21 passed. URL bug found + fixed (daf4ce6): JS path was /api/experience/ not /api/v1/experience/ |
+| Step 6 | TechWriter | Confluence update + spec files confirmed (Phase 01) | `[x]` | Confluence page 76611602 updated to v9. Both specs confirmed current |
 | Merge | Engineer | Merge Phase 01 worktree branch into master | `[x]` | Merge commit: c57734a. URL fix: daf4ce6 |
+| Step 4b | Engineer | Implement Phase 0 — Overview geography panels | `[x]` | Branch: worktree-agent-abb1dba6f43a36671. Commit: f8c8b84. Merge: 4e1e119. DoD: 8/8. Ruff: passed |
+| Step 5b | QA | Unit tests + contract check (Phase 0) | `[x]` | 25/25 passed. Contract match. Note: GeoInstrument.flag unused by JS (harmless) |
 
 ---
 
