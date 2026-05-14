@@ -1411,6 +1411,11 @@ function mkTbl(rows, cols) {
   const trs = rows.map(r=>{
     const tds = cols.map(c=>{
       const v = r[c.key]??'—';
+      if (c.badge) {
+        const s = String(v).toLowerCase();
+        const cls = s==='ok'?'ok':s==='warn'||s==='warning'?'warn':s==='err'||s==='error'||s==='fail'||s==='failed'?'err':'neu';
+        return `<td><span class="badge ${cls}">${v}</span></td>`;
+      }
       return `<td${c.mono?' class="td-mono"':''}${c.right?' style="text-align:right"':''}>${v}</td>`;
     }).join('');
     return `<tr>${tds}</tr>`;
@@ -2790,7 +2795,7 @@ async function loadObservability() {
 
     el('obs-run-tbl').innerHTML=mkTbl(log.slice(-20).reverse(),[
       {key:'timestamp',label:'Time',mono:true},{key:'step_name',label:'Step'},
-      {key:'status',label:'Status',mono:true},{key:'duration_s',label:'Duration(s)',mono:true,right:true},{key:'notes',label:'Notes'}
+      {key:'status',label:'Status',badge:true},{key:'duration_s',label:'Duration(s)',mono:true,right:true},{key:'notes',label:'Notes'}
     ]);
   } catch(e){ console.warn('Observability:',e); }
 }
@@ -2832,7 +2837,7 @@ async function loadMCP() {
 
     e('mcp-tbl').innerHTML=mkTbl(calls.slice().reverse().slice(0,100),[
       {key:'timestamp',label:'Time',mono:true},{key:'tool_name',label:'Tool'},
-      {key:'status',label:'Status',mono:true},{key:'latency_ms',label:'Latency(ms)',mono:true,right:true},{key:'error',label:'Error'}
+      {key:'status',label:'Status',badge:true},{key:'latency_ms',label:'Latency(ms)',mono:true,right:true},{key:'error',label:'Error'}
     ]);
   } catch(e){ console.warn('MCP:',e); }
 }
@@ -3680,7 +3685,7 @@ async function loadModelObservability() {
       document.getElementById('mob-step-log-wrap').innerHTML = mkTbl(recent, [
         { key: 'step_num', label: 'Step', mono: true },
         { key: 'step_name', label: 'Name' },
-        { key: 'status', label: 'Status', mono: true },
+        { key: 'status', label: 'Status', badge: true },
         { key: 'started_at', label: 'Started', mono: true },
         { key: 'duration_secs', label: 'Duration (s)', mono: true, right: true },
         { key: 'summary', label: 'Summary' }
@@ -3738,7 +3743,7 @@ async function loadModelMcp() {
     document.getElementById('mmcp-table-wrap').innerHTML = mkTbl(rows.slice(0, 50), [
       { key: 'timestamp', label: 'Timestamp', mono: true },
       { key: 'tool_name', label: 'Tool' },
-      { key: 'status', label: 'Status', mono: true },
+      { key: 'status', label: 'Status', badge: true },
       { key: 'duration_ms', label: 'Duration', mono: true, right: true },
       { key: 'args_summary', label: 'Args' },
       { key: 'result_summary', label: 'Result' }
@@ -3797,7 +3802,7 @@ async function loadModelAudit() {
       document.getElementById('mau-steplog-wrap').innerHTML = mkTbl(recent, [
         { key: 'step_num', label: 'Step', mono: true },
         { key: 'step_name', label: 'Name' },
-        { key: 'status', label: 'Status', mono: true },
+        { key: 'status', label: 'Status', badge: true },
         { key: 'started_at', label: 'Started', mono: true },
         { key: 'ended_at', label: 'Ended', mono: true },
         { key: 'duration_secs', label: 'Duration', mono: true, right: true },

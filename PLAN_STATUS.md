@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-14 (Post-v1.0 — Agent Performance Metrics closed + improvement loop)
+**Last updated:** 2026-05-14 (Post-v1.0 — RITA App Improve feature complete + mkTbl badge fix)
 
 ---
 
@@ -121,3 +121,4 @@ _None_
 - 2026-05-12: Agent Performance Metrics feature built and merged (f23f74b, 79f1bbd, cd79570). 2 tasks pending. See `project-office/features/agent-performance-metrics/PLAN_STATUS.md`.
 - 2026-05-14: Agent Performance Metrics closed — 10/10 DoD. Browser verify passed. Human score recorded (accuracy 3, relevance 4, planning_ok false, csat 2, time_saved 32h). aggregate_metrics.py re-run. 3 threshold alerts fired: FC-001 ×7, engineer first-pass rate 44%, CSAT 2.0/5. program-roadmap.html retired from end-of-day routine.
 - 2026-05-14: /agent-performance-improvements run — FC-001 STOP gate added to all 3 skill files; FC-PARTIAL-IMPL files-count cross-check added to /enhance Step 4; aggregate_metrics.py skill_version_history preservation fixed; /agent-performance-improvements command created. Commit: 26f965b.
+- 2026-05-14: Feature 05 (rita-app-improve) complete — all 5 phases delivered (Technical Analysis, Geography Overview, Learnings, ANALYSE reorg, Monitor→ds.html migration). Cosmetic fix: mkTbl badge rendering for status columns applied across ds.html MODEL + non-MODEL sections. See `project-office/features/05 rita-app-improve/PLAN_STATUS.md`.
