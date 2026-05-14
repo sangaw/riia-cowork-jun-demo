@@ -5,7 +5,7 @@
 
 ---
 
-## Current Status: PHASE 0 COMPLETE — resume next session at Phase 05 (Learnings)
+## Current Status: ALL PHASES COMPLETE — minor cosmetic fixes pending (mkTbl badges in ds.html MODEL sections)
 
 ---
 
