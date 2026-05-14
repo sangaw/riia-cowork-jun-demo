@@ -504,29 +504,6 @@ tr:hover td{background:var(--surface2);}
     <div class="chart-box" style="height:165px"><canvas id="chart-ms-pv"></canvas></div>
   </div>
 
-  <!-- Row 1: Trend Score + EMA (ATR% moved to Technical Analysis) -->
-  <div class="card-row-3">
-    <div class="chart-wrap" style="margin:0">
-      <div class="chart-title">Trend Score <span style="font-weight:400;color:var(--t3);font-size:11px">— normalized EMA50 slope · −1 bearish → +1 bullish</span></div>
-      <div class="chart-box" style="height:150px"><canvas id="chart-ms-trend"></canvas></div>
-    </div>
-    <div class="chart-wrap" style="margin:0">
-      <div class="chart-title">EMA <span style="font-weight:400;color:var(--t3);font-size:11px">— price · EMA 5 · EMA 13 · EMA 26</span></div>
-      <div class="chart-box" style="height:150px"><canvas id="chart-ms-ema"></canvas></div>
-    </div>
-  </div>
-
-  <!-- Row 2: MACD + Bollinger Bands (RSI-14 moved to Technical Analysis) -->
-  <div class="card-row-3">
-    <div class="chart-wrap" style="margin:0">
-      <div class="chart-title">MACD <span style="font-weight:400;color:var(--t3);font-size:11px">— line · signal · histogram</span></div>
-      <div class="chart-box" style="height:150px"><canvas id="chart-ms-macd"></canvas></div>
-    </div>
-    <div class="chart-wrap" style="margin:0">
-      <div class="chart-title">Bollinger Bands <span style="font-weight:400;color:var(--t3);font-size:11px">— price · upper · lower</span></div>
-      <div class="chart-box" style="height:150px"><canvas id="chart-ms-bb"></canvas></div>
-    </div>
-  </div>
 
   <div id="ms-loading" class="empty" style="display:none">Loading indicators...</div>
 </section>
@@ -539,8 +516,38 @@ tr:hover td{background:var(--surface2);}
   </div>
   <div id="ta-commentary" class="card" style="margin-bottom:16px">Loading commentary…</div>
   <div class="chart-wrap"><canvas id="chart-ta-pv"></canvas></div>
-  <div class="chart-wrap"><canvas id="chart-ta-atr"></canvas></div>
-  <div class="chart-wrap"><canvas id="chart-ta-rsi"></canvas></div>
+
+  <!-- ATR% row: Trend Score + EMA + ATR% -->
+  <div class="card-row-3">
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">Trend Score <span style="font-weight:400;color:var(--t3);font-size:11px">— normalized EMA50 slope · −1 bearish → +1 bullish</span></div>
+      <div class="chart-box" style="height:150px"><canvas id="chart-ta-trend"></canvas></div>
+    </div>
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">EMA <span style="font-weight:400;color:var(--t3);font-size:11px">— price · EMA 5 · EMA 13 · EMA 26</span></div>
+      <div class="chart-box" style="height:150px"><canvas id="chart-ta-ema"></canvas></div>
+    </div>
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">ATR% (14) <span style="font-weight:400;color:var(--t3);font-size:11px">— volatility as % of price</span></div>
+      <div class="chart-box" style="height:150px"><canvas id="chart-ta-atr"></canvas></div>
+    </div>
+  </div>
+
+  <!-- RSI-14 row: MACD + Bollinger Bands + RSI-14 -->
+  <div class="card-row-3">
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">MACD <span style="font-weight:400;color:var(--t3);font-size:11px">— line · signal · histogram</span></div>
+      <div class="chart-box" style="height:150px"><canvas id="chart-ta-macd"></canvas></div>
+    </div>
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">Bollinger Bands <span style="font-weight:400;color:var(--t3);font-size:11px">— price · upper · lower</span></div>
+      <div class="chart-box" style="height:150px"><canvas id="chart-ta-bb"></canvas></div>
+    </div>
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">RSI-14 <span style="font-weight:400;color:var(--t3);font-size:11px">— 30 oversold · 70 overbought</span></div>
+      <div class="chart-box" style="height:150px"><canvas id="chart-ta-rsi"></canvas></div>
+    </div>
+  </div>
 </section>
 
 
