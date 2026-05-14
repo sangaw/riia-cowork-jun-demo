@@ -187,69 +187,28 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "26f965b",
-      "recent_commits": [
-        {
-          "hash": "26f965b",
-          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
-        },
-        {
-          "hash": "979df5f",
-          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
-        }
-      ],
+      "last_updated": "2631b95",
       "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
       "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "26f965b",
-      "recent_commits": [
-        {
-          "hash": "26f965b",
-          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
-        },
-        {
-          "hash": "979df5f",
-          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
-        }
-      ],
+      "last_updated": "2631b95",
       "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
       "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "26f965b",
-      "recent_commits": [
-        {
-          "hash": "26f965b",
-          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
-        },
-        {
-          "hash": "979df5f",
-          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
-        }
-      ],
+      "last_updated": "2631b95",
       "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
       "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
     },
     {
       "skill_file": ".claude/commands/enhance.md",
+      "last_updated": "2631b95",
       "improvement_applied": "FC-001 blocking gate (spec-not-updated now re-invokes Engineer, not a warning) + Step 4 confirmation pause before advancing to QA",
       "before_first_pass_rate": 0.4,
       "after_first_pass_rate": null
