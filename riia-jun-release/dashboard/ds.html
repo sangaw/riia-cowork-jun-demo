@@ -364,6 +364,21 @@ tr:hover td{background:var(--surface2);}
       <span class="nav-icon">📥</span> Export &amp; DevOps
     </div>
   </div>
+  <div class="nav-section">
+    <div class="nav-label">Monitor</div>
+    <div class="nav-item c-run" data-s="model-train-progress" onclick="show('model-train-progress',this)">
+      <span class="nav-icon">📉</span> Training Progress
+    </div>
+    <div class="nav-item c-mon" data-s="model-observability" onclick="show('model-observability',this)">
+      <span class="nav-icon">🔭</span> Observability
+    </div>
+    <div class="nav-item c-mon" data-s="model-mcp" onclick="show('model-mcp',this)">
+      <span class="nav-icon">🔌</span> MCP Calls
+    </div>
+    <div class="nav-item c-warn" data-s="model-audit" onclick="show('model-audit',this)">
+      <span class="nav-icon">📋</span> Audit
+    </div>
+  </div>
   <div class="sidebar-footer">
     <div class="lbl" id="sb-data-info">Data: checking…</div>
     <div class="lbl" style="margin-top:2px" id="sb-model-info">Model: checking…</div>
@@ -1189,6 +1204,112 @@ tr:hover td{background:var(--surface2);}
   <div id="sc-result"></div>
 </div>
 
+<!-- ════════════════════════════════════════════════
+     MODEL — TRAINING PROGRESS
+     ════════════════════════════════════════════════ -->
+<div id="s-model-train-progress" class="section">
+  <div class="page-hdr">
+    <div><div class="page-title">Training Progress</div><div class="page-sub">Round-by-round model improvement across training experiments</div></div>
+    <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadModelTrainProgress()">↻ Refresh</button></div>
+  </div>
+
+  <div class="chart-wrap" style="margin-bottom:14px">
+    <div class="chart-title">Sharpe Ratio by Training Round</div>
+    <div class="chart-box h220"><canvas id="ch-mtp-sharpe"></canvas></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Training History</span></div>
+    <div class="tbl-wrap" id="mtp-table-wrap"><div class="empty">No training history found.</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MODEL — OBSERVABILITY
+     ════════════════════════════════════════════════ -->
+<div id="s-model-observability" class="section">
+  <div class="page-hdr">
+    <div><div class="page-title">Observability</div><div class="page-sub">Pipeline timing, drift detection and API health</div></div>
+    <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadModelObservability()">↻ Refresh</button></div>
+  </div>
+
+  <div class="card-row" style="margin-bottom:14px">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Drift Report</span><span id="mob-drift-badge" class="badge">—</span></div>
+      <div id="mob-drift-details"><div class="empty">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">API Request Stats</span></div>
+      <div id="mob-api-stats"><div class="empty">Loading…</div></div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Pipeline Timing</span></div>
+      <div id="mob-pipeline-stats"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Step Execution Log</span></div>
+    <div class="tbl-wrap" id="mob-step-log-wrap"><div class="empty">Loading step log…</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MODEL — MCP CALLS
+     ════════════════════════════════════════════════ -->
+<div id="s-model-mcp" class="section">
+  <div class="page-hdr">
+    <div><div class="page-title">MCP Calls</div><div class="page-sub">Claude Desktop tool invocations via Model Context Protocol</div></div>
+    <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadModelMcp()">↻ Refresh</button></div>
+  </div>
+
+  <div class="card-row" style="margin-bottom:14px">
+    <div class="chart-wrap">
+      <div class="chart-title">Calls by Tool</div>
+      <div class="chart-box h220"><canvas id="ch-mmcp-tools"></canvas></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Avg Duration by Tool (ms)</div>
+      <div class="chart-box h220"><canvas id="ch-mmcp-duration"></canvas></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Count of MCP Function Calls</div>
+      <div class="chart-box h220"><canvas id="ch-mmcp-share"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Recent MCP Calls</span></div>
+    <div class="tbl-wrap" id="mmcp-table-wrap"><div class="empty">No MCP call log entries found.</div></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     MODEL — AUDIT
+     ════════════════════════════════════════════════ -->
+<div id="s-model-audit" class="section">
+  <div class="page-hdr">
+    <div><div class="page-title">Audit</div><div class="page-sub">Run history, step execution log and training constraint outcomes</div></div>
+    <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadModelAudit()">↻ Refresh</button></div>
+  </div>
+
+  <div class="kpi-row kpi-row-3" style="margin-bottom:14px">
+    <div class="kpi"><div class="kpi-label">Training Rounds</div><div class="kpi-value ds" id="mau-rounds">—</div></div>
+    <div class="kpi"><div class="kpi-label">Constraint Pass Rate</div><div class="kpi-value" id="mau-pass-rate">—</div></div>
+    <div class="kpi"><div class="kpi-label">Best Sharpe</div><div class="kpi-value" id="mau-best-sharpe">—</div><div class="kpi-sub" id="mau-best-sharpe-sub"></div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr"><span class="card-title">Training History</span><span class="card-sub">one row per pipeline run</span></div>
+    <div class="tbl-wrap" id="mau-history-wrap"><div class="empty">Loading…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><span class="card-title">Step Execution Log</span><span class="card-sub">recent 40 step entries</span></div>
+    <div class="tbl-wrap" id="mau-steplog-wrap"><div class="empty">Loading…</div></div>
+  </div>
+</div>
+
 </main>
 </div><!-- /shell -->
 
@@ -1720,7 +1841,11 @@ function show(sId, el) {
     trades:loadTrades, explain:loadExplain, training:loadTraining,
     observability:loadObservability, mcp:loadMCP,
     changelog:loadChangelog, export:loadExport,
-    scenarios:loadScenariosPage
+    scenarios:loadScenariosPage,
+    'model-train-progress':loadModelTrainProgress,
+    'model-observability':loadModelObservability,
+    'model-mcp':loadModelMcp,
+    'model-audit':loadModelAudit
   };
   if (loaders[sId]) loaders[sId]();
 }
@@ -3092,6 +3217,232 @@ async function init() {
   loadUnderstand();  // default landing section
 }
 init();
+
+// ─── MODEL — TRAINING PROGRESS ─────────────────────────────
+async function loadModelTrainProgress() {
+  try {
+    const rows = await api('/api/v1/training-history').catch(() => []);
+    if (!rows || !rows.length) {
+      document.getElementById('mtp-table-wrap').innerHTML = '<div class="empty">No training history found.</div>';
+      return;
+    }
+    const labels = rows.map(r => 'Round ' + r.round);
+    const valSharpe = rows.map(r => r.val_sharpe);
+    const btSharpe = rows.map(r => r.backtest_sharpe);
+
+    mkChart('ch-mtp-sharpe', 'bar', {
+      labels,
+      datasets: [
+        { label: 'Val Sharpe', data: valSharpe, backgroundColor: 'rgba(0,86,184,0.6)', borderRadius: 3 },
+        { label: 'Backtest Sharpe', data: btSharpe, backgroundColor: 'rgba(26,107,60,0.65)', borderRadius: 3 }
+      ]
+    }, {
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v.toFixed(2) } }
+      }
+    });
+
+    document.getElementById('mtp-table-wrap').innerHTML = `
+      <table>
+        <thead><tr><th>Round</th><th>Timestamp</th><th>Timesteps</th><th>Source</th><th>Val Sharpe</th><th>BT Sharpe</th><th>BT MDD</th><th>BT Return</th><th>BT CAGR</th><th>Constraints</th></tr></thead>
+        <tbody>${rows.map(r => `
+          <tr>
+            <td class="td-mono">${r.round}</td>
+            <td class="td-mono" style="font-size:11px">${(r.timestamp || '').slice(0, 16)}</td>
+            <td class="td-mono">${r.timesteps != null ? Number(r.timesteps).toLocaleString() : '—'}</td>
+            <td>${r.source || '—'}</td>
+            <td class="td-mono">${fmt(r.val_sharpe, 3)}</td>
+            <td class="td-mono" style="font-weight:600">${fmt(r.backtest_sharpe, 3)}</td>
+            <td class="td-mono">${r.backtest_mdd_pct != null ? parseFloat(r.backtest_mdd_pct).toFixed(2) + '%' : '—'}</td>
+            <td class="td-mono">${r.backtest_return_pct != null ? parseFloat(r.backtest_return_pct).toFixed(2) + '%' : '—'}</td>
+            <td class="td-mono">${r.backtest_cagr_pct != null ? parseFloat(r.backtest_cagr_pct).toFixed(2) + '%' : '—'}</td>
+            <td>${r.backtest_constraints_met ? '<span class="badge ok">Met</span>' : '<span class="badge err">Not Met</span>'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) {
+    document.getElementById('mtp-table-wrap').innerHTML = '<div class="empty">Error loading training history.</div>';
+  }
+}
+
+// ─── MODEL — OBSERVABILITY ──────────────────────────────────
+async function loadModelObservability() {
+  try {
+    const [metrics, drift, stepLog] = await Promise.all([
+      api('/api/experience/ops/metrics/summary').catch(() => ({})),
+      api('/api/v1/drift').catch(() => null),
+      api('/api/experience/ops/step-log').catch(() => []),
+    ]);
+
+    if (drift) {
+      const h = (drift.summary && drift.summary.overall) || 'unknown';
+      const badge = document.getElementById('mob-drift-badge');
+      if (badge) { badge.className = 'badge ' + (h === 'ok' ? 'ok' : h === 'warn' ? 'warn' : 'err'); badge.textContent = h.toUpperCase(); }
+      const r = drift.checks || {};
+      document.getElementById('mob-drift-details').innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--t2)">
+          ${Object.entries(r).filter(([k, v]) => v && typeof v === 'object' && v.status).map(([k, v]) => `
+            <div style="display:flex;justify-content:space-between;gap:8px">
+              <span>${k.replace(/_/g, ' ')}</span>
+              <span class="badge ${v.status === 'ok' ? 'ok' : 'warn'}">${v.status}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    const a = metrics.api_requests || {};
+    document.getElementById('mob-api-stats').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--t2)">
+        <div style="display:flex;justify-content:space-between"><span>Total requests</span><span style="font-family:var(--fm)">${a.total_requests != null ? a.total_requests : '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Avg latency</span><span style="font-family:var(--fm)">${a.avg_latency_ms != null ? Math.round(a.avg_latency_ms) + ' ms' : '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Error rate</span><span style="font-family:var(--fm)">${a.error_rate_pct != null ? a.error_rate_pct.toFixed(1) + '%' : '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Error count</span><span style="font-family:var(--fm)">${a.error_count != null ? a.error_count : '—'}</span></div>
+      </div>`;
+
+    const p = metrics.pipeline || {};
+    const t = metrics.training || {};
+    document.getElementById('mob-pipeline-stats').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--t2)">
+        <div style="display:flex;justify-content:space-between"><span>Training rounds</span><span style="font-family:var(--fm)">${t.rounds != null ? t.rounds : '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Completed runs</span><span style="font-family:var(--fm)">${p.completed_steps != null ? p.completed_steps : '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Failed runs</span><span class="badge ${p.failed_steps ? 'err' : 'ok'}">${p.failed_steps != null ? p.failed_steps : 0}</span></div>
+        ${t.latest_backtest_sharpe != null ? `<div style="display:flex;justify-content:space-between"><span>Latest Sharpe</span><span style="font-family:var(--fm)">${parseFloat(t.latest_backtest_sharpe).toFixed(3)}</span></div>` : ''}
+      </div>`;
+
+    if (stepLog && stepLog.length) {
+      const recent = stepLog.slice(-30).reverse();
+      document.getElementById('mob-step-log-wrap').innerHTML = mkTbl(recent, [
+        { key: 'step_num', label: 'Step', mono: true },
+        { key: 'step_name', label: 'Name' },
+        { key: 'status', label: 'Status', mono: true },
+        { key: 'started_at', label: 'Started', mono: true },
+        { key: 'duration_secs', label: 'Duration (s)', mono: true, right: true },
+        { key: 'summary', label: 'Summary' }
+      ]);
+    } else {
+      document.getElementById('mob-step-log-wrap').innerHTML = '<div class="empty">No step log entries found.</div>';
+    }
+  } catch (e) {
+    console.warn('model-observability error', e);
+    document.getElementById('mob-step-log-wrap').innerHTML = `<div class="empty">Error loading observability data: ${e.message}</div>`;
+  }
+}
+
+// ─── MODEL — MCP CALLS ─────────────────────────────────────
+async function loadModelMcp() {
+  try {
+    const rows = await api('/api/v1/mcp-calls?limit=100');
+    if (!rows || !rows.length) {
+      document.getElementById('mmcp-table-wrap').innerHTML = '<div class="empty">No MCP call log entries found.</div>';
+      return;
+    }
+
+    const byTool = {};
+    rows.forEach(r => {
+      const t = r.tool_name || 'unknown';
+      if (!byTool[t]) byTool[t] = { count: 0, dur_sum: 0, ok: 0 };
+      byTool[t].count++;
+      byTool[t].dur_sum += parseFloat(r.duration_ms || 0);
+      if ((r.status || '').toLowerCase() === 'ok') byTool[t].ok++;
+    });
+    const tools = Object.keys(byTool);
+    const counts = tools.map(t => byTool[t].count);
+    const avgDur = tools.map(t => byTool[t].dur_sum / byTool[t].count);
+    const palette = [C.run, C.build, C.mon, C.warn, C.danger, '#5B6FA0', '#8B6914', '#3D7A6B'];
+
+    mkChart('ch-mmcp-tools', 'bar', {
+      labels: tools,
+      datasets: [{ label: 'Calls', data: counts, backgroundColor: tools.map((_, i) => palette[i % palette.length] + 'CC'), borderRadius: 3 }]
+    }, { scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,.04)' } } } });
+
+    mkChart('ch-mmcp-duration', 'bar', {
+      labels: tools,
+      datasets: [{ label: 'Avg ms', data: avgDur.map(v => Math.round(v)), backgroundColor: tools.map((_, i) => palette[i % palette.length] + '88'), borderRadius: 3 }]
+    }, { scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,.04)' }, ticks: { callback: v => v + 'ms' } } } });
+
+    const total = counts.reduce((a, b) => a + b, 0);
+    mkChart('ch-mmcp-share', 'bar', {
+      labels: tools,
+      datasets: [{ label: 'Calls', data: counts, backgroundColor: tools.map((_, i) => palette[i % palette.length] + 'AA'), borderRadius: 3 }]
+    }, {
+      plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} (${total ? Math.round(ctx.parsed.y / total * 100) : 0}%)` } } },
+      scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,.04)' } } }
+    });
+
+    document.getElementById('mmcp-table-wrap').innerHTML = mkTbl(rows.slice(0, 50), [
+      { key: 'timestamp', label: 'Timestamp', mono: true },
+      { key: 'tool_name', label: 'Tool' },
+      { key: 'status', label: 'Status', mono: true },
+      { key: 'duration_ms', label: 'Duration', mono: true, right: true },
+      { key: 'args_summary', label: 'Args' },
+      { key: 'result_summary', label: 'Result' }
+    ]);
+  } catch (e) {
+    document.getElementById('mmcp-table-wrap').innerHTML = '<div class="empty">Error loading MCP call log.</div>';
+  }
+}
+
+// ─── MODEL — AUDIT ─────────────────────────────────────────
+async function loadModelAudit() {
+  try {
+    const [history, stepLog] = await Promise.all([
+      api('/api/v1/training-history').catch(() => []),
+      api('/api/experience/ops/step-log').catch(() => []),
+    ]);
+
+    const rounds = history.length;
+    const elRounds = document.getElementById('mau-rounds');
+    if (elRounds) elRounds.textContent = rounds || '0';
+
+    if (rounds > 0) {
+      const passed = history.filter(r => r.backtest_constraints_met).length;
+      const passRate = ((passed / rounds) * 100).toFixed(0);
+      const prEl = document.getElementById('mau-pass-rate');
+      if (prEl) { prEl.textContent = passRate + '%'; prEl.className = 'kpi-value ' + (passed === rounds ? 'pos' : passed > 0 ? 'neu' : 'neg'); }
+
+      const bestSharpe = Math.max(...history.map(r => parseFloat(r.backtest_sharpe) || 0));
+      const bsEl = document.getElementById('mau-best-sharpe');
+      if (bsEl) { bsEl.textContent = bestSharpe.toFixed(3); bsEl.className = 'kpi-value ' + (bestSharpe >= 1 ? 'pos' : 'neg'); }
+      const bestRound = history.reduce((a, b) =>
+        (parseFloat(b.backtest_sharpe) || 0) > (parseFloat(a.backtest_sharpe) || 0) ? b : a, history[0]);
+      const subEl = document.getElementById('mau-best-sharpe-sub');
+      if (subEl) subEl.textContent = bestRound.timestamp ? `round on ${bestRound.timestamp.slice(0, 10)}` : 'across all rounds';
+    }
+
+    if (history.length === 0) {
+      document.getElementById('mau-history-wrap').innerHTML = '<div class="empty">No training history yet — run the full pipeline first.</div>';
+    } else {
+      document.getElementById('mau-history-wrap').innerHTML = mkTbl([...history].reverse(), [
+        { key: 'round', label: '#', mono: true },
+        { key: 'timestamp', label: 'Date', mono: true },
+        { key: 'source', label: 'Source' },
+        { key: 'backtest_sharpe', label: 'Sharpe', mono: true, right: true },
+        { key: 'backtest_mdd_pct', label: 'Max DD%', mono: true, right: true },
+        { key: 'backtest_cagr_pct', label: 'CAGR%', mono: true, right: true },
+        { key: 'backtest_constraints_met', label: 'Constraints' },
+        { key: 'notes', label: 'Notes' }
+      ]);
+    }
+
+    const recent = stepLog.slice(0, 40);
+    if (recent.length === 0) {
+      document.getElementById('mau-steplog-wrap').innerHTML = '<div class="empty">No step log entries yet.</div>';
+    } else {
+      document.getElementById('mau-steplog-wrap').innerHTML = mkTbl(recent, [
+        { key: 'step_num', label: 'Step', mono: true },
+        { key: 'step_name', label: 'Name' },
+        { key: 'status', label: 'Status', mono: true },
+        { key: 'started_at', label: 'Started', mono: true },
+        { key: 'ended_at', label: 'Ended', mono: true },
+        { key: 'duration_secs', label: 'Duration', mono: true, right: true },
+        { key: 'notes', label: 'Notes' }
+      ]);
+    }
+  } catch (e) {
+    console.warn('loadModelAudit error', e);
+    document.getElementById('mau-history-wrap').innerHTML = `<div class="empty" style="color:var(--danger)">${e.message}</div>`;
+  }
+}
 </script>
 
 <!-- ── Chart expand modal ───────────────────────────────── -->

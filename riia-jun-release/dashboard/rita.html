@@ -364,18 +364,6 @@ tr:hover td{background:var(--surface2);}
     <div class="nav-item p04" data-s="risk" onclick="show('risk',this)">
       <span class="nav-icon">◎</span> Risk View
     </div>
-    <div class="nav-item p04" data-s="train-progress" onclick="show('train-progress',this)">
-      <span class="nav-icon">◎</span> Training Progress
-    </div>
-    <div class="nav-item p04" data-s="observability" onclick="show('observability',this)">
-      <span class="nav-icon">◎</span> Observability
-    </div>
-    <div class="nav-item p04" data-s="mcp" onclick="show('mcp',this)">
-      <span class="nav-icon">◎</span> MCP Calls
-    </div>
-    <div class="nav-item p04" data-s="audit" onclick="show('audit',this)">
-      <span class="nav-icon">◎</span> Audit
-    </div>
     <div class="nav-item p04" data-s="ai-compliance" onclick="show('ai-compliance',this)">
       <span class="nav-icon">◈</span> AI Compliance
     </div>
@@ -1044,77 +1032,6 @@ tr:hover td{background:var(--surface2);}
   </div>
 </section>
 
-<!-- ════════════════ TRAINING PROGRESS ════════════════ -->
-<section class="section" id="sec-train-progress">
-  <div class="page-hdr">
-    <div><div class="page-title">Training Progress</div><div class="page-sub">Model training rounds, validation &amp; backtest metrics history</div></div>
-    <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadTrainProgress()">↺ Reload</button></div>
-  </div>
-
-  <div class="chart-wrap">
-    <div class="chart-title">Sharpe Ratio by Training Round</div>
-    <div class="chart-box" style="height:180px"><canvas id="chart-training-sharpe"></canvas></div>
-  </div>
-
-  <div class="tbl-wrap" id="training-table-wrap">
-    <div class="empty">Loading...</div>
-  </div>
-</section>
-
-<!-- ════════════════ OBSERVABILITY ════════════════ -->
-<section class="section" id="sec-observability">
-  <div class="page-hdr">
-    <div><div class="page-title">Observability</div><div class="page-sub">Pipeline timing, drift detection &amp; API health</div></div>
-    <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadObservability()">↺ Reload</button></div>
-  </div>
-
-  <div class="card-row" id="obs-stats">
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">Drift Report</span><span id="drift-badge" class="badge neu">—</span></div>
-      <div id="drift-details" class="loading">Loading...</div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">API Request Stats</span></div>
-      <div id="api-stats" class="loading">Loading...</div>
-    </div>
-    <div class="card">
-      <div class="card-hdr"><span class="card-title">Pipeline Timing</span></div>
-      <div id="pipeline-stats" class="loading">Loading...</div>
-    </div>
-  </div>
-
-  <div class="tbl-wrap" id="step-log-wrap">
-    <div class="empty">Loading step log...</div>
-  </div>
-</section>
-
-<!-- ════════════════ MCP CALLS ════════════════ -->
-<section class="section" id="sec-mcp">
-  <div class="page-hdr">
-    <div><div class="page-title">MCP Calls</div><div class="page-sub">Claude Desktop tool invocations via Model Context Protocol</div></div>
-    <div class="hdr-actions"><button class="btn btn-ghost btn-sm" onclick="loadMcp()">↺ Reload</button></div>
-  </div>
-
-  <div class="card-row-3">
-    <div class="chart-wrap" style="margin:0">
-      <div class="chart-title">Calls by Tool</div>
-      <div class="chart-box" style="height:200px"><canvas id="chart-mcp-tools"></canvas></div>
-    </div>
-    <div class="chart-wrap" style="margin:0">
-      <div class="chart-title">Avg Duration by Tool (ms)</div>
-      <div class="chart-box" style="height:200px"><canvas id="chart-mcp-duration"></canvas></div>
-    </div>
-    <div class="chart-wrap" style="margin:0">
-      <div class="chart-title">Count of MCP Function calls</div>
-      <div class="chart-box" style="height:200px"><canvas id="chart-mcp-share"></canvas></div>
-    </div>
-  </div>
-
-  <div class="tbl-wrap" id="mcp-table-wrap" style="margin-top:16px">
-    <div class="empty">Loading...</div>
-  </div>
-</section>
-
 <!-- ════════════════ EXPORT & DEVOPS ════════════════ -->
 <section class="section" id="sec-export">
   <div class="page-hdr">
@@ -1145,60 +1062,6 @@ tr:hover td{background:var(--surface2);}
     <div class="card">
       <div class="card-hdr"><span class="card-title">System Info</span></div>
       <div id="sys-info" class="loading">Loading...</div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════ AUDIT ════════════════ -->
-<section class="section" id="sec-audit">
-  <div class="page-hdr">
-    <div>
-      <div class="page-title">Pipeline Audit</div>
-      <div class="page-sub">Run history, step execution log &amp; training constraint outcomes</div>
-    </div>
-    <div class="hdr-actions">
-      <button class="btn btn-ghost btn-sm" onclick="loadAudit()">↺ Reload</button>
-    </div>
-  </div>
-
-  <!-- Summary KPIs -->
-  <div class="kpi-row-3" id="audit-kpis" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-    <div class="kpi">
-      <div class="kpi-label">Training Rounds</div>
-      <div class="kpi-value neu" id="audit-rounds">—</div>
-      <div class="kpi-delta">pipeline executions recorded</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Constraint Pass Rate</div>
-      <div class="kpi-value neu" id="audit-pass-rate">—</div>
-      <div class="kpi-delta">Sharpe ≥ 1.0 &amp; MDD &lt; 10%</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Best Sharpe</div>
-      <div class="kpi-value neu" id="audit-best-sharpe">—</div>
-      <div class="kpi-delta" id="audit-best-sharpe-sub">across all rounds</div>
-    </div>
-  </div>
-
-  <!-- Training history table -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-hdr">
-      <span class="card-title">Training History</span>
-      <span class="card-sub">one row per pipeline run</span>
-    </div>
-    <div class="tbl-wrap" style="margin:0" id="audit-history-wrap">
-      <div class="empty">Loading...</div>
-    </div>
-  </div>
-
-  <!-- Step execution log -->
-  <div class="card">
-    <div class="card-hdr">
-      <span class="card-title">Step Execution Log</span>
-      <span class="card-sub">recent 40 step entries from monitor_log.csv</span>
-    </div>
-    <div class="tbl-wrap" style="margin:0" id="audit-steplog-wrap">
-      <div class="empty">Loading...</div>
     </div>
   </div>
 </section>

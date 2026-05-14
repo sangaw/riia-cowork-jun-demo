@@ -15,6 +15,7 @@ import { loadGameCompliance, toggleGcDetail } from './game-compliance.js';
 import { loadAlerts } from './alerts.js';
 import { loadSourceAvailability } from './source-availability.js';
 import { loadFunctionalKPIs } from './functional-kpis.js';
+import { loadUtilities, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './utilities.js';
 
 // ── Populate section loader registry ─────────────────────────────────────────
 sectionLoaders['overview']             = loadOverview;
@@ -50,6 +51,11 @@ window.toggleGcDetail         = toggleGcDetail;
 window.loadAlerts             = loadAlerts;
 window.loadSourceAvailability = loadSourceAvailability;
 window.loadFunctionalKPIs     = loadFunctionalKPIs;
+window.runGoal                = runGoal;
+window.runMarket              = runMarket;
+window.runStrategy            = runStrategy;
+window.runFullPipeline        = runFullPipeline;
+window.doReset                = doReset;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
