@@ -18,7 +18,7 @@ async function apiFetch(url, opts = {}) {
 }
 import { show, warmupChat, _sectionLoaders, getCurrentSection } from './nav.js';
 import { loadHealth, loadPerfSummary, loadDrift, loadProgress } from './health.js';
-import { switchMsTab, loadMarketSignals, loadGoalHint } from './market-signals.js';
+import { switchMsTab, loadMarketSignals, loadGoalHint, loadGeoPanels } from './market-signals.js';
 import { loadPerformance } from './performance.js';
 import { loadTrades, downloadTradeJournal } from './trades.js';
 import { loadDiagnostics } from './diagnostics.js';
@@ -79,6 +79,7 @@ window.closeChartModal    = closeChartModal;
 // Reload buttons for individual sections
 window.loadMarketSignals  = loadMarketSignals;
 window.loadGoalHint       = loadGoalHint;
+window.loadGeoPanels      = loadGeoPanels;
 window.loadPerformance    = loadPerformance;
 window.loadTrades         = loadTrades;
 window.loadDiagnostics    = loadDiagnostics;

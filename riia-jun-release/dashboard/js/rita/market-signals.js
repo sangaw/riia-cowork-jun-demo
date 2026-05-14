@@ -384,10 +384,43 @@ export async function loadMarketSignals() {
       ? alerts.join('')
       : mkAlert('neu', 'No significant signals');
 
+    await loadGeoPanels();
+
   } catch (e) {
     console.warn('market signals error', e);
     setEl('ms-loading', `<div class="empty" style="color:var(--danger)">Error: ${e.message}</div>`);
     document.getElementById('ms-loading').style.display = '';
     setEl('ms-last-updated', '—');
+  }
+}
+
+export async function loadGeoPanels() {
+  const container = document.getElementById('geo-panels');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/v1/experience/rita/geography-overview');
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    if (!data.regions || data.regions.length === 0) {
+      container.innerHTML = '<p class="no-data">No geography data configured</p>';
+      return;
+    }
+    container.innerHTML = data.regions.map(r => `
+      <div class="geo-panel">
+        <h4>${r.flag || ''} ${r.region}</h4>
+        <table class="geo-table">
+          ${r.instruments.map(i => `
+            <tr>
+              <td>${i.name}</td>
+              <td>${i.close != null ? i.close.toFixed(2) : '—'}</td>
+              <td>${i.daily_return_pct != null ? i.daily_return_pct.toFixed(2) + '%' : '—'}</td>
+              <td><span class="badge badge-${i.signal}">${i.signal}</span></td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    `).join('');
+  } catch (e) {
+    container.innerHTML = '<p class="no-data">—</p>';
   }
 }
