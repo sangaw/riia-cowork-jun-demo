@@ -28,5 +28,13 @@
   "branch": "master",
   "merge_status": "merged",
   "merge_commit": "2171077",
+  "human_score": {
+    "accuracy": 3,
+    "relevance": 4,
+    "csat": 3,
+    "planning_ok": true,
+    "time_saved_hours": 8,
+    "notes": "Planning correct but user noted gap between actual token consumption and the value shown on the Agent Builds dashboard. End-of-day checklist gaps also caught (no feedback prompt, no HITL step)."
+  },
   "notes": "Cosmetic fix only — no /enhance pipeline needed. This run log written manually as part of end-of-day routine. Feature 05 rita-app-improve fully closed."
 }

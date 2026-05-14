@@ -1,8 +1,8 @@
 ---
-description: Run all 4 mandatory end-of-day steps: PLAN_STATUS + session run log + Confluence + git commit
+description: Run all 5 mandatory end-of-day steps: PLAN_STATUS + session run log + HITL feedback + Confluence + git commit
 ---
 
-Run all 4 end-of-day steps in order. Do not skip any step. Do not mark the day done until all 4 are complete.
+Run all 5 end-of-day steps in order. Do not skip any step. Do not mark the day done until all 5 are complete.
 
 ## Step 1 — Update PLAN_STATUS.md
 - Mark today's day row as `[x]` done
@@ -46,13 +46,40 @@ python riia-ai-org/agent-ops/aggregate_metrics.py
 ```
 Run from workspace root `riia-cowork-jun/`. Note any `[ALERT]` lines in the session summary.
 
-## Step 3 — Publish Confluence sprint board
+## Step 3 — Collect HITL Feedback
+Ask the user for scores on today's session using AskUserQuestion (4 questions, max 4 options each):
+
+1. **Accuracy** (1–5) — was the work correct? Options: 5/4/3/2-or-below
+2. **CSAT** (1–5) — overall satisfaction. Options: 5/4/3/2-or-below
+3. **Planning OK** — did the agent plan correctly? Options: Yes / No
+4. **Time saved** (hours) — Options: <1h / 1–3h / 3–8h / 8+h
+
+Map answers to numbers: 5→5, 4→4, 3→3, "2 or below"→2, "8+"→8, "3–8"→5, "1–3"→2, "<1"→0.5
+
+Write the `human_score` block into the run log created in Step 2:
+```json
+"human_score": {
+  "accuracy": <number>,
+  "relevance": 4,
+  "csat": <number>,
+  "planning_ok": <true|false>,
+  "time_saved_hours": <number>,
+  "notes": "<any freetext the user added>"
+}
+```
+
+Re-run `aggregate_metrics.py` after writing scores. If any `[ALERT]` lines appear, note them.
+
+If alerts fire, append to the session summary:
+> ⚠ N alert(s) active — run `/agent-performance-improvements` before next session.
+
+## Step 4 — Publish Confluence sprint board
 Identify the current sprint number N from PLAN_STATUS.md.
 Run: `CONFLUENCE_EMAIL=contact@ravionics.nl python project-office/confluence/sprint-boards/publish_sprint{N}_board.py`
 (Run from the workspace root: `riia-cowork-jun/`)
 If the script does not exist yet, skip this step and note it as a blocker.
 
-## Step 4 — Git commit
+## Step 5 — Git commit
 Stage all files changed today. Commit with a message in this format:
 ```
 <type>(<scope>): <what was delivered today>
@@ -64,4 +91,4 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
 After committing, run `git status` to confirm working tree is clean.
 
 ## Done
-Report: "Day complete. All 4 end-of-day steps done. Commit: <short hash>"
+Report: "Day complete. All 5 end-of-day steps done. Commit: <short hash>"
