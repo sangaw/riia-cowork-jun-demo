@@ -46,9 +46,13 @@
         "code_changed": true,
         "spec_updated": false,
         "ruff_passed": true,
-        "contract_matches_architect": true
+        "contract_matches_architect": true,
+        "memory_used": false,
+        "tool_error_handled": false
       },
-      "failure_modes": ["FC-001"]
+      "failure_modes": [
+        "FC-001"
+      ]
     },
     {
       "role": "qa",
@@ -83,5 +87,31 @@
   "overall_status": "pass_with_warnings",
   "total_tokens_estimated": 15400,
   "duration_minutes": 12.5,
-  "branch": "feature/rita-market-signals-timestamp"
+  "branch": "feature/rita-market-signals-timestamp",
+  "retry_count": 0,
+  "abandoned": false,
+  "loop_events": 0,
+  "hitl_events": [],
+  "human_score": {
+    "accuracy": null,
+    "relevance": null,
+    "planning_ok": null,
+    "csat": null,
+    "time_saved_hours": null
+  },
+  "token_forecast": {
+    "complexity": "small",
+    "complexity_score": 0.7,
+    "feature_type": "rita",
+    "per_role": {
+      "pm": 1759,
+      "architect": 2305,
+      "engineer": 7189,
+      "qa": 2611,
+      "techwriter": 1537
+    },
+    "total_forecast": 15401,
+    "confidence": "\u00b140%",
+    "basis_runs": 1
+  }
 }

@@ -1,7 +1,7 @@
 {
   "run_id": "20260506-0830",
   "app": "invest-game",
-  "request": "Build invest-game Phase 2 — backend API (3 endpoints, agent chain, run log writer, router registration)",
+  "request": "Build invest-game Phase 2 \u00e2\u20ac\u201d backend API (3 endpoints, agent chain, run log writer, router registration)",
   "skill_file": "project-office/features/invest-game/Invest_Gamification_Requirements.md",
   "agents": [
     {
@@ -48,9 +48,14 @@
         "contract_verified": true,
         "worktree_used": false,
         "no_hardcoded_values": true,
-        "dod_all_checked": false
+        "dod_all_checked": false,
+        "memory_used": false,
+        "tool_error_handled": false
       },
-      "failure_modes": ["FC-001", "FC-003"]
+      "failure_modes": [
+        "FC-001",
+        "FC-003"
+      ]
     },
     {
       "role": "qa",
@@ -79,7 +84,10 @@
         "spec_file_confirmed": false,
         "branch_noted": false
       },
-      "failure_modes": ["FC-001", "FC-005"]
+      "failure_modes": [
+        "FC-001",
+        "FC-005"
+      ]
     }
   ],
   "overall_status": "pass_with_warnings",
@@ -87,5 +95,31 @@
   "duration_minutes": 85,
   "branch": "master",
   "merge_status": "merged",
-  "merge_commit": "8edf27d"
+  "merge_commit": "8edf27d",
+  "retry_count": 0,
+  "abandoned": false,
+  "loop_events": 0,
+  "hitl_events": [],
+  "human_score": {
+    "accuracy": null,
+    "relevance": null,
+    "planning_ok": null,
+    "csat": null,
+    "time_saved_hours": null
+  },
+  "token_forecast": {
+    "complexity": "large",
+    "complexity_score": 1.5,
+    "feature_type": "invest-game",
+    "per_role": {
+      "pm": 10587,
+      "architect": 13874,
+      "engineer": 43273,
+      "qa": 15717,
+      "techwriter": 9249
+    },
+    "total_forecast": 92700,
+    "confidence": "\u00b140%",
+    "basis_runs": 1
+  }
 }

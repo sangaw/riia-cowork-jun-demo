@@ -46,9 +46,13 @@
         "code_changed": true,
         "spec_updated": false,
         "ruff_passed": true,
-        "contract_matches_architect": true
+        "contract_matches_architect": true,
+        "memory_used": false,
+        "tool_error_handled": false
       },
-      "failure_modes": ["FC-001"]
+      "failure_modes": [
+        "FC-001"
+      ]
     },
     {
       "role": "qa",
@@ -85,5 +89,31 @@
   "duration_minutes": 4,
   "branch": "worktree-agent-ae12ac59e058ea0c2",
   "merge_status": "merged",
-  "merge_commit": "7d1e372"
+  "merge_commit": "7d1e372",
+  "retry_count": 0,
+  "abandoned": false,
+  "loop_events": 0,
+  "hitl_events": [],
+  "human_score": {
+    "accuracy": null,
+    "relevance": null,
+    "planning_ok": null,
+    "csat": null,
+    "time_saved_hours": null
+  },
+  "token_forecast": {
+    "complexity": "small",
+    "complexity_score": 0.7,
+    "feature_type": "ops",
+    "per_role": {
+      "pm": 1759,
+      "architect": 2305,
+      "engineer": 7189,
+      "qa": 2611,
+      "techwriter": 1537
+    },
+    "total_forecast": 15401,
+    "confidence": "\u00b140%",
+    "basis_runs": 0
+  }
 }
