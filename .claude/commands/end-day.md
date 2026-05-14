@@ -1,33 +1,22 @@
 ---
-description: Run all 4 mandatory end-of-day steps: PLAN_STATUS + roadmap + Confluence + git commit
+description: Run all 3 mandatory end-of-day steps: PLAN_STATUS + Confluence + git commit
 ---
 
-Run all 4 end-of-day steps in order. Do not skip any step. Do not mark the day done until all 4 are complete.
+Run all 3 end-of-day steps in order. Do not skip any step. Do not mark the day done until all 3 are complete.
 
 ## Step 1 — Update PLAN_STATUS.md
 - Mark today's day row as `[x]` done
 - Add a brief notes column entry (what was delivered)
-- Update the "Last updated" date at the top to today's date (2026-04-23 or current date)
+- Update the "Last updated" date at the top to today's date
 - Update the "Current Sprint" header if a sprint just completed
 
-## Step 2 — Update program-roadmap.html
-File: `project-office/program-roadmap.html`
-Update ALL of these — do not leave any stale:
-- Overall completion % (progress bar width + label)
-- Current sprint progress bar % and label
-- "Days Done" KPI counter
-- Activity feed — prepend one new entry for today (date + what was delivered)
-- Sprint status badges: flip "In Progress" → "Done" if sprint just completed
-
-Read the file in a targeted slice (search for the section you need — the file is large, do not read in full).
-
-## Step 3 — Publish Confluence sprint board
+## Step 2 — Publish Confluence sprint board
 Identify the current sprint number N from PLAN_STATUS.md.
 Run: `CONFLUENCE_EMAIL=contact@ravionics.nl python project-office/confluence/sprint-boards/publish_sprint{N}_board.py`
 (Run from the workspace root: `riia-cowork-jun/`)
 If the script does not exist yet, skip this step and note it as a blocker.
 
-## Step 4 — Git commit
+## Step 3 — Git commit
 Stage all files changed today. Commit with a message in this format:
 ```
 <type>(<scope>): <what was delivered today>
@@ -39,4 +28,4 @@ Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
 After committing, run `git status` to confirm working tree is clean.
 
 ## Done
-Report: "Day N complete. All 4 end-of-day steps done. Commit: <short hash>"
+Report: "Day complete. All 3 end-of-day steps done. Commit: <short hash>"

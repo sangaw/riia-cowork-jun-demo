@@ -534,7 +534,17 @@ python riia-ai-org/agent-ops/aggregate_metrics.py
 
 This reads all `runs/run-*.json` files and rewrites `metrics.json` with fresh aggregates. The Agent Builds dashboard reads `metrics.json` on next load — no further action needed.
 
+Capture the stdout output. If any `[ALERT]` lines appear, collect them as `METRIC_ALERTS`.
+
 Report: `✓ metrics.json regenerated`
+
+If `METRIC_ALERTS` is non-empty, append to the final report:
+```
+⚠ aggregate_metrics.py flagged {N} alert(s):
+  {list each alert line}
+
+  Run /agent-performance-improvements to address these before the next /enhance run.
+```
 
 ---
 
