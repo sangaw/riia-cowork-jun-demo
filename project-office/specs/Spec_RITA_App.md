@@ -80,11 +80,17 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `experience/dashboard.py` | `/api/experience` | Legacy RITA/FnO/Ops aggregated payloads |
 | `experience/fno.py` | `/api/experience/fno` | FnO aggregated payload |
 | `experience/ops.py` | `/api/experience/ops` | Ops payload + metrics/summary + step-log + users + agent-builds |
-| `experience/rita.py` | `/api/v1` | RITA performance, risk, trade, instrument-selection |
+| `experience/rita.py` | `/api/v1` | RITA performance, risk, trade, instrument-selection, geography overview |
 | `experience/pipeline_wizard.py` | `/api/v1` | Goal/Market/Strategy wizard steps |
 | `experience/ds.py` | `/api/experience/ds` | DS dashboard instruments + training history + split dates |
 | `experience/agent_panel.py` | `/api/v1/agent-panel` | LangGraph 6-agent simulation for ASML |
 | `experience/invest_game.py` | `/api/experience/invest-game` | User-vs-AI investing game — session management, agent chain per day, run log writer |
+
+### RITA Experience Endpoints (`/api/v1/experience/rita`)
+
+| Method | Path | Description | Auth |
+|---|---|---|---|
+| `GET` | `/api/v1/experience/rita/geography-overview` | Geography panels for Overview section — US/EU/India instruments with close, daily return, signal badge | No |
 
 ### Ops Experience Endpoints (`/api/experience/ops`)
 

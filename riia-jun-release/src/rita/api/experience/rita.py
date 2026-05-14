@@ -22,11 +22,13 @@ from rita.repositories.instrument import InstrumentRepository
 from rita.repositories.config_overrides import ConfigOverridesRepository
 from rita.repositories.backtest import BacktestRunsRepository, BacktestResultsRepository
 from rita.repositories.training import TrainingRunsRepository
+from rita.repositories.market_data import MarketDataCacheRepository
 from rita.core.performance import (
     build_performance_feedback,
     build_portfolio_comparison,
     simulate_stress_scenarios,
 )
+from rita.schemas.geography import GeographyOverviewResponse, GeoInstrument, GeoRegion
 
 log = structlog.get_logger()
 
@@ -1097,3 +1099,138 @@ def technical_commentary(
         commentary=commentary,
         signal_summary=signal_summary,
     ).model_dump()
+
+
+# ── GET /api/v1/experience/rita/geography-overview ────────────────────────────
+
+_GEO_REGIONS: list[dict] = [
+    {
+        "region": "US",
+        "flag": "\U0001f1fa\U0001f1f8",
+        "instruments": [
+            {"id": "AAPL",    "name": "Apple"},
+            {"id": "MSFT",    "name": "Microsoft"},
+            {"id": "GOOGL",   "name": "Alphabet"},
+            {"id": "AMZN",    "name": "Amazon"},
+        ],
+    },
+    {
+        "region": "EU",
+        "flag": "\U0001f1ea\U0001f1fa",
+        "instruments": [
+            {"id": "SAP",     "name": "SAP"},
+            {"id": "ASML",    "name": "ASML"},
+            {"id": "LVMH",    "name": "LVMH"},
+            {"id": "SIE",     "name": "Siemens"},
+        ],
+    },
+    {
+        "region": "India",
+        "flag": "\U0001f1ee\U0001f1f3",
+        "instruments": [
+            {"id": "NIFTY",    "name": "Nifty 50"},
+            {"id": "BANKNIFTY","name": "Bank Nifty"},
+            {"id": "RELIANCE", "name": "Reliance"},
+            {"id": "INFY",     "name": "Infosys"},
+        ],
+    },
+]
+
+
+@router.get(
+    "/experience/rita/geography-overview",
+    summary="Geography panels — latest close and daily return for US / EU / India instruments",
+    response_model=GeographyOverviewResponse,
+)
+def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewResponse:
+    """Read-only.  Returns close price and daily return for a fixed instrument universe
+    grouped by geography.  Missing instruments are returned with null values so the
+    UI never receives an error for instruments not yet in the data cache.
+    """
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
+    # Build a lookup: instrument_id (upper) → (close, daily_return_pct)
+    price_map: dict[str, tuple[Optional[float], Optional[float]]] = {}
+
+    t0 = time.monotonic()
+    try:
+        cache_repo = MarketDataCacheRepository(db)
+        all_records = cache_repo.read_all()
+        sources["market_data_cache"] = {
+            "status": "ok" if all_records else "empty",
+            "record_count": len(all_records),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+
+        # Group by underlying, keep the two most-recent rows to compute daily return
+        from collections import defaultdict
+        by_instrument: dict[str, list[Any]] = defaultdict(list)
+        for rec in all_records:
+            by_instrument[rec.underlying.upper()].append(rec)
+
+        for inst_id, recs in by_instrument.items():
+            recs_sorted = sorted(recs, key=lambda r: r.date)
+            latest = recs_sorted[-1]
+            close = float(latest.close) if latest.close is not None else None
+            if len(recs_sorted) >= 2:
+                prev_close = float(recs_sorted[-2].close) if recs_sorted[-2].close else None
+                if prev_close and prev_close != 0 and close is not None:
+                    daily_return_pct = round((close - prev_close) / prev_close * 100, 4)
+                else:
+                    daily_return_pct = None
+            else:
+                daily_return_pct = None
+            price_map[inst_id] = (close, daily_return_pct)
+
+    except Exception as exc:
+        sources["market_data_cache"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    def _signal(daily_return_pct: Optional[float]) -> str:
+        if daily_return_pct is None:
+            return "neutral"
+        if daily_return_pct > 0.5:
+            return "bullish"
+        if daily_return_pct < -0.5:
+            return "bearish"
+        return "neutral"
+
+    regions: list[GeoRegion] = []
+    for region_def in _GEO_REGIONS:
+        instruments: list[GeoInstrument] = []
+        for inst_def in region_def["instruments"]:
+            inst_id = inst_def["id"].upper()
+            close, daily_return_pct = price_map.get(inst_id, (None, None))
+            instruments.append(
+                GeoInstrument(
+                    id=inst_id,
+                    name=inst_def["name"],
+                    flag=region_def["flag"],
+                    close=close,
+                    daily_return_pct=daily_return_pct,
+                    signal=_signal(daily_return_pct),
+                )
+            )
+        regions.append(
+            GeoRegion(
+                region=region_def["region"],
+                flag=region_def["flag"],
+                instruments=instruments,
+            )
+        )
+
+    overall = "ok" if sources.get("market_data_cache", {}).get("status") == "ok" else "partial"
+    log_event(
+        log, "info", "experience.compose",
+        handler="geography_overview",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=["regions"],
+        sources=sources,
+    )
+    return GeographyOverviewResponse(regions=regions)
