@@ -5,7 +5,7 @@
 
 ---
 
-## Current Status: IN PROGRESS — Architect analysis pending user confirmation
+## Current Status: PHASE 01 COMPLETE — resume next session at Phase 0 (Overview geography panels)
 
 ---
 
@@ -84,3 +84,21 @@
 | Steps 1–2 | 2026-05-14-1030 | /enhance orchestrator | — | — | PM approved |
 | Step 3 | 2026-05-14 | Architect (Plan agent) | — | — | 5-phase design complete |
 | Steps 3b–6 | 2026-05-14 | Engineer / QA / TechWriter | worktree-agent-afaa245ae7de4a431 | daf7a72 + daf4ce6 | Phase 01 complete. Merge: c57734a |
+| Post-QA fixes | 2026-05-14 | Orchestrator (direct) | master | e0db819 + 9824ee2 + 621360b | 3 bugs fixed: incomplete row move, dangling lastCrossIdx, display:none on section |
+
+## Next Session — Resume at Phase 0
+
+**Next phase:** Phase 0 — Overview Page (Geography Panels)
+**Architect design:** already in `project-office/task-briefs/task-brief-20260514-1030.md`
+**Implementation order for Phase 0:**
+1. `src/rita/schemas/geography.py` — GeoInstrument, GeoRegion, GeographyOverviewResponse
+2. `src/rita/api/experience/rita.py` — GET /api/v1/experience/rita/geography-overview
+3. `dashboard/rita.html` — add `div#geo-panels` inside `sec-market-signals`
+4. `dashboard/js/rita/market-signals.js` — add `loadGeoPanels()`, call from `loadMarketSignals()`
+5. `dashboard/js/rita/main.js` — expose `window.loadGeoPanels`
+
+**Post-Phase 0 order:** Phase 05 (Learnings) → Phase 03 (ANALYSE reorg) → Phase 04 (Monitor removals)
+
+**Known gaps to feed into Engineer skill file (captured in memory):**
+- Engineer must move complete DOM row containers, not just individual canvas elements, when requirement says "move a row"
+- Engineer must not add `style="display:none"` to new sections — use class-only visibility matching existing section pattern
