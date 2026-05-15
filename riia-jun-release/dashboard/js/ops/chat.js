@@ -52,9 +52,9 @@ export async function loadChat() {
     : '<div class="empty">No queries logged yet</div>';
 
   // Commentary metrics
-  const cCount   = data.commentary_count ?? 0;
-  const cLatency = data.commentary_avg_latency_ms;
-  const cErrors  = data.commentary_error_count ?? 0;
+  const cCount   = s.commentary_count ?? 0;
+  const cLatency = s.commentary_avg_latency_ms;
+  const cErrors  = s.commentary_error_count ?? 0;
   const errColour = cErrors === 0 ? 'ok' : cErrors < 3 ? 'ops' : 'warn';
   document.getElementById('chat-commentary').innerHTML = `
     <div class="kpi-strip" style="margin-bottom:12px">
