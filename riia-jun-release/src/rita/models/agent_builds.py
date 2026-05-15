@@ -33,6 +33,7 @@ class AgentBuildAgentModel(Base):
     steps_completed = Column(Integer, nullable=True)
     adherence_score = Column(Float, nullable=True)
     token_estimate = Column(Integer, nullable=True)
+    actual_tokens_total = Column(Integer, nullable=True)
     grounding_checks = Column(JSON, nullable=True)
     failure_modes = Column(JSON, nullable=True)
     recorded_at = Column(DateTime, nullable=False, default=datetime.utcnow)
