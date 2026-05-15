@@ -1,186 +1,63 @@
 # Feature 0501 — Agent Builds Page: Defect Fix + Actual Token Tracking
-**Last updated:** 2026-05-14
-**Status:** Analysis complete — ready to implement
+**Last updated:** 2026-05-15
+**Status:** COMPLETE — merged at a872db1
 
 ---
 
-## Fixes Applied This Session
+## Fixes Applied
 
 | Fix | Root Cause | Commit |
 |---|---|---|
-| Ops nav completely broken | `utilities.js` imported `{ api }` which doesn't exist in `ops/api.js` — fatal ES module linking error, `window.nav` never set | `8ca753d` |
-| DB empty, no runs showing | `agent_build_runs` table had 0 rows — `seed_agent_builds.py` not re-run after 2 new run logs added | Re-ran seed — 18 runs now in DB |
-
----
-
-## Remaining Defects (Identified 2026-05-14)
-
-### P1 — Metric Trend Lines: 3 of 4 lines always empty
-
-**File:** `riia-jun-release/dashboard/js/ops/agent-builds.js` — `mountTrendChart()`
-
-**Root cause:**
-`mountTrendChart` reads `overall_status`, `human_score.csat`, `plan_status_read`, and `spec_reference_valid`
-off each item in `grounding_trend`. But `GroundingPoint` (the API model) only carries:
-```
-{ run_id, app, grounding_score, checks_passed, checks_total }
-```
-None of the other fields exist, so TSR, CSAT, and Context Adherence lines are always null/flat.
-Only the Grounding Score line renders real data.
-
-**Fix required:**
-- API (`ops.py` `/agent-builds`): add `human_score_csat: Optional[float]` to `AgentBuildRunOut` by reading `human_score.csat` from the per-run JSON file (same place `token_forecast` and `hitl_events` are read)
-- JS (`agent-builds.js`): change `mountTrendChart` to compute TSR and CSAT from `data.runs` instead of `grounding_trend` items:
-  - TSR per run: `r.overall_status === 'pass' ? 1 : 0` (from `data.runs`)
-  - CSAT per run: `r.human_score_csat != null ? r.human_score_csat / 5 : null`
-  - Context Adherence: derive from `r.agents` — check if pm.grounding_checks.plan_status_read AND architect.grounding_checks.spec_reference_valid
-  - Grounding: keep reading from `grounding_trend` (already correct)
-- Schema (`agent_builds.py`): add `human_score_csat: Optional[float] = None` to `AgentBuildRunOut`
-
----
-
-### P1 — Skill Version History: improvement data not shown
-
-**File:** `riia-jun-release/src/rita/api/experience/ops.py` — `get_agent_builds()`
-
-**Root cause:**
-The endpoint builds `skill_version_history` from distinct `skill_file` names in the DB,
-always with `last_updated=None`, `recent_commits=[]`, `improvement_applied=None`.
-The `SkillVersion` schema already has all the right fields — they just aren't populated.
-`metrics.json` has the full data: `improvement_applied`, `before/after_first_pass_rate`, `last_updated`.
-
-**Fix required:**
-- In `get_agent_builds`, after computing `skill_files` from the DB, read `metrics.json` and
-  join against its `skill_version_history` array by `skill_file` name.
-- Populate: `last_updated`, `improvement_applied`, `before_first_pass_rate`, `after_first_pass_rate`
-- JS `renderSkillVersions`: add columns for `improvement_applied` and rate delta display.
-- Also fix the `recent_commits` rendering bug: items are `{hash, message}` objects, not strings.
-  Change `esc(c)` to `esc(c.hash) + ' — ' + esc(c.message)`.
-
----
-
-### P2 — Token Estimate widget: result cards never populate
-
-**File:** `riia-jun-release/dashboard/js/ops/agent-builds.js` — `submitTokenEstimate()`
-
-**Root cause:**
-`renderTokenEstimateWidget()` renders three result cards in the form grid:
-`#ab-res-complexity`, `#ab-res-total`, `#ab-res-confidence`
-But `submitTokenEstimate()` writes its output only to `#ab-estimate-result` (separate div).
-The three grid cards remain blank after every estimate.
-
-**Fix required:**
-In `submitTokenEstimate`, after receiving `resp`, also set:
-```js
-document.getElementById('ab-res-complexity').innerHTML =
-  `<span class="ab-kpi-lbl">Complexity</span><span class="ab-kpi-val">${esc(resp.complexity)}</span>`;
-document.getElementById('ab-res-total').innerHTML =
-  `<span class="ab-kpi-lbl">Total tokens</span><span class="ab-kpi-val">${resp.total_forecast?.toLocaleString()}</span>`;
-document.getElementById('ab-res-confidence').innerHTML =
-  `<span class="ab-kpi-lbl">Confidence</span><span class="ab-kpi-val">${esc(resp.confidence)}</span>`;
-```
-
----
-
-### P3 — recent_commits rendered as [object Object] (dormant)
-
-**File:** `riia-jun-release/dashboard/js/ops/agent-builds.js` — `renderSkillVersions()`
-
-**Root cause:**
-```js
-const commits = (s.recent_commits ?? []).slice(0, 2)
-  .map(c => `<code ...>${esc(c)}</code>`)
-```
-`recent_commits` items are objects `{hash, message}`, not strings.
-Currently dormant because the API always returns `recent_commits=[]`.
-Will surface when P1 Skill Version History fix is applied.
-
-**Fix:** change `esc(c)` to `` `${esc(c.hash)} — ${esc(c.message)}` ``
+| Ops nav completely broken | `utilities.js` imported `{ api }` which doesn't exist in `ops/api.js` — fatal ES module linking error | `8ca753d` |
+| DB empty, no runs showing | `agent_build_runs` table had 0 rows — `seed_agent_builds.py` not re-run after 2 new run logs added | Re-ran seed |
+| P1 — Metric Trend Lines: 3 of 4 lines always empty | `mountTrendChart` read `overall_status`, `human_score.csat` off `grounding_trend` items — fields not present; only Grounding Score rendered | `a872db1` |
+| P1 — Skill Version History: improvement data not shown | `get_agent_builds` built `skill_version_history` from DB only, ignoring `metrics.json`; `recent_commits` type was `list[str]` but data is `list[dict]` | `a872db1` |
+| P2 — Token Estimate result cards never populate | `submitTokenEstimate` wrote result to `#ab-estimate-result` only; three grid cards (`ab-res-complexity`, `ab-res-total`, `ab-res-confidence`) never written to | `a872db1` |
+| P3 — recent_commits shown as [object Object] | `renderSkillVersions` called `esc(c)` on `{hash, message}` objects | `a872db1` |
 
 ---
 
 ## New Feature: Actual Token Tracking from Claude API
 
-### Motivation
-Token estimates shown on the Agent Builds page are based on per-agent `token_estimate` fields
-in the run JSON files — these are the orchestrator's rough guesses, not actual Claude API usage.
-The user noted a visible gap between estimated and actual consumption (run 20260514-1945).
-
-Accurate token data requires reading the actual `usage` object returned by the Claude API
-(`input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`).
-
-### Requirements
-
-#### R1 — Capture actual token usage per agent run
-- When any agent completes a task (PM, Architect, Engineer, QA, TechWriter), capture the
-  Claude API response `usage` object and store it alongside the agent result in the run JSON.
-- Fields to capture per agent:
-  - `input_tokens` — tokens sent to Claude
-  - `output_tokens` — tokens generated by Claude
-  - `cache_read_input_tokens` — tokens served from prompt cache (if any)
-  - `cache_creation_input_tokens` — tokens written to cache
-  - `total_tokens` = input + output (the billable measure)
-
-#### R2 — Store actual tokens in run JSON and DB
-- In `riia-ai-org/agent-ops/runs/run-*.json`, each agent entry gains an `actual_tokens` block:
-  ```json
-  {
-    "role": "engineer",
-    "token_estimate": 33000,
-    "actual_tokens": {
-      "input_tokens": 28400,
-      "output_tokens": 4200,
-      "cache_read_input_tokens": 18000,
-      "cache_creation_input_tokens": 0,
-      "total_tokens": 32600
-    }
-  }
-  ```
-- `AgentBuildAgentModel` DB table: add `actual_tokens_total INT` column (via Alembic migration).
-- `AgentOut` schema: add `actual_tokens: Optional[dict] = None`.
-
-#### R3 — Show actual vs estimated in Agent Builds UI
-- Run History table: replace "Forecast Δ" column with "Est / Actual" showing both numbers.
-  Colour code: green if actual ≤ estimate, amber if within 25%, red if over by >25%.
-- Token Cost Trend chart: add a second dataset per role ("Actual") alongside the existing "Estimate".
-- Token Forecast vs Actual chart: replace `total_tokens_estimated` (sum of estimates) with
-  `total_actual_tokens` (sum of `actual_tokens.total_tokens` from all agents in the run).
-
-#### R4 — Feed actual data into forecast calibration
-- `aggregate_metrics.py`: when computing `token_forecasting.by_feature_type[x].avg_tokens`,
-  prefer `actual_tokens.total_tokens` over `total_tokens_estimated` where available.
-- This automatically improves the token forecast endpoint accuracy over time.
-
-#### R5 — Display cache efficiency on Agent Builds page
-- Add a "Cache Hit Rate" KPI card: `avg(cache_read / input_tokens)` across recent runs.
-- High cache hit rate = prompt caching working correctly and saving cost.
-
-### Files to Touch
-| File | Change |
-|---|---|
-| `riia-ai-org/agent-ops/runs/run-*.json` (new runs only) | Add `actual_tokens` block to each agent |
-| `.claude/commands/enhance.md` Step 7 | Record `actual_tokens` from each agent's API response into the run log |
-| `src/rita/models/agent_builds.py` | Add `actual_tokens_total` column |
-| `src/rita/schemas/agent_builds.py` | Add `actual_tokens` field to `AgentOut`, `actual_tokens_total` to run response |
-| `src/rita/api/experience/ops.py` | Surface `actual_tokens` from per-run JSON alongside `token_forecast` |
-| `dashboard/js/ops/agent-builds.js` | Update Run History table + Token chart to show actual vs estimated |
-| `riia-ai-org/agent-ops/aggregate_metrics.py` | Prefer actual tokens in `by_feature_type` avg calculation |
-
-### Implementation Note
-The `/enhance` orchestrator controls when run logs are written (Step 7). The actual token
-counts need to be recorded by each agent step as it reports back, not derived after the fact.
-This means the orchestrator must ask each agent to report its token usage when it completes,
-or the harness must expose `usage` from the Claude API response automatically.
-
-For Claude Code agents (general-purpose, Plan, etc.), token usage is visible in the API
-response object. The orchestrator should capture this and write it into the agent result
-block before closing the run log.
+| Requirement | Delivered | Notes |
+|---|---|---|
+| R1 — Capture actual tokens per agent run | Partial — schema + API ready; capture requires orchestrator change | `actual_tokens: Optional[dict]` added to `AgentOut`; populated from run JSON |
+| R2 — Store in run JSON + DB | Done | `actual_tokens_total` column added to `agent_build_agents` via Alembic migration `a3f9c1e82b5d`; DB migrated |
+| R3 — Show actual vs estimated in UI | Done | Run history "Est / Actual" column; Token chart dual datasets; Forecast chart uses actual sum |
+| R4 — Feed actual into forecast calibration | Done | `aggregate_metrics.py` prefers `actual_tokens.total_tokens` over `total_tokens_estimated` |
+| R5 — Cache Hit Rate KPI | Done | `ab-kpi-cache-hit` card added to `ops.html`; `renderKpiCards` computes avg cache hit rate |
 
 ---
 
-## Implementation Order (Next Session)
+## Defects Discovered During This Run
 
-1. Fix P1: Trend Lines (ops.py + agent-builds.js) — ~1 enhance run
-2. Fix P1: Skill Version History (ops.py + agent-builds.js) — small ops.py edit
-3. Fix P2: Estimate result cards (agent-builds.js only) — 5-line fix
-4. New Feature: Actual Token Tracking — full /enhance run (medium complexity)
+| Defect | Root Cause | Resolution |
+|---|---|---|
+| Engineer skipped `ops.html` | "Never read HTML" misread as "never touch HTML" | Re-invoked Engineer; fixed in commit `c85abdd`. Feedback + guardrail added to all skill files |
+| QA agent ran in background — no permissions | Orchestrator used `run_in_background: true` | Re-ran in foreground; 18/18 tests passed. Feedback recorded: never run agents in background during /enhance |
+| Alembic migration committed but not applied | Engineer created migration file but did not run `alembic upgrade head` | Applied manually: `a3f9c1e82b5d`. Hard gate added to all skill files + enhance.md step 7c |
+| May 15 run not showing in dashboard | `seed_agent_builds.py` not re-run after new run log added | Re-ran seed: 1 run inserted, 18 skipped |
+
+---
+
+## Files Changed (merge a872db1)
+
+| File | Change |
+|---|---|
+| `src/rita/schemas/agent_builds.py` | Added `actual_tokens`, `human_score_csat`; `recent_commits` type corrected |
+| `src/rita/models/agent_builds.py` | Added `actual_tokens_total` column |
+| `alembic/versions/a3f9c1e82b5d_add_actual_tokens_total.py` | New migration (applied) |
+| `src/rita/api/experience/ops.py` | Populated `skill_version_history` from `metrics.json`; added `human_score_csat` + `actual_tokens` per agent |
+| `dashboard/js/ops/agent-builds.js` | All 4 defect fixes + Actual Token Tracking UI (7 function changes) |
+| `dashboard/ops.html` | Added `ab-kpi-cache-hit` KPI card |
+| `riia-ai-org/agent-ops/aggregate_metrics.py` | Prefers actual tokens in `by_feature_type` avg |
+| `project-office/specs/Spec_RITA_App.md` | Updated agent-builds endpoint row |
+| `project-office/specs/Spec_JS_Code.md` | Updated agent-builds.js module row |
+
+---
+
+## QA
+
+- 18/18 unit tests pass (`tests/unit/test_agent_builds_defects.py`)
+- API-frontend contract: MATCH — all 6 new/changed fields verified
+- DB migration confirmed applied: `Running upgrade 47b9b71fa2f6 -> a3f9c1e82b5d`

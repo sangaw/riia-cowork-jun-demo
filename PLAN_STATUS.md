@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-14 (Post-v1.0 — RITA App Improve feature complete + mkTbl badge fix)
+**Last updated:** 2026-05-15 (Post-v1.0 — Agent Builds defect fix + Actual Token Tracking + agent-performance-improvements)
 
 ---
 
@@ -122,3 +122,5 @@ _None_
 - 2026-05-14: Agent Performance Metrics closed — 10/10 DoD. Browser verify passed. Human score recorded (accuracy 3, relevance 4, planning_ok false, csat 2, time_saved 32h). aggregate_metrics.py re-run. 3 threshold alerts fired: FC-001 ×7, engineer first-pass rate 44%, CSAT 2.0/5. program-roadmap.html retired from end-of-day routine.
 - 2026-05-14: /agent-performance-improvements run — FC-001 STOP gate added to all 3 skill files; FC-PARTIAL-IMPL files-count cross-check added to /enhance Step 4; aggregate_metrics.py skill_version_history preservation fixed; /agent-performance-improvements command created. Commit: 26f965b.
 - 2026-05-14: Feature 05 (rita-app-improve) complete — all 5 phases delivered (Technical Analysis, Geography Overview, Learnings, ANALYSE reorg, Monitor→ds.html migration). Cosmetic fix: mkTbl badge rendering for status columns applied across ds.html MODEL + non-MODEL sections. See `project-office/features/05 rita-app-improve/PLAN_STATUS.md`.
+- 2026-05-15: Agent Builds defect fix + Actual Token Tracking (Feature 0501) complete — 4 defects fixed (P1 trend lines, P1 skill version history, P2 token estimate cards, P3 recent_commits); Actual Token Tracking feature added (schema, ORM, Alembic migration, ops.py, agent-builds.js, ops.html, aggregate_metrics.py). Merged at a872db1. Confluence Engineering page updated v9→v10. 18 QA tests pass. DB migrated + seeded. See `project-office/features/0501 Defect Fix - Agent Builds Page/PLAN_STATUS.md`.
+- 2026-05-15: /agent-performance-improvements — FC-PARTIAL-IMPL HTML Grep+Edit guardrail added to all 3 skill files + enhance.md step 7b; Alembic migration hard gate added to all 3 skill files + enhance.md step 7c. Commits: c8c10cd, 393d1d5.

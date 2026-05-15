@@ -85,15 +85,27 @@ def compute_grounding_trend(runs: list) -> list:
 
 def compute_failure_modes(runs: list) -> dict:
     counts: dict = defaultdict(lambda: defaultdict(int))
-    for run in runs:
-        if run.get("skill_file", "n/a") == "n/a":
-            continue  # exclude game sessions
+    recent_counts: dict = defaultdict(lambda: defaultdict(int))
+
+    pipeline_runs = [r for r in runs if r.get("skill_file", "n/a") != "n/a"]
+    recent_runs = pipeline_runs[-5:]  # last 5 pipeline runs only
+
+    for run in pipeline_runs:
         for agent in run["agents"]:
             for fm in agent.get("failure_modes", []):
                 counts[fm][agent["role"]] += 1
 
+    for run in recent_runs:
+        for agent in run["agents"]:
+            for fm in agent.get("failure_modes", []):
+                recent_counts[fm][agent["role"]] += 1
+
     return {
-        fm: {"total": sum(roles.values()), "by_role": dict(roles)}
+        fm: {
+            "total": sum(roles.values()),
+            "recent_fires": sum(recent_counts.get(fm, {}).values()),
+            "by_role": dict(roles),
+        }
         for fm, roles in counts.items()
     }
 

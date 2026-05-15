@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-15T09:58:49",
+  "generated_at": "2026-05-15T10:08:29",
   "total_runs": 19,
   "per_role": {
     "pm": {
@@ -194,8 +194,12 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "c8c10cd",
+      "last_updated": "393d1d5",
       "recent_commits": [
+        {
+          "hash": "393d1d5",
+          "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
+        },
         {
           "hash": "c8c10cd",
           "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
@@ -211,10 +215,6 @@
         {
           "hash": "1790af4",
           "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
-        },
-        {
-          "hash": "979df5f",
-          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
       "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
@@ -223,8 +223,12 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "c8c10cd",
+      "last_updated": "393d1d5",
       "recent_commits": [
+        {
+          "hash": "393d1d5",
+          "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
+        },
         {
           "hash": "c8c10cd",
           "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
@@ -240,10 +244,6 @@
         {
           "hash": "1790af4",
           "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
-        },
-        {
-          "hash": "979df5f",
-          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
       "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
@@ -252,8 +252,12 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "c8c10cd",
+      "last_updated": "393d1d5",
       "recent_commits": [
+        {
+          "hash": "393d1d5",
+          "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
+        },
         {
           "hash": "c8c10cd",
           "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
@@ -269,10 +273,6 @@
         {
           "hash": "1790af4",
           "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
-        },
-        {
-          "hash": "979df5f",
-          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
       "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
@@ -353,8 +353,8 @@
   "quality": {
     "avg_accuracy_score": 3.0,
     "avg_relevance_score": 4.0,
-    "avg_csat": 2.5,
-    "planning_accuracy_rate": 0.5,
+    "avg_csat": 2.67,
+    "planning_accuracy_rate": 0.667,
     "grounding_pass_rate": 0.899
   },
   "token_forecasting": {
@@ -400,7 +400,7 @@
     "avg_duration_minutes": 34,
     "avg_tokens_per_run": 41015,
     "avg_retry_count": 0.11,
-    "avg_time_saved_hours": 20.0
+    "avg_time_saved_hours": 16.0
   },
   "reliability": {
     "error_recovery_rate": 0.75,
