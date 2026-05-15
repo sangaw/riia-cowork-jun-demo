@@ -166,6 +166,7 @@ Record responses as `human_score{}` in the run JSON: `accuracy`, `relevance`, `p
 | Never add `print()` statements | Use `structlog` for logging |
 | Never hardcode `http://localhost:8000` in JS | Use `window.RITA_API_BASE` |
 | HTML changes are still required even though full reads are forbidden | "Never read rita.html" = no full-file Read (4,000 lines). For any HTML file in the Architect's files-to-touch list: use Grep to find a sibling element ID, read ±15 lines around it, then use targeted Edit to insert. Skipping an HTML change is a partial implementation (FC-PARTIAL-IMPL). |
+| **Alembic migration must be applied, not just created** | After writing a migration file, run `python -m alembic upgrade head` from `riia-jun-release/` and confirm the `Running upgrade` line before committing. Committing the file alone does NOT apply the schema change — the app will crash with `OperationalError: no such column` at runtime. This is a hard DoD gate: migration applied = confirmed upgrade output seen. |
 | Never call `new Chart(...)` directly | Always use `mkChart(id, config)` from `charts.js` |
 | Never expose ES module functions without `window.*` | `onclick=""` handlers silently fail if not on `window` |
 | Always update spec when contract changes | Spec drift breaks future agents |

@@ -269,6 +269,11 @@ Implementation order:
     around the match, then use targeted Edit to insert. A targeted Edit does not require
     reading the full file. Skipping a required HTML change is a partial implementation
     (FC-PARTIAL-IMPL) and will trigger re-invocation before QA.
+7c. **Alembic migrations must be applied, not just created — hard gate.**
+    If you created a migration file: run `python -m alembic upgrade head` from
+    `riia-jun-release/` and confirm the output shows `Running upgrade {prev} -> {new}`.
+    Only then stage and commit. Committing the file without applying it causes a runtime
+    crash (`OperationalError: no such column`) visible to the user immediately on page load.
 8. Update Spec_RITA_App.md — add the new endpoint to the correct tier table
 9. Update Spec_JS_Code.md — add the new JS module to the {APP} module structure table
 10. Run: ruff check src/ — fix any errors before proceeding
