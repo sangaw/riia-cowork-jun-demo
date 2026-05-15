@@ -14,7 +14,7 @@ export const HANDLER_FN = {
 export async function loadChat() {
   const data = await apiFetch('/api/v1/chat/monitor');
   if (!data) {
-    ['chat-kpis','chat-intents','chat-recent'].forEach(id => {
+    ['chat-kpis','chat-intents','chat-recent','chat-commentary'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '<div class="empty">No chat data yet — use the RITA Agent chat first</div>';
     });
@@ -50,6 +50,24 @@ export async function loadChat() {
         </table>
       </div>`
     : '<div class="empty">No queries logged yet</div>';
+
+  // Commentary metrics
+  const cCount   = data.commentary_count ?? 0;
+  const cLatency = data.commentary_avg_latency_ms;
+  const cErrors  = data.commentary_error_count ?? 0;
+  const errColour = cErrors === 0 ? 'ok' : cErrors < 3 ? 'ops' : 'warn';
+  document.getElementById('chat-commentary').innerHTML = `
+    <div class="kpi-strip" style="margin-bottom:12px">
+      <div class="kpi"><div class="kpi-ey">Generated</div><div class="kpi-val ops">${cCount}</div><div class="kpi-sub">total commentaries</div></div>
+      <div class="kpi"><div class="kpi-ey">Avg Latency</div><div class="kpi-val ops">${cLatency != null ? cLatency.toFixed(0)+'ms' : '—'}</div><div class="kpi-sub">end-to-end</div></div>
+      <div class="kpi"><div class="kpi-ey">Errors</div><div class="kpi-val ${errColour}">${cErrors}</div><div class="kpi-sub">status=error rows</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--t3);line-height:1.7">
+      <div><span style="color:var(--t2);font-weight:600">Endpoint:</span> POST /api/v1/commentary</div>
+      <div><span style="color:var(--t2);font-weight:600">Pages:</span> Overview (auto-load) · Strategy (on button click)</div>
+      <div><span style="color:var(--t2);font-weight:600">Engine:</span> Deterministic rule-based · <span style="font-style:italic">LLM swap point: _build_narrative()</span></div>
+      <div><span style="color:var(--t2);font-weight:600">Instruments:</span> NVIDIA · ASML · NIFTY · BANKNIFTY</div>
+    </div>`;
 
   // Intent distribution with Python function column
   const intents = data.intents || [];

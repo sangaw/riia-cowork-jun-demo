@@ -935,10 +935,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       <div id="chat-recent"><div class="loading">Loading…</div></div>
     </div>
 
-    <!-- Intent distribution -->
-    <div class="card">
-      <div class="c-ey"><div class="ey-d" style="background:var(--chat)"></div>Intent Distribution — Python Function Mapping</div>
-      <div class="tbl-wrap" id="chat-intents"><div class="loading">Loading…</div></div>
+    <!-- Intent distribution + Commentary metrics (half / half) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="card">
+        <div class="c-ey"><div class="ey-d" style="background:var(--chat)"></div>Intent Distribution — Python Function Mapping</div>
+        <div class="tbl-wrap" id="chat-intents"><div class="loading">Loading…</div></div>
+      </div>
+      <div class="card">
+        <div class="c-ey"><div class="ey-d" style="background:var(--chat)"></div>Agent Commentary Metrics</div>
+        <div id="chat-commentary"><div class="loading">Loading…</div></div>
+      </div>
     </div>
   </section>
 
