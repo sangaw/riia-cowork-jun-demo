@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { setEl } from './utils.js';
 import { renderGoalResult, renderMarketResult, renderStepResult } from './pipeline.js';
 import { loadProgress } from './health.js';
+import { showStrategyCommentary } from './commentary.js';
 
 export async function loadExport() {
   try {
@@ -66,11 +67,35 @@ export async function runStrategy() {
   const btn = document.getElementById('btn-strategy');
   btn.disabled = true; btn.textContent = 'Running...';
   document.getElementById('strategy-status-badge').className = 'badge run';
+
+  const instrument = _inst();
+
+  // Fire commentary and strategy concurrently; strategy grid always renders
+  const [commentaryResult, strategyResult] = await Promise.allSettled([
+    api('/api/v1/commentary', 'POST', { app: 'rita', page: 'strategy', instrument }),
+    api('/api/v1/strategy', 'POST', { instrument }),
+  ]);
+
+  // Show commentary before result grid — shows '—' on failure
   try {
-    const d = await api('/api/v1/strategy', 'POST', { instrument: _inst() });
-    document.getElementById('strategy-status-badge').className = 'badge ok';
-    setEl('strategy-status-badge', 'Done');
-    renderStepResult('strategy-result', d);
+    const commentaryText =
+      commentaryResult.status === 'fulfilled' && commentaryResult.value?.commentary
+        ? commentaryResult.value.commentary
+        : '—';
+    showStrategyCommentary(commentaryText);
+  } catch (_) {
+    showStrategyCommentary('—');
+  }
+
+  // Strategy result always renders regardless of commentary outcome
+  try {
+    if (strategyResult.status === 'fulfilled') {
+      document.getElementById('strategy-status-badge').className = 'badge ok';
+      setEl('strategy-status-badge', 'Done');
+      renderStepResult('strategy-result', strategyResult.value);
+    } else {
+      throw strategyResult.reason;
+    }
   } catch (e) {
     document.getElementById('strategy-status-badge').className = 'badge err';
     setEl('strategy-status-badge', 'Error');

@@ -17,6 +17,7 @@ async function apiFetch(url, opts = {}) {
     }
 }
 import { show, warmupChat, _sectionLoaders, getCurrentSection } from './nav.js';
+import { loadOverviewCommentary } from './commentary.js';
 import { loadHealth, loadPerfSummary, loadDrift, loadProgress } from './health.js';
 import { switchMsTab, loadMarketSignals, loadGoalHint, loadGeoPanels } from './market-signals.js';
 import { loadPerformance } from './performance.js';
@@ -74,6 +75,7 @@ window.closeChartModal    = closeChartModal;
 window.loadMarketSignals  = loadMarketSignals;
 window.loadGoalHint       = loadGoalHint;
 window.loadGeoPanels      = loadGeoPanels;
+window.loadOverviewCommentary = loadOverviewCommentary;
 window.loadPerformance    = loadPerformance;
 window.loadExplain        = loadExplain;
 window.loadRisk           = loadRisk;

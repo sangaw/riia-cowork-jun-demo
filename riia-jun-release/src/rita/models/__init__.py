@@ -18,6 +18,7 @@ from .instrument import InstrumentModel
 from .user import UserModel
 from .mcp_call import MCPCallModel
 from .agent_builds import AgentBuildRunModel, AgentBuildAgentModel
+from .commentary_log import CommentaryLogModel
 
 __all__ = [
     "PositionModel",
@@ -42,4 +43,5 @@ __all__ = [
     "MCPCallModel",
     "AgentBuildRunModel",
     "AgentBuildAgentModel",
+    "CommentaryLogModel",
 ]

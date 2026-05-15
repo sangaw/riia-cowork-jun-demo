@@ -72,6 +72,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `workflow/evaluate.py` | `POST /api/v1/evaluate` |
 | `workflow/pipeline.py` | `POST /api/v1/instrument/select`, `GET /api/v1/pipeline/progress`, `POST /api/v1/pipeline/quick-backtest` |
 | `workflow/chat.py` | `POST /api/v1/chat`, `POST /api/v1/chat/warmup` |
+| `workflow/commentary.py` | `POST /api/v1/commentary` |
 
 ### Experience Tier — Read-only, no auth
 
@@ -337,6 +338,8 @@ context → strategy → probability → portfolio_manager → compliance → na
 Endpoints:
 - `POST /api/v1/chat/warmup` — pre-warms SentenceTransformer (called when chat panel opens)
 - `POST /api/v1/chat` — classify + dispatch + log
+- `GET /api/v1/chat/monitor` — KPIs + recent queries + intent distribution. Response `summary` dict also includes `commentary_count`, `commentary_avg_latency_ms`, `commentary_error_count` merged from `commentary_logs` table.
+- `POST /api/v1/commentary` — deterministic rule-based narrative commentary for RITA dashboard pages. Request: `{app, page, instrument?}`. Response: `{app, page, commentary, instruments_analyzed, latency_ms}`. HTTP 400 for unknown app+page or missing instrument on strategy page.
 
 ---
 
