@@ -63,6 +63,7 @@ from rita.api.experience.ds import router as ds_router
 from rita.api.experience.agent_panel import router as agent_panel_router
 from rita.api.experience.invest_game import router as invest_game_router
 from rita.api.v1.workflow.chat import router as chat_router
+from rita.api.v1.workflow.commentary import router as commentary_router
 from rita.api.v1.portfolio import router as portfolio_router
 
 settings = get_settings()
@@ -323,6 +324,9 @@ app.include_router(invest_game_router)
 
 # -- Chat -- local intent classifier + OHLCV dispatch (no external API) -------
 app.include_router(chat_router)
+
+# -- Commentary -- deterministic narrative generation (no auth) ----------------
+app.include_router(commentary_router)
 
 # -- Portfolio -- cross-instrument overview + backtest (read-only, no auth) ----
 app.include_router(portfolio_router)

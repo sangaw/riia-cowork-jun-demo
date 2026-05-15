@@ -2,6 +2,7 @@
 import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
+import { loadOverviewCommentary } from './commentary.js';
 
 let _msTimeframe = 'daily';
 
@@ -196,6 +197,7 @@ export async function loadMarketSignals() {
       : mkAlert('neu', 'No significant signals');
 
     await loadGeoPanels();
+    await loadOverviewCommentary();
 
   } catch (e) {
     console.warn('market signals error', e);

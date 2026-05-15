@@ -41,6 +41,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `audit.js` | Audit log table | `loadAudit()` |
 | `mcp.js` | MCP calls panel | `loadMcp()` |
 | `chat.js` | RITA chat assistant | `sendChatMsg()`, `useChip()`, `clearChat()` |
+| `commentary.js` | Typewriter narrative for overview and strategy pages | `loadOverviewCommentary()`, `showOverviewCommentary(text)`, `showStrategyCommentary(text)` |
 | **`agent-panel.js`** | **LangGraph 6-agent simulation** | `loadAgentPanel()`, `agentPanelStep()`, `approveAgentProposal()`, `rejectAgentProposal()`, `resetAgentPanel()` |
 | **`ai-compliance.js`** | **AI Compliance panel (reads agent history)** | `loadAiCompliance()`, `switchAcTab(tabId, viewId)` |
 | `technical-analysis.js` | Technical Analysis section — commentary + PV/ATR/RSI charts | `loadTechnicalAnalysis()` |

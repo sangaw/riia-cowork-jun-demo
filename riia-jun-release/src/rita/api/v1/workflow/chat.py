@@ -285,11 +285,24 @@ def chat(req: ChatRequest, db: Session = Depends(get_db)) -> dict:
 
 
 @router.get("/monitor")
-def chat_monitor_summary() -> dict:
-    """KPIs and recent queries from the chat monitor CSV."""
+def chat_monitor_summary(db: Session = Depends(get_db)) -> dict:
+    """KPIs and recent queries from the chat monitor CSV.
+
+    Also merges commentary_logs KPIs: commentary_count, commentary_avg_latency_ms,
+    commentary_error_count.
+    """
     from rita.core.chat_monitor import get_summary, get_recent_queries, get_intent_distribution
+    from rita.repositories.commentary_log import CommentaryLogRepository
+
+    summary = get_summary()
+    try:
+        commentary_kpis = CommentaryLogRepository(db).get_summary()
+        summary.update(commentary_kpis)
+    except Exception as exc:
+        log.warning("chat_monitor.commentary_kpis_failed", error=str(exc))
+
     return {
-        "summary": get_summary(),
+        "summary": summary,
         "recent":  get_recent_queries(20),
         "intents": get_intent_distribution(),
     }
