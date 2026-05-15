@@ -446,17 +446,11 @@ def get_agent_builds(
         for code, v in failure_map.items()
     }
 
-    # Skill version history — distinct skill files
-    skill_files = list({r.skill_file for r in all_runs_for_trend if r.skill_file})
-    skill_version_history = [
-        SkillVersion(skill_file=sf, last_updated=None, recent_commits=[])
-        for sf in skill_files
-    ]
-
-    # Read metrics.json for the 7 extended metric sections
+    # Read metrics.json for the 7 extended metric sections + skill_version_history
     _metrics_extra: dict[str, Any] = {}
     _runs_dir = Path(__file__).parents[5] / "riia-ai-org" / "agent-ops"
     _metrics_path = _runs_dir / "metrics.json"
+    _metrics_svh_lookup: dict[str, dict] = {}
     if _metrics_path.exists():
         try:
             with _metrics_path.open() as _f:
@@ -465,12 +459,61 @@ def get_agent_builds(
                          "efficiency", "reliability", "hitl", "agentic"):
                 if _key in _m:
                     _metrics_extra[_key] = _m[_key]
+            # Build lookup for skill_version_history by skill_file name
+            for _svh in _m.get("skill_version_history", []):
+                _sf_key = _svh.get("skill_file")
+                if _sf_key:
+                    _metrics_svh_lookup[_sf_key] = _svh
         except Exception:
             pass
+
+    # Skill version history — join DB skill files with metrics.json data
+    skill_files = list({r.skill_file for r in all_runs_for_trend if r.skill_file})
+    skill_version_history: list[SkillVersion] = []
+    for sf in skill_files:
+        _svh_data = _metrics_svh_lookup.get(sf, {})
+        skill_version_history.append(
+            SkillVersion(
+                skill_file=sf,
+                last_updated=_svh_data.get("last_updated"),
+                recent_commits=_svh_data.get("recent_commits", []),
+                improvement_applied=_svh_data.get("improvement_applied"),
+                before_first_pass_rate=_svh_data.get("before_first_pass_rate"),
+                after_first_pass_rate=_svh_data.get("after_first_pass_rate"),
+            )
+        )
+    # Also include entries from metrics.json not yet in DB (e.g. enhance.md)
+    for _sf_key, _svh_data in _metrics_svh_lookup.items():
+        if _sf_key not in skill_files:
+            skill_version_history.append(
+                SkillVersion(
+                    skill_file=_sf_key,
+                    last_updated=_svh_data.get("last_updated"),
+                    recent_commits=_svh_data.get("recent_commits", []),
+                    improvement_applied=_svh_data.get("improvement_applied"),
+                    before_first_pass_rate=_svh_data.get("before_first_pass_rate"),
+                    after_first_pass_rate=_svh_data.get("after_first_pass_rate"),
+                )
+            )
 
     runs_out: list[AgentBuildRunOut] = []
     for run in runs:
         agents_for_run = [a for a in all_agents if a.run_id == run.run_id]
+        # Load per-run JSON for v2 fields not stored in DB
+        _run_json: dict[str, Any] = {}
+        _run_json_path = _runs_dir / "runs" / f"run-{run.run_id}.json"
+        if _run_json_path.exists():
+            try:
+                with _run_json_path.open() as _f:
+                    _run_json = json.load(_f)
+            except Exception:
+                pass
+        # Build per-agent actual_tokens lookup from run JSON
+        _json_agents_by_role: dict[str, dict] = {
+            a["role"]: a
+            for a in _run_json.get("agents", [])
+            if isinstance(a, dict) and "role" in a
+        }
         agents_out = [
             AgentOut(
                 role=a.role,
@@ -481,18 +524,10 @@ def get_agent_builds(
                 steps_completed=a.steps_completed,
                 grounding_checks=a.grounding_checks,
                 failure_modes=a.failure_modes,
+                actual_tokens=_json_agents_by_role.get(a.role, {}).get("actual_tokens"),
             )
             for a in agents_for_run
         ]
-        # Load per-run JSON for v2 fields not stored in DB
-        _run_json: dict[str, Any] = {}
-        _run_json_path = _runs_dir / "runs" / f"run-{run.run_id}.json"
-        if _run_json_path.exists():
-            try:
-                with _run_json_path.open() as _f:
-                    _run_json = json.load(_f)
-            except Exception:
-                pass
         runs_out.append(
             AgentBuildRunOut(
                 run_id=run.run_id,
@@ -505,6 +540,7 @@ def get_agent_builds(
                 token_forecast=_run_json.get("token_forecast"),
                 total_tokens_estimated=_run_json.get("total_tokens_estimated"),
                 hitl_events=_run_json.get("hitl_events"),
+                human_score_csat=_run_json.get("human_score", {}).get("csat"),
             )
         )
 

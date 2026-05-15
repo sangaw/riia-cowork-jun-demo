@@ -13,6 +13,7 @@ class AgentOut(BaseModel):
     steps_completed: Optional[int] = None
     grounding_checks: Optional[dict] = None
     failure_modes: Optional[list[str]] = None
+    actual_tokens: Optional[dict] = None
 
 
 class AgentBuildRunOut(BaseModel):
@@ -26,6 +27,7 @@ class AgentBuildRunOut(BaseModel):
     token_forecast: Optional[dict] = None
     total_tokens_estimated: Optional[int] = None
     hitl_events: Optional[list] = None
+    human_score_csat: Optional[float] = None
 
 
 class RoleMetrics(BaseModel):
@@ -51,7 +53,7 @@ class FailureEntry(BaseModel):
 class SkillVersion(BaseModel):
     skill_file: str
     last_updated: Optional[str] = None
-    recent_commits: list[str]
+    recent_commits: list[dict]
     improvement_applied: Optional[str] = None
     before_first_pass_rate: Optional[float] = None
     after_first_pass_rate: Optional[float] = None

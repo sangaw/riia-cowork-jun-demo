@@ -192,7 +192,14 @@ def compute_token_forecasting(runs: list) -> dict:
     }
     for r in runs:
         tf = r.get("token_forecast")
-        actual = r.get("total_tokens_estimated")
+        estimated = r.get("total_tokens_estimated")
+        # Prefer actual token sum over estimated where available
+        actual_sum = sum(
+            a["actual_tokens"]["total_tokens"]
+            for a in r.get("agents", [])
+            if a.get("actual_tokens") and a["actual_tokens"].get("total_tokens") is not None
+        )
+        actual = actual_sum if actual_sum > 0 else estimated
         if tf and actual and tf.get("total_forecast"):
             err = abs(actual - tf["total_forecast"]) / tf["total_forecast"] * 100
             errors.append(err)

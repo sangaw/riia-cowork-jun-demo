@@ -101,15 +101,19 @@ function renderRunHistory(runs) {
     const hitlCount = r.hitl_events?.length ?? 0;
     const hitlCol = hitlCount > 0 ? String(hitlCount) : '—';
 
-    // Forecast Δ
-    let forecastDelta = '—';
-    if (r.token_forecast?.total_forecast) {
-      const actual   = r.total_tokens_estimated ?? 0;
-      const forecast = r.token_forecast.total_forecast;
-      const deltaPct = ((actual - forecast) / forecast) * 100;
-      const sign     = deltaPct >= 0 ? '+' : '';
-      const color    = deltaPct >= 0 ? 'var(--ok)' : 'var(--danger)';
-      forecastDelta  = `<span style="color:${color};font-family:var(--fm)">${sign}${deltaPct.toFixed(0)}%</span>`;
+    // Est / Actual tokens
+    const est = r.total_tokens_estimated ?? 0;
+    const actualSum = (r.agents ?? []).reduce((acc, a) => acc + (a.actual_tokens?.total_tokens ?? 0), 0);
+    const hasActual = (r.agents ?? []).some(a => a.actual_tokens?.total_tokens != null);
+    let estActualCol = `${est.toLocaleString()} / —`;
+    if (hasActual) {
+      let tokenColor = 'var(--ok)';
+      if (actualSum > est * 1.25) {
+        tokenColor = 'var(--danger)';
+      } else if (actualSum > est) {
+        tokenColor = 'var(--warn)';
+      }
+      estActualCol = `${est.toLocaleString()} / <span style="color:${tokenColor};font-family:var(--fm)">${actualSum.toLocaleString()}</span>`;
     }
 
     return `<tr>
@@ -122,13 +126,13 @@ function renderRunHistory(runs) {
       <td style="font-family:var(--fm);color:var(--t3);font-size:10px">${esc(r.branch ?? '—')}</td>
       <td style="font-size:11px">${fcCol}</td>
       <td style="font-family:var(--fm);text-align:center">${hitlCol}</td>
-      <td style="text-align:center">${forecastDelta}</td>
+      <td style="font-family:var(--fm);font-size:11px">${estActualCol}</td>
     </tr>`;
   }).join('');
   const tbl = `<div class="tbl-wrap"><table>
     <thead><tr>
       <th>Run ID</th><th>App</th><th>Request</th><th>Status</th><th>Agents</th><th>Duration</th><th>Branch</th>
-      <th>FC Codes</th><th>HITL</th><th>Forecast Δ</th>
+      <th>FC Codes</th><th>HITL</th><th>Est / Actual</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
@@ -239,7 +243,8 @@ function renderTokenPanel(runs) {
 
 function mountTokenChart(runs) {
   const labels   = runs.map(r => fmtRunId(r.run_id));
-  const datasets = ROLES.map((role, i) => ({
+  // Estimate datasets (solid lines, one per role)
+  const estimateDatasets = ROLES.map((role, i) => ({
     label: ROLE_LABEL[role],
     data: runs.map(r => (r.agents ?? []).find(a => a.role === role)?.token_estimate ?? 0),
     borderColor: roleColour(i),
@@ -248,6 +253,19 @@ function mountTokenChart(runs) {
     tension: 0.3,
     pointRadius: 4,
   }));
+  // Actual datasets (dashed lines, one per role)
+  const actualDatasets = ROLES.map((role, i) => ({
+    label: `${ROLE_LABEL[role]} (actual)`,
+    data: runs.map(r => (r.agents ?? []).find(a => a.role === role)?.actual_tokens?.total_tokens ?? null),
+    borderColor: roleColour(i, 0.55),
+    backgroundColor: roleColour(i, 0.04),
+    borderDash: [4, 4],
+    fill: false,
+    tension: 0.3,
+    pointRadius: 3,
+    spanGaps: false,
+  }));
+  const datasets = [...estimateDatasets, ...actualDatasets];
   if (_chartTokens) { _chartTokens.destroy(); _chartTokens = null; }
   const ctx = document.getElementById('ab-chart-tokens');
   if (!ctx) return;
@@ -267,16 +285,23 @@ function renderSkillVersions(m) {
   }
   const rows = hist.map(s => {
     const commits = (s.recent_commits ?? []).slice(0, 2)
-      .map(c => `<code style="font-size:10px;font-family:var(--fm);color:var(--t3)">${esc(c)}</code>`)
+      .map(c => `<code style="font-size:10px;font-family:var(--fm);color:var(--t3)">${esc(c.hash)} — ${esc(c.message)}</code>`)
       .join('<br>');
+    const improvement = esc(s.improvement_applied ?? '—');
+    let rateDelta = '—';
+    if (s.before_first_pass_rate != null && s.after_first_pass_rate != null) {
+      rateDelta = `${Math.round(s.before_first_pass_rate * 100)}% → ${Math.round(s.after_first_pass_rate * 100)}%`;
+    }
     return `<tr>
       <td style="font-family:var(--fm);font-size:10px;color:var(--accelerate)">${esc(s.skill_file)}</td>
       <td style="font-family:var(--fm);font-size:11px">${esc(s.last_updated ?? '—')}</td>
+      <td style="font-size:11px">${improvement}</td>
+      <td style="font-family:var(--fm);font-size:11px">${rateDelta}</td>
       <td>${commits || '<span style="color:var(--t4)">—</span>'}</td>
     </tr>`;
   }).join('');
   const tbl = `<div class="tbl-wrap"><table>
-    <thead><tr><th>Skill File</th><th>Last Updated</th><th>Recent Commits</th></tr></thead>
+    <thead><tr><th>Skill File</th><th>Last Updated</th><th>Improvement</th><th>Rate Δ</th><th>Recent Commits</th></tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
   return panel('skills', 'Skill File Versions', tbl);
@@ -284,7 +309,7 @@ function renderSkillVersions(m) {
 
 /* ── Panel A: KPI Cards ──────────────────────────────────────────────────── */
 
-function renderKpiCards(metrics) {
+function renderKpiCards(metrics, runs) {
   try {
     const tc  = metrics?.task_completion;
     const q   = metrics?.quality;
@@ -295,6 +320,7 @@ function renderKpiCards(metrics) {
     const csatEl = document.getElementById('ab-kpi-csat');
     const forecastEl = document.getElementById('ab-kpi-forecast-err');
     const hitlEl = document.getElementById('ab-kpi-hitl');
+    const cacheHitEl = document.getElementById('ab-kpi-cache-hit');
 
     if (tsrEl) tsrEl.innerHTML = tc?.tsr != null
       ? `<span class="ab-kpi-val">${(tc.tsr * 100).toFixed(1)}%</span><span class="ab-kpi-lbl">Task Success Rate</span>`
@@ -311,6 +337,23 @@ function renderKpiCards(metrics) {
     if (hitlEl) hitlEl.innerHTML = h != null
       ? `<span class="ab-kpi-val">${((h.escalation_rate || 0) * 100).toFixed(0)}%</span><span class="ab-kpi-lbl">HITL Escalation Rate</span>`
       : `<span class="ab-kpi-val">—</span><span class="ab-kpi-lbl">HITL Escalation Rate</span>`;
+
+    // Cache hit rate: avg(cache_read_input_tokens / input_tokens) across all agents with actual_tokens
+    if (cacheHitEl) {
+      const cacheRates = [];
+      for (const r of (runs ?? [])) {
+        for (const a of (r.agents ?? [])) {
+          const at = a.actual_tokens;
+          if (at && at.input_tokens > 0) {
+            cacheRates.push((at.cache_read_input_tokens ?? 0) / at.input_tokens);
+          }
+        }
+      }
+      const cacheHitDisplay = cacheRates.length > 0
+        ? `${Math.round(cacheRates.reduce((s, v) => s + v, 0) / cacheRates.length * 100)}%`
+        : '—';
+      cacheHitEl.innerHTML = `<span class="ab-kpi-val">${cacheHitDisplay}</span><span class="ab-kpi-lbl">Cache Hit Rate</span>`;
+    }
   } catch (e) {
     // silently ignore — KPI cards show — by default
   }
@@ -333,7 +376,10 @@ function mountForecastChart(runs) {
     const slice  = (runs ?? []).slice(-10);
     const labels = slice.map(r => fmtRunId(r.run_id));
     const forecasts = slice.map(r => (r.token_forecast?.total_forecast ?? 0) / 1000);
-    const actuals   = slice.map(r => (r.total_tokens_estimated ?? 0) / 1000);
+    const actuals   = slice.map(r => {
+      const sum = (r.agents ?? []).reduce((acc, a) => acc + (a.actual_tokens?.total_tokens ?? 0), 0);
+      return sum > 0 ? sum / 1000 : null;
+    });
 
     if (window._chartForecast) { window._chartForecast.destroy(); window._chartForecast = null; }
 
@@ -402,35 +448,54 @@ function mountForecastChart(runs) {
 
 /* ── Panel C: Metric Trend Lines ─────────────────────────────────────────── */
 
-function renderTrendPanel(m) {
+function renderTrendPanel(m, runs) {
   try {
     const el = document.getElementById('ab-panel-trends');
     if (!el) return;
-    mountTrendChart(m);
+    mountTrendChart(m, runs);
   } catch (e) {
     // silently ignore
   }
 }
 
-function mountTrendChart(m) {
+function mountTrendChart(m, runs) {
   try {
     const trend = m?.grounding_trend ?? [];
     const labels = trend.map(r => fmtRunId(r.run_id));
-    const runs   = m?._runs ?? [];  // passed through by caller when available
 
-    // TSR per run: 1 if pass else 0
-    const tsrData = trend.map(r => r.overall_status === 'pass' ? 1 : (r.overall_status != null ? 0 : null));
+    // Build a lookup from run_id -> run object for fast access
+    const runsById = {};
+    for (const r of (runs ?? [])) {
+      runsById[r.run_id] = r;
+    }
 
-    // Grounding score (already 0-1)
+    // TSR per run: find matching run by run_id, 1 if pass else 0, null if not found
+    const tsrData = trend.map(t => {
+      const r = runsById[t.run_id];
+      if (!r) return null;
+      return r.overall_status === 'pass' ? 1 : 0;
+    });
+
+    // Grounding score (already 0-1, from grounding_trend)
     const groundingData = trend.map(r => r.grounding_score ?? null);
 
-    // CSAT: null = gap (Chart.js spanGaps:false renders gap)
-    const csatData = trend.map(r => r.human_score?.csat != null ? r.human_score.csat / 5 : null);
+    // CSAT: from matching run's human_score_csat (normalised 0-1), null if missing
+    const csatData = trend.map(t => {
+      const r = runsById[t.run_id];
+      return (r?.human_score_csat != null) ? r.human_score_csat / 5 : null;
+    });
 
-    // Context adherence: plan_status_read AND spec_reference_valid
-    const adherenceData = trend.map(r => {
-      if (r.plan_status_read == null && r.spec_reference_valid == null) return null;
-      return (r.plan_status_read && r.spec_reference_valid) ? 1 : 0;
+    // Context adherence: pm.grounding_checks.plan_status_read AND
+    // architect.grounding_checks.spec_reference_valid → 1; else 0; null if agents missing
+    const adherenceData = trend.map(t => {
+      const r = runsById[t.run_id];
+      if (!r?.agents?.length) return null;
+      const pm = r.agents.find(a => a.role === 'pm');
+      const arch = r.agents.find(a => a.role === 'architect');
+      if (!pm && !arch) return null;
+      const planOk = pm?.grounding_checks?.plan_status_read === true;
+      const specOk = arch?.grounding_checks?.spec_reference_valid === true;
+      return (planOk && specOk) ? 1 : 0;
     });
 
     if (window._chartTrends) { window._chartTrends.destroy(); window._chartTrends = null; }
@@ -644,6 +709,14 @@ export async function submitTokenEstimate() {
       </div>
       ${noHistNote}
     `;
+
+    // Populate the three result KPI cards in the form grid
+    const resComplexity = document.getElementById('ab-res-complexity');
+    if (resComplexity) resComplexity.innerHTML = `<span class="ab-kpi-lbl">Complexity</span><span class="ab-kpi-val">${esc(resp.complexity ?? '—')}</span>`;
+    const resTotal = document.getElementById('ab-res-total');
+    if (resTotal) resTotal.innerHTML = `<span class="ab-kpi-lbl">Total tokens</span><span class="ab-kpi-val">${resp.total_forecast != null ? resp.total_forecast.toLocaleString() : '—'}</span>`;
+    const resConfidence = document.getElementById('ab-res-confidence');
+    if (resConfidence) resConfidence.innerHTML = `<span class="ab-kpi-lbl">Confidence</span><span class="ab-kpi-val">${esc(resp.confidence ?? '—')}</span>`;
   } catch (e) {
     const result = document.getElementById('ab-estimate-result');
     if (result) result.innerHTML = '<span style="color:var(--danger)">—</span>';
@@ -671,7 +744,7 @@ export async function loadAgentBuilds() {
     }
 
     // KPI card HTML (outside grid — targets fixed DOM IDs in ops.html)
-    renderKpiCards(m);
+    renderKpiCards(m, runs);
 
     // Render HTML panels (charts need canvas in DOM first)
     grid.innerHTML = [
@@ -694,7 +767,7 @@ export async function loadAgentBuilds() {
       mountGroundingChart(m);
       mountTokenChart(runs);
       renderForecastPanel(runs);
-      renderTrendPanel(m);
+      renderTrendPanel(m, runs);
     }
 
     renderTokenEstimateWidget();
