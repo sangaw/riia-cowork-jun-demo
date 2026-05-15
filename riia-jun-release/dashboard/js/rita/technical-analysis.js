@@ -26,8 +26,8 @@ function _renderCommentary(data) {
     : '';
 
   el.innerHTML = `
-    <div style="font-size:13px;color:#555;margin-bottom:10px">${data.instrument}</div>
-    <div style="font-size:15px;line-height:1.6;margin-bottom:12px">${data.commentary}</div>
+    <div style="font-size:11px;font-weight:600;color:var(--t2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Agent Commentary — ${data.instrument}</div>
+    <div style="font-size:13px;color:var(--t1);line-height:1.6;margin-bottom:12px">${data.commentary}</div>
     <div>${summaryHtml}</div>
   `;
 }
