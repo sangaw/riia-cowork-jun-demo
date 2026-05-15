@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-15T09:52:41",
+  "generated_at": "2026-05-15T09:58:49",
   "total_runs": 19,
   "per_role": {
     "pm": {
@@ -194,11 +194,11 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "pending-commit",
+      "last_updated": "c8c10cd",
       "recent_commits": [
         {
-          "hash": "pending-commit",
-          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files (FC-PARTIAL-IMPL)"
+          "hash": "c8c10cd",
+          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
         },
         {
           "hash": "2631b95",
@@ -210,7 +210,11 @@
         },
         {
           "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u2014 JS panels A-D, estimate widget, skill score prompts, spec updates"
+          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
+        },
+        {
+          "hash": "979df5f",
+          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
       "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
@@ -219,11 +223,11 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "pending-commit",
+      "last_updated": "c8c10cd",
       "recent_commits": [
         {
-          "hash": "pending-commit",
-          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files (FC-PARTIAL-IMPL)"
+          "hash": "c8c10cd",
+          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
         },
         {
           "hash": "2631b95",
@@ -235,7 +239,11 @@
         },
         {
           "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u2014 JS panels A-D, estimate widget, skill score prompts, spec updates"
+          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
+        },
+        {
+          "hash": "979df5f",
+          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
       "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
@@ -244,11 +252,11 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "pending-commit",
+      "last_updated": "c8c10cd",
       "recent_commits": [
         {
-          "hash": "pending-commit",
-          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files (FC-PARTIAL-IMPL)"
+          "hash": "c8c10cd",
+          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
         },
         {
           "hash": "2631b95",
@@ -260,7 +268,11 @@
         },
         {
           "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u2014 JS panels A-D, estimate widget, skill score prompts, spec updates"
+          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
+        },
+        {
+          "hash": "979df5f",
+          "message": "feat(investor-flow): complete UI overhaul \u00e2\u20ac\u201d investor type flow v2 desktop + mobile"
         }
       ],
       "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
@@ -269,7 +281,6 @@
     },
     {
       "skill_file": ".claude/commands/enhance.md",
-      "last_updated": "pending-commit",
       "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 step 7b added to Engineer prompt: HTML files in files-to-touch must be handled via Grep+targeted Edit, not skipped",
       "before_first_pass_rate": 0.364,
       "after_first_pass_rate": null
