@@ -46,7 +46,7 @@ export function showOverviewCommentary(text) {
   _showCommentaryNarrator(
     'commentary-overview-title',
     'commentary-overview-text',
-    'AI Commentary',
+    'Agent Commentary',
     text,
     10
   );
@@ -62,7 +62,7 @@ export function showStrategyCommentary(text) {
   _showCommentaryNarrator(
     'commentary-strategy-title',
     'commentary-strategy-text',
-    'Strategy Rationale',
+    'Agent Commentary',
     text,
     10
   );
