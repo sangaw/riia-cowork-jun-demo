@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-15 (Post-v1.0 — Agent Builds defect fix + Actual Token Tracking + agent-performance-improvements)
+**Last updated:** 2026-05-15 (Post-v1.0 — AI Commentary feature complete + Chat Analytics chart + Confluence token fix)
 
 ---
 
@@ -124,3 +124,4 @@ _None_
 - 2026-05-14: Feature 05 (rita-app-improve) complete — all 5 phases delivered (Technical Analysis, Geography Overview, Learnings, ANALYSE reorg, Monitor→ds.html migration). Cosmetic fix: mkTbl badge rendering for status columns applied across ds.html MODEL + non-MODEL sections. See `project-office/features/05 rita-app-improve/PLAN_STATUS.md`.
 - 2026-05-15: Agent Builds defect fix + Actual Token Tracking (Feature 0501) complete — 4 defects fixed (P1 trend lines, P1 skill version history, P2 token estimate cards, P3 recent_commits); Actual Token Tracking feature added (schema, ORM, Alembic migration, ops.py, agent-builds.js, ops.html, aggregate_metrics.py). Merged at a872db1. Confluence Engineering page updated v9→v10. 18 QA tests pass. DB migrated + seeded. See `project-office/features/0501 Defect Fix - Agent Builds Page/PLAN_STATUS.md`.
 - 2026-05-15: /agent-performance-improvements — FC-PARTIAL-IMPL HTML Grep+Edit guardrail added to all 3 skill files + enhance.md step 7b; Alembic migration hard gate added to all 3 skill files + enhance.md step 7c. Commits: c8c10cd, 393d1d5.
+- 2026-05-15: AI Commentary feature (06) complete — POST /api/v1/commentary, narrator boxes on Overview + Strategy pages, commentary_logs DB table, 3 KPIs added to chat/monitor, 34 tests pass. Confluence page published (82313217). Post-merge: Agent Commentary rename, font fix, Technical Analysis commentary style aligned, Chat Analytics half/half chart (intent distribution + commentary metrics), Confluence token bug fixed across 6 publish scripts. See `project-office/features/06 ai-commentary/PLAN_STATUS.md`.
