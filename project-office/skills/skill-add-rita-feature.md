@@ -165,6 +165,7 @@ Record responses as `human_score{}` in the run JSON: `accuracy`, `relevance`, `p
 | Never call a repo directly from a Workflow router | Workflow tier uses service layer; System tier uses repo-per-router |
 | Never add `print()` statements | Use `structlog` for logging |
 | Never hardcode `http://localhost:8000` in JS | Use `window.RITA_API_BASE` |
+| HTML changes are still required even though full reads are forbidden | "Never read rita.html" = no full-file Read (4,000 lines). For any HTML file in the Architect's files-to-touch list: use Grep to find a sibling element ID, read ±15 lines around it, then use targeted Edit to insert. Skipping an HTML change is a partial implementation (FC-PARTIAL-IMPL). |
 | Never call `new Chart(...)` directly | Always use `mkChart(id, config)` from `charts.js` |
 | Never expose ES module functions without `window.*` | `onclick=""` handlers silently fail if not on `window` |
 | Always update spec when contract changes | Spec drift breaks future agents |

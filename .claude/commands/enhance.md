@@ -263,6 +263,12 @@ Implementation order:
 5. Register the router in main.py only if you created a new router file
 6. Create the JS module (dashboard/js/{APP}/) — inside the worktree
 7. Register the section loader and window bindings in dashboard/js/{APP}/main.js
+7b. **HTML files in the Architect's "Files to touch" table — do NOT skip them.**
+    "Never read HTML" = no full-file Read. For each HTML file listed by the Architect:
+    use Grep to find the sibling element ID near your insertion point, read ±15 lines
+    around the match, then use targeted Edit to insert. A targeted Edit does not require
+    reading the full file. Skipping a required HTML change is a partial implementation
+    (FC-PARTIAL-IMPL) and will trigger re-invocation before QA.
 8. Update Spec_RITA_App.md — add the new endpoint to the correct tier table
 9. Update Spec_JS_Code.md — add the new JS module to the {APP} module structure table
 10. Run: ruff check src/ — fix any errors before proceeding

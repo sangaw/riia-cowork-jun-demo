@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-05-14T20:00:39",
-  "total_runs": 18,
+  "generated_at": "2026-05-15T09:52:41",
+  "total_runs": 19,
   "per_role": {
     "pm": {
-      "run_count": 10,
+      "run_count": 11,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 8485
+      "avg_token_cost": 7904
     },
     "architect": {
-      "run_count": 10,
-      "avg_adherence_score": 0.975,
-      "first_pass_rate": 0.9,
-      "avg_token_cost": 8660
+      "run_count": 11,
+      "avg_adherence_score": 0.977,
+      "first_pass_rate": 0.909,
+      "avg_token_cost": 8182
     },
     "engineer": {
-      "run_count": 10,
-      "avg_adherence_score": 0.838,
-      "first_pass_rate": 0.4,
-      "avg_token_cost": 33172
+      "run_count": 11,
+      "avg_adherence_score": 0.834,
+      "first_pass_rate": 0.364,
+      "avg_token_cost": 30629
     },
     "qa": {
-      "run_count": 10,
-      "avg_adherence_score": 0.975,
-      "first_pass_rate": 0.8,
-      "avg_token_cost": 14091
+      "run_count": 11,
+      "avg_adherence_score": 0.977,
+      "first_pass_rate": 0.818,
+      "avg_token_cost": 13065
     },
     "techwriter": {
-      "run_count": 10,
-      "avg_adherence_score": 0.9,
-      "first_pass_rate": 0.8,
-      "avg_token_cost": 9802
+      "run_count": 11,
+      "avg_adherence_score": 0.909,
+      "first_pass_rate": 0.818,
+      "avg_token_cost": 9083
     }
   },
   "per_app": {
@@ -47,9 +47,9 @@
       "fail": 1
     },
     "ops": {
-      "run_count": 3,
+      "run_count": 4,
       "pass": 1,
-      "pass_with_warnings": 2,
+      "pass_with_warnings": 3,
       "fail": 0
     },
     "ds": {
@@ -129,12 +129,19 @@
       "grounding_score": 0.95,
       "checks_passed": 19,
       "checks_total": 20
+    },
+    {
+      "run_id": "20260515-0859",
+      "app": "ops",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
     }
   ],
   "failure_modes": {
     "FC-001": {
       "total": 7,
-      "recent_fires": 2,
+      "recent_fires": 1,
       "by_role": {
         "engineer": 5,
         "techwriter": 2
@@ -169,10 +176,10 @@
       }
     },
     "FC-PARTIAL-IMPL": {
-      "total": 1,
-      "recent_fires": 1,
+      "total": 2,
+      "recent_fires": 2,
       "by_role": {
-        "engineer": 1
+        "engineer": 2
       }
     },
     "FC-004": {
@@ -187,30 +194,84 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "2631b95",
-      "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
-      "before_first_pass_rate": 0.4,
+      "last_updated": "pending-commit",
+      "recent_commits": [
+        {
+          "hash": "pending-commit",
+          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files (FC-PARTIAL-IMPL)"
+        },
+        {
+          "hash": "2631b95",
+          "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
+        },
+        {
+          "hash": "26f965b",
+          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
+        },
+        {
+          "hash": "1790af4",
+          "message": "feat(ops): agent performance metrics \u2014 JS panels A-D, estimate widget, skill score prompts, spec updates"
+        }
+      ],
+      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
+      "before_first_pass_rate": 0.364,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "2631b95",
-      "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
-      "before_first_pass_rate": 0.4,
+      "last_updated": "pending-commit",
+      "recent_commits": [
+        {
+          "hash": "pending-commit",
+          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files (FC-PARTIAL-IMPL)"
+        },
+        {
+          "hash": "2631b95",
+          "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
+        },
+        {
+          "hash": "26f965b",
+          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
+        },
+        {
+          "hash": "1790af4",
+          "message": "feat(ops): agent performance metrics \u2014 JS panels A-D, estimate widget, skill score prompts, spec updates"
+        }
+      ],
+      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
+      "before_first_pass_rate": 0.364,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "2631b95",
-      "improvement_applied": "FC-001 v2 \u2014 STOP instruction upgraded to blocking gate with exact-line reporting requirement",
-      "before_first_pass_rate": 0.4,
+      "last_updated": "pending-commit",
+      "recent_commits": [
+        {
+          "hash": "pending-commit",
+          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files (FC-PARTIAL-IMPL)"
+        },
+        {
+          "hash": "2631b95",
+          "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
+        },
+        {
+          "hash": "26f965b",
+          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
+        },
+        {
+          "hash": "1790af4",
+          "message": "feat(ops): agent performance metrics \u2014 JS panels A-D, estimate widget, skill score prompts, spec updates"
+        }
+      ],
+      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
+      "before_first_pass_rate": 0.364,
       "after_first_pass_rate": null
     },
     {
       "skill_file": ".claude/commands/enhance.md",
-      "last_updated": "2631b95",
-      "improvement_applied": "FC-001 blocking gate (spec-not-updated now re-invokes Engineer, not a warning) + Step 4 confirmation pause before advancing to QA",
-      "before_first_pass_rate": 0.4,
+      "last_updated": "pending-commit",
+      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 step 7b added to Engineer prompt: HTML files in files-to-touch must be handled via Grep+targeted Edit, not skipped",
+      "before_first_pass_rate": 0.364,
       "after_first_pass_rate": null
     }
   ],
@@ -273,9 +334,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.667,
-    "first_attempt_success_rate": 0.667,
-    "partial_completion_rate": 0.278,
+    "tsr": 0.632,
+    "first_attempt_success_rate": 0.632,
+    "partial_completion_rate": 0.316,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -283,7 +344,7 @@
     "avg_relevance_score": 4.0,
     "avg_csat": 2.5,
     "planning_accuracy_rate": 0.5,
-    "grounding_pass_rate": 0.894
+    "grounding_pass_rate": 0.899
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 4.1,
@@ -325,18 +386,18 @@
     }
   },
   "efficiency": {
-    "avg_duration_minutes": 31,
-    "avg_tokens_per_run": 42438,
+    "avg_duration_minutes": 34,
+    "avg_tokens_per_run": 41015,
     "avg_retry_count": 0.11,
     "avg_time_saved_hours": 20.0
   },
   "reliability": {
-    "error_recovery_rate": 0.733,
-    "graceful_degradation_rate": 0.833,
+    "error_recovery_rate": 0.75,
+    "graceful_degradation_rate": 0.857,
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.056,
+    "escalation_rate": 0.053,
     "avg_corrections_per_run": 0.11,
     "total_hitl_events": 2
   },

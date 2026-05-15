@@ -181,6 +181,7 @@ Record responses as `human_score{}` in the run JSON: `accuracy`, `relevance`, `p
 | Never expose ES module functions without `window.*` | `onclick=""` handlers silently fail |
 | Never duplicate existing ops endpoints | Check the Ops Experience API Reference table above first |
 | Always update spec when contract changes | Spec drift breaks future agents |
+| HTML changes are still required even though full reads are forbidden | "Never read ops.html" = no full-file Read (3,500 lines). For any HTML file in the Architect's files-to-touch list: use Grep to find a sibling element ID, read ±15 lines around it, then use targeted Edit to insert. Skipping an HTML change is a partial implementation (FC-PARTIAL-IMPL). |
 
 ---
 

@@ -188,6 +188,7 @@ Record responses as `human_score{}` in the run JSON: `accuracy`, `relevance`, `p
 | Never use bare `pd.read_csv()` | Use `load_nifty_csv()` or `load_instrument_data()` from `core/data_loader.py` |
 | Never add `print()` statements | Use `structlog` |
 | Never hardcode `http://localhost:8000` in JS | Use `window.RITA_API_BASE` |
+| HTML changes are still required even though full reads are forbidden | "Never read fno.html" = no full-file Read (3,500 lines). For any HTML file in the Architect's files-to-touch list: use Grep to find a sibling element ID, read ±15 lines around it, then use targeted Edit to insert. Skipping an HTML change is a partial implementation (FC-PARTIAL-IMPL). |
 | Never call `new Chart(...)` directly | Use `mkChart(id, config)` from `charts.js` |
 | Never expose ES module functions without `window.*` | `onclick=""` handlers silently fail |
 | Never duplicate existing portfolio endpoints | Check the Portfolio API Reference table above first |
