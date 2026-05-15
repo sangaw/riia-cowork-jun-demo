@@ -10,7 +10,7 @@ def _load_token():
         return os.environ["CONFLUENCE_API_TOKEN"]
     key_file = Path(__file__).parent.parent.parent.parent / "confluence-api-key.txt"
     if key_file.exists():
-        return key_file.read_text().strip()
+        return key_file.read_text().splitlines()[0].strip()
     raise RuntimeError("Set CONFLUENCE_API_TOKEN env var or place token in project root confluence-api-key.txt")
 
 EMAIL = os.environ.get("CONFLUENCE_EMAIL", "")

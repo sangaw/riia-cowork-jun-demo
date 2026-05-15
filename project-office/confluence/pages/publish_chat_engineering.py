@@ -20,7 +20,7 @@ if not os.environ.get("CONFLUENCE_API_TOKEN"):
     for _ancestor in _here.parents:
         _candidate = _ancestor / "confluence-api-key.txt"
         if _candidate.exists():
-            os.environ["CONFLUENCE_API_TOKEN"] = _candidate.read_text().strip()
+            os.environ["CONFLUENCE_API_TOKEN"] = _candidate.read_text().splitlines()[0].strip()
             break
 
 TITLE = "RITA Chat Feature — Engineering Reference"
