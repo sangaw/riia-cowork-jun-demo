@@ -1,11 +1,11 @@
 # RITA App UI Improvements — Feature Plan Status
-**Last updated:** 2026-05-14
+**Last updated:** 2026-05-15
 **Feature brief:** `project-office/task-briefs/task-brief-20260514-1030.md`
 **Run log:** `riia-ai-org/agent-ops/runs/run-20260514-1030.json`
 
 ---
 
-## Current Status: ALL PHASES COMPLETE — minor cosmetic fixes pending (mkTbl badges in ds.html MODEL sections)
+## Current Status: COMPLETE — all 5 phases delivered and merged (2026-05-14)
 
 ---
 
@@ -22,6 +22,10 @@
 | Merge | Engineer | Merge Phase 01 worktree branch into master | `[x]` | Merge commit: c57734a. URL fix: daf4ce6 |
 | Step 4b | Engineer | Implement Phase 0 — Overview geography panels | `[x]` | Branch: worktree-agent-abb1dba6f43a36671. Commit: f8c8b84. Merge: 4e1e119. DoD: 8/8. Ruff: passed |
 | Step 5b | QA | Unit tests + contract check (Phase 0) | `[x]` | 25/25 passed. Contract match. Note: GeoInstrument.flag unused by JS (harmless) |
+| Phase 05 | Engineer | Learnings section — 4 sub-pages (Technical Indicators, Model Building, Sharpe Ratio, Market Trends) | `[x]` | Delivered 2026-05-14 — see root PLAN_STATUS.md |
+| Phase 03 | Engineer | ANALYSE reorg: Model Overview above Performance; Trade Journal + Trade Diagnostics → ds.html | `[x]` | Delivered 2026-05-14 — see root PLAN_STATUS.md |
+| Phase 04 | Engineer | Monitor menu copied to ds.html; Training Progress / Observability / MCP Calls / Audit removed from RITA; Utilities → Ops | `[x]` | Delivered 2026-05-14 — see root PLAN_STATUS.md |
+| Cosmetic | Engineer | mkTbl badge rendering fixed across ds.html MODEL + non-MODEL sections | `[x]` | Delivered 2026-05-14 |
 
 ---
 
@@ -63,11 +67,7 @@
 
 ## Blockers
 
-| Blocker | Phase | Resolution |
-|---|---|---|
-| Phase 04 removals are destructive | Phase 04 | QA regression coverage required before merge |
-
-> Note: Data Science HTML app confirmed at `riia-jun-release/dashboard/ds.html` (localhost:8000/dashboard/ds.html). Phase 03/04 items can target it directly — no separate app creation needed.
+None — all phases complete.
 
 ---
 
@@ -88,19 +88,6 @@
 | Steps 3b–6 | 2026-05-14 | Engineer / QA / TechWriter | worktree-agent-afaa245ae7de4a431 | daf7a72 + daf4ce6 | Phase 01 complete. Merge: c57734a |
 | Post-QA fixes | 2026-05-14 | Orchestrator (direct) | master | e0db819 + 9824ee2 + 621360b | 3 bugs fixed: incomplete row move, dangling lastCrossIdx, display:none on section |
 
-## Next Session — Resume at Phase 0
+## Next Session
 
-**Next phase:** Phase 0 — Overview Page (Geography Panels)
-**Architect design:** already in `project-office/task-briefs/task-brief-20260514-1030.md`
-**Implementation order for Phase 0:**
-1. `src/rita/schemas/geography.py` — GeoInstrument, GeoRegion, GeographyOverviewResponse
-2. `src/rita/api/experience/rita.py` — GET /api/v1/experience/rita/geography-overview
-3. `dashboard/rita.html` — add `div#geo-panels` inside `sec-market-signals`
-4. `dashboard/js/rita/market-signals.js` — add `loadGeoPanels()`, call from `loadMarketSignals()`
-5. `dashboard/js/rita/main.js` — expose `window.loadGeoPanels`
-
-**Post-Phase 0 order:** Phase 05 (Learnings) → Phase 03 (ANALYSE reorg) → Phase 04 (Monitor removals)
-
-**Known gaps to feed into Engineer skill file (captured in memory):**
-- Engineer must move complete DOM row containers, not just individual canvas elements, when requirement says "move a row"
-- Engineer must not add `style="display:none"` to new sections — use class-only visibility matching existing section pattern
+Nothing pending — feature fully closed.

@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-05-15T15:54:50",
-  "total_runs": 20,
+  "generated_at": "2026-05-16T12:09:13",
+  "total_runs": 21,
   "per_role": {
     "pm": {
-      "run_count": 12,
+      "run_count": 13,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 7420
+      "avg_token_cost": 7011
     },
     "architect": {
-      "run_count": 12,
-      "avg_adherence_score": 0.979,
-      "first_pass_rate": 0.917,
-      "avg_token_cost": 7800
+      "run_count": 13,
+      "avg_adherence_score": 0.981,
+      "first_pass_rate": 0.923,
+      "avg_token_cost": 7462
     },
     "engineer": {
-      "run_count": 12,
-      "avg_adherence_score": 0.848,
-      "first_pass_rate": 0.417,
-      "avg_token_cost": 28618
+      "run_count": 13,
+      "avg_adherence_score": 0.86,
+      "first_pass_rate": 0.462,
+      "avg_token_cost": 26817
     },
     "qa": {
-      "run_count": 12,
-      "avg_adherence_score": 0.979,
-      "first_pass_rate": 0.833,
-      "avg_token_cost": 12209
+      "run_count": 13,
+      "avg_adherence_score": 0.981,
+      "first_pass_rate": 0.846,
+      "avg_token_cost": 11486
     },
     "techwriter": {
-      "run_count": 12,
-      "avg_adherence_score": 0.889,
-      "first_pass_rate": 0.75,
-      "avg_token_cost": 8485
+      "run_count": 13,
+      "avg_adherence_score": 0.898,
+      "first_pass_rate": 0.769,
+      "avg_token_cost": 7978
     }
   },
   "per_app": {
@@ -47,8 +47,8 @@
       "fail": 1
     },
     "ops": {
-      "run_count": 4,
-      "pass": 1,
+      "run_count": 5,
+      "pass": 2,
       "pass_with_warnings": 3,
       "fail": 0
     },
@@ -143,6 +143,13 @@
       "grounding_score": 1.0,
       "checks_passed": 20,
       "checks_total": 20
+    },
+    {
+      "run_id": "20260515-1500",
+      "app": "ops",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
     }
   ],
   "failure_modes": {
@@ -208,8 +215,12 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "393d1d5",
+      "last_updated": "11f440c",
       "recent_commits": [
+        {
+          "hash": "11f440c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
+        },
         {
           "hash": "393d1d5",
           "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
@@ -225,20 +236,20 @@
         {
           "hash": "26f965b",
           "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
         }
       ],
-      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
-      "before_first_pass_rate": 0.364,
+      "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule (n/a only valid when Architect lists zero spec rows); added HTML completeness as explicit DoD checklist item",
+      "before_first_pass_rate": 0.462,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "393d1d5",
+      "last_updated": "11f440c",
       "recent_commits": [
+        {
+          "hash": "11f440c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
+        },
         {
           "hash": "393d1d5",
           "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
@@ -254,20 +265,20 @@
         {
           "hash": "26f965b",
           "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
         }
       ],
-      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
-      "before_first_pass_rate": 0.364,
+      "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule (n/a only valid when Architect lists zero spec rows); added HTML completeness as explicit DoD checklist item",
+      "before_first_pass_rate": 0.462,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "393d1d5",
+      "last_updated": "11f440c",
       "recent_commits": [
+        {
+          "hash": "11f440c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
+        },
         {
           "hash": "393d1d5",
           "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
@@ -283,20 +294,16 @@
         {
           "hash": "26f965b",
           "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "1790af4",
-          "message": "feat(ops): agent performance metrics \u00e2\u20ac\u201d JS panels A-D, estimate widget, skill score prompts, spec updates"
         }
       ],
-      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 HTML Grep+Edit guardrail added: 'never read HTML' does not mean skip HTML changes; use Grep+targeted Edit for insertions",
-      "before_first_pass_rate": 0.364,
+      "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule (n/a only valid when Architect lists zero spec rows); added HTML completeness as explicit DoD checklist item",
+      "before_first_pass_rate": 0.462,
       "after_first_pass_rate": null
     },
     {
       "skill_file": ".claude/commands/enhance.md",
-      "improvement_applied": "FC-PARTIAL-IMPL v1 \u2014 step 7b added to Engineer prompt: HTML files in files-to-touch must be handled via Grep+targeted Edit, not skipped",
-      "before_first_pass_rate": 0.364,
+      "improvement_applied": "FC-001 v2: spec validation now treats n/a-when-spec-rows-exist as spec-not-updated (blocking gate); spec gate condition clarified in validation table and re-invocation block",
+      "before_first_pass_rate": 0.462,
       "after_first_pass_rate": null
     }
   ],
@@ -359,17 +366,17 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.6,
-    "first_attempt_success_rate": 0.6,
-    "partial_completion_rate": 0.35,
+    "tsr": 0.619,
+    "first_attempt_success_rate": 0.619,
+    "partial_completion_rate": 0.333,
     "abandonment_rate": 0.0
   },
   "quality": {
-    "avg_accuracy_score": 3.25,
+    "avg_accuracy_score": 3.0,
     "avg_relevance_score": 4.0,
     "avg_csat": 3.0,
-    "planning_accuracy_rate": 0.75,
-    "grounding_pass_rate": 0.905
+    "planning_accuracy_rate": 0.8,
+    "grounding_pass_rate": 0.909
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 4.1,
@@ -411,10 +418,10 @@
     }
   },
   "efficiency": {
-    "avg_duration_minutes": 42,
-    "avg_tokens_per_run": 39810,
+    "avg_duration_minutes": 41,
+    "avg_tokens_per_run": 38647,
     "avg_retry_count": 0.1,
-    "avg_time_saved_hours": 14.0
+    "avg_time_saved_hours": 12.8
   },
   "reliability": {
     "error_recovery_rate": 0.765,
@@ -422,7 +429,7 @@
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.05,
+    "escalation_rate": 0.048,
     "avg_corrections_per_run": 0.1,
     "total_hitl_events": 2
   },
