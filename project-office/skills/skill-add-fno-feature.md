@@ -206,6 +206,7 @@ Before marking this task complete, verify each item:
 - [ ] **Section loader registered** — `_sectionLoaders['name'] = loadName` in `fno/main.js`
 - [ ] **Window bindings set** — all `onclick` handlers on `window.*` in `fno/main.js`
 - [ ] **Error handled** — `try/catch` in JS loader; shows `—` on failure
-- [ ] **Spec updated** — endpoint added to `Spec_RITA_App.md` Portfolio tier; JS module added to `Spec_JS_Code.md` Section 3
+- [ ] **Spec updated** — endpoint added to `Spec_RITA_App.md` Portfolio tier; JS module added to `Spec_JS_Code.md` Section 3. **"n/a" is ONLY valid if the Architect's files-to-touch table lists zero spec rows** — any other "n/a" is FC-001 and triggers orchestrator re-invocation.
+- [ ] **HTML changes complete** — every HTML file in the Architect's files-to-touch table is edited via Grep → read ±15 lines → targeted Edit. If Architect listed zero HTML files, write "n/a". Skipping = FC-PARTIAL-IMPL.
 - [ ] **Ruff passes** — `ruff check src/` returns no errors
 - [ ] **No hardcoded values** — no localhost URLs, no hardcoded lot sizes

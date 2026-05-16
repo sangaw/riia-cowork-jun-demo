@@ -312,7 +312,7 @@ Read `{BRIEF_PATH}` — find the `[Engineer] Implementation Log` section. Check:
 | Files changed listed | At least 2 files |
 | Files count vs Architect | `N_actual >= N_expected × 0.7` |
 | Ruff result | "passed" |
-| Spec updated | "yes" |
+| Spec updated | "yes"; or "n/a" only if Architect listed zero spec rows in files-to-touch |
 
 **Files-count cross-check (FC-PARTIAL-IMPL gate):**
 - Count rows in the Architect's "Files to touch" table from `{BRIEF_PATH}` → `N_expected`
@@ -324,7 +324,7 @@ Read `{BRIEF_PATH}` — find the `[Engineer] Implementation Log` section. Check:
 - If **branch is master**: report error and stop — `Engineer agent wrote to master instead of a worktree branch. Do not proceed. Check worktree isolation.`
 - If **commit hash missing**: report error and stop — `Engineer agent did not commit. Changes may be lost. Check worktree and commit manually.`
 - If **ruff failed**: report as warning — `⚠ Engineer Agent — ruff errors present. Review before merging.` — add `"FC-003"` to Engineer failure_modes
-- If **spec not updated**: **BLOCKING GATE** — do not advance to QA. Re-invoke the Engineer agent with this prompt:
+- If **spec not updated** (includes "n/a" when Architect files-to-touch lists spec rows): **BLOCKING GATE** — do not advance to QA. Re-invoke the Engineer agent with this prompt:
   ```
   Your spec files were not updated. Fix this now before QA can proceed:
   1. Open project-office/specs/Spec_RITA_App.md — find the {APP} tier table — add the new endpoint row.
