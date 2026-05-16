@@ -575,6 +575,14 @@ After all agents have completed and `AGENT_RESULTS` contains 5 records, write th
 
 Report: `✓ Run log written: {RUN_LOG_PATH}`
 
+**Write run to DB (non-blocking):**
+
+Run from the repo root (`riia-cowork-jun/`):
+```
+python riia-ai-org/agent-ops/write_run_to_db.py {RUN_LOG_PATH}
+```
+DB write failure is non-blocking — if the script exits 1, log a warning and continue. Do not halt the /enhance run.
+
 **Regenerate `riia-ai-org/agent-ops/metrics.json`:**
 
 Run from the repo root (`riia-cowork-jun/`):
