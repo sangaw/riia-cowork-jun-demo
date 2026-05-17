@@ -90,6 +90,33 @@ riia-cowork-jun/
 - **v1:** SQLite + SQLAlchemy 2.x ORM, stateless API, JWT-secured
 - **v2:** PostgreSQL replaces SQLite via one config change — zero code changes
 
+## API Tier Routing Rules (Enforced)
+
+Dashboard JS **must only call** Experience or Workflow tier endpoints. Calling system-tier routes directly from JS is a compliance violation (Feature 08).
+
+| | Path pattern | Notes |
+|---|---|---|
+| ✅ Allowed | `/api/v1/experience/*` | Experience tier — all dashboards |
+| ✅ Allowed | `/api/experience/*` | Experience tier (ops prefix variant) |
+| ✅ Allowed | `/api/v1/portfolio/*` | Portfolio / FnO tier |
+| ✅ Allowed | `/api/v1/chat*`, `/api/v1/commentary`, `/api/v1/instrument/*` | Workflow/chat operations |
+| ✅ Allowed | `/api/v1/train`, `/api/v1/backtest`, `/api/v1/pipeline`, `/api/v1/goal`, `/api/v1/market`, `/api/v1/strategy` | Pipeline workflow operations |
+| ✅ Allowed | `/api/v1/agent-panel/*`, `/api/v1/mcp-calls` | Agent/MCP read |
+| ✅ Allowed | `/health`, `/progress`, `/reset` | App-root routes |
+| ✅ Allowed | `/api/v1/market-signals`, `/api/v1/shap` | Raw indicators/ML artifacts — no experience wrapper needed |
+| ❌ Never | `/api/v1/backtest-daily` | System tier — use `/api/v1/experience/rita/backtest-daily` |
+| ❌ Never | `/api/v1/risk-timeline` | System tier — use `/api/v1/experience/rita/risk-timeline` |
+| ❌ Never | `/api/v1/training-history` | System tier — use `/api/v1/experience/rita/training-history` |
+
+**When adding a new JS module:**
+1. Check if the data is already available via an experience endpoint
+2. If not, create the experience endpoint first (in `src/rita/api/experience/`)
+3. Never call system tier (`/api/v1/system/` or raw CRUD routes) directly from dashboard JS
+
+Full audit: `project-office/features/08 API Layer Rationalization/REQUIREMENTS.md`
+
+---
+
 ## Daily Commands
 
 | User says | Action |
