@@ -3,7 +3,7 @@ import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, chartOpts, C } from './charts.js';
 import { loadHealth, loadProgress } from './health.js';
-import { createCache } from '../../shared/api-cache.js';
+import { createCache } from '../shared/api-cache.js';
 
 const cachedApi = createCache(api);
 

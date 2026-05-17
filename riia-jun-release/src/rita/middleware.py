@@ -36,7 +36,7 @@ trace_id_var: ContextVar[str] = ContextVar("trace_id", default="")
 log = structlog.get_logger()
 
 # Paths that should never be logged to api_call_log
-_EXCLUDED_PATHS = {"/health", "/readyz", "/metrics", "/docs", "/openapi.json", "/redoc"}
+_EXCLUDED_PATHS = {"/health", "/readyz", "/metrics", "/docs", "/openapi.json", "/redoc", "/favicon.ico"}
 _EXCLUDED_PREFIXES = ("/dashboard", "/static", "/openapi")
 
 
