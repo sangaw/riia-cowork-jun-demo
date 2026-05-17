@@ -2,10 +2,13 @@
 import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export async function loadHealth() {
   try {
-    const d = await api('/health');
+    const d = await cachedApi('/health', 15000);
     const dot = document.getElementById('status-dot');
     const txt = document.getElementById('status-text');
     dot.className = 'status-dot ok';
@@ -84,7 +87,7 @@ export async function loadHealth() {
 
 export async function loadPerfSummary() {
   try {
-    const d = await api('/api/v1/performance-summary');
+    const d = await cachedApi('/api/v1/performance-summary', 120000);
     const activeInst = (d._active_instrument_id || 'this instrument').toUpperCase();
     const stale = d._run_instrument_id && d._active_instrument_id &&
                   d._run_instrument_id !== d._active_instrument_id;

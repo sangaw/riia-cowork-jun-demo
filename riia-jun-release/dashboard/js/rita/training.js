@@ -2,10 +2,13 @@
 import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export async function loadTrainProgress() {
   try {
-    const rows = await api('/api/v1/training-history');
+    const rows = await cachedApi('/api/v1/training-history', 120000);
     if (!rows || !rows.length) {
       setEl('training-table-wrap', '<div class="empty">No training history found.</div>');
       return;

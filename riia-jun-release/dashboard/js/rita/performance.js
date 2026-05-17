@@ -2,6 +2,9 @@
 import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
 import { mkChart, chartOpts, C } from './charts.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export async function loadPerformance() {
   try {
@@ -52,7 +55,7 @@ export async function loadPerformance() {
 
 export async function loadPerfSummaryFull() {
   try {
-    const d = await api('/api/v1/performance-summary');
+    const d = await cachedApi('/api/v1/performance-summary', 120000);
     setEl('p-return', fmtPct(d.portfolio_total_return_pct));
     document.getElementById('p-return').className = 'kpi-value ' + (parseFloat(d.portfolio_total_return_pct) > 0 ? 'pos' : 'neg');
     setEl('p-return-bnh', 'B&H ' + fmtPct(d.benchmark_total_return_pct));

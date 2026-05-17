@@ -361,6 +361,71 @@ def compute_skill_version_history(repo_root: Path) -> list:
     return result
 
 
+def compute_api_metrics(db_path: Path) -> dict:
+    """Read api_call_log table via sqlite3 and return aggregate metrics."""
+    import sqlite3
+    from datetime import timezone
+
+    if not db_path.exists():
+        return {"available": False}
+    try:
+        con = sqlite3.connect(str(db_path))
+        cur = con.cursor()
+        tables = [r[0] for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+        if "api_call_log" not in tables:
+            con.close()
+            return {"available": False}
+        rows = cur.execute(
+            "SELECT path, method, status_code, duration_ms, called_at FROM api_call_log"
+        ).fetchall()
+        con.close()
+        if not rows:
+            return {
+                "available": True,
+                "total_calls": 0,
+                "unique_endpoints": 0,
+                "overall_error_rate_pct": 0.0,
+                "top_5_by_calls": [],
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        grouped: dict = defaultdict(list)
+        for path, method, status_code, duration_ms, called_at in rows:
+            grouped[(path, method)].append((status_code, duration_ms))
+        total_calls = len(rows)
+        error_count = sum(1 for _, _, sc, _, _ in rows if sc and sc >= 400)
+        endpoint_stats = []
+        for (path, method), calls in grouped.items():
+            durations = sorted([d for _, d in calls if d is not None])
+            n = len(durations)
+            p50 = durations[n // 2] if n else None
+            p95 = durations[int(n * 0.95)] if n else None
+            errs = sum(1 for sc, _ in calls if sc and sc >= 400)
+            endpoint_stats.append(
+                {
+                    "path": path,
+                    "method": method,
+                    "count": len(calls),
+                    "p50_ms": round(p50, 1) if p50 is not None else None,
+                    "p95_ms": round(p95, 1) if p95 is not None else None,
+                    "error_count": errs,
+                }
+            )
+        endpoint_stats.sort(key=lambda x: x["count"], reverse=True)
+        overall_error_rate = round(error_count / total_calls * 100, 2) if total_calls else 0.0
+        if overall_error_rate > 5.0:
+            print(f"[ALERT] API error rate {overall_error_rate}% above 5% threshold")
+        return {
+            "available": True,
+            "total_calls": total_calls,
+            "unique_endpoints": len(grouped),
+            "overall_error_rate_pct": overall_error_rate,
+            "top_5_by_calls": endpoint_stats[:5],
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception as e:
+        return {"available": False, "error": str(e)}
+
+
 def main() -> None:
     script_dir = Path(__file__).parent
     runs_dir = script_dir / "runs"
@@ -399,6 +464,7 @@ def main() -> None:
         if key not in computed_keys and preserved.get("improvement_applied"):
             skill_version_history.append({"skill_file": key, **preserved})
 
+    db_path = repo_root / "riia-jun-release" / "rita_output" / "rita.db"
     metrics = {
         "generated_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
         "total_runs": len(runs),
@@ -415,6 +481,7 @@ def main() -> None:
         "reliability": compute_reliability(runs),
         "hitl": compute_hitl(runs),
         "agentic": compute_agentic(runs),
+        "api_metrics": compute_api_metrics(db_path),
     }
 
     with open(output_path, "w") as f:

@@ -2,11 +2,14 @@
 import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export async function loadDiagnostics() {
   try {
     const [bRows, mRows] = await Promise.all([
-      api('/api/v1/backtest-daily'),
+      cachedApi('/api/v1/backtest-daily', 120000),
       api('/api/v1/market-signals?timeframe=daily&periods=2000'),
     ]);
     if (!bRows?.length) { setEl('diag-tbody', '<tr><td colspan="10" class="empty">No backtest data found — run the pipeline first.</td></tr>'); return; }

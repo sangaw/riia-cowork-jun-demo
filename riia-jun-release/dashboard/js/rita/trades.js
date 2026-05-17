@@ -2,6 +2,9 @@
 import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, chartOpts, C } from './charts.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export const TJ_PHASE = {
   Train:      { color: '#1565C0', bg: 'rgba(21,101,192,0.13)',  rowBg: '#E3F2FD' },
@@ -14,9 +17,9 @@ export async function loadTrades() {
   try {
     const instrument = localStorage.getItem('ritaInstrument') || 'NIFTY';
     const [rows, history, perf, split] = await Promise.all([
-      api(`/api/v1/risk-timeline?phase=all&instrument=${instrument}`),
+      cachedApi(`/api/v1/risk-timeline?phase=all&instrument=${instrument}`, 60000),
       api(`/api/v1/training-history?instrument=${instrument}`).catch(() => []),
-      api('/api/v1/performance-summary').catch(() => null),
+      cachedApi('/api/v1/performance-summary', 120000).catch(() => null),
       api(`/api/v1/training-split?instrument=${instrument}`).catch(() => null),
     ]);
     if (!rows || !rows.length) {

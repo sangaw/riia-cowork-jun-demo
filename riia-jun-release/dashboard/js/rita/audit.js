@@ -1,11 +1,14 @@
 // ── Audit ───────────────────────────────────────────────────
 import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export async function loadAudit() {
   try {
     const [history, stepLog, metrics] = await Promise.all([
-      api('/api/v1/training-history').catch(() => []),
+      cachedApi('/api/v1/training-history', 120000).catch(() => []),
       api('/api/experience/ops/step-log').catch(() => []),
       api('/metrics').catch(() => ({})),
     ]);
