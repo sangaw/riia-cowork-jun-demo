@@ -192,6 +192,12 @@ A missing named export is a **static binding error** — the browser throws a
 app, not just the new section. This check must be done explicitly; it is not caught
 by the FC-004 contract check or by ruff.
 
+**FC-MERGE gate — no leftover conflict markers (run before `git add`):**
+Run: `grep -rn "^<<<<<<\|^=======\|^>>>>>>>" dashboard/js/`
+Output must be empty. Any `<<<<<<<` / `=======` / `>>>>>>>` left in a JS file is a
+`SyntaxError` that kills the entire app module tree — the browser cannot parse these
+tokens. This is especially critical after merge conflict resolution sessions.
+
 - [ ] **API contract matches** — Pydantic schema field names match JS `data.field` reads exactly
 - [ ] **Experience tier is read-only** — no `db.commit()` calls in the new route
 - [ ] **Section loader registered** — `_sectionLoaders['name'] = loadName` in `main.js`
