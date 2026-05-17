@@ -314,6 +314,12 @@ Read `{BRIEF_PATH}` — find the `[Engineer] Implementation Log` section. Check:
 | Ruff result | "passed" |
 | Spec updated | "yes"; or "n/a" only if Architect listed zero spec rows in files-to-touch |
 
+**Active spec verification (FC-001 guard — do not trust self-report alone):**
+After reading `Spec updated: yes` from the brief, independently confirm by checking the actual spec file:
+- Grep `project-office/specs/Spec_RITA_App.md` for the new endpoint path from the Architect's API contract
+- If the path does NOT appear in the spec file: treat `spec_updated` as `false` and apply the blocking gate below — even if the brief says "yes"
+- This closes the historical gap where engineers wrote "yes" in the brief without actually editing the spec file
+
 **Files-count cross-check (FC-PARTIAL-IMPL gate):**
 - Count rows in the Architect's "Files to touch" table from `{BRIEF_PATH}` → `N_expected`
 - Count files in the Engineer's "Files changed" list → `N_actual`

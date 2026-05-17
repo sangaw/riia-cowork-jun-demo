@@ -252,72 +252,26 @@
           "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
         }
       ],
-      "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
-      "before_first_pass_rate": 0.5,
+      "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 5.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
+      "before_first_pass_rate": 0.533,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "9f306e4",
-      "recent_commits": [
-        {
-          "hash": "9f306e4",
-          "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
-        },
-        {
-          "hash": "68ae873",
-          "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
-        },
-        {
-          "hash": "f8887c4",
-          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
-        },
-        {
-          "hash": "11f440c",
-          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
-        },
-        {
-          "hash": "393d1d5",
-          "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
-        }
-      ],
-      "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
-      "before_first_pass_rate": 0.5,
+      "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 5.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
+      "before_first_pass_rate": 0.533,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "9f306e4",
-      "recent_commits": [
-        {
-          "hash": "9f306e4",
-          "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
-        },
-        {
-          "hash": "68ae873",
-          "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
-        },
-        {
-          "hash": "f8887c4",
-          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
-        },
-        {
-          "hash": "11f440c",
-          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
-        },
-        {
-          "hash": "393d1d5",
-          "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
-        }
-      ],
-      "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
-      "before_first_pass_rate": 0.5,
+      "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 4.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
+      "before_first_pass_rate": 0.533,
       "after_first_pass_rate": null
     },
     {
       "skill_file": ".claude/commands/enhance.md",
-      "improvement_applied": "FC-001 v2: spec validation now treats n/a-when-spec-rows-exist as spec-not-updated (blocking gate); spec gate condition clarified in validation table and re-invocation block",
-      "before_first_pass_rate": 0.462,
+      "improvement_applied": "FC-001 v3: active spec grep verification added to Step 4 validation \u2014 orchestrator independently greps Spec_RITA_App.md for the new endpoint path after reading spec_updated=yes from brief; closes trust gap where Engineer self-reported yes without actually updating spec (5 of 7 FC-001 fires were this pattern).",
+      "before_first_pass_rate": 0.533,
       "after_first_pass_rate": null
     }
   ],

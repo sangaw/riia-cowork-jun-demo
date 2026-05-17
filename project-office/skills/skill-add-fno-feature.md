@@ -138,6 +138,19 @@ export async function loadMyFeature() {
 - No top-level `fetch()` or DOM queries
 - Use `state` from `state.js` for active group/instrument if needed
 
+### Step 5.5 — FC-IMP Check: Verify Named Imports (run before Step 6)
+
+> **Run this immediately after writing the JS module — before registering in main.js.**
+
+For every `import { name1, name2 } from './module.js'` line in the new JS file:
+1. Open `module.js` and grep for `export` statements
+2. Confirm each imported name appears as `export function name` or `export const name`
+3. Report explicitly: "FC-IMP: [name1] ✓ in [module.js]" — one line per import
+
+**A missing named export is a static binding error** — the browser throws a `SyntaxError` at parse time and the entire app module tree dies, not just the new section. Do NOT proceed to main.js registration until all imports are confirmed.
+
+If any name is missing: find the correct exported name in the file, or add the export — report the resolution. Do not silently skip a check.
+
 ### Step 6 — Register Section Loader in main.js
 In `dashboard/js/fno/main.js`:
 ```js
@@ -161,7 +174,13 @@ Open each spec file. Read the relevant table. Add the new row. **Report the exac
 
 > **STOP — before closing the run, confirm `Spec_RITA_App.md` and `Spec_JS_Code.md` reflect the new endpoint and module. If the Engineer skipped Step 7, do it now before emitting the human score prompt.**
 
-After confirming spec files and updating Confluence, emit the following prompt to the user:
+After confirming spec files and updating Confluence, ask the user to run a smoke test before scoring:
+
+> **Smoke-test gate:** "Please open the FnO dashboard in a browser and verify the new section renders without JavaScript console errors. Open browser DevTools → Console and confirm no `SyntaxError`, `Cannot resolve module`, or `is not exported` errors appear. Report: page loads OK / page broken."
+>
+> If the user reports a runtime error: do NOT emit the scoring prompt. Investigate and fix the error first — it is likely a missing named export (FC-IMP) or a conflict marker (FC-MERGE). Only emit the scoring prompt after the user confirms the page loads cleanly.
+
+Once the user confirms the page loads, emit the following prompt:
 
 ```
 === Agent Run Complete — Please score this run ===
