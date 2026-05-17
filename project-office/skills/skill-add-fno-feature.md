@@ -201,6 +201,13 @@ Record responses as `human_score{}` in the run JSON: `accuracy`, `relevance`, `p
 
 Before marking this task complete, verify each item:
 
+**FC-004 gate — verify before committing:**
+Open the JS module you just wrote or changed. List every `data.field` or `r.field`
+access in the file. For each, confirm the exact field name exists in your Pydantic
+schema or response dict. A single character difference (underscore vs camelCase,
+_pct suffix missing) causes a silent JS render failure. Only after verifying every
+field may you proceed to git add.
+
 - [ ] **API contract matches** — Pydantic schema field names match JS `data.field` reads exactly
 - [ ] **Correct tier used** — Portfolio for FnO computation, Experience for read-only aggregation
 - [ ] **Section loader registered** — `_sectionLoaders['name'] = loadName` in `fno/main.js`
