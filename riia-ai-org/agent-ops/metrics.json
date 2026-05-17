@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T20:56:16",
+  "generated_at": "2026-05-17T21:11:31",
   "total_runs": 23,
   "per_role": {
     "pm": {
@@ -229,8 +229,12 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "9f306e4",
+      "last_updated": "2f09e2c",
       "recent_commits": [
+        {
+          "hash": "2f09e2c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, engineer first-pass, CSAT"
+        },
         {
           "hash": "9f306e4",
           "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
@@ -246,10 +250,6 @@
         {
           "hash": "11f440c",
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
-        },
-        {
-          "hash": "393d1d5",
-          "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
         }
       ],
       "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 5.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
@@ -258,12 +258,58 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
+      "last_updated": "2f09e2c",
+      "recent_commits": [
+        {
+          "hash": "2f09e2c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, engineer first-pass, CSAT"
+        },
+        {
+          "hash": "9f306e4",
+          "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
+        },
+        {
+          "hash": "68ae873",
+          "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
+        },
+        {
+          "hash": "f8887c4",
+          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
+        },
+        {
+          "hash": "11f440c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
+        }
+      ],
       "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 5.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
       "before_first_pass_rate": 0.533,
       "after_first_pass_rate": null
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
+      "last_updated": "2f09e2c",
+      "recent_commits": [
+        {
+          "hash": "2f09e2c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, engineer first-pass, CSAT"
+        },
+        {
+          "hash": "9f306e4",
+          "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
+        },
+        {
+          "hash": "68ae873",
+          "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
+        },
+        {
+          "hash": "f8887c4",
+          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
+        },
+        {
+          "hash": "11f440c",
+          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
+        }
+      ],
       "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 4.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
       "before_first_pass_rate": 0.533,
       "after_first_pass_rate": null
@@ -408,22 +454,22 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 97,
-    "unique_endpoints": 25,
-    "overall_error_rate_pct": 5.15,
+    "total_calls": 127,
+    "unique_endpoints": 28,
+    "overall_error_rate_pct": 4.72,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 26,
+        "count": 42,
         "p50_ms": 16.0,
-        "p95_ms": 63.0,
+        "p95_ms": 78.0,
         "error_count": 0
       },
       {
         "path": "/api/v1/instrument/active",
         "method": "GET",
-        "count": 10,
+        "count": 11,
         "p50_ms": 16.0,
         "p95_ms": 16.0,
         "error_count": 0
@@ -431,9 +477,17 @@
       {
         "path": "/api/v1/instrument/select",
         "method": "POST",
-        "count": 7,
+        "count": 8,
         "p50_ms": 31.0,
         "p95_ms": 78.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/experience/ops/step-log",
+        "method": "GET",
+        "count": 8,
+        "p50_ms": 16.0,
+        "p95_ms": 32.0,
         "error_count": 0
       },
       {
@@ -443,16 +497,8 @@
         "p50_ms": 0.0,
         "p95_ms": 31.0,
         "error_count": 0
-      },
-      {
-        "path": "/api/experience/ops/step-log",
-        "method": "GET",
-        "count": 5,
-        "p50_ms": 15.0,
-        "p95_ms": 32.0,
-        "error_count": 0
       }
     ],
-    "generated_at": "2026-05-17T18:56:16.209713+00:00"
+    "generated_at": "2026-05-17T19:11:31.599129+00:00"
   }
 }
