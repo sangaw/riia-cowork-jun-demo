@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T21:11:31",
+  "generated_at": "2026-05-17T21:14:42",
   "total_runs": 23,
   "per_role": {
     "pm": {
@@ -389,7 +389,7 @@
     "avg_accuracy_score": 3.0,
     "avg_relevance_score": 4.0,
     "avg_csat": 3.0,
-    "planning_accuracy_rate": 0.8,
+    "planning_accuracy_rate": 0.667,
     "grounding_pass_rate": 0.918
   },
   "token_forecasting": {
@@ -435,7 +435,7 @@
     "avg_duration_minutes": 50,
     "avg_tokens_per_run": 36626,
     "avg_retry_count": 0.09,
-    "avg_time_saved_hours": 12.8
+    "avg_time_saved_hours": 11.5
   },
   "reliability": {
     "error_recovery_rate": 0.765,
@@ -454,14 +454,14 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 127,
+    "total_calls": 130,
     "unique_endpoints": 28,
-    "overall_error_rate_pct": 4.72,
+    "overall_error_rate_pct": 4.62,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 42,
+        "count": 45,
         "p50_ms": 16.0,
         "p95_ms": 78.0,
         "error_count": 0
@@ -499,6 +499,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-17T19:11:31.599129+00:00"
+    "generated_at": "2026-05-17T19:14:42.356172+00:00"
   }
 }

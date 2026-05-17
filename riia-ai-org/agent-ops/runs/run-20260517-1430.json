@@ -115,6 +115,14 @@
     "contract_check": "full match — all 7 schema fields match JS r.field reads; last_called_at intentionally not rendered in table (within spec)",
     "fc_imp_check": "pass — setEl confirmed in ops/utils.js; api confirmed in ops/api.js"
   },
+  "human_score": {
+    "accuracy": 3,
+    "relevance": 4,
+    "csat": 3,
+    "planning_ok": false,
+    "time_saved_hours": 5,
+    "notes": "Accuracy 3 — post-merge hotfixes required (wrong import path, missing setEl export, conflict marker). Planning partially correct but FC-IMP/FC-MERGE issues not caught before merge."
+  },
   "lessons_learned": [
     "Merge before QA completed — Run B was merged at a2d57a6 before Steps 5-7 ran. QA deferred across sessions introduced a user-visible crash window.",
     "Skill template drift — ops/utils.js never had setEl despite skill-add-ops-feature.md listing it in the import boilerplate. Skill templates must match the actual exports of the target utility files.",
