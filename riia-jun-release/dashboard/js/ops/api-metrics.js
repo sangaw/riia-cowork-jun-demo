@@ -56,6 +56,7 @@ function renderMetrics(items, isFilter = false) {
         <td>${r.p95_ms != null ? r.p95_ms.toFixed(1) : '—'}</td>
         <td>${r.error_count}</td>
         <td>${r.error_rate_pct.toFixed(1)}%</td>
+        <td>${r.last_called_at ? new Date(r.last_called_at).toLocaleString() : '—'}</td>
       </tr>`).join('');
   }
 }
