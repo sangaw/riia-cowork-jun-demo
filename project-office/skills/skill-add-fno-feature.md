@@ -208,6 +208,14 @@ schema or response dict. A single character difference (underscore vs camelCase,
 _pct suffix missing) causes a silent JS render failure. Only after verifying every
 field may you proceed to git add.
 
+**FC-IMP gate — JS named-import resolution (verify before committing):**
+For every `import { name1, name2 } from './module.js'` line in the new or modified
+JS file, open `module.js` and confirm each name appears in an `export` statement.
+A missing named export is a **static binding error** — the browser throws a
+`SyntaxError` at parse time, which cascades up the import chain and kills the entire
+app, not just the new section. This check must be done explicitly; it is not caught
+by the FC-004 contract check or by ruff.
+
 - [ ] **API contract matches** — Pydantic schema field names match JS `data.field` reads exactly
 - [ ] **Correct tier used** — Portfolio for FnO computation, Experience for read-only aggregation
 - [ ] **Section loader registered** — `_sectionLoaders['name'] = loadName` in `fno/main.js`
