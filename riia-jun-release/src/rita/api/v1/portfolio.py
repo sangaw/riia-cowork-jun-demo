@@ -23,7 +23,7 @@ No JWT auth required — read-only, same as observability endpoints.
 from __future__ import annotations
 
 from datetime import date as _date
-from typing import Any
+from typing import Any, Optional
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException
@@ -358,6 +358,57 @@ def man_snapshot(
         "group_name": req.group_name,
         "recorded_at": _date.today().isoformat(),
     }
+
+
+class _AdjustPositionRequest(BaseModel):
+    date: str = ""
+    month: str = ""
+    action: str = ""
+    lot_key: str = ""
+    from_group: str = ""
+    to_group: str = ""
+    nifty_spot: Optional[float] = None
+    banknifty_spot: Optional[float] = None
+
+
+@router.post("/adjust-position-action")
+def adjust_position_action(
+    req: _AdjustPositionRequest,
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    """Record a manoeuvre action from the FnO Manoeuvre panel.
+
+    Injects server-side timestamp; JS payload does not send it.
+    Returns status ok + manoeuvre_id on success, error + detail on failure.
+    """
+    from rita.services.manoeuvre_service import ManoeuvreService
+    from rita.schemas.manoeuvres import ManoeuvreCreate
+    from datetime import datetime, timezone, date as _date_type
+    import structlog as _structlog
+    _log = _structlog.get_logger()
+    try:
+        now = datetime.now(timezone.utc)
+        try:
+            action_date = _date_type.fromisoformat(req.date) if req.date else _date_type.today()
+        except ValueError:
+            action_date = _date_type.today()
+        payload = ManoeuvreCreate(
+            timestamp=now,
+            date=action_date,
+            month=req.month,
+            action=req.action,
+            lot_key=req.lot_key,
+            from_group=req.from_group or None,
+            to_group=req.to_group or None,
+            nifty_spot=req.nifty_spot,
+            banknifty_spot=req.banknifty_spot,
+        )
+        svc = ManoeuvreService(db)
+        result = svc.record(payload)
+        return {"status": "ok", "manoeuvre_id": result.manoeuvre_id}
+    except Exception as exc:
+        _log.error("adjust_position_action_failed", error=str(exc))
+        return {"status": "error", "detail": str(exc)}
 
 
 @router.get("/man-pnl-history")

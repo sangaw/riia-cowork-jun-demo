@@ -1340,7 +1340,7 @@ let LIVE_MODE  = localStorage.getItem('ritaLiveMode') === 'true';
 
 // ── API client ──────────────────────────────────────────────────────
 async function fetchTimeline() {
-  try { const r = await fetch(`${API_BASE}/api/v1/risk-timeline`); return r.ok ? r.json() : null; } catch { return null; }
+  try { const r = await fetch(`${API_BASE}/api/v1/experience/rita/risk-timeline`); return r.ok ? r.json() : null; } catch { return null; }
 }
 async function fetchSignals() {
   try { const r = await fetch(`${API_BASE}/api/v1/market-signals?instrument=ASML&periods=5`); return r.ok ? r.json() : null; } catch { return null; }

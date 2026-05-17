@@ -13,7 +13,7 @@ export async function loadScenarios() {
   // Show last backtest results on page load only when real data exists
   try {
     const perf  = await api('/api/v1/performance-summary');
-    const daily = await api('/api/v1/backtest-daily');
+    const daily = await api('/api/v1/experience/rita/backtest-daily');
     // total_days === 0 means no completed backtest — don't render garbage NaN KPIs
     const hasData = perf && typeof perf === 'object' && perf.total_days > 0;
     if (hasData) {
@@ -56,7 +56,7 @@ export async function runScenarioBacktest() {
 
     const [perf, daily] = await Promise.all([
       api('/api/v1/performance-summary'),
-      api('/api/v1/backtest-daily'),
+      api('/api/v1/experience/rita/backtest-daily'),
     ]);
     badge.className = 'badge ok'; badge.textContent = 'Done';
     renderScenarioResults(perf, daily, from, to);

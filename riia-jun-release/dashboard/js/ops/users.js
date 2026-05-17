@@ -4,7 +4,7 @@ export async function loadUsers() {
     
     try {
         const token = localStorage.getItem('auth_token') || 'rita-dev'; // legacy fallback if running locally
-        const res = await fetch('/users', {
+        const res = await fetch('/api/v1/users', {
             headers: {'Authorization': `Bearer ${token}`}
         });
         
@@ -59,7 +59,7 @@ export async function saveUserRoles(userId) {
     const token = localStorage.getItem('auth_token') || 'rita-dev';
     
     try {
-        const res = await fetch(`/users/${userId}/roles`, {
+        const res = await fetch(`/api/v1/users/${userId}/roles`, {
             method: 'PUT',
             headers: {
                 'Authorization': `Bearer ${token}`,

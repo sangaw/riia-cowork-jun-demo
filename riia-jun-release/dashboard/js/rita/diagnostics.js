@@ -6,7 +6,7 @@ import { mkChart, C } from './charts.js';
 export async function loadDiagnostics() {
   try {
     const [bRows, mRows] = await Promise.all([
-      api('/api/v1/backtest-daily'),
+      api('/api/v1/experience/rita/backtest-daily'),
       api('/api/v1/market-signals?timeframe=daily&periods=2000'),
     ]);
     if (!bRows?.length) { setEl('diag-tbody', '<tr><td colspan="10" class="empty">No backtest data found — run the pipeline first.</td></tr>'); return; }

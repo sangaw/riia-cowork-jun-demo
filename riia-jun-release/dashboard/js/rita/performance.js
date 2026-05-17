@@ -6,7 +6,7 @@ import { mkChart, chartOpts, C } from './charts.js';
 export async function loadPerformance() {
   try {
     await loadPerfSummaryFull();
-    const rows = await api('/api/v1/backtest-daily');
+    const rows = await api('/api/v1/experience/rita/backtest-daily');
     if (!rows || !rows.length) {
       setEl('sec-performance', document.getElementById('sec-performance').innerHTML);
       return;

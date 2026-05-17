@@ -92,6 +92,9 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | Method | Path | Description | Auth |
 |---|---|---|---|
 | `GET` | `/api/v1/experience/rita/geography-overview` | Geography panels for Overview section — US/EU/India instruments with close, daily return, signal badge | No |
+| `GET` | `/api/v1/experience/rita/backtest-daily` | Daily backtest results for charting — date, portfolio_value, benchmark_value, allocation, close_price | No |
+| `GET` | `/api/v1/experience/rita/risk-timeline` | Risk timeline from latest backtest — drawdowns, VaR, vol, regime. Query: phase, instrument | No |
+| `GET` | `/api/v1/experience/rita/training-history` | Training run history — all KPIs newest-first. Query: instrument | No |
 
 ### Ops Experience Endpoints (`/api/experience/ops`)
 
@@ -134,6 +137,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `/api/v1/portfolio/hedge-history` | GET | Historical hedge suggestions from manoeuvres |
 | `/api/v1/portfolio/man-groups` | GET | Manoeuvre group list aggregated from portfolio table |
 | `/api/v1/portfolio/man-snapshot` | POST | Record snapshot when manoeuvre applied |
+| `/api/v1/portfolio/adjust-position-action` | POST | Record manoeuvre action from FnO panel — body: date, month, action, lot_key, from_group, to_group, nifty_spot, banknifty_spot. Returns {status, manoeuvre_id} |
 | `/api/v1/portfolio/man-pnl-history` | GET | Daily P&L history for Manoeuvre chart |
 | `/api/v1/portfolio/man-daily-status` | GET | Today's manoeuvre count and last manoeuvre record |
 | `/api/v1/portfolio/man-daily-snapshot` | POST | Record daily portfolio snapshot |

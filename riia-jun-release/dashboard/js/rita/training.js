@@ -5,7 +5,7 @@ import { mkChart, C } from './charts.js';
 
 export async function loadTrainProgress() {
   try {
-    const rows = await api('/api/v1/training-history');
+    const rows = await api('/api/v1/experience/rita/training-history');
     if (!rows || !rows.length) {
       setEl('training-table-wrap', '<div class="empty">No training history found.</div>');
       return;

@@ -11,7 +11,7 @@ from rita.database import get_db
 from rita.models.user import UserModel
 from rita.auth import RequireRole
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
 class UserResponse(BaseModel):
     id: str
