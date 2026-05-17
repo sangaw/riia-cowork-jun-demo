@@ -651,5 +651,5 @@ def get_api_metrics(
         items = [ApiMetricsRow(**row) for row in rows]
         return ApiMetricsResponse(items=items)
     except Exception as exc:
-        log_event("api_metrics.error", error=str(exc))
+        log_event(log, "error", "api_metrics.error", error=str(exc))
         return ApiMetricsResponse(items=[])
