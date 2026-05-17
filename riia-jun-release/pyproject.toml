@@ -27,6 +27,7 @@ dependencies = [
     "sentence-transformers>=2.7",
     "langgraph>=0.2",
     "matplotlib>=3.8",
+    "yfinance>=0.2",
 ]
 
 [project.optional-dependencies]

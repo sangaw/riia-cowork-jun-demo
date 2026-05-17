@@ -110,7 +110,7 @@ def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
                      Called every 1000 timesteps with {timestep, loss, ep_rew_mean}.
     """  # noqa: D401
     """Load data, train Double-DQN, validate, save model, return real metrics."""
-    from rita.core.data_loader import load_nifty_csv
+    from rita.core.data_loader import load_ohlcv_csv
     from rita.core.data_understanding import find_instrument_csv
     from rita.core.technical_analyzer import calculate_indicators
     from rita.core.trading_env import train_agent, train_best_of_n, run_episode
@@ -118,7 +118,7 @@ def train(config: TrainingConfig, progress_fn=None) -> TrainingOutcome:
     # ── 1. Load OHLCV data ────────────────────────────────────────────────────
     log.info("ml_dispatch.load_data", instrument=config.instrument)
     csv_path = find_instrument_csv(config.instrument)
-    df = load_nifty_csv(str(csv_path))
+    df = load_ohlcv_csv(str(csv_path))
     log.info("ml_dispatch.data_loaded", rows=len(df))
 
     # ── 2. Technical indicators ───────────────────────────────────────────────

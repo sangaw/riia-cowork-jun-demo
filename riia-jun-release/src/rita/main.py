@@ -54,6 +54,7 @@ from rita.api.v1.workflow.train import router as train_router
 from rita.api.v1.workflow.backtest import router as backtest_router
 from rita.api.v1.workflow.evaluate import router as evaluate_router
 from rita.api.v1.workflow.pipeline import router as pipeline_router
+from rita.api.v1.workflow.instrument_onboard import router as instrument_onboard_router
 from rita.api.experience.dashboard import router as dashboard_router
 from rita.api.experience.fno import router as fno_router
 from rita.api.experience.ops import router as ops_router
@@ -312,6 +313,7 @@ app.include_router(train_router, dependencies=[Depends(get_current_user)])
 app.include_router(backtest_router, dependencies=[Depends(get_current_user)])
 app.include_router(evaluate_router, dependencies=[Depends(get_current_user)])
 app.include_router(pipeline_router)
+app.include_router(instrument_onboard_router)
 
 # -- Experience Layer -- UI-shaped aggregation routers (read-only) -------------
 app.include_router(dashboard_router)

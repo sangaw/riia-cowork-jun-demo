@@ -47,11 +47,11 @@ def _compute_market_signals(
     nifty = [r for r in records if r.underlying == inst]
 
     if not nifty:
-        from rita.core.data_loader import load_nifty_csv
+        from rita.core.data_loader import load_ohlcv_csv
         from rita.core.data_understanding import find_instrument_csv
         try:
             csv_path = find_instrument_csv(inst)
-            _df = load_nifty_csv(str(csv_path))
+            _df = load_ohlcv_csv(str(csv_path))
             daily_close  = _df["Close"].astype(float)
             daily_high   = _df["High"].astype(float)
             daily_low    = _df["Low"].astype(float)

@@ -56,9 +56,9 @@ def model_dir(instrument: str) -> Path:
 # CSV loader
 # ---------------------------------------------------------------------------
 
-def load_nifty_csv(csv_path: str) -> pd.DataFrame:
+def load_ohlcv_csv(csv_path: str) -> pd.DataFrame:
     """
-    Load Nifty 50 data from the merged CSV file.
+    Load OHLCV data from a CSV file (instrument-agnostic).
 
     Returns a DataFrame with DatetimeIndex and columns:
     Open, High, Low, Close, Volume
@@ -108,6 +108,10 @@ def load_nifty_csv(csv_path: str) -> pd.DataFrame:
     return df
 
 
+# Backward-compat alias — kept so any direct references continue to resolve.
+load_nifty_csv = load_ohlcv_csv
+
+
 def load_instrument_data(instrument: str) -> "pd.DataFrame":
     """Load the full OHLCV history for an instrument, appending any manual supplement.
 
@@ -116,19 +120,19 @@ def load_instrument_data(instrument: str) -> "pd.DataFrame":
         data/input/DAILY-DATA/{instrument_lower}_manual.csv
     and concatenates it so that backtests can cover up-to-date dates.
 
-    Returns a deduplicated, date-sorted DataFrame identical in shape to load_nifty_csv().
+    Returns a deduplicated, date-sorted DataFrame identical in shape to load_ohlcv_csv().
     """
     from rita.core.data_understanding import find_instrument_csv
 
     primary_path = find_instrument_csv(instrument)
-    df = load_nifty_csv(str(primary_path))
+    df = load_ohlcv_csv(str(primary_path))
 
     # Check for manual supplement (e.g. nifty_manual.csv for 2026 data)
     manual_path = (
         Path(settings.data.input_dir) / "DAILY-DATA" / f"{instrument.lower()}_manual.csv"
     )
     if manual_path.exists():
-        df_manual = load_nifty_csv(str(manual_path))
+        df_manual = load_ohlcv_csv(str(manual_path))
         df = pd.concat([df, df_manual])
         df = df[~df.index.duplicated(keep="last")].sort_index()
         df = df.dropna(subset=["Close"])

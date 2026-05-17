@@ -1013,10 +1013,10 @@ def technical_commentary(
 
     if not nifty:
         try:
-            from rita.core.data_loader import load_nifty_csv
+            from rita.core.data_loader import load_ohlcv_csv
             from rita.core.data_understanding import find_instrument_csv
             csv_path = find_instrument_csv(inst)
-            _df = load_nifty_csv(str(csv_path))
+            _df = load_ohlcv_csv(str(csv_path))
             close  = _df["Close"].astype(float)
             high   = _df["High"].astype(float)
             low    = _df["Low"].astype(float)
@@ -1103,49 +1103,39 @@ def technical_commentary(
 
 # ── GET /api/v1/experience/rita/geography-overview ────────────────────────────
 
-_GEO_REGIONS: list[dict] = [
-    {
-        "region": "US",
-        "flag": "\U0001f1fa\U0001f1f8",
-        "instruments": [
-            {"id": "AAPL",    "name": "Apple"},
-            {"id": "NVDA",    "name": "Nvidia"},
-            {"id": "GOOGL",   "name": "Alphabet"},
-            {"id": "TRU",     "name": "TransUnion"},
-        ],
-    },
-    {
-        "region": "EU",
-        "flag": "\U0001f1ea\U0001f1fa",
-        "instruments": [
-            {"id": "SAP",     "name": "SAP"},
-            {"id": "ASML",    "name": "ASML"},
-            {"id": "LVMH",    "name": "LVMH"},
-            {"id": "SIE",     "name": "Siemens"},
-        ],
-    },
-    {
-        "region": "India",
-        "flag": "\U0001f1ee\U0001f1f3",
-        "instruments": [
-            {"id": "NIFTY",    "name": "Nifty 50"},
-            {"id": "BANKNIFTY","name": "Bank Nifty"},
-            {"id": "RELIANCE", "name": "Reliance"},
-            {"id": "INFY",     "name": "Infosys"},
-        ],
-    },
-]
+_EU_COUNTRY_CODES = frozenset({"NL", "DE", "FR", "GB", "BE", "CH", "SE", "ES", "IT", "AT", "FI", "DK", "IE", "PL", "PT"})
+
+_REGION_FLAGS = {
+    "US":    "\U0001f1fa\U0001f1f8",
+    "EU":    "\U0001f1ea\U0001f1fa",
+    "India": "\U0001f1ee\U0001f1f3",
+    "Other": "\U0001f310",
+}
+
+
+def _country_to_region(country_code: str) -> str:
+    """Map a country_code string to a geography bucket."""
+    cc = (country_code or "").upper()
+    if cc == "IN":
+        return "India"
+    if cc == "US":
+        return "US"
+    if cc in _EU_COUNTRY_CODES:
+        return "EU"
+    return "Other"
 
 
 @router.get(
     "/experience/rita/geography-overview",
-    summary="Geography panels — latest close and daily return for US / EU / India instruments",
+    summary="Geography panels — latest close and daily return for all available instruments",
     response_model=GeographyOverviewResponse,
 )
 def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewResponse:
-    """Read-only.  Returns close price and daily return for a fixed instrument universe
-    grouped by geography.  Missing instruments are returned with null values so the
-    UI never receives an error for instruments not yet in the data cache.
+    """Read-only. Returns close price and daily return for all is_available instruments
+    grouped by geography (dynamically from the instruments table).
+    Missing instruments are returned with null values so the UI never receives an error
+    for instruments not yet in the data cache.
+    No db.commit() in this endpoint.
     """
     _start = time.monotonic()
     sources: dict[str, Any] = {}
@@ -1200,17 +1190,47 @@ def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewRespon
             return "bearish"
         return "neutral"
 
+    # Load available instruments dynamically from DB
+    t0 = time.monotonic()
+    try:
+        inst_repo = InstrumentRepository(db)
+        all_instruments = [i for i in inst_repo.read_all() if i.is_available]
+        sources["instruments"] = {
+            "status": "ok",
+            "count": len(all_instruments),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_instruments = []
+        sources["instruments"] = {
+            "status": "error",
+            "count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    # Group instruments by region bucket
+    from collections import defaultdict as _defaultdict
+    region_buckets: dict[str, list[Any]] = _defaultdict(list)
+    for inst in all_instruments:
+        region = _country_to_region(inst.country_code)
+        region_buckets[region].append(inst)
+
     regions: list[GeoRegion] = []
-    for region_def in _GEO_REGIONS:
-        instruments: list[GeoInstrument] = []
-        for inst_def in region_def["instruments"]:
-            inst_id = inst_def["id"].upper()
+    for region_name in ("India", "US", "EU", "Other"):
+        bucket = region_buckets.get(region_name, [])
+        if not bucket:
+            continue
+        flag = _REGION_FLAGS.get(region_name, "\U0001f310")
+        geo_instruments: list[GeoInstrument] = []
+        for inst in bucket:
+            inst_id = inst.instrument_id.upper()
             close, daily_return_pct = price_map.get(inst_id, (None, None))
-            instruments.append(
+            geo_instruments.append(
                 GeoInstrument(
                     id=inst_id,
-                    name=inst_def["name"],
-                    flag=region_def["flag"],
+                    name=inst.name,
+                    flag=flag,
                     close=close,
                     daily_return_pct=daily_return_pct,
                     signal=_signal(daily_return_pct),
@@ -1218,9 +1238,9 @@ def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewRespon
             )
         regions.append(
             GeoRegion(
-                region=region_def["region"],
-                flag=region_def["flag"],
-                instruments=instruments,
+                region=region_name,
+                flag=flag,
+                instruments=geo_instruments,
             )
         )
 
