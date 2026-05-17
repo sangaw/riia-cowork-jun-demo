@@ -16,7 +16,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 from rita.config import get_settings
-from rita.core.data_loader import load_nifty_csv
+from rita.core.data_loader import load_ohlcv_csv
 
 
 # ── CSV discovery ──────────────────────────────────────────────────────────────
@@ -24,23 +24,37 @@ from rita.core.data_loader import load_nifty_csv
 def find_instrument_csv(instrument_id: str) -> Path:
     """Return the best CSV path for an instrument.
 
-    Preference order:
-    1. data/raw/{INSTRUMENT}/merged.csv   (NIFTY has a pre-merged file)
-    2. Largest CSV in data/raw/{INSTRUMENT}/
-    3. Largest CSV in data/input/{INSTRUMENT}/
+    Dynamic glob-based resolution — no hardcoded paths per instrument.
+
+    NIFTY exception: primary = data/raw/NIFTY/merged.csv
+    BANKNIFTY exception: primary = data/raw/BANKNIFTY/banknifty_daily_25yr_rounded.csv
+
+    For all other instruments:
+      Priority 1: first CSV in data/raw/{TICKER}/
+      Priority 2: first CSV in data/input/{TICKER}/  (fallback)
     """
     cfg = get_settings()
-    raw_dir = Path(cfg.data.raw_dir) / instrument_id.upper()
+    uid = instrument_id.upper()
+    raw_dir = Path(cfg.data.raw_dir) / uid
+    input_dir = Path(cfg.data.input_dir) / uid
 
-    merged = raw_dir / "merged.csv"
-    if merged.exists():
-        return merged
+    # NIFTY — merged pre-built file takes priority
+    if uid == "NIFTY":
+        merged = raw_dir / "merged.csv"
+        if merged.exists():
+            return merged
 
+    # BANKNIFTY — explicit named file
+    if uid == "BANKNIFTY":
+        named = raw_dir / "banknifty_daily_25yr_rounded.csv"
+        if named.exists():
+            return named
+
+    # Generic instruments — glob raw dir first, then input dir
     csvs = sorted(raw_dir.glob("*.csv"), key=lambda p: p.stat().st_size, reverse=True)
     if csvs:
         return csvs[0]
 
-    input_dir = Path(cfg.data.input_dir) / instrument_id.upper()
     csvs = sorted(input_dir.glob("*.csv"), key=lambda p: p.stat().st_size, reverse=True)
     if csvs:
         return csvs[0]
@@ -122,7 +136,7 @@ def compute_understanding(instrument_id: str) -> dict[str, Any]:
     """Load instrument CSV, compute all sections and return the full payload."""
 
     csv_path = find_instrument_csv(instrument_id)
-    raw = load_nifty_csv(str(csv_path))
+    raw = load_ohlcv_csv(str(csv_path))
     df  = add_indicators(raw)
 
     # ── Summary ───────────────────────────────────────────────────────────────

@@ -31,7 +31,7 @@ import pandas as pd
 import structlog
 
 from rita.config import get_settings
-from rita.core.data_loader import load_nifty_csv
+from rita.core.data_loader import load_ohlcv_csv
 from rita.core.data_understanding import find_instrument_csv
 from rita.core.technical_analyzer import calculate_indicators
 from rita.core.performance import compute_all_metrics, sharpe_ratio
@@ -69,7 +69,7 @@ TRADING_DAYS = 252
 def _load_with_indicators(instrument_id: str) -> pd.DataFrame:
     """Load OHLCV CSV and compute technical indicators. Returns DatetimeIndex df."""
     csv_path = find_instrument_csv(instrument_id)
-    df = load_nifty_csv(str(csv_path))
+    df = load_ohlcv_csv(str(csv_path))
     return calculate_indicators(df)
 
 

@@ -42,7 +42,7 @@ def _get_df(instrument: str):
     Recomputes only when any source file's mtime changes.
     """
     import pandas as pd
-    from rita.core.data_loader import load_nifty_csv
+    from rita.core.data_loader import load_ohlcv_csv
     from rita.core.data_understanding import find_instrument_csv
     from rita.core.technical_analyzer import calculate_indicators
 
@@ -60,9 +60,9 @@ def _get_df(instrument: str):
     if cached is not None and cached["mtime_key"] == mtime_key:
         return cached["df"]
 
-    raw = load_nifty_csv(primary_path)
+    raw = load_ohlcv_csv(primary_path)
     if manual_path.exists():
-        manual = load_nifty_csv(str(manual_path))
+        manual = load_ohlcv_csv(str(manual_path))
         raw = pd.concat([raw, manual])
         raw = raw[~raw.index.duplicated(keep="last")].sort_index()
 

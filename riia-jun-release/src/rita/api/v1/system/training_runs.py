@@ -87,7 +87,7 @@ def training_split(
     """Return the date ranges used for train, validation, and backtest phases."""
     from rita.core.data_understanding import find_instrument_csv
     from rita.core.technical_analyzer import calculate_indicators
-    from rita.core.data_loader import load_nifty_csv
+    from rita.core.data_loader import load_ohlcv_csv
 
     result: dict[str, Any] = {
         "train_start": None, "train_end": None,
@@ -97,7 +97,7 @@ def training_split(
 
     try:
         csv_path = find_instrument_csv(instrument)
-        df = load_nifty_csv(str(csv_path))
+        df = load_ohlcv_csv(str(csv_path))
         df = calculate_indicators(df)
         split_idx = int(len(df) * 0.8)
         train_df = df.iloc[:split_idx]

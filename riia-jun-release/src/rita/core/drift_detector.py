@@ -212,12 +212,12 @@ class DriftDetector:
 
         csv_latest: date | None = None
         try:
-            from rita.core.data_loader import load_nifty_csv  # noqa: PLC0415
+            from rita.core.data_loader import load_ohlcv_csv  # noqa: PLC0415
             from rita.config import get_settings  # noqa: PLC0415
             _raw = _Path("data/raw/NIFTY/merged.csv")
             csv_path = _raw if _raw.exists() else _Path(get_settings().data.input_dir) / "DAILY-DATA" / "nifty_manual.csv"
             if csv_path.exists():
-                _df = load_nifty_csv(str(csv_path))
+                _df = load_ohlcv_csv(str(csv_path))
                 if not _df.empty:
                     csv_latest = _df.index[-1].date()
         except Exception:

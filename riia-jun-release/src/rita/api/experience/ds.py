@@ -27,7 +27,7 @@ def ds_payload(instrument: str = "NIFTY", db: Session = Depends(get_db)) -> dict
     from rita.repositories.training import TrainingRunsRepository
     from rita.repositories.backtest import BacktestRunsRepository
     from rita.core.data_understanding import find_instrument_csv
-    from rita.core.data_loader import load_nifty_csv
+    from rita.core.data_loader import load_ohlcv_csv
     from rita.core.technical_analyzer import calculate_indicators
 
     _start = time.monotonic()
@@ -87,7 +87,7 @@ def ds_payload(instrument: str = "NIFTY", db: Session = Depends(get_db)) -> dict
     t0 = time.monotonic()
     try:
         csv_path = find_instrument_csv(instrument)
-        df = calculate_indicators(load_nifty_csv(str(csv_path)))
+        df = calculate_indicators(load_ohlcv_csv(str(csv_path)))
         idx = int(len(df) * 0.8)
         split.update({
             "train_start": str(df.index[0].date()),

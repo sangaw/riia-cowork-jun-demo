@@ -24,6 +24,7 @@ class _InstrumentBody(BaseModel):
     name: str
     exchange: str
     country_code: str
+    currency: Optional[str] = None
     lot_size: Optional[int] = None
     is_available: bool = False
 
@@ -37,6 +38,7 @@ def list_instruments(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
             "name": i.name,
             "exchange": i.exchange,
             "country_code": i.country_code,
+            "currency": i.currency,
             "lot_size": i.lot_size,
             "data_ready": i.is_available,
         }
