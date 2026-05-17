@@ -2,10 +2,13 @@
 import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export async function loadRisk() {
   try {
-    const rows = await api('/api/v1/experience/rita/risk-timeline');
+    const rows = await cachedApi('/api/v1/experience/rita/risk-timeline', 60000);
     if (!rows || !rows.length) {
       setEl('risk-regime-wrap', '<div class="empty">No risk data — run pipeline first.</div>');
       return;

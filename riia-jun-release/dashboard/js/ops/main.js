@@ -16,6 +16,7 @@ import { loadAlerts } from './alerts.js';
 import { loadSourceAvailability } from './source-availability.js';
 import { loadFunctionalKPIs } from './functional-kpis.js';
 import { loadUtilities, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './utilities.js';
+import { loadApiMetrics, filterApiMetrics } from './api-metrics.js';
 
 // ── Populate section loader registry ─────────────────────────────────────────
 sectionLoaders['overview']             = loadOverview;
@@ -32,6 +33,7 @@ sectionLoaders['game-compliance']      = loadGameCompliance;
 sectionLoaders['alerts']               = loadAlerts;
 sectionLoaders['source-availability']  = loadSourceAvailability;
 sectionLoaders['functional-kpis']      = loadFunctionalKPIs;
+sectionLoaders['api-metrics']          = loadApiMetrics;
 
 // ── Window bindings for inline onclick= attributes ────────────────────────────
 window.nav                    = nav;
@@ -56,6 +58,8 @@ window.runMarket              = runMarket;
 window.runStrategy            = runStrategy;
 window.runFullPipeline        = runFullPipeline;
 window.doReset                = doReset;
+window.loadApiMetrics         = loadApiMetrics;
+window.filterApiMetrics       = filterApiMetrics;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {

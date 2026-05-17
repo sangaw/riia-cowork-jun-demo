@@ -23,6 +23,8 @@ from rita.repositories.agent_builds import AgentBuildRepository
 from rita.repositories.audit import AuditLogRepository
 from rita.repositories.training import TrainingRunsRepository
 from rita.repositories.backtest import BacktestRunsRepository
+from rita.repositories.api_call_log import ApiCallLogRepository
+from rita.schemas.api_metrics import ApiMetricsResponse, ApiMetricsRow
 from rita.schemas.agent_builds import (
     AgentBuildMetrics,
     AgentBuildRunOut,
@@ -631,3 +633,23 @@ def get_token_forecast(
         confidence=confidence,
         basis_runs=basis_runs,
     )
+
+
+@router.get("/api-metrics", response_model=ApiMetricsResponse)
+def get_api_metrics(
+    limit: int = Query(default=200, ge=1, le=5000),
+    method: Optional[str] = Query(default=None),
+    path_prefix: Optional[str] = Query(default=None),
+    db: Session = Depends(get_db),
+) -> ApiMetricsResponse:
+    """Return per-endpoint call counts, p50/p95 latency percentiles, and error rates."""
+    try:
+        repo = ApiCallLogRepository(db)
+        rows = repo.aggregate_by_path_method(
+            limit=limit, method_filter=method, path_prefix=path_prefix
+        )
+        items = [ApiMetricsRow(**row) for row in rows]
+        return ApiMetricsResponse(items=items)
+    except Exception as exc:
+        log_event(log, "error", "api_metrics.error", error=str(exc))
+        return ApiMetricsResponse(items=[])

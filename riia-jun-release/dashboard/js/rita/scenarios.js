@@ -3,6 +3,9 @@ import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, chartOpts, C } from './charts.js';
 import { loadHealth, loadProgress } from './health.js';
+import { createCache } from '../../shared/api-cache.js';
+
+const cachedApi = createCache(api);
 
 export function setScenarioPeriod(from, to) {
   document.getElementById('inp-bt-from').value = from;
@@ -12,8 +15,8 @@ export function setScenarioPeriod(from, to) {
 export async function loadScenarios() {
   // Show last backtest results on page load only when real data exists
   try {
-    const perf  = await api('/api/v1/performance-summary');
-    const daily = await api('/api/v1/experience/rita/backtest-daily');
+    const perf  = await cachedApi('/api/v1/performance-summary', 120000);
+    const daily = await cachedApi('/api/v1/experience/rita/backtest-daily', 120000);
     // total_days === 0 means no completed backtest — don't render garbage NaN KPIs
     const hasData = perf && typeof perf === 'object' && perf.total_days > 0;
     if (hasData) {
@@ -55,8 +58,13 @@ export async function runScenarioBacktest() {
     if (polls >= MAX_POLLS) throw new Error('Backtest timed out after 3 minutes.');
 
     const [perf, daily] = await Promise.all([
+<<<<<<< HEAD
       api('/api/v1/performance-summary'),
       api('/api/v1/experience/rita/backtest-daily'),
+=======
+      cachedApi('/api/v1/performance-summary', 120000),
+      cachedApi('/api/v1/backtest-daily', 120000),
+>>>>>>> worktree-agent-a0b598acfe0979d86
     ]);
     badge.className = 'badge ok'; badge.textContent = 'Done';
     renderScenarioResults(perf, daily, from, to);

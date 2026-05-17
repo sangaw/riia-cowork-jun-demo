@@ -31,7 +31,7 @@ from rita.exception_handlers import (
 )
 from rita.logging_config import configure_logging
 from rita.metrics import instrument_app
-from rita.middleware import TraceIDMiddleware
+from rita.middleware import ApiCallLogMiddleware, TraceIDMiddleware
 from rita.repositories.base import RepositoryValidationError
 from rita.api.v1.auth import router as auth_router
 from rita.api.v1.users import router as users_router
@@ -268,6 +268,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # -- Middleware (registration order: last-added executes outermost/first) ------
+app.add_middleware(ApiCallLogMiddleware)
 app.add_middleware(TraceIDMiddleware)
 app.add_middleware(
     CORSMiddleware,

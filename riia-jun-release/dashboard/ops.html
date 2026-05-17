@@ -476,6 +476,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
     Functional KPIs
   </div>
 
+  <div class="ni n-api-metrics" onclick="nav(this,'api-metrics')">
+    <div class="ni-ic">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="1.5" y="3.5" width="11" height="7" rx="1" stroke="currentColor" stroke-width="1.3" fill="none"/>
+        <path d="M4 7h6M4 9h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+      </svg>
+    </div>
+    API Metrics
+  </div>
+
   <div class="s-foot">
     <div class="mc">
       <div class="mc-ey">Pipeline Status</div>
@@ -1147,6 +1157,33 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
     <div class="card">
       <div class="c-ey"><div class="ey-d" style="background:var(--data)"></div>KPI Sparklines</div>
       <div id="functional-kpis-container" style="display:flex;flex-wrap:wrap;gap:16px;"><div class="loading">Loading…</div></div>
+    </div>
+  </section>
+
+  <section class="sec" id="sec-api-metrics" style="display:none">
+    <div class="ph">
+      <div class="ph-badge data">Monitoring</div>
+      <div>
+        <div class="ph-t">API Metrics</div>
+        <div class="ph-g">Per-endpoint call counts, latency percentiles, and error rates from the live request log.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="kpi-row">
+        <div class="kpi-card"><span class="kpi-label">Total Calls</span><span class="kpi-value" id="ops-api-metrics-total">—</span></div>
+        <div class="kpi-card"><span class="kpi-label">Unique Endpoints</span><span class="kpi-value" id="ops-api-metrics-unique">—</span></div>
+        <div class="kpi-card"><span class="kpi-label">Error Rate</span><span class="kpi-value" id="ops-api-metrics-error-rate">—</span></div>
+      </div>
+      <div class="filter-row" style="margin-bottom:12px;">
+        <label>Method: <input id="ops-api-metrics-filter-method" type="text" placeholder="GET / POST" style="width:80px" onchange="filterApiMetrics()"></label>
+        <label style="margin-left:16px;">Path prefix: <input id="ops-api-metrics-filter-prefix" type="text" placeholder="/api/v1/experience" style="width:200px" onchange="filterApiMetrics()"></label>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Path</th><th>Method</th><th>Calls</th><th>p50 (ms)</th><th>p95 (ms)</th><th>Errors</th><th>Error Rate</th></tr></thead>
+        <tbody id="ops-api-metrics-tbody"></tbody>
+      </table>
+      <div id="ops-api-metrics-empty" style="display:none; padding:16px; color:#888;">No data available.</div>
     </div>
   </section>
 

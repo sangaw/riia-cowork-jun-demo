@@ -89,6 +89,13 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `chat.js` | Ops chat | `sendOpsChat()` |
 | **`users.js`** | **User management table** | `loadUsers()`, `createUser()`, `deleteUser()` |
 | `agent-builds.js` | Agent Builds pipeline runs + performance metrics panels — API calls to `/api/experience/ops/agent-builds` and `/api/experience/ops/token-forecast` | `loadAgentBuilds()`, `renderTokenEstimateWidget()`, `submitTokenEstimate()`, `toggleEstimateWidget()`. Updated signatures: `mountTrendChart(m, runs)` and `renderTrendPanel(m, runs)` take runs array to derive TSR/CSAT/adherence; `renderKpiCards(metrics, runs)` takes runs for cache hit rate KPI. Run History table shows "Est / Actual" tokens column (colour-coded) replacing "Forecast Δ". Token chart shows dashed actual lines alongside solid estimate lines. |
+| `api-metrics.js` | API call log metrics panel — reads from `/api/experience/ops/api-metrics` | `loadApiMetrics()`, `filterApiMetrics()` |
+
+**Shared modules (`dashboard/js/shared/`):**
+
+| File | Responsibility | Key exports |
+|---|---|---|
+| `shared/api-cache.js` | Session-scoped API response cache factory. Cleared on page reload. | `createCache(apiFn)` — returns `cachedApi(path, ttlMs)` |
 
 ---
 
