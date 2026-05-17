@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T10:19:03",
+  "generated_at": "2026-05-17T10:21:36",
   "total_runs": 22,
   "per_role": {
     "pm": {
@@ -222,8 +222,12 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "11f440c",
+      "last_updated": "f8887c4",
       "recent_commits": [
+        {
+          "hash": "f8887c4",
+          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
+        },
         {
           "hash": "11f440c",
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
@@ -239,10 +243,6 @@
         {
           "hash": "2631b95",
           "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
-        },
-        {
-          "hash": "26f965b",
-          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
         }
       ],
       "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
@@ -251,8 +251,12 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "11f440c",
+      "last_updated": "f8887c4",
       "recent_commits": [
+        {
+          "hash": "f8887c4",
+          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
+        },
         {
           "hash": "11f440c",
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
@@ -268,10 +272,6 @@
         {
           "hash": "2631b95",
           "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
-        },
-        {
-          "hash": "26f965b",
-          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
         }
       ],
       "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
@@ -280,8 +280,12 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "11f440c",
+      "last_updated": "f8887c4",
       "recent_commits": [
+        {
+          "hash": "f8887c4",
+          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
+        },
         {
           "hash": "11f440c",
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
@@ -297,10 +301,6 @@
         {
           "hash": "2631b95",
           "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
-        },
-        {
-          "hash": "26f965b",
-          "message": "fix(agent-ops): strengthen spec gate + engineer files-count cross-check (FC-001, FC-PARTIAL-IMPL)"
         }
       ],
       "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
