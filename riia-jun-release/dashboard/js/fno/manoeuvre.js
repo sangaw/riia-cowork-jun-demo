@@ -574,7 +574,7 @@ async function manLoadHistory(month) {
 
 // ── Action Logger ─────────────────────────────────────────────────────────────
 function manLogAction(action, lotKey, fromGroup, toGroup) {
-  fetch(apiBase() + '/api/v1/portfolio/man-action', {
+  fetch(apiBase() + '/api/v1/portfolio/adjust-position-action', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

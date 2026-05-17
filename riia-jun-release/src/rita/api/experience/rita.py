@@ -1234,3 +1234,300 @@ def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewRespon
         sources=sources,
     )
     return GeographyOverviewResponse(regions=regions)
+
+
+# ── GET /api/v1/experience/rita/backtest-daily ────────────────────────────────
+
+@router.get("/experience/rita/backtest-daily", summary="Daily backtest results (experience tier)")
+def experience_backtest_daily(db: Session = Depends(get_db)) -> list[dict[str, Any]]:
+    """Experience-tier alias of /backtest-daily. Read-only, no db.commit()."""
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
+    active_id = _get_active_instrument_id(db)
+
+    t0 = time.monotonic()
+    try:
+        runs_repo    = BacktestRunsRepository(db)
+        results_repo = BacktestResultsRepository(db)
+        all_runs = [
+            r for r in runs_repo.read_all()
+            if r.status in ("complete", "completed")
+            and (r.instrument or "NIFTY").upper() == active_id
+        ]
+        sources["backtest_runs"] = {
+            "status": "ok" if all_runs else "empty",
+            "record_count": len(all_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_runs = []
+        sources["backtest_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    if not all_runs:
+        log_event(
+            log, "info", "experience.compose",
+            handler="experience_backtest_daily",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="empty",
+            response_keys=[],
+            sources=sources,
+        )
+        return []
+
+    latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
+
+    t0 = time.monotonic()
+    try:
+        results = sorted(
+            [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
+            key=lambda r: r.date,
+        )
+        sources["backtest_results"] = {
+            "status": "ok" if results else "empty",
+            "record_count": len(results),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        results = []
+        sources["backtest_results"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    response = [{
+        "date":            str(r.date),
+        "portfolio_value": r.portfolio_value,
+        "benchmark_value": r.benchmark_value,
+        "allocation":      r.allocation,
+        "close_price":     r.close_price,
+    } for r in results]
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="experience_backtest_daily",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=[],
+        sources=sources,
+    )
+    return response
+
+
+# ── GET /api/v1/experience/rita/risk-timeline ─────────────────────────────────
+
+@router.get("/experience/rita/risk-timeline", summary="Risk timeline (experience tier)")
+def experience_risk_timeline(
+    phase: str = "all",
+    instrument: str = "NIFTY",
+    db: Session = Depends(get_db),
+) -> list[dict[str, Any]]:
+    """Experience-tier alias of /risk-timeline. Read-only, no db.commit()."""
+    _start = time.monotonic()
+    sources: dict[str, Any] = {}
+
+    instrument = instrument.upper()
+
+    t0 = time.monotonic()
+    try:
+        runs_repo    = BacktestRunsRepository(db)
+        results_repo = BacktestResultsRepository(db)
+        all_runs = [
+            r for r in runs_repo.read_all()
+            if r.status in ("complete", "completed") and (r.instrument or "NIFTY") == instrument
+        ]
+        sources["backtest_runs"] = {
+            "status": "ok" if all_runs else "empty",
+            "record_count": len(all_runs),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        all_runs = []
+        sources["backtest_runs"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    if not all_runs:
+        log_event(
+            log, "info", "experience.compose",
+            handler="experience_risk_timeline",
+            duration_ms=int((time.monotonic() - _start) * 1000),
+            overall_status="empty",
+            response_keys=[],
+            sources=sources,
+        )
+        return []
+
+    latest_run = max(all_runs, key=lambda r: r.ended_at or r.recorded_at)
+
+    t0 = time.monotonic()
+    try:
+        results = sorted(
+            [r for r in results_repo.read_all() if r.run_id == latest_run.run_id],
+            key=lambda r: r.date,
+        )
+        sources["backtest_results"] = {
+            "status": "ok" if results else "empty",
+            "record_count": len(results),
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+        }
+    except Exception as exc:
+        results = []
+        sources["backtest_results"] = {
+            "status": "error",
+            "record_count": 0,
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "error": str(exc),
+        }
+
+    port_values  = [r.portfolio_value if r.portfolio_value is not None else 1.0 for r in results]
+    bench_values = [r.benchmark_value if r.benchmark_value is not None else 1.0 for r in results]
+
+    def _daily_rets(vals: list[float]) -> list[Optional[float]]:
+        rets: list[Optional[float]] = [None]
+        for i in range(1, len(vals)):
+            prev = vals[i - 1]
+            rets.append((vals[i] - prev) / prev if prev else None)
+        return rets
+
+    port_rets  = _daily_rets(port_values)
+    bench_rets = _daily_rets(bench_values)
+
+    def _rolling_vol(rets: list[Optional[float]], i: int, window: int = 20) -> Optional[float]:
+        window_rets = [r for r in rets[max(0, i - window + 1): i + 1] if r is not None]
+        if len(window_rets) < 2:
+            return None
+        return round(_stats.stdev(window_rets) * _math.sqrt(252) * 100, 4)
+
+    def _var_95(rets: list[Optional[float]], i: int, window: int = 20) -> Optional[float]:
+        window_rets = sorted(r for r in rets[max(0, i - window + 1): i + 1] if r is not None)
+        if not window_rets:
+            return None
+        idx = max(0, int(len(window_rets) * 0.05) - 1)
+        return round(window_rets[idx] * 100, 4)
+
+    peak = 1.0
+    drawdowns: list[float] = []
+    for v in port_values:
+        if v > peak:
+            peak = v
+        dd = (v - peak) / peak * 100 if peak > 0 else 0.0
+        drawdowns.append(round(dd, 4))
+
+    _ = phase  # accepted for forward-compatibility, not yet used for filtering
+
+    response = [{
+        "date":                  str(r.date),
+        "portfolio_value":       r.portfolio_value,
+        "portfolio_value_norm":  r.portfolio_value,
+        "benchmark_value":       r.benchmark_value,
+        "allocation":            r.allocation,
+        "close_price":           r.close_price,
+        "current_drawdown_pct":  drawdowns[i],
+        "drawdown_budget_pct":   round(min(abs(drawdowns[i]) / _MDD_LIMIT_PCT * 100.0, 150.0), 2),
+        "rolling_vol_20d":       _rolling_vol(port_rets, i),
+        "market_var_95":         _var_95(bench_rets, i),
+        "portfolio_var_95":      _var_95(port_rets, i),
+        "regime":                _regime(r.allocation),
+        "trend_score":           round(((r.allocation if r.allocation is not None else 0.5) - 0.5) * 2.0, 4),
+        "phase":                 "Backtest",
+        "run_id":                r.run_id,
+    } for i, r in enumerate(results)]
+
+    statuses = [s["status"] for s in sources.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "partial"
+    else:
+        overall = "error"
+
+    log_event(
+        log, "info", "experience.compose",
+        handler="experience_risk_timeline",
+        duration_ms=int((time.monotonic() - _start) * 1000),
+        overall_status=overall,
+        response_keys=[],
+        sources=sources,
+    )
+    return response
+
+
+# ── GET /api/v1/experience/rita/training-history ──────────────────────────────
+
+@router.get("/experience/rita/training-history", summary="Training run history (experience tier)")
+def experience_training_history(
+    instrument: str = "NIFTY",
+    db: Session = Depends(get_db),
+) -> list[dict[str, Any]]:
+    """Experience-tier alias of /training-history. Read-only, no db.commit()."""
+    from rita.repositories.training import TrainingRunsRepository
+
+    repo = TrainingRunsRepository(db)
+    runs = sorted(
+        [r for r in repo.read_all() if (r.instrument or "NIFTY") == instrument],
+        key=lambda r: r.recorded_at,
+    )
+
+    def _pct(v: Any) -> Optional[float]:
+        return round(v * 100, 2) if v is not None else None
+
+    def _f(v: Any) -> Optional[float]:
+        return round(v, 4) if v is not None else None
+
+    result = []
+    for i, r in enumerate(runs):
+        bt_sharpe = _f(r.backtest_sharpe)
+        bt_mdd    = _pct(r.backtest_mdd)
+        bt_ret    = _pct(r.backtest_return)
+        bt_constraints = (
+            bool(bt_sharpe >= 1.0 and abs(bt_mdd) < 10)
+            if bt_sharpe is not None and bt_mdd is not None else None
+        )
+        result.append({
+            "round":    i + 1,
+            "run_id":   r.run_id,
+            "instrument": r.instrument or "NIFTY",
+            "timestamp":  r.recorded_at.isoformat(),
+            "model_version": r.model_version,
+            "algorithm": r.algorithm,
+            "status":    r.status,
+            "timesteps": r.timesteps,
+            "source": "trained",
+            "train_sharpe":     _f(r.train_sharpe),
+            "train_mdd_pct":    _pct(r.train_mdd),
+            "train_return_pct": _pct(r.train_return),
+            "train_trades":     r.train_trades,
+            "val_sharpe":       _f(r.val_sharpe),
+            "val_mdd_pct":      _pct(r.val_mdd),
+            "val_return_pct":   _pct(r.val_return),
+            "val_cagr_pct":     _pct(r.val_cagr),
+            "val_trades":       r.val_trades,
+            "backtest_sharpe":          bt_sharpe,
+            "backtest_mdd_pct":         bt_mdd,
+            "backtest_return_pct":      bt_ret,
+            "backtest_cagr_pct":        bt_ret,
+            "backtest_trades":          r.backtest_trades,
+            "backtest_constraints_met": bt_constraints,
+            "notes": "",
+        })
+    result.reverse()
+    return result

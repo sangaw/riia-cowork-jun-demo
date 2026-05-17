@@ -5,7 +5,7 @@ import { mkChart, C } from './charts.js';
 
 export async function loadRisk() {
   try {
-    const rows = await api('/api/v1/risk-timeline');
+    const rows = await api('/api/v1/experience/rita/risk-timeline');
     if (!rows || !rows.length) {
       setEl('risk-regime-wrap', '<div class="empty">No risk data — run pipeline first.</div>');
       return;
