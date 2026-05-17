@@ -50,7 +50,8 @@ date, open, high, low, close, shares traded, turnover (₹ cr)
 Date format in `merged.csv`: `1999-07-01 00:00:00+05:30` (timezone-aware IST)
 Date format in `nifty_manual.csv`: `16-MAR-2026` (dd-MMM-yyyy, plain)
 
-Both formats are handled automatically by `load_nifty_csv()` in `src/rita/core/data_loader.py`.
+Both formats are handled automatically by `load_ohlcv_csv()` in `src/rita/core/data_loader.py`.
+(Backward-compat alias: `load_nifty_csv = load_ohlcv_csv` — both names resolve to the same function.)
 
 ### BANKNIFTY
 
@@ -93,16 +94,19 @@ These are real trading records imported manually. The API reads them; it never w
 
 ---
 
-## 4. `load_nifty_csv()` — The Canonical Data Loader
+## 4. `load_ohlcv_csv()` — The Canonical Data Loader
 
 **Location:** `src/rita/core/data_loader.py`
 
 All code that reads OHLCV CSVs must use this function. Do not write ad-hoc `pd.read_csv()` calls in routers or services.
 
-```python
-from rita.core.data_loader import load_nifty_csv
+**Renamed in Feature 09:** `load_nifty_csv` → `load_ohlcv_csv` (instrument-agnostic name).
+A backward-compat alias `load_nifty_csv = load_ohlcv_csv` is retained in data_loader.py so older imports continue to work.
 
-df = load_nifty_csv("data/raw/NIFTY/merged.csv")
+```python
+from rita.core.data_loader import load_ohlcv_csv
+
+df = load_ohlcv_csv("data/raw/NIFTY/merged.csv")
 # Returns: DataFrame with DatetimeIndex, columns = Open, High, Low, Close, Volume
 # Index is timezone-naive (converted from IST if needed)
 # Sorted ascending by date
@@ -116,6 +120,22 @@ df = load_nifty_csv("data/raw/NIFTY/merged.csv")
 - Sorts by date ascending
 
 **Output columns:** `Open`, `High`, `Low`, `Close`, `Volume` (Volume may be NaN if the source file has no volume column)
+
+### `find_instrument_csv()` — Dynamic Glob-Based Resolution
+
+**Location:** `src/rita/core/data_understanding.py`
+
+**Updated in Feature 09** from a hardcoded per-instrument mapping to a dynamic glob:
+
+```
+NIFTY:     data/raw/NIFTY/merged.csv              (exception — explicit path)
+BANKNIFTY: data/raw/BANKNIFTY/banknifty_daily_25yr_rounded.csv (exception — explicit path)
+All others:
+  Priority 1: first CSV in data/raw/{TICKER}/
+  Priority 2: first CSV in data/input/{TICKER}/   (fallback)
+```
+
+New instruments onboarded via `POST /api/v1/instrument/onboard` are automatically discovered by this logic once their CSV is written to `data/raw/{TICKER}/`.
 
 ---
 
@@ -192,8 +212,38 @@ These are study/demo positions. The `positions` table holds real broker data. Ac
 ## 9. AI Agent Directives
 
 1. **Never write to `data/raw/`** — it is the immutable source of truth.
-2. **Never call `pd.read_csv()` directly on OHLCV files** — always use `load_nifty_csv()`. It handles all date formats and column normalisation.
+2. **Never call `pd.read_csv()` directly on OHLCV files** — always use `load_ohlcv_csv()`. It handles all date formats and column normalisation.
 3. **Do not seed the full 25-year history** — the 2025+2026 window is the correct design. Full history causes slow startup.
 4. **To add a new instrument to the DB seed:** follow the same pattern in `main.py` lifespan — check if table empty, bulk `db.add_all()`, single `db.commit()`.
 5. **`nifty_manual.csv` is the live feed** — it is the only file updated after each trading day. Code that needs the most recent data should read from the DB (which includes it) not directly from the file.
-6. **Check `data/raw/` before downloading** — all instruments already have 25 years of historical data. Never suggest downloading from NSE or Yahoo Finance unless explicitly asked.
+6. **New instruments auto-onboard via API** — use `POST /api/v1/instrument/onboard`. The service writes to `data/raw/{TICKER}/` and `data/input/{TICKER}/` automatically; `find_instrument_csv()` discovers them via glob.
+
+---
+
+## 10. New Instrument Data Layout (Feature 09)
+
+New instruments onboarded via `POST /api/v1/instrument/onboard` follow this layout:
+
+```
+data/
+├── raw/
+│   └── {TICKER}/
+│       └── {ticker_lower}_daily.csv    ← yfinance OHLCV download (never modified after write)
+└── input/
+    └── {TICKER}/
+        └── {ticker_lower}_daily.csv    ← normalized: Open/High/Low/Close/Volume
+                                           tz-naive, sorted asc, year >= 2010
+```
+
+| Window | Purpose | Filter |
+|---|---|---|
+| 2009-09-01 → 2009-12-31 | Indicator warmup (not in input CSV) | Fetched, not saved |
+| 2010-01-01 → present | Full training history | `data/input/{TICKER}/` |
+| 2025-01-01 → present | Runtime DB cache | `market_data_cache` |
+
+**Onboarding pipeline** (Feature 09 — `src/rita/services/instrument_onboard.py`):
+1. `fetch_raw_data(ticker)` → downloads from yfinance, writes `data/raw/{TICKER}/{ticker_lower}_daily.csv`, raises ValueError if < 100 rows
+2. `process_to_input(ticker, raw_path)` → normalizes, filters year >= 2010, writes `data/input/{TICKER}/{ticker_lower}_daily.csv`
+3. `seed_market_cache(db, ticker, currency)` → reads input CSV, filters year >= 2025, bulk inserts into `market_data_cache`
+
+The four original instruments (NIFTY, BANKNIFTY, ASML, NVIDIA) are seeded at startup in `main.py` lifespan and are NOT affected by the new onboarding flow.

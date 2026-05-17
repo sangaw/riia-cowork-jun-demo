@@ -71,6 +71,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `workflow/backtest.py` | `POST /api/v1/backtest` |
 | `workflow/evaluate.py` | `POST /api/v1/evaluate` |
 | `workflow/pipeline.py` | `POST /api/v1/instrument/select`, `GET /api/v1/pipeline/progress`, `POST /api/v1/pipeline/quick-backtest` |
+| `workflow/instrument_onboard.py` | `GET /api/v1/instrument/search?q=<str>` (no auth), `POST /api/v1/instrument/onboard` (no auth) |
 | `workflow/chat.py` | `POST /api/v1/chat`, `POST /api/v1/chat/warmup` |
 | `workflow/commentary.py` | `POST /api/v1/commentary` |
 

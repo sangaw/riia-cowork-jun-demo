@@ -62,6 +62,7 @@ Stateful orchestration — **calls services only, JWT-protected (except pipeline
 | `backtest.py` | `POST /api/v1/backtest` | JWT |
 | `evaluate.py` | `POST /api/v1/evaluate` | JWT |
 | `pipeline.py` | `POST /api/v1/instrument/select`, `GET /api/v1/pipeline/progress`, `POST /api/v1/pipeline/quick-backtest` | No JWT |
+| `instrument_onboard.py` | `GET /api/v1/instrument/search`, `POST /api/v1/instrument/onboard` | No JWT |
 | `chat.py` | `POST /api/v1/chat`, `POST /api/v1/chat/warmup` | No JWT |
 
 ### Tier 3: Experience Layer (`src/rita/api/experience/`)
@@ -292,13 +293,19 @@ SESSION_DATA: dict[str, dict] = {}  # thread_id → {cash, holdings, portfolio_v
 
 ### `data_loader.py`
 
+**Feature 09:** `load_nifty_csv` renamed to `load_ohlcv_csv` (instrument-agnostic).
+Backward-compat alias `load_nifty_csv = load_ohlcv_csv` retained in the same file.
+
 ```python
-def load_nifty_csv(path: str) -> pd.DataFrame:
+def load_ohlcv_csv(path: str) -> pd.DataFrame:
     """Returns DatetimeIndex df with columns: Open, High, Low, Close, Volume.
-    Handles: IST timezone-aware dates, plain ISO, dd-MMM-yyyy formats."""
+    Handles: IST timezone-aware dates, plain ISO, dd-MMM-yyyy formats.
+    (Previously named load_nifty_csv — alias retained for compatibility.)"""
+
+load_nifty_csv = load_ohlcv_csv  # backward-compat alias
 
 def load_instrument_data(instrument_id: str) -> pd.DataFrame:
-    """Loads the correct CSV for NIFTY/BANKNIFTY/ASML/NVIDIA via find_instrument_csv."""
+    """Loads the correct CSV for any instrument via find_instrument_csv."""
 ```
 
 ### `trading_env.py`
@@ -400,6 +407,39 @@ def classify_intent(query: str) -> tuple[str, float]:
 
 def dispatch(intent: str, confidence: float, db: Session) -> dict:
     """Routes to handler based on intent. Returns structured response."""
+```
+
+---
+
+## 10b. Services (`src/rita/services/`)
+
+Business logic layer called by workflow routers. Do not call repositories directly from routers — use services.
+
+| File | Functions | Purpose |
+|---|---|---|
+| `workflow_service.py` | `get_live_progress()` | Training progress polling |
+| `backtest_service.py` | `run_backtest()` | Single-instrument DDQN backtest |
+| `portfolio_service.py` | `compute_portfolio_summary()` | Cross-instrument portfolio KPIs |
+| `manoeuvre_service.py` | `evaluate_manoeuvres()` | FnO manoeuvre P&L computation |
+| `instrument_onboard.py` | `search_tickers()`, `fetch_raw_data()`, `process_to_input()`, `seed_market_cache()` | Feature 09 — yfinance data fetch, normalize, DB seeding for new instruments |
+
+### `instrument_onboard.py` (Feature 09)
+
+```python
+def search_tickers(query: str, max_results: int = 10) -> list[dict]:
+    """Search Yahoo Finance for EQUITY listings. Raises HTTPException(502) if unreachable."""
+
+def fetch_raw_data(ticker: str) -> tuple[Path, int]:
+    """Download from yfinance (2009-09-01), write data/raw/{TICKER}/{ticker_lower}_daily.csv.
+    Raises ValueError if < 100 rows. Returns (raw_path, row_count)."""
+
+def process_to_input(ticker: str, raw_path: Path) -> Path:
+    """Normalize raw CSV → Open/High/Low/Close/Volume, filter year >= 2010, tz-naive.
+    Writes data/input/{TICKER}/{ticker_lower}_daily.csv. Returns input_path."""
+
+def seed_market_cache(db: Session, ticker: str, currency: str) -> int:
+    """Bulk insert 2025+ rows into market_data_cache. Skips if already seeded.
+    Returns count inserted (0 if skipped)."""
 ```
 
 ---
