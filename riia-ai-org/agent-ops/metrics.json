@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-05-17T10:21:36",
-  "total_runs": 22,
+  "generated_at": "2026-05-17T20:56:16",
+  "total_runs": 23,
   "per_role": {
     "pm": {
-      "run_count": 14,
+      "run_count": 15,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 6660
+      "avg_token_cost": 6356
     },
     "architect": {
-      "run_count": 14,
-      "avg_adherence_score": 0.982,
-      "first_pass_rate": 0.929,
-      "avg_token_cost": 7171
+      "run_count": 15,
+      "avg_adherence_score": 0.983,
+      "first_pass_rate": 0.933,
+      "avg_token_cost": 6920
     },
     "engineer": {
-      "run_count": 14,
-      "avg_adherence_score": 0.87,
-      "first_pass_rate": 0.5,
-      "avg_token_cost": 25273
+      "run_count": 15,
+      "avg_adherence_score": 0.878,
+      "first_pass_rate": 0.533,
+      "avg_token_cost": 23935
     },
     "qa": {
-      "run_count": 14,
-      "avg_adherence_score": 0.982,
-      "first_pass_rate": 0.857,
-      "avg_token_cost": 10865
+      "run_count": 15,
+      "avg_adherence_score": 0.983,
+      "first_pass_rate": 0.867,
+      "avg_token_cost": 10327
     },
     "techwriter": {
-      "run_count": 14,
-      "avg_adherence_score": 0.905,
-      "first_pass_rate": 0.786,
-      "avg_token_cost": 7544
+      "run_count": 15,
+      "avg_adherence_score": 0.911,
+      "first_pass_rate": 0.8,
+      "avg_token_cost": 7168
     }
   },
   "per_app": {
@@ -47,8 +47,8 @@
       "fail": 1
     },
     "ops": {
-      "run_count": 5,
-      "pass": 2,
+      "run_count": 6,
+      "pass": 3,
       "pass_with_warnings": 3,
       "fail": 0
     },
@@ -157,6 +157,13 @@
       "grounding_score": 1.0,
       "checks_passed": 20,
       "checks_total": 20
+    },
+    {
+      "run_id": "20260517-1430",
+      "app": "ops",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
     }
   ],
   "failure_modes": {
@@ -205,7 +212,7 @@
     },
     "FC-004": {
       "total": 2,
-      "recent_fires": 2,
+      "recent_fires": 0,
       "by_role": {
         "engineer": 1,
         "qa": 1
@@ -222,8 +229,16 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "f8887c4",
+      "last_updated": "9f306e4",
       "recent_commits": [
+        {
+          "hash": "9f306e4",
+          "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
+        },
+        {
+          "hash": "68ae873",
+          "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
+        },
         {
           "hash": "f8887c4",
           "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
@@ -235,14 +250,6 @@
         {
           "hash": "393d1d5",
           "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
-        },
-        {
-          "hash": "c8c10cd",
-          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "2631b95",
-          "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
         }
       ],
       "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
@@ -251,8 +258,16 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "f8887c4",
+      "last_updated": "9f306e4",
       "recent_commits": [
+        {
+          "hash": "9f306e4",
+          "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
+        },
+        {
+          "hash": "68ae873",
+          "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
+        },
         {
           "hash": "f8887c4",
           "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
@@ -264,14 +279,6 @@
         {
           "hash": "393d1d5",
           "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
-        },
-        {
-          "hash": "c8c10cd",
-          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "2631b95",
-          "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
         }
       ],
       "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
@@ -280,8 +287,16 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "f8887c4",
+      "last_updated": "9f306e4",
       "recent_commits": [
+        {
+          "hash": "9f306e4",
+          "message": "chore(skills): add FC-MERGE gate to all 3 dashboard skill DoDs"
+        },
+        {
+          "hash": "68ae873",
+          "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
+        },
         {
           "hash": "f8887c4",
           "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
@@ -293,14 +308,6 @@
         {
           "hash": "393d1d5",
           "message": "fix(agent-ops): add alembic migration hard gate to all skill files + enhance.md"
-        },
-        {
-          "hash": "c8c10cd",
-          "message": "fix(agent-ops): add HTML Grep+Edit guardrail to all skill files + enhance.md (FC-PARTIAL-IMPL)"
-        },
-        {
-          "hash": "2631b95",
-          "message": "fix(agent-ops): upgrade spec gate to blocking + add Step 4 confirmation pause (FC-001, engineer first-pass)"
         }
       ],
       "improvement_applied": "FC-001 v2 + FC-PARTIAL-IMPL v2: tightened spec n/a rule; added HTML completeness DoD item. FC-004 v1: JS field-access gate \u00e2\u20ac\u201d enumerate every data.field/r.field, confirm each exists in Pydantic schema before git add; addresses silent JS render failures from field name mismatches",
@@ -373,9 +380,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.636,
-    "first_attempt_success_rate": 0.636,
-    "partial_completion_rate": 0.318,
+    "tsr": 0.652,
+    "first_attempt_success_rate": 0.652,
+    "partial_completion_rate": 0.304,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -383,7 +390,7 @@
     "avg_relevance_score": 4.0,
     "avg_csat": 3.0,
     "planning_accuracy_rate": 0.8,
-    "grounding_pass_rate": 0.914
+    "grounding_pass_rate": 0.918
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 4.1,
@@ -425,8 +432,8 @@
     }
   },
   "efficiency": {
-    "avg_duration_minutes": 41,
-    "avg_tokens_per_run": 37591,
+    "avg_duration_minutes": 50,
+    "avg_tokens_per_run": 36626,
     "avg_retry_count": 0.09,
     "avg_time_saved_hours": 12.8
   },
@@ -436,7 +443,7 @@
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.045,
+    "escalation_rate": 0.043,
     "avg_corrections_per_run": 0.09,
     "total_hitl_events": 2
   },
@@ -444,5 +451,54 @@
     "context_adherence_rate": null,
     "memory_utilization_rate": 0.0,
     "loop_detection_rate": 0.0
+  },
+  "api_metrics": {
+    "available": true,
+    "total_calls": 97,
+    "unique_endpoints": 25,
+    "overall_error_rate_pct": 5.15,
+    "top_5_by_calls": [
+      {
+        "path": "/progress",
+        "method": "GET",
+        "count": 26,
+        "p50_ms": 16.0,
+        "p95_ms": 63.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/v1/instrument/active",
+        "method": "GET",
+        "count": 10,
+        "p50_ms": 16.0,
+        "p95_ms": 16.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/v1/instrument/select",
+        "method": "POST",
+        "count": 7,
+        "p50_ms": 31.0,
+        "p95_ms": 78.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/experience/ops/api-metrics",
+        "method": "GET",
+        "count": 7,
+        "p50_ms": 0.0,
+        "p95_ms": 31.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/experience/ops/step-log",
+        "method": "GET",
+        "count": 5,
+        "p50_ms": 15.0,
+        "p95_ms": 32.0,
+        "error_count": 0
+      }
+    ],
+    "generated_at": "2026-05-17T18:56:16.209713+00:00"
   }
 }
