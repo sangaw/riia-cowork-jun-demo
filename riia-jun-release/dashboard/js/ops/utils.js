@@ -14,3 +14,8 @@ export function stepName(num) {
                  5:'Set Period',6:'Backtest',7:'Results',8:'Update Goal'};
   return names[num] || ('Step ' + num);
 }
+
+export function setEl(id, html) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = html;
+}

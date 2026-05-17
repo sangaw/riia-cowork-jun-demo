@@ -117,13 +117,35 @@
 
 ---
 
-## Lesson learned this session
+## Lessons learned this session
 
 **Grep syntax in Grep tool:** The tool uses ripgrep. Alternation must use `|` not `\|`. Pattern `foo\|bar` searches for the literal string `foo\|bar`, not `foo` OR `bar`. Use `foo|bar` or `(foo|bar)` for OR matching. This caused false-negative FC-PARTIAL-IMPL detection — the Engineer had done the work but the check reported it missing.
+
+**Post-merge defect (2026-05-17 session):** Two defects discovered during user testing after Run B merged:
+1. **RITA** — api-cache import path `../../shared/api-cache.js` was wrong (should be `../shared/api-cache.js`). Entire RITA module chain failed. Fixed in commit `2c94033` same session.
+2. **Ops** — `setEl` was imported by `api-metrics.js` from `./utils.js` but was never exported from `ops/utils.js`. ES module static binding error killed entire Ops app. Fixed in this session by adding `setEl` to `ops/utils.js`.
+
+**Root causes:**
+- Merge happened before QA ran (Steps 5–7 deferred to next session)
+- Architect did not list `ops/utils.js` in files-to-touch, so Engineer never checked its exports
+- FC-004 contract check covers schema ↔ JS field mismatches but not JS named-import resolution
+
+**Required process improvements (applied to /enhance skill files):**
+- QA must validate named imports: for each `import { name } from './module.js'` in new/modified files, verify `module.js` exports `name`
+- Architect guardrail: any new JS file importing from an existing utils must list that utils in files-to-touch with explicit export verification note
+- Hard gate: QA must complete before merge confirmation step
 
 ---
 
 ## Remaining features
 
-**Feature 08 R6** — CLAUDE.md API routing rules update (small, do after Run B QA+TechWriter)
+**Feature 08 R6** — CLAUDE.md API routing rules update (small, standalone)
 **Feature 09** — TBD (see `project-office/features/09 Build a Agent Dashboard/`)
+
+Next session picks up at:
+  1. /enhance Step 5 — QA Agent (unit tests for /api/experience/ops/api-metrics, FC-004 contract check)
+  2. Step 6 — TechWriter (Confluence Engineering page update)
+  3. Step 7 — Write run log run-20260517-1430.json + regenerate metrics.json
+  4. Feature 08 R6 — CLAUDE.md routing rules
+
+  The HANDOFF carries forward the 3 AGENT_RESULTS records and all run metadata needed to complete the /enhance flow in the next session.
