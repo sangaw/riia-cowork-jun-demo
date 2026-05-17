@@ -58,13 +58,8 @@ export async function runScenarioBacktest() {
     if (polls >= MAX_POLLS) throw new Error('Backtest timed out after 3 minutes.');
 
     const [perf, daily] = await Promise.all([
-<<<<<<< HEAD
-      api('/api/v1/performance-summary'),
-      api('/api/v1/experience/rita/backtest-daily'),
-=======
       cachedApi('/api/v1/performance-summary', 120000),
-      cachedApi('/api/v1/backtest-daily', 120000),
->>>>>>> worktree-agent-a0b598acfe0979d86
+      cachedApi('/api/v1/experience/rita/backtest-daily', 120000),
     ]);
     badge.className = 'badge ok'; badge.textContent = 'Done';
     renderScenarioResults(perf, daily, from, to);
