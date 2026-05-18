@@ -53,7 +53,8 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 | File | Responsibility | Key exports |
 |---|---|---|
-| `api.js` | FnO HTTP client | `api(path, method?, body?)` |
+| `api.js` | Thin re-export wrapper → `shared/api.js`; exports apiBase, api, apiFetch, RITA_API_KEY | `apiBase()`, `api(path, method?, body?)`, `apiFetch(url, options?)`, `RITA_API_KEY` |
+| `app-init.js` | fetchPositions, initApp, checkStatus — extracted from api.js god module | `fetchPositions()`, `initApp()`, `checkStatus()` |
 | `state.js` | Shared FnO state | `state` object (active group, instrument, etc.) |
 | `nav.js` | Section navigation | `show(section)`, `_sectionLoaders` map |
 | `main.js` | Entry point | Registers loaders, binds `window.*` |
@@ -66,7 +67,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `rr.js` | Risk-Reward chart | `loadRR()` |
 | `hedge.js` | Hedge Radar section | `loadHedge()` |
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
-| `utils.js` | DOM helpers | `setEl`, `badge`, `fmt`, `fmtPct` |
+| `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---
 
