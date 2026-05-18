@@ -236,8 +236,12 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "2f09e2c",
+      "last_updated": "1442756",
       "recent_commits": [
+        {
+          "hash": "1442756",
+          "message": "fix(agent-ops): FC-001 self-verify grep + FC-IMP path-depth check in all 3 skill files"
+        },
         {
           "hash": "2f09e2c",
           "message": "fix(agent-ops): improve skill rules for FC-001, engineer first-pass, CSAT"
@@ -251,10 +255,6 @@
           "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
         },
         {
-          "hash": "f8887c4",
-          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
-        },
-        {
           "hash": "11f440c",
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
         }
@@ -265,8 +265,12 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "2f09e2c",
+      "last_updated": "1442756",
       "recent_commits": [
+        {
+          "hash": "1442756",
+          "message": "fix(agent-ops): FC-001 self-verify grep + FC-IMP path-depth check in all 3 skill files"
+        },
         {
           "hash": "2f09e2c",
           "message": "fix(agent-ops): improve skill rules for FC-001, engineer first-pass, CSAT"
@@ -294,8 +298,12 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "2f09e2c",
+      "last_updated": "1442756",
       "recent_commits": [
+        {
+          "hash": "1442756",
+          "message": "fix(agent-ops): FC-001 self-verify grep + FC-IMP path-depth check in all 3 skill files"
+        },
         {
           "hash": "2f09e2c",
           "message": "fix(agent-ops): improve skill rules for FC-001, engineer first-pass, CSAT"
@@ -307,10 +315,6 @@
         {
           "hash": "68ae873",
           "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
-        },
-        {
-          "hash": "f8887c4",
-          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
         },
         {
           "hash": "11f440c",
