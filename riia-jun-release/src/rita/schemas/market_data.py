@@ -1,12 +1,12 @@
 """Pydantic schemas for the market_data_cache table (OHLCV price data)."""
 from datetime import date, datetime
-from typing import Optional, Literal
+from typing import Optional
 from pydantic import BaseModel, ConfigDict
 
 
 class MarketDataCacheBase(BaseModel):
     date: date
-    underlying: Literal["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]
+    underlying: str
     open: float
     high: float
     low: float
