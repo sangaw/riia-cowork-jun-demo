@@ -24,27 +24,17 @@ export async function loadChangelog() {
     }
   } catch(e){ /* silently skip if API unavailable */ }
 
-  try {
-    const data=await api('/api/v1/changelog');
-    const rows=Array.isArray(data)?data:(data.entries||[]);
-    document.getElementById('cl-tbl').innerHTML=rows.length
-      ? mkTbl(rows.slice().reverse(),[
-          {key:'date',label:'Date',mono:true},{key:'version',label:'Version',mono:true},
-          {key:'category',label:'Category'},{key:'change',label:'Change'},{key:'notes',label:'Notes'}
-        ])
-      : '<div class="empty">No changelog entries yet. Add one below.</div>';
-    document.getElementById('cl-date').value=new Date().toISOString().slice(0,10);
-  } catch(e){
-    document.getElementById('cl-tbl').innerHTML=`<div class="empty">Could not load changelog: ${e.message}</div>`;
-  }
+  const clTbl=document.getElementById('cl-tbl');
+  if(clTbl) clTbl.innerHTML='<div class="empty">No changelog entries yet. Add one below.</div>';
+  const clDate=document.getElementById('cl-date');
+  if(clDate) clDate.value=new Date().toISOString().slice(0,10);
 }
 
 export async function saveChangelog() {
   const g=id=>document.getElementById(id).value;
   const msg=document.getElementById('cl-msg');
   try {
-    await api('/api/v1/changelog',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({date:g('cl-date'),version:g('cl-version'),category:g('cl-cat'),change:g('cl-change'),notes:g('cl-notes')})});
+    await api('/api/v1/changelog','POST',{date:g('cl-date'),version:g('cl-version'),category:g('cl-cat'),change:g('cl-change'),notes:g('cl-notes')});
     msg.style.color=C.build; msg.textContent='✓ Saved';
     ['cl-change','cl-notes','cl-version'].forEach(id=>document.getElementById(id).value='');
     await loadChangelog();

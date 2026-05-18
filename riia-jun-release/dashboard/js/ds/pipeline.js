@@ -133,7 +133,7 @@ async function runPipeline(forceRetrain) {
         for (let i = 1; i <= 8; i++) markIStep(prefix, i, 'done');
         statusEl.innerHTML = '<span class="badge ok" style="font-size:11px">✓ Complete</span>';
         try {
-          const log = await api('/api/v1/step-log');
+          const log = await api('/api/experience/ops/step-log');
           if (log && log.length) buildAccordion(accId, log);
         } catch(e) {}
         await loadActiveInstrument();

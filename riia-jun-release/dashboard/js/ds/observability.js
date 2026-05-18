@@ -7,7 +7,7 @@ const C = DS_C;
 export async function loadObservability() {
   try {
     const [log, drift] = await Promise.all([
-      api('/api/v1/step-log').catch(()=>[]),
+      api('/api/experience/ops/step-log').catch(()=>[]),
       api('/api/v1/drift').catch(()=>({}))
     ]);
     const failed=log.filter(s=>s.status!=='ok'&&s.status!=='success').length;
