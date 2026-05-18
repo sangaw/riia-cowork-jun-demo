@@ -100,10 +100,12 @@ Read these files:
 
 Your job: validate that the requested feature fits the current sprint scope.
 
+**Continuation run detection:** If the request contains words like "Phase 2", "Phase 3", "Run B", "continuation", "resume", or "part N", this is a multi-run feature. In this case, search `project-office/task-briefs/` for the most recently dated brief whose request matches this feature, then read its [Engineer] Implementation Log and [QA] Test Results sections. Include in your Dependencies field: "Prior run deliverables: [list what was merged, with commit hash]". This context ensures the Architect knows exactly what is already live and what remains to be built — omitting it causes scope drift and planning misses.
+
 Write the [PM] Validation section into {BRIEF_PATH}. Fill in every field:
 - Sprint alignment: state whether this is in scope for the current sprint and why
 - Risk flags: list any technical risks, dependencies, or blockers you identify. Write "none" if there are none.
-- Dependencies: list prerequisite tasks or external dependencies. Write "none" if there are none.
+- Dependencies: list prerequisite tasks or external dependencies. Write "none" if there are none. For continuation runs, always list the prior run deliverables here.
 - Cross-system scope check: state which dashboards/apps this feature touches beyond the primary target. For each dashboard not in the primary target (rita, fno, ops, ds), explicitly answer: "Does this feature affect [dashboard]? Yes/No — reason." If yes, flag it in Risk flags so the Architect includes it in files-to-touch.
 - Approved to proceed: write "yes" or "no". Write "yes" unless there is a clear blocker (out of scope for sprint, hard dependency unmet, risk too high). Default to yes for reasonable feature additions.
 
@@ -417,10 +419,11 @@ Spawn a `general-purpose` agent with this prompt:
 ```
 You are the QA Agent for the RITA project.
 
-Read this file only:
+Read these files:
 1. {BRIEF_PATH} — read fully (all sections: Architect Design for contract + edge cases, Engineer log for files changed)
+2. **File-path gate (prevents wrong patch targets):** For each Python file listed in the Engineer's "Files changed" section that is a schema (`src/rita/schemas/`) or endpoint handler (`src/rita/api/`): read that file now to verify exact class names, function names, and module import paths. Write down the verified paths before writing any test. A test that patches the wrong module path will always fail — reading the source is required, not optional.
 
-Do NOT read source files, HTML files, or spec files. All contract information is in the task brief.
+Do NOT read HTML files or spec files.
 
 Your job: write unit tests for the new endpoint and verify the API-frontend contract.
 
@@ -428,6 +431,7 @@ Tasks:
 1. Write at least 1 unit test per new endpoint function. Place tests in tests/unit/.
    Test structure: happy path + at least 1 edge case from the Architect's edge cases list.
    Use pytest. Mock the database session where needed.
+   **Patch path rule:** every `@patch('module.path.ClassName')` must match the exact import path of the class as used in the handler file you read in step 2 above. If unsure, grep the handler file for the import line.
 
 2. Verify the API-frontend contract:
    - List every field in the Pydantic response schema
