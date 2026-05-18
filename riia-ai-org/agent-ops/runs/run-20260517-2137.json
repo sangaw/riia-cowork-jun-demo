@@ -100,11 +100,11 @@
   "merge_status": "merged",
   "merge_commit": "872aeaf",
   "human_score": {
-    "accuracy": null,
-    "relevance": null,
-    "csat": null,
-    "planning_ok": null,
-    "time_saved_hours": null,
-    "notes": "Pending HITL scoring"
+    "accuracy": 4,
+    "relevance": 4,
+    "csat": 4,
+    "planning_ok": true,
+    "time_saved_hours": 5,
+    "notes": ""
   }
 }

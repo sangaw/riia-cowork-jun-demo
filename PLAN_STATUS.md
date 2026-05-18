@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-18 (Post-v1.0 — Feature 09 Run B complete + /agent-performance-improvements alert threshold recalibration)
+**Last updated:** 2026-05-18 (Post-v1.0 — Feature 09 fully complete: QA 21/21, RITA dynamic instrument tabs, TechWriter Confluence v19, run log written)
 
 ---
 
@@ -132,3 +132,4 @@ _None_
 - 2026-05-18: /agent-performance-improvements — FC-001 v4: mandatory self-verify grep added to spec-update step in all 3 skill files (Engineer must report grep output, not just claim "yes"). FC-IMP v3: path-depth verification added to inline check + DoD gate in all 3 skill files (../../ vs ../ for shared/ modules). Commit: 1442756.
 - 2026-05-18: Feature 09 Run B complete — instrument onboard UI panel: searchInstrument() + onboardInstrument() added to daily-ops.js, window bindings in main.js, Instrument Onboard card inserted in ops.html (sec-dailyops), 19/19 QA tests pass, Confluence Engineering page v17→v18. Merged at 57bf151.
 - 2026-05-18: /agent-performance-improvements (alert threshold recalibration) — FC alert changed to recent_fires>0 (eliminates FC-001 total=7 false positive); engineer alert now uses recent_first_pass_rate/last-5 (100%, was 59% all-time); CSAT now requires ≥3 rated runs; API error alert split into combined 15% + 5xx 2% thresholds; skill_version_history after_first_pass_rate set to 1.0 for all 3 skill files. Commit: da99cb9.
+- 2026-05-18 (EOD): Feature 09 COMPLETE — QA 21/21 tests (2 gap tests added: ETF filter + search 502); RITA dynamic instrument tabs (loadInstrumentTabs() via geography-overview, static fallback); Spec_JS_Code.md updated; Confluence Engineering v19; run-20260517-2137.json written. Commit: 3b9fa77.
