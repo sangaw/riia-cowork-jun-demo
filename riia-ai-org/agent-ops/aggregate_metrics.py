@@ -214,24 +214,35 @@ def compute_token_forecasting(runs: list) -> dict:
         "rita": [], "ops": [], "fno": [], "invest-game": []
     }
     for r in runs:
-        tf = r.get("token_forecast")
         estimated = r.get("total_tokens_estimated")
-        # Prefer actual token sum over estimated where available
-        actual_sum = sum(
-            a["actual_tokens"]["total_tokens"]
-            for a in r.get("agents", [])
-            if a.get("actual_tokens") and a["actual_tokens"].get("total_tokens") is not None
-        )
-        actual = actual_sum if actual_sum > 0 else estimated
-        if tf and actual and tf.get("total_forecast"):
-            err = abs(actual - tf["total_forecast"]) / tf["total_forecast"] * 100
+        # actual: prefer run-level total_actual_tokens, then per-agent sum, then fall back to estimated
+        actual = r.get("total_actual_tokens")
+        if actual is None:
+            actual_sum = sum(
+                a["actual_tokens"]["total_tokens"]
+                for a in r.get("agents", [])
+                if a.get("actual_tokens") and isinstance(a["actual_tokens"], dict)
+                and a["actual_tokens"].get("total_tokens") is not None
+            )
+            actual = actual_sum if actual_sum > 0 else None
+        # Compute forecast error whenever we have both actual and estimated
+        if actual and estimated:
+            err = abs(actual - estimated) / estimated * 100
             errors.append(err)
+        # Bucket by complexity/feature_type using actual (or estimated as fallback)
+        bucket_val = actual if actual else estimated
+        tf = r.get("token_forecast")
+        if tf and bucket_val:
             c = tf.get("complexity")
             if c in by_complexity:
-                by_complexity[c].append(actual)
+                by_complexity[c].append(bucket_val)
             ft = tf.get("feature_type")
             if ft in by_feature_type:
-                by_feature_type[ft].append(actual)
+                by_feature_type[ft].append(bucket_val)
+        elif bucket_val:
+            app = r.get("app")
+            if app in by_feature_type:
+                by_feature_type[app].append(bucket_val)
     multipliers = {"small": 0.7, "medium": 1.0, "large": 1.5}
     modifiers = {"rita": 1.0, "ops": 0.6, "fno": 0.8, "invest-game": 1.1}
     return {
@@ -256,7 +267,12 @@ def compute_token_forecasting(runs: list) -> dict:
 
 def compute_efficiency(runs: list) -> dict:
     durations = [r["duration_minutes"] for r in runs if r.get("duration_minutes") is not None]
-    tokens = [r["total_tokens_estimated"] for r in runs if r.get("total_tokens_estimated") is not None]
+    # Prefer actual tokens when available; fall back to estimated
+    tokens = [
+        r.get("total_actual_tokens") or r["total_tokens_estimated"]
+        for r in runs
+        if r.get("total_actual_tokens") is not None or r.get("total_tokens_estimated") is not None
+    ]
     retries = [r.get("retry_count", 0) for r in runs]
     time_saved = [
         r["human_score"]["time_saved_hours"]

@@ -11,6 +11,7 @@
       "steps_completed": 4,
       "adherence_score": 1.0,
       "token_estimate": 2100,
+      "actual_tokens": {"total_tokens": 22468, "tool_uses": 3},
       "grounding_checks": {
         "plan_status_read": true,
         "sprint_fit_confirmed": true,
@@ -26,6 +27,7 @@
       "steps_completed": 4,
       "adherence_score": 1.0,
       "token_estimate": 3400,
+      "actual_tokens": {"total_tokens": 21942, "tool_uses": 2},
       "grounding_checks": {
         "api_contract_present": true,
         "files_listed": true,
@@ -41,6 +43,7 @@
       "steps_completed": 5,
       "adherence_score": 1.0,
       "token_estimate": 5200,
+      "actual_tokens": {"total_tokens": 50797, "tool_uses": 49},
       "grounding_checks": {
         "branch_created": true,
         "code_changed": true,
@@ -57,6 +60,7 @@
       "steps_completed": 4,
       "adherence_score": 1.0,
       "token_estimate": 2800,
+      "actual_tokens": {"total_tokens": 64683, "tool_uses": 47},
       "grounding_checks": {
         "tests_written": true,
         "tests_passed": true,
@@ -72,6 +76,7 @@
       "steps_completed": 3,
       "adherence_score": 1.0,
       "token_estimate": 1900,
+      "actual_tokens": {"total_tokens": 35885, "tool_uses": 22},
       "grounding_checks": {
         "confluence_updated": true,
         "spec_file_confirmed": true,
@@ -81,7 +86,8 @@
     }
   ],
   "overall_status": "pass",
-  "total_tokens_estimated": 15400,
+  "total_tokens_estimated": 202000,
+  "total_actual_tokens": 195775,
   "duration_minutes": 32,
   "branch": "worktree-agent-a19ee4b2d4c56552a",
   "merge_status": "merged",

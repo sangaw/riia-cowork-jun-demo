@@ -46,6 +46,18 @@ Initialize in-memory tracking (carry these values forward through all steps):
 - `AGENT_RESULTS` = empty list — each agent appends one record after validation
 - `RUN_BRANCH` = "" — set by Engineer validation
 - `RUN_WARNINGS` = [] — accumulates ⚠ warning strings
+- `AGENT_USAGE` = {} — keyed by role; value = `{total_tokens: N, tool_uses: N}` parsed from the `<usage>` block in each agent result. Populate after every agent spawn.
+
+**Usage parsing rule (apply after every agent spawn):**
+The agent tool result contains a `<usage>` block like:
+```
+<usage>total_tokens: 22468
+tool_uses: 3
+duration_ms: 24311</usage>
+```
+After each agent completes, extract `total_tokens` and `tool_uses` from this block and store:
+`AGENT_USAGE['{role}'] = { "total_tokens": N, "tool_uses": M }`
+If no `<usage>` block appears in the result, store `null` for that role.
 
 ---
 
@@ -107,6 +119,8 @@ Check: does `Approved to proceed:` equal `yes`?
 - If **no**: report the reason to the user and stop:
   > "Enhancement halted at PM validation. Reason: {reason from brief}. Resolve the blocker and re-run /enhance."
 
+**Parse usage:** store `AGENT_USAGE['pm']` from the `<usage>` block in the PM agent result (see usage parsing rule in Step 0).
+
 **Record PM agent result** (append to `AGENT_RESULTS`):
 ```json
 {
@@ -115,7 +129,8 @@ Check: does `Approved to proceed:` equal `yes`?
   "steps_required": 4,
   "steps_completed": "<4 if approved=yes, else 3>",
   "adherence_score": "<steps_completed / 4>",
-  "token_estimate": 2100,
+  "token_estimate": 22000,
+  "actual_tokens": "<AGENT_USAGE['pm'] or null>",
   "grounding_checks": {
     "plan_status_read": true,
     "sprint_fit_confirmed": "<true if sprint alignment is stated>",
@@ -212,6 +227,8 @@ Report: "Architect design recorded into task brief."
 
 Report `✓ Architect Agent — design complete and recorded` and proceed to Step 4.
 
+**Parse usage:** store `AGENT_USAGE['architect']` from the `<usage>` block in the Architect agent result (Plan agents may not emit a usage block — store null if absent).
+
 **Record Architect agent result** (append to `AGENT_RESULTS`):
 ```json
 {
@@ -220,7 +237,8 @@ Report `✓ Architect Agent — design complete and recorded` and proceed to Ste
   "steps_required": 4,
   "steps_completed": "<4 if all checks passed>",
   "adherence_score": "<steps_completed / 4>",
-  "token_estimate": 3400,
+  "token_estimate": 22000,
+  "actual_tokens": "<AGENT_USAGE['architect'] or null>",
   "grounding_checks": {
     "api_contract_present": "<true/false from validation>",
     "files_listed": "<true/false from validation>",
@@ -366,6 +384,8 @@ Report the Engineer summary and wait for confirmation:
 - If user replies **"stop"**: write run log as partial (`overall_status = "partial"`) and halt.
 - If user replies **"ok"** (or any other reply): proceed to Step 5.
 
+**Parse usage:** store `AGENT_USAGE['engineer']` from the `<usage>` block in the Engineer agent result.
+
 **Record Engineer agent result** (append to `AGENT_RESULTS`):
 ```json
 {
@@ -374,7 +394,8 @@ Report the Engineer summary and wait for confirmation:
   "steps_required": 5,
   "steps_completed": "<count of checks that passed: branch_created, code_changed, spec_updated, ruff_passed, contract_matches_architect>",
   "adherence_score": "<steps_completed / 5>",
-  "token_estimate": 5200,
+  "token_estimate": 55000,
+  "actual_tokens": "<AGENT_USAGE['engineer'] or null>",
   "grounding_checks": {
     "branch_created": "<true if branch present and not master>",
     "code_changed": "<true if files_changed >= 2>",
@@ -431,6 +452,8 @@ Report: "QA section complete. Tests: {n}/{n} passed. Contract: match/mismatch."
 
 Report `✓ QA Agent — {n} tests, {n} passed` (or flag failures as warnings).
 
+**Parse usage:** store `AGENT_USAGE['qa']` from the `<usage>` block in the QA agent result.
+
 **Record QA agent result** (append to `AGENT_RESULTS`):
 ```json
 {
@@ -439,7 +462,8 @@ Report `✓ QA Agent — {n} tests, {n} passed` (or flag failures as warnings).
   "steps_required": 4,
   "steps_completed": "<count: tests_written + tests_passed + coverage_delta_recorded + contract_check_done>",
   "adherence_score": "<steps_completed / 4>",
-  "token_estimate": 2800,
+  "token_estimate": 65000,
+  "actual_tokens": "<AGENT_USAGE['qa'] or null>",
   "grounding_checks": {
     "tests_written": "<true if tests_written > 0>",
     "tests_passed": "<true if all written tests passed>",
@@ -485,6 +509,8 @@ Report: "TechWriter section complete."
 
 Update `{BRIEF_PATH}` status field from `in-progress` to `complete`.
 
+**Parse usage:** store `AGENT_USAGE['techwriter']` from the `<usage>` block in the TechWriter agent result. If Step 3b (TechWriter recording Architect design) also ran, add its tokens to the Step 6 TechWriter total.
+
 **Record TechWriter agent result** (append to `AGENT_RESULTS`):
 ```json
 {
@@ -493,7 +519,8 @@ Update `{BRIEF_PATH}` status field from `in-progress` to `complete`.
   "steps_required": 3,
   "steps_completed": "<count: confluence_updated + spec_file_confirmed + branch_noted>",
   "adherence_score": "<steps_completed / 3>",
-  "token_estimate": 1900,
+  "token_estimate": 38000,
+  "actual_tokens": "<AGENT_USAGE['techwriter'] or null>",
   "grounding_checks": {
     "confluence_updated": "<true if Confluence page was updated or a valid n/a reason given>",
     "spec_file_confirmed": "<true if spec confirmed current in brief>",
@@ -559,6 +586,8 @@ After all agents have completed and `AGENT_RESULTS` contains 5 records, write th
 
 **Compute `total_tokens_estimated`:** sum all agent `token_estimate` values from `AGENT_RESULTS`.
 
+**Compute `total_actual_tokens`:** sum all `actual_tokens.total_tokens` values from `AGENT_USAGE` (skip nulls). If zero agents have actual data, set to null.
+
 **Compute `duration_minutes`:** elapsed time from Step 0 parse to now (estimate in whole minutes).
 
 **Write `{RUN_LOG_PATH}`** with this structure (fill in all values from tracked state):
@@ -572,6 +601,7 @@ After all agents have completed and `AGENT_RESULTS` contains 5 records, write th
   "agents": {AGENT_RESULTS},
   "overall_status": "{derived above}",
   "total_tokens_estimated": {sum of token_estimate values},
+  "total_actual_tokens": {sum of actual_tokens.total_tokens or null},
   "duration_minutes": {elapsed minutes},
   "branch": "{RUN_BRANCH}",
   "merge_status": "{MERGE_STATUS}",
@@ -633,7 +663,8 @@ Report the completed run to the user:
   ✓ Merge             — {merged: {MERGE_COMMIT} | deferred: branch left open}
 
   Overall status: {overall_status}
-  Total tokens:   ~{total_tokens_estimated}
+  Tokens (est):   ~{total_tokens_estimated}
+  Tokens (actual): {total_actual_tokens | "not captured"}
   Duration:       {duration_minutes} min
 
   {list any ⚠ warnings here}

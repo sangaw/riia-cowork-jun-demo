@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-18T07:36:05",
+  "generated_at": "2026-05-18T07:59:04",
   "total_runs": 26,
   "per_role": {
     "pm": {
@@ -413,7 +413,7 @@
     "grounding_pass_rate": 0.922
   },
   "token_forecasting": {
-    "avg_forecast_error_pct": 4.1,
+    "avg_forecast_error_pct": 3.1,
     "by_complexity": {
       "small": {
         "avg_actual": 8673,
@@ -430,13 +430,13 @@
     },
     "by_feature_type": {
       "rita": {
-        "run_count": 4,
-        "avg_tokens": 78600,
+        "run_count": 7,
+        "avg_tokens": 76428,
         "modifier": 1.0
       },
       "ops": {
-        "run_count": 3,
-        "avg_tokens": 21400,
+        "run_count": 9,
+        "avg_tokens": 35864,
         "modifier": 0.6
       },
       "fno": {
@@ -453,7 +453,7 @@
   },
   "efficiency": {
     "avg_duration_minutes": 47,
-    "avg_tokens_per_run": 33630,
+    "avg_tokens_per_run": 40568,
     "avg_retry_count": 0.08,
     "avg_time_saved_hours": 9.9
   },
@@ -474,15 +474,15 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 268,
+    "total_calls": 334,
     "unique_endpoints": 31,
-    "overall_error_rate_pct": 9.7,
-    "error_rate_5xx_pct": 1.87,
+    "overall_error_rate_pct": 8.38,
+    "error_rate_5xx_pct": 1.5,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 107,
+        "count": 128,
         "p50_ms": 16.0,
         "p95_ms": 78.0,
         "error_count": 0
@@ -490,7 +490,7 @@
       {
         "path": "/api/v1/instrument/onboard",
         "method": "POST",
-        "count": 30,
+        "count": 31,
         "p50_ms": 0.0,
         "p95_ms": 16.0,
         "error_count": 12
@@ -498,28 +498,28 @@
       {
         "path": "/api/v1/instrument/search",
         "method": "GET",
-        "count": 25,
-        "p50_ms": 16.0,
+        "count": 27,
+        "p50_ms": 78.0,
         "p95_ms": 1250.0,
         "error_count": 8
       },
       {
         "path": "/api/v1/instrument/active",
         "method": "GET",
-        "count": 13,
+        "count": 20,
         "p50_ms": 16.0,
         "p95_ms": 62.0,
         "error_count": 0
       },
       {
-        "path": "/api/experience/ops/step-log",
-        "method": "GET",
-        "count": 10,
-        "p50_ms": 16.0,
-        "p95_ms": 32.0,
+        "path": "/api/v1/instrument/select",
+        "method": "POST",
+        "count": 13,
+        "p50_ms": 31.0,
+        "p95_ms": 78.0,
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T05:36:05.365230+00:00"
+    "generated_at": "2026-05-18T05:59:04.142691+00:00"
   }
 }
