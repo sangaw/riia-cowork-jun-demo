@@ -106,40 +106,62 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 ## 5. Module Structure — `dashboard/js/ds/`
 
-**IMPORTANT: ds.html uses inline `<script>` blocks — NOT ES modules.** There is no `dashboard/js/ds/` directory. All JS logic lives inside `<script>` tags at the bottom of `riia-jun-release/dashboard/ds.html`.
+**Feature 10 Phase 4 complete (2026-05-18).** All inline scripts extracted from `ds.html` into ES modules at `dashboard/js/ds/`. `ds.html` now loads via `<script type="module" src="js/ds/main.js">`.
 
-Script loading: Chart.js + annotation plugin loaded via CDN. Navigation via inline `show(section, el)` function. No `_sectionLoaders` registry — section switching is direct DOM show/hide.
+Script loading: Chart.js + annotation plugin loaded via CDN (kept). Nav-collapse IIFE kept as plain `<script>`. Entry point: `ds/main.js`. Section switching: `ds/nav.js` `createShow(loaders)` factory. Cross-section state: `ds/state.js`.
 
-### Current ds.html Section Inventory
+### ds/ Module Table (24 files)
 
-| Section key (`data-s`) | Page title | Notes |
-|---|---|---|
-| `understand` | Understand Data | Landing page (active by default) |
-| `dashboard` | Dashboard | Build overview KPIs |
-| `pipeline` | — | Build pipeline steps |
-| `performance` | Performance | Backtest results — DDQN vs Buy & Hold |
-| `risk` | Risk View | VaR, drawdown, trade risk, regime confidence |
-| `trades` | Trade Journal | Entry/exit signals overlaid on price |
-| `explain` | Explainability | SHAP feature importance charts |
-| `scenarios` | Portfolio Scenarios | Scenario runner |
-| `training` | Training Metrics | Round-by-round model improvement |
-| `changelog` | Model Changelog | Model improvement log |
-| `observability` | Observability | Pipeline timing, drift detection, system health |
-| `mcp` | MCP Calls | Live log of Claude Desktop → RITA MCP invocations |
-| `export` | Export & DevOps | Download results, API health, deployment info |
+| File | Responsibility |
+|---|---|
+| `ds/api.js` | Thin re-export: `apiBase`, `api`, `apiFetch` from `../shared/api.js`; exports `DS_API_KEY = ''` |
+| `ds/utils.js` | `mkTbl`, `fmtPctRaw`, `openChartModal`, `closeChartModal`, `DS_C` (extended color palette with ds-specific colors) |
+| `ds/state.js` | `export const state = { activeInst: null }` — shared cross-section mutable state |
+| `ds/nav.js` | `createShow(loaders)` factory → returns `show(sId, el)` function |
+| `ds/main.js` | Entry point: imports all loaders + `createShow`; assigns all `window.*` at module scope; calls init on DOMContentLoaded |
+| `ds/understand.js` | `data-s="understand"` — `loadUnderstand`, `runUnderstand`, `vizSelectInstrument`, `openVizModal`, `closeVizModal`, `runPortfolioOverview` |
+| `ds/dashboard.js` | `data-s="dashboard"` — `loadDashboard` |
+| `ds/pipeline.js` | `data-s="pipeline"` — `runBuild`, `runReuse`, `resetSession`, `checkStatus`, `loadInstruments`, `loadActiveInstrument` (writes `state.activeInst`) |
+| `ds/performance.js` | `data-s="performance"` — `loadPerformance`, `switchPerfTab` (reads `state.activeInst`) |
+| `ds/risk.js` | `data-s="risk"` — `loadRisk` |
+| `ds/trades.js` | `data-s="trades"` — `loadTrades` (reads `state.activeInst`) |
+| `ds/explain.js` | `data-s="explain"` — `loadExplain` |
+| `ds/scenarios.js` | `data-s="scenarios"` — `loadScenariosPage`, `runPortfolioScenario` |
+| `ds/training.js` | `data-s="training"` — `loadTraining`, `switchTrainTab` |
+| `ds/changelog.js` | `data-s="changelog"` — `loadChangelog`, `saveChangelog` |
+| `ds/observability.js` | `data-s="observability"` — `loadObservability` |
+| `ds/mcp.js` | `data-s="mcp"` — `loadMCP` |
+| `ds/export.js` | `data-s="export"` — `loadExport`, `pingAPI`, `dlJSON` |
+| `ds/experiment-results.js` | `data-s="experiment-results"` — `loadExperimentResults`, `downloadExperimentResults` (reads `state.activeInst`) |
+| `ds/trade-diagnostics.js` | `data-s="trade-diagnostics"` — `loadTradeDiagnostics` |
+| `ds/model-train-progress.js` | `data-s="model-train-progress"` — `loadModelTrainProgress` |
+| `ds/model-observability.js` | `data-s="model-observability"` — `loadModelObservability` |
+| `ds/model-mcp.js` | `data-s="model-mcp"` — `loadModelMcp` |
+| `ds/model-audit.js` | `data-s="model-audit"` — `loadModelAudit` |
 
-### Planned additions (Phases 03 / 04 — rita-app-improve feature)
+### ds.html Section Inventory (all 19 sections extracted)
 
-| Section key | Page title | Source | Status |
+| Section key (`data-s`) | Page title | Module | Status |
 |---|---|---|---|
-| `experiment-results` | Experiment Results | RITA Trade Journal content moved here (renamed) — distinct from existing `trades` section | Not yet in ds.html |
-| `trade-diagnostics` | Trade Diagnostics | RITA Trade Diagnostics content moved here — new section | Not yet in ds.html |
-| `model-train-progress` | Training Progress | RITA Monitor copy — distinct from existing `training` section | Not yet in ds.html |
-| `model-observability` | Observability | RITA Monitor copy — distinct from existing `observability` section | Not yet in ds.html |
-| `model-mcp` | MCP Calls | RITA Monitor copy — distinct from existing `mcp` section | Not yet in ds.html |
-| `model-audit` | Audit | RITA Monitor copy — new section | Not yet in ds.html |
-
-> ⚠ Existing ds.html sections (`trades`, `observability`, `mcp`, `training`) have DIFFERENT content from RITA's equivalents. All additions use distinct section keys with `model-` prefix or different names to avoid collision. Do not modify existing ds.html sections when implementing Phases 03/04.
+| `understand` | Understand Data | `ds/understand.js` | Extracted |
+| `dashboard` | Dashboard | `ds/dashboard.js` | Extracted |
+| `pipeline` | Pipeline | `ds/pipeline.js` | Extracted |
+| `performance` | Performance | `ds/performance.js` | Extracted |
+| `risk` | Risk View | `ds/risk.js` | Extracted |
+| `trades` | Trade Journal | `ds/trades.js` | Extracted |
+| `explain` | Explainability | `ds/explain.js` | Extracted |
+| `scenarios` | Portfolio Scenarios | `ds/scenarios.js` | Extracted |
+| `training` | Training Metrics | `ds/training.js` | Extracted |
+| `changelog` | Model Changelog | `ds/changelog.js` | Extracted |
+| `observability` | Observability | `ds/observability.js` | Extracted |
+| `mcp` | MCP Calls | `ds/mcp.js` | Extracted |
+| `export` | Export & DevOps | `ds/export.js` | Extracted |
+| `experiment-results` | Experiment Results | `ds/experiment-results.js` | Extracted |
+| `trade-diagnostics` | Trade Diagnostics | `ds/trade-diagnostics.js` | Extracted |
+| `model-train-progress` | Training Progress | `ds/model-train-progress.js` | Extracted |
+| `model-observability` | Model Observability | `ds/model-observability.js` | Extracted |
+| `model-mcp` | Model MCP Calls | `ds/model-mcp.js` | Extracted |
+| `model-audit` | Model Audit | `ds/model-audit.js` | Extracted |
 
 ---
 
