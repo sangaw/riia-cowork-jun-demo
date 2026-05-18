@@ -11,7 +11,7 @@ function fmt(v, dec=2) {
 
 export async function loadDashboard() {
   try {
-    api('/api/v1/training-history').then(hist => {
+    api('/api/v1/experience/rita/training-history').then(hist => {
       if (!hist || !hist.length) return;
       const last = hist[hist.length - 1];
       const badge = document.getElementById('dash-run-badge');
@@ -49,7 +49,7 @@ export async function loadDashboard() {
       }).join('');
     }
 
-    api('/api/v1/training-history').then(hist => {
+    api('/api/v1/experience/rita/training-history').then(hist => {
       if (!hist || !hist.length) return;
       const last = hist[hist.length - 1];
       const rows = [

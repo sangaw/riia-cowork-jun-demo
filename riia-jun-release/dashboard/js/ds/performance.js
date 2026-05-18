@@ -23,8 +23,8 @@ export async function loadPerformance() {
   try {
     const [summary, daily, history] = await Promise.all([
       api('/api/v1/performance-summary'),
-      api('/api/v1/backtest-daily'),
-      api('/api/v1/training-history').catch(()=>[])
+      api('/api/v1/experience/rita/backtest-daily'),
+      api('/api/v1/experience/rita/training-history').catch(()=>[])
     ]);
     const p=summary.performance||summary;
     const set=(id,v,cls)=>{ const e=document.getElementById(id); if(e){e.textContent=v;if(cls)e.className='kpi-value '+cls;} };
@@ -90,7 +90,7 @@ export async function loadPerformance() {
     }
 
     try {
-      const history2 = await api('/api/v1/training-history').catch(()=>[]);
+      const history2 = await api('/api/v1/experience/rita/training-history').catch(()=>[]);
       const hRows = Array.isArray(history2)?history2:(history2.runs||[]);
       const hLabels = hRows.map((r,i)=>`R${i+1}`);
 

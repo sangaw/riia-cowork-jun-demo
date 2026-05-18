@@ -9,7 +9,7 @@ function fmt(v, dec=2) {
 
 export async function loadModelTrainProgress() {
   try {
-    const rows = await api('/api/v1/training-history').catch(() => []);
+    const rows = await api('/api/v1/experience/rita/training-history').catch(() => []);
     if (!rows || !rows.length) {
       document.getElementById('mtp-table-wrap').innerHTML = '<div class="empty">No training history found.</div>';
       return;

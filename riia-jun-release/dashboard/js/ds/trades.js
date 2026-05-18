@@ -9,7 +9,7 @@ export async function loadTrades() {
   try {
     const [events, daily] = await Promise.all([
       api('/api/v1/trade-events').catch(()=>[]),
-      api('/api/v1/backtest-daily').catch(()=>[])
+      api('/api/v1/experience/rita/backtest-daily').catch(()=>[])
     ]);
     const entries=events.filter(e=>e.risk_action==='Increased'||e.event_type==='entry'||e.trade_type==='entry');
     const pEx=events.filter(e=>(e.risk_action==='Reduced'||e.event_type==='exit'||e.trade_type==='exit')&&parseFloat(e.pnl??0)>0);

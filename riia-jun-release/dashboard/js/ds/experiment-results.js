@@ -11,8 +11,8 @@ export async function loadExperimentResults() {
   try {
     const instrument = (state.activeInst?.id) || localStorage.getItem('ritaInstrument') || 'NIFTY';
     const [rows, history, perf, split] = await Promise.all([
-      api(`/api/v1/risk-timeline?phase=all&instrument=${instrument}`),
-      api(`/api/v1/training-history?instrument=${instrument}`).catch(() => []),
+      api(`/api/v1/experience/rita/risk-timeline?phase=all&instrument=${instrument}`),
+      api(`/api/v1/experience/rita/training-history?instrument=${instrument}`).catch(() => []),
       api('/api/v1/performance-summary').catch(() => null),
       api(`/api/v1/training-split?instrument=${instrument}`).catch(() => null),
     ]);

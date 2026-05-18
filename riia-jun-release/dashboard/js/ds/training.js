@@ -21,7 +21,7 @@ export function switchTrainTab(tab, el) {
 export async function loadTraining() {
   try {
     const [history, progress] = await Promise.all([
-      api('/api/v1/training-history').catch(()=>[]),
+      api('/api/v1/experience/rita/training-history').catch(()=>[]),
       api('/api/v1/training-progress').catch(()=>[])
     ]);
     const rows=Array.isArray(history)?history:(history.runs||[]);

@@ -5,7 +5,7 @@ const C = DS_C;
 
 export async function loadChangelog() {
   try {
-    const history=await api('/api/v1/training-history').catch(()=>[]);
+    const history=await api('/api/v1/experience/rita/training-history').catch(()=>[]);
     const rows=Array.isArray(history)?history:(history.runs||[]);
     const histEl=document.getElementById('build-hist-tbl');
     const badge=document.getElementById('build-badge');

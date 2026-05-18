@@ -7,7 +7,7 @@ const C = DS_C;
 export async function loadRisk() {
   try {
     const [risk, events] = await Promise.all([
-      api('/api/v1/risk-timeline').catch(()=>[]),
+      api('/api/v1/experience/rita/risk-timeline').catch(()=>[]),
       api('/api/v1/trade-events').catch(()=>[])
     ]);
     if(!risk||!risk.length) return;

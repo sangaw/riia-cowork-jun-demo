@@ -4,7 +4,7 @@ import { DS_C, mkTbl } from './utils.js';
 export async function loadModelAudit() {
   try {
     const [history, stepLog] = await Promise.all([
-      api('/api/v1/training-history').catch(() => []),
+      api('/api/v1/experience/rita/training-history').catch(() => []),
       api('/api/experience/ops/step-log').catch(() => []),
     ]);
 

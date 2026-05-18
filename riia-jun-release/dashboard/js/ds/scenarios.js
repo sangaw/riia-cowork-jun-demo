@@ -68,10 +68,7 @@ export async function runPortfolioScenario() {
   document.getElementById('sc-result').innerHTML = '';
 
   try {
-    const result = await api('/api/v1/portfolio/backtest', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ instruments: selected, allocations_eur: allocations, start_date: from, end_date: to })
-    });
+    const result = await api('/api/v1/portfolio/backtest', 'POST', { instruments: selected, allocations_eur: allocations, start_date: from, end_date: to });
     badge.className = 'badge ok'; badge.textContent = 'Done';
     renderPortfolioScenarioResults(result, from, to, selected);
   } catch(e) {

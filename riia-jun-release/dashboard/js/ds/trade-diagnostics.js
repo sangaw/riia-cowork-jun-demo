@@ -10,7 +10,7 @@ export async function loadTradeDiagnostics() {
   wrap.innerHTML = '<div class="empty">Loading…</div>';
   try {
     const [bRows, mRows] = await Promise.all([
-      api('/api/v1/backtest-daily'),
+      api('/api/v1/experience/rita/backtest-daily'),
       api('/api/v1/market-signals?timeframe=daily&periods=2000'),
     ]);
     if (!bRows?.length) {

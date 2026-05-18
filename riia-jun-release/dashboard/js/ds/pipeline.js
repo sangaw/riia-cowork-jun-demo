@@ -86,10 +86,7 @@ async function runPipeline(forceRetrain) {
 
   if (selectedInstrumentId) {
     try {
-      await api('/api/v1/instrument/select', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ instrument_id: selectedInstrumentId })
-      });
+      await api('/api/v1/instrument/select', 'POST', { instrument_id: selectedInstrumentId });
       await loadActiveInstrument();
     } catch(e) {
       statusEl.innerHTML = `<span class="badge err" style="font-size:11px">✗ Could not select instrument: ${e.message}</span>`;
@@ -177,10 +174,7 @@ async function runPipeline(forceRetrain) {
   pollProgress();
 
   try {
-    await api('/api/v1/pipeline', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
+    await api('/api/v1/pipeline', 'POST', body);
   } catch(e) {
     clearTimeout(pollTimer);
     markIStep(prefix, lastRunningStep, 'pending');
@@ -196,7 +190,7 @@ export function runReuse()  { runPipeline(false); }
 export async function resetSession() {
   if(!confirm('Reset pipeline session? In-memory results will be cleared.')) return;
   try {
-    await api('/reset',{method:'POST'});
+    await api('/reset', 'POST');
     lastResults=null;
     ['build-steps','reuse-steps'].forEach(id=>document.getElementById(id).classList.remove('visible'));
     ['build-status','reuse-status'].forEach(id=>document.getElementById(id).innerHTML='');
