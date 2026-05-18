@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-18 (Post-v1.0 — Feature 09 fully complete: QA 21/21, RITA dynamic instrument tabs, TechWriter Confluence v19, run log written)
+**Last updated:** 2026-05-18 (Feature 10 Phases 3 + 4 complete; /enhance ds support added; /agent-performance-improvements run)
 
 ---
 
@@ -133,3 +133,8 @@ _None_
 - 2026-05-18: Feature 09 Run B complete — instrument onboard UI panel: searchInstrument() + onboardInstrument() added to daily-ops.js, window bindings in main.js, Instrument Onboard card inserted in ops.html (sec-dailyops), 19/19 QA tests pass, Confluence Engineering page v17→v18. Merged at 57bf151.
 - 2026-05-18: /agent-performance-improvements (alert threshold recalibration) — FC alert changed to recent_fires>0 (eliminates FC-001 total=7 false positive); engineer alert now uses recent_first_pass_rate/last-5 (100%, was 59% all-time); CSAT now requires ≥3 rated runs; API error alert split into combined 15% + 5xx 2% thresholds; skill_version_history after_first_pass_rate set to 1.0 for all 3 skill files. Commit: da99cb9.
 - 2026-05-18 (EOD): Feature 09 COMPLETE — QA 21/21 tests (2 gap tests added: ETF filter + search 502); RITA dynamic instrument tabs (loadInstrumentTabs() via geography-overview, static fallback); Spec_JS_Code.md updated; Confluence Engineering v19; run-20260517-2137.json written. Commit: 3b9fa77.
+- 2026-05-18: Feature 10 (JS Modular Restructure) — Phase 1 complete (commit 24102af). shared/api.js, shared/utils.js, shared/charts.js, shared/nav-base.js created; rita/charts.js → re-export shim; Spec_JS_Code.md updated; 40/40 QA tests pass; Confluence Engineering v20. Phases 2–5 pending. See `project-office/features/10 Restructure JS scripts as Modular/PLAN_STATUS.md`.
+- 2026-05-18: Feature 10 Phase 3 QA + TechWriter complete — fno/api.js thin re-export + fno/app-init.js merged (cb79df2); Confluence Engineering v22; run-20260518-1253.json written.
+- 2026-05-18: /enhance command extended to support ds app — skill-add-ds-feature.md created; ds routing added to .claude/commands/enhance.md.
+- 2026-05-18: Feature 10 Phase 4 (DS module extraction) complete — 24 JS modules in dashboard/js/ds/ (19 sections + api/nav/main/state/utils); ds.html inline scripts (~2500 lines) replaced with single ES module entry point; FC-TIER + FC-API-SIG violations caught and fixed by QA; merged at 9c59fdb; run-20260518-1608.json written.
+- 2026-05-18: /agent-performance-improvements — FC-TIER guardrail (banned system-tier API self-verify grep gate) + FC-API-SIG guardrail (api() POST positional signature) added to skill-add-ds-feature.md; skill_version_history entry added to metrics.json.

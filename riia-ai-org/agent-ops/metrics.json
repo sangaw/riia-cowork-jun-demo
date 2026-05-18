@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-18T17:17:43",
+  "generated_at": "2026-05-18T17:25:31",
   "total_runs": 32,
   "per_role": {
     "pm": {
@@ -480,12 +480,12 @@
     "abandonment_rate": 0.0
   },
   "quality": {
-    "avg_accuracy_score": 3.0,
+    "avg_accuracy_score": 3.1,
     "avg_relevance_score": 4.0,
-    "avg_csat": 3.11,
-    "recent_avg_csat": 3.33,
-    "csat_count": 9,
-    "planning_accuracy_rate": 0.667,
+    "avg_csat": 3.1,
+    "recent_avg_csat": 3.0,
+    "csat_count": 10,
+    "planning_accuracy_rate": 0.7,
     "recent_planning_accuracy_rate": 0.667,
     "grounding_pass_rate": 0.936
   },
@@ -532,7 +532,7 @@
     "avg_duration_minutes": 46,
     "avg_tokens_per_run": 64242,
     "avg_retry_count": 0.06,
-    "avg_time_saved_hours": 9.3
+    "avg_time_saved_hours": 8.9
   },
   "reliability": {
     "error_recovery_rate": 0.789,
@@ -597,6 +597,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T15:17:43.081477+00:00"
+    "generated_at": "2026-05-18T15:25:31.985275+00:00"
   }
 }

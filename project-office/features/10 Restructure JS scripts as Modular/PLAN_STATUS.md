@@ -32,7 +32,7 @@ Restructure the dashboard JS codebase from 4 siloed app directories with duplica
 ---
 
 ### Phase 2 — Migrate RITA + Ops to Shared Imports
-**Status:** `In progress — code complete; browser verify pending`  
+**Status:** `[x] Complete — merged 2026-05-18, commit 2d8df86`  
 **Effort:** ~1 day  
 **Risk:** Medium — import paths change across ~25 files; window bindings must be preserved
 
@@ -41,24 +41,24 @@ Restructure the dashboard JS codebase from 4 siloed app directories with duplica
 | Update `rita/` — all modules import from `../shared/` | `[x]` | Replace or re-export local api.js, utils.js, charts.js |
 | Update `ops/` — modules import from `../shared/` | `[x]` | ops/api.js → thin re-export from shared/ |
 | Merge `ops/utils.js` + `ops/utilities.js` → one file | `[x]` | ops/utilities.js deleted; content merged into ops/utils.js |
-| Browser verify: rita.html + ops.html load with zero console errors | `[ ]` | Pending manual browser check |
+| Browser verify: rita.html + ops.html load with zero console errors | `[x]` | Verified manually 2026-05-18 — zero console errors |
 | Update `Spec_JS_Code.md` | `[x]` | commit 2b7fa51, branch worktree-agent-af1025d550695762c |
 
 ---
 
 ### Phase 3 — FnO God Module Split
-**Status:** `[ ] Not started`  
+**Status:** `[x] Complete — merged 2026-05-18, commit cb79df2`  
 **Effort:** ~1 day  
 **Risk:** Medium — fno/api.js is deeply imported; must not break fno.html load
 
 | Task | Status | Notes |
 |---|---|---|
-| Extract `fno/api.js` init logic → `fno/app-init.js` (new file) | `[ ]` | fetchPositions(), initApp(), checkStatus() |
-| Rewrite `fno/api.js` → thin re-export from `../shared/api.js` (≤20 lines) | `[ ]` | |
-| Update `fno/nav.js` + `fno/main.js` to import from `app-init.js` | `[ ]` | |
-| `fno/utils.js` — keep fno-specific formatters, import setEl/badge from shared | `[ ]` | |
-| Browser verify: fno.html loads with zero console errors | `[ ]` | |
-| Update `Spec_JS_Code.md` | `[ ]` | |
+| Extract `fno/api.js` init logic → `fno/app-init.js` (new file) | `[x]` | fetchPositions(), initApp(), checkStatus() — commit 198348b |
+| Rewrite `fno/api.js` → thin re-export from `../shared/api.js` (≤20 lines) | `[x]` | 9 lines — commit 198348b |
+| Update `fno/main.js` to import from `app-init.js` | `[x]` | One-line import change — commit 198348b |
+| `fno/utils.js` — keep fno-specific formatters (fmt, fmtPnl, pnlClass) | `[x]` | No changes needed — all 3 already fno-specific |
+| Browser verify: fno.html loads with zero console errors | `[x]` | Verified manually 2026-05-18 — zero console errors |
+| Update `Spec_JS_Code.md` | `[x]` | app-init.js row added; api.js + utils.js rows updated — Confluence Engineering v22 |
 
 ---
 
@@ -118,3 +118,4 @@ None
 - Phases 1–3 can run in order without touching HTML files.
 - Phase 4 (DS) is the highest-risk phase — ds.html inline script removal requires careful coordination.
 - Phase 5 is optional; only proceed if Phase 4 is complete with no regressions.
+

@@ -1,12 +1,13 @@
 # /enhance — Multi-Agent Feature Orchestrator
 
-Orchestrates a chain of specialist agents to plan, build, test, and document a feature enhancement for the RITA, FnO, or Ops dashboard.
+Orchestrates a chain of specialist agents to plan, build, test, and document a feature enhancement for the RITA, FnO, Ops, or DS dashboard.
 
 **Usage:** `/enhance <app> "<description>"`
 **Examples:**
 - `/enhance rita "Add a volatility regime indicator to the market signals panel"`
 - `/enhance fno "Add a net Greeks exposure summary to the portfolio overview"`
 - `/enhance ops "Add a failed test trend chart to the test results section"`
+- `/enhance ds "Feature 10 Phase 4 — extract ds.html inline scripts into dashboard/js/ds/ ES modules"`
 
 ---
 
@@ -19,11 +20,11 @@ You are the orchestrator. Read these instructions fully before taking any action
 ## Step 0 — Parse Arguments
 
 Parse `$ARGUMENTS` to extract:
-- `APP` — the first word (must be one of: `rita`, `fno`, `ops`)
+- `APP` — the first word (must be one of: `rita`, `fno`, `ops`, `ds`)
 - `DESCRIPTION` — everything after the first word (strip surrounding quotes)
 
-If `APP` is not one of the three valid values, reply:
-> "Unknown app '{APP}'. Valid apps: rita, fno, ops. Usage: /enhance <app> \"<description>\""
+If `APP` is not one of the four valid values, reply:
+> "Unknown app '{APP}'. Valid apps: rita, fno, ops, ds. Usage: /enhance <app> \"<description>\""
 
 Then stop.
 
@@ -34,6 +35,7 @@ Then stop.
 | `rita` | `project-office/skills/skill-add-rita-feature.md` | `project-office/specs/Spec_RITA_App.md` | `project-office/specs/Spec_JS_Code.md` |
 | `fno` | `project-office/skills/skill-add-fno-feature.md` | `project-office/specs/Spec_RITA_App.md` | `project-office/specs/Spec_JS_Code.md` |
 | `ops` | `project-office/skills/skill-add-ops-feature.md` | `project-office/specs/Spec_RITA_App.md` | `project-office/specs/Spec_JS_Code.md` |
+| `ds` | `project-office/skills/skill-add-ds-feature.md` | `project-office/specs/Spec_RITA_App.md` | `project-office/specs/Spec_JS_Code.md` |
 
 Set:
 - `SKILL_FILE` = skill file path from routing table
