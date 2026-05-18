@@ -63,33 +63,36 @@ Restructure the dashboard JS codebase from 4 siloed app directories with duplica
 ---
 
 ### Phase 4 — DS Module Extraction
-**Status:** `[ ] Not started`  
+**Status:** `[x] Complete — merged 2026-05-18, commit 9c59fdb; browser verified 2026-05-18`  
 **Effort:** ~2 days  
 **Risk:** High — requires coordinated changes to ds.html (remove inline scripts, add module script tag)
 
 | Task | Status | Notes |
 |---|---|---|
-| Create `dashboard/js/ds/` directory | `[ ]` | |
-| Create `ds/api.js` — re-export from `../shared/api.js` | `[ ]` | |
-| Create `ds/nav.js` — extract inline show(section, el) + section switching | `[ ]` | |
-| Create `ds/main.js` — entry point, wire all section loaders | `[ ]` | |
-| Extract each of 13 ds.html sections into a module file | `[ ]` | understand, dashboard, pipeline, performance, risk, trades, explain, scenarios, training, changelog, observability, mcp, export |
-| Replace inline `<script>` blocks in `ds.html` with `<script type="module" src="js/ds/main.js">` | `[ ]` | |
-| Browser verify: ds.html loads all 13 sections with zero console errors | `[ ]` | |
-| Update `Spec_JS_Code.md` — ds/ module table | `[ ]` | |
+| Create `dashboard/js/ds/` directory | `[x]` | 24 JS modules created |
+| Create `ds/api.js` — re-export from `../shared/api.js` | `[x]` | commit 763b465 |
+| Create `ds/nav.js` — extract inline show(section, el) + section switching | `[x]` | createShow(loaders) factory pattern |
+| Create `ds/main.js` — entry point, wire all section loaders | `[x]` | 19 sections + window.* bindings at module scope |
+| Extract each section into a module file | `[x]` | 19 sections (13 original + 6 model-* planned); state.js for cross-section state |
+| Replace inline `<script>` blocks in `ds.html` with `<script type="module" src="js/ds/main.js">` | `[x]` | ~2500 lines of inline script removed |
+| Browser verify: ds.html loads all sections with zero console errors | `[x]` | Verified 2026-05-18; 2 path bugs fixed (changelog 404 + step-log prefix) — commit c04441d |
+| Update `Spec_JS_Code.md` — ds/ module table | `[x]` | 24-file table added — Confluence Engineering v23 |
 
 ---
 
 ### Phase 5 — Large Module Audit (optional)
-**Status:** `[ ] Not started`  
-**Effort:** ~1 day  
+**Status:** `[x] Complete — audited 2026-05-18, no splits warranted`  
+**Effort:** ~0.5 day (audit only)  
 **Risk:** Low
 
 | Task | Status | Notes |
 |---|---|---|
-| Review `fno/manoeuvre.js` (703 lines) for renderer/state split | `[ ]` | Only split if clear separation exists |
-| Review `ops/agent-builds.js` (699 lines) for sub-module split | `[ ]` | |
-| Review `fno/hedge.js` (401 lines) + `fno/rr.js` (311 lines) | `[ ]` | |
+| Review `fno/manoeuvre.js` (703 lines) for renderer/state split | `[x]` | **No split.** 8 module-scoped state variables (`manGroupState`, `manAssign`, `manActiveTab`, etc.) shared implicitly across every render function. Split would require passing state objects everywhere — adds complexity, not reduces it. Coupling is intentional. |
+| Review `ops/agent-builds.js` (699 lines) for sub-module split | `[x]` | **No split.** Already organized by comment blocks (Panel 1, Panel 2, etc.). All panels share helpers (`esc`, `panel`, `chartOpts`, `statusBadge`). A split would just create a third shared-helpers file with no functional gain. |
+| Review `fno/hedge.js` (401 lines) | `[x]` | **No split.** Two named sections (`loadHedgeHistory` + `renderHedgeRadar`) read different state properties and don't call each other — split is technically clean. But at 401 lines it causes no real pain. Risk not worth the gain. |
+| Review `fno/rr.js` (311 lines) | `[x]` | **No split.** Has a data layer (`computeScen`, `loadHistory`, `getBullBear`) and render layer (`renderScenarios` etc.) but render functions call data functions directly. Split would create a circular dep. Too small. |
+
+**Design decision:** All 4 files audited. None meet the split threshold — state coupling or shared helpers prevent clean separation, and the files that could technically be split are not large enough to cause maintenance pain. No code changes made. Feature 10 closed.
 
 ---
 
