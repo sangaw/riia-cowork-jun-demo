@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-18T06:14:41",
+  "generated_at": "2026-05-18T06:34:01",
   "total_runs": 24,
   "per_role": {
     "pm": {
@@ -255,8 +255,8 @@
           "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
         },
         {
-          "hash": "11f440c",
-          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
+          "hash": "f8887c4",
+          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
         }
       ],
       "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing; prevents 'claimed yes without doing it' pattern (5/7 historical FC-001 fires). FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports; prevents ../../ vs ../ error that caused 8-file hotfix in run 20260517-1430.",
@@ -286,10 +286,6 @@
         {
           "hash": "f8887c4",
           "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
-        },
-        {
-          "hash": "11f440c",
-          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
         }
       ],
       "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing. FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports.",
@@ -317,8 +313,8 @@
           "message": "chore(skills): add FC-IMP gate to all 3 dashboard skill files"
         },
         {
-          "hash": "11f440c",
-          "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
+          "hash": "f8887c4",
+          "message": "fix(agent-ops): add FC-004 JS field-access gate to all dashboard skill files"
         }
       ],
       "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing. FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports.",
@@ -397,10 +393,10 @@
     "abandonment_rate": 0.0
   },
   "quality": {
-    "avg_accuracy_score": 3.0,
+    "avg_accuracy_score": 2.86,
     "avg_relevance_score": 4.0,
     "avg_csat": 3.0,
-    "planning_accuracy_rate": 0.667,
+    "planning_accuracy_rate": 0.714,
     "grounding_pass_rate": 0.921
   },
   "token_forecasting": {
@@ -446,7 +442,7 @@
     "avg_duration_minutes": 49,
     "avg_tokens_per_run": 35741,
     "avg_retry_count": 0.08,
-    "avg_time_saved_hours": 11.5
+    "avg_time_saved_hours": 11.0
   },
   "reliability": {
     "error_recovery_rate": 0.765,
@@ -510,6 +506,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T04:14:41.692933+00:00"
+    "generated_at": "2026-05-18T04:34:01.494125+00:00"
   }
 }

@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-17 (Post-v1.0 — Feature 08 API Layer Rationalization complete + /agent-performance-improvements FC-001 v3/FC-IMP v2/CSAT v1 fixes)
+**Last updated:** 2026-05-18 (Post-v1.0 — Feature 09 Run A QA+TechWriter complete + /agent-performance-improvements FC-001 v4/FC-IMP v3 fixes)
 
 ---
 
@@ -128,3 +128,5 @@ _None_
 - 2026-05-16: Feature 07 (agent-build-runs) — COMPLETE. DB write infrastructure for /enhance runs: upsert_run/upsert_agents in AgentBuildRepository, write_run_to_db.py helper, enhance.md Step 7 updated. DoD 8/8, 23 QA tests pass. Merged at 89fb5dd. /agent-performance-improvements also run: FC-001 n/a rule tightened + HTML completeness DoD item added across all 3 skill files. Commit 11f440c. See `project-office/features/07 agent-build-runs/PLAN_STATUS.md`.
 - 2026-05-17: Feature 08 (API Layer Rationalization) — COMPLETE. Run A (20260517-1130): 3 experience endpoints added (backtest-daily, risk-timeline, training-history), 8 rita JS files + mobile app updated, portfolio adjust-position-action added, dead metrics fetch removed, ops/users.js path fixed. Run B R4+R5 (20260517-1430): session cache module (api-cache.js), API monitoring middleware + DB table, /api/experience/ops/api-metrics endpoint, API Metrics table in Ops dashboard, aggregate_metrics.py api_metrics block. Post-merge hotfixes: import path fix, setEl missing export, conflict marker (FC-IMP + FC-MERGE gates added to all skill DoDs). See `project-office/features/08 API Layer Rationalization/PLAN_STATUS.md`.
 - 2026-05-17: /agent-performance-improvements — FC-001 v3: active spec grep added to enhance.md Step 4 (orchestrator independently verifies endpoint path in spec file). FC-IMP v2: named-import check promoted from DoD checklist to inline build step 4.5/5.5 in all 3 skill files. CSAT v1: smoke-test gate added to TechWriter step in all 3 skill files. Commits: 2f09e2c, 9dd8cb3.
+- 2026-05-18: Feature 09 Run A continuation — QA agent (19/19 tests in tests/unit/test_instrument_onboard.py, mock yfinance, all edge cases) + TechWriter (Confluence Engineering v16, all 3 spec files confirmed current). Run log: run-20260518-0545.json. Commit: 1442756.
+- 2026-05-18: /agent-performance-improvements — FC-001 v4: mandatory self-verify grep added to spec-update step in all 3 skill files (Engineer must report grep output, not just claim "yes"). FC-IMP v3: path-depth verification added to inline check + DoD gate in all 3 skill files (../../ vs ../ for shared/ modules). Commit: 1442756.

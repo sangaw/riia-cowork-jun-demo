@@ -92,5 +92,13 @@
   "branch": "master",
   "merge_status": "merged",
   "merge_commit": "872aeaf",
-  "notes": "Continuation run — Run A backend pre-merged; this run completed QA (19/19 tests) + TechWriter (Confluence v16). Run B (daily-ops.js UI) is a separate /enhance run."
+  "notes": "Continuation run — Run A backend pre-merged; this run completed QA (19/19 tests) + TechWriter (Confluence v16). Run B (daily-ops.js UI) is a separate /enhance run.",
+  "human_score": {
+    "accuracy": 2,
+    "relevance": 4,
+    "csat": 3,
+    "planning_ok": true,
+    "time_saved_hours": 8,
+    "notes": "Accuracy 2 — QA tests had 3 pre-existing failures (wrong patch targets) that needed fixing; TechWriter and skill improvements were clean."
+  }
 }
