@@ -20,9 +20,9 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 | File | Responsibility | Key exports |
 |---|---|---|
-| `api.js` | HTTP client wrapping `fetch` | `api(path, method?, body?)` |
-| `utils.js` | DOM helpers | `setEl(id, html)`, `badge(status)`, `fmt(v, dec)`, `fmtPct(v)` |
-| `charts.js` | Chart.js registry + defaults | `mkChart(id, config)`, `destroyChart(id)`, `C` (color palette), `chartOpts()` |
+| `api.js` | Thin re-export wrapper → `shared/api.js` | `api(path, method?, body?)` |
+| `utils.js` | Thin re-export wrapper → `shared/utils.js` | `setEl(id, html)`, `badge(status)`, `fmt(v, d?)`, `fmtPct(v)`, `fmtMs(v)`, `appendResult(containerId, html)` |
+| `charts.js` | Thin re-export wrapper → `shared/charts.js` | `mkChart(id, config)`, `destroyChart(id)`, `C` (color palette), `chartOpts()` |
 | `chart-modal.js` | Zoom-on-click modal for charts | `openChartModal(id, title)`, `closeChartModal()` |
 | `nav.js` | Section navigation, loader registry | `show(section)`, `_sectionLoaders` map, `getCurrentSection()`. `_currentSection` defaults to `'market-signals'` (landing page). |
 | `main.js` | Entry point — wires everything | Registers `_sectionLoaders`, binds `window.*`. `loadInstrumentTabs()` — called on page load; fetches `GET /api/v1/experience/rita/geography-overview`, renders all `is_available` instruments as tab buttons into `#inst-tabs-container`; fallback to static 4 tabs if API unavailable. |
@@ -74,8 +74,8 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 | File | Responsibility | Key exports |
 |---|---|---|
-| `api.js` | Ops HTTP client | `api(path, method?, body?)` |
-| `utils.js` | DOM helpers | `setEl`, `badge`, etc. |
+| `api.js` | Thin re-export wrapper → `shared/api.js` | `apiBase()`, `api(path, method?, body?)`, `apiFetch(url, options?)` |
+| `utils.js` | DOM helpers + pipeline actions (merged from former utilities.js) | `setEl`, `badge(text, cls)` (local two-arg), `fmt`, `stepName`, `runGoal`, `runMarket`, `runStrategy`, `runFullPipeline`, `doReset`, `loadUtilities` |
 | `sidebar.js` | Sidebar navigation | `showSection()` |
 | `nav.js` | Section navigation | `show(section)`, `_sectionLoaders` |
 | `main.js` | Entry point | Registers loaders, binds `window.*` |

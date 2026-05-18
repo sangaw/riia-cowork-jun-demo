@@ -1,21 +1,5 @@
 // ── RITA Dashboard — main.js (entry point) ─────────────────
 import { api } from './api.js';
-
-const SESSION_TRACE_ID = crypto.randomUUID();
-
-async function apiFetch(url, opts = {}) {
-    try {
-        const res = await fetch(url, {
-            ...opts,
-            headers: { ...opts.headers, 'X-Request-ID': SESSION_TRACE_ID }
-        });
-        if (!res.ok) console.error('[RITA] fetch error', url, res.status, SESSION_TRACE_ID);
-        return res.ok ? res.json() : null;
-    } catch (e) {
-        console.error('[RITA] fetch failed', url, e, SESSION_TRACE_ID);
-        return null;
-    }
-}
 import { show, warmupChat, _sectionLoaders, getCurrentSection } from './nav.js';
 import { loadOverviewCommentary } from './commentary.js';
 import { loadHealth, loadPerfSummary, loadDrift, loadProgress } from './health.js';

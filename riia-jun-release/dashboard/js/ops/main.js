@@ -15,7 +15,7 @@ import { loadGameCompliance, toggleGcDetail } from './game-compliance.js';
 import { loadAlerts } from './alerts.js';
 import { loadSourceAvailability } from './source-availability.js';
 import { loadFunctionalKPIs } from './functional-kpis.js';
-import { loadUtilities, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './utilities.js';
+import { loadUtilities, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './utils.js';
 import { loadApiMetrics, filterApiMetrics } from './api-metrics.js';
 
 // ── Populate section loader registry ─────────────────────────────────────────
