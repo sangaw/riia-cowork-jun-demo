@@ -102,9 +102,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .sec{display:none;animation:fi .22s ease;}
 .sec.on{display:block;}
 @keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.ab-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.ab-grid{display:flex;flex-direction:column;gap:16px;}
+.ab-row{display:grid;gap:16px;align-items:start;}
+.ab-row-2{grid-template-columns:1fr 1fr;}
+.ab-row-3{grid-template-columns:1fr 1fr 1fr;}
+.ab-row-2-75{grid-template-columns:3fr 1fr;}
 .ab-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--sh);min-width:0;overflow:hidden;}
-.ab-sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:4px;}
+.ab-sc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0 10px;margin-top:4px;}
+.ab-hm-grid{display:grid;grid-template-columns:150px repeat(5,1fr);gap:0;margin-top:4px;}
 .ab-sc{background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:11px 13px;}
 .ab-sc-role{font-family:var(--fm);font-size:11px;font-weight:700;color:var(--accelerate);text-transform:capitalize;margin-bottom:8px;}
 .ab-sc-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:5px;gap:8px;}
@@ -771,14 +776,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       <div class="loading">Loading…</div>
     </div>
 
-    <!-- KPI cards — populated by renderKpiCards() -->
-    <div class="ab-kpi-strip" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px">
-      <div id="ab-kpi-tsr" class="ab-kpi-card"></div>
-      <div id="ab-kpi-csat" class="ab-kpi-card"></div>
-      <div id="ab-kpi-forecast-err" class="ab-kpi-card"></div>
-      <div id="ab-kpi-hitl" class="ab-kpi-card"></div>
-      <div id="ab-kpi-cache-hit" class="ab-kpi-card"></div>
-    </div>
 
   </section>
 
@@ -1253,5 +1250,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
   } catch (_) {}
 })();
 </script>
+
+<!-- ── Chart expand modal ───────────────────────────────── -->
+<div id="ab-chart-modal" onclick="closeChartModal()" style="
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.72);
+  align-items:center;justify-content:center;cursor:zoom-out;">
+  <div onclick="event.stopPropagation()" style="
+    background:var(--surface);border-radius:var(--r);
+    padding:24px;width:94vw;max-width:94vw;max-height:96vh;
+    overflow:auto;position:relative;box-sizing:border-box;">
+    <button onclick="closeChartModal()" style="
+      position:absolute;top:10px;right:14px;
+      background:none;border:none;font-size:22px;
+      cursor:pointer;color:var(--t2);line-height:1;">✕</button>
+    <div id="ab-chart-modal-title" style="font-family:var(--fs);font-size:16px;font-weight:600;margin-bottom:16px;padding-right:28px;color:var(--t1)"></div>
+    <img id="ab-chart-modal-img" style="width:100%;max-height:88vh;display:block;border-radius:4px;object-fit:contain;" />
+  </div>
+</div>
+<script>document.addEventListener('keydown', e => { if (e.key === 'Escape' && window.closeChartModal) closeChartModal(); });</script>
 </body>
 </html>

@@ -24,7 +24,17 @@ function pct(v) { return v != null ? Math.round(v * 100) + '%' : '—'; }
 function fmtRunId(id) {
   if (!id || id === 'sample') return id;
   const m = id.match(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})$/);
-  return m ? `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}` : id;
+  return m ? `${m[2]}/${m[3]} ${m[4]}:${m[5]}` : id;
+}
+
+function fmtDate(v) {
+  if (v == null || v === '') return '—';
+  const n = Number(v);
+  if (!isNaN(n)) {
+    const ms = n > 1e12 ? n : n * 1000;
+    return new Date(ms).toISOString().slice(0, 10);
+  }
+  return String(v);
 }
 
 function roleColour(i, alpha = 1) {
@@ -77,62 +87,28 @@ function renderRunHistory(runs) {
     return panel('runs', 'Pipeline Run History', '<div class="empty">No run data found</div>');
   }
   const rows = runs.map(r => {
-    const agents = r.agents || [];
-    const warns  = agents.filter(a => a.status === 'pass_with_warnings').length;
-    const fails  = agents.filter(a => a.status === 'fail').length;
-    const flagCol = fails ? `<span class="badge danger">${fails} failed</span>` :
-                    warns ? `<span class="badge warn">${warns} warned</span>` :
-                    `<span class="badge ok">Clean</span>`;
-
-    // FC Codes — flatten failure_modes from all agents, count per code
-    const fcCounts = {};
-    for (const a of agents) {
-      for (const fm of (a.failure_modes ?? [])) {
-        const code = typeof fm === 'string' ? fm : (fm.code ?? String(fm));
-        fcCounts[code] = (fcCounts[code] || 0) + 1;
-      }
-    }
-    const fcBadges = Object.entries(fcCounts)
-      .map(([code, cnt]) => `<span class="badge danger" style="margin-right:2px">${esc(code)} ×${cnt}</span>`)
-      .join('');
-    const fcCol = fcBadges || '—';
-
-    // HITL count
-    const hitlCount = r.hitl_events?.length ?? 0;
-    const hitlCol = hitlCount > 0 ? String(hitlCount) : '—';
-
-    // Est / Actual tokens
     const est = r.total_tokens_estimated ?? 0;
     const actualSum = (r.agents ?? []).reduce((acc, a) => acc + (a.actual_tokens?.total_tokens ?? 0), 0);
     const hasActual = (r.agents ?? []).some(a => a.actual_tokens?.total_tokens != null);
     let estActualCol = `${est.toLocaleString()} / —`;
     if (hasActual) {
       let tokenColor = 'var(--ok)';
-      if (actualSum > est * 1.25) {
-        tokenColor = 'var(--danger)';
-      } else if (actualSum > est) {
-        tokenColor = 'var(--warn)';
-      }
+      if (actualSum > est * 1.25) tokenColor = 'var(--danger)';
+      else if (actualSum > est) tokenColor = 'var(--warn)';
       estActualCol = `${est.toLocaleString()} / <span style="color:${tokenColor};font-family:var(--fm)">${actualSum.toLocaleString()}</span>`;
     }
-
     return `<tr>
-      <td style="font-family:var(--fm);white-space:nowrap">${fmtRunId(r.run_id)}</td>
-      <td><span class="badge neutral" style="text-transform:uppercase">${esc(r.app)}</span></td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3)" title="${esc(r.request)}">${esc(r.request ?? '—')}</td>
+      <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--t3)" title="${esc(r.request)}">${esc(r.request ?? '—')}</td>
       <td>${statusBadge(r.overall_status)}</td>
-      <td>${flagCol}</td>
       <td style="font-family:var(--fm)">${r.duration_minutes ?? '—'} min</td>
       <td style="font-family:var(--fm);color:var(--t3);font-size:10px">${esc(r.branch ?? '—')}</td>
-      <td style="font-size:11px">${fcCol}</td>
-      <td style="font-family:var(--fm);text-align:center">${hitlCol}</td>
       <td style="font-family:var(--fm);font-size:11px">${estActualCol}</td>
+      <td style="font-family:var(--fm);white-space:nowrap;color:var(--t3);font-size:10px">${fmtRunId(r.run_id)}</td>
     </tr>`;
   }).join('');
   const tbl = `<div class="tbl-wrap"><table>
     <thead><tr>
-      <th>Run ID</th><th>App</th><th>Request</th><th>Status</th><th>Agents</th><th>Duration</th><th>Branch</th>
-      <th>FC Codes</th><th>HITL</th><th>Est / Actual</th>
+      <th>Request</th><th>Status</th><th>Duration</th><th>Branch</th><th>Est / Actual</th><th>Run</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
@@ -207,6 +183,7 @@ function mountGroundingChart(m) {
     },
     options: chartOpts({ yMax: 100, yLabel: '%', suffix: '%' })
   });
+  bindChartExpand('ab-chart-grounding', 'Grounding Score Trend');
 }
 
 /* ── Panel 4: Failure Heatmap ────────────────────────────────────────────── */
@@ -217,21 +194,27 @@ function renderFailureHeatmap(m) {
   if (!fcodes.length) {
     return panel('failures', 'Failure Mode Heatmap', '<div class="empty">No failure modes recorded</div>');
   }
-  const headerCells = ROLES.map(r => `<th>${ROLE_LABEL[r]}</th>`).join('');
-  const bodyRows = fcodes.map(code => {
+  const bd  = 'border-bottom:1px solid var(--border);';
+  const hdr = `font-family:var(--fm);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t4);padding:5px 8px;text-align:center;border-bottom:1.5px solid var(--border);`;
+  const cod = `font-family:var(--fm);font-size:10px;color:var(--accelerate);padding:5px 8px;${bd}display:flex;align-items:center;white-space:nowrap;`;
+  const cel = `font-size:11px;font-family:var(--fm);padding:5px 8px;${bd}display:flex;align-items:center;justify-content:center;`;
+
+  const headers = `<div style="${hdr};text-align:left">FC Code</div>` +
+    ROLES.map(r => `<div style="${hdr}">${ROLE_LABEL[r]}</div>`).join('');
+
+  const rows = fcodes.map(code => {
     const entry = fm[code];
     const cells = ROLES.map(role => {
       const count = entry.by_role?.[role] ?? 0;
-      const cls   = count === 0 ? 'heat-0' : count === 1 ? 'heat-1' : count <= 2 ? 'heat-2' : 'heat-3';
-      return `<td class="${cls}">${count || '—'}</td>`;
+      const cls = count === 0 ? 'heat-0' : count === 1 ? 'heat-1' : count <= 2 ? 'heat-2' : 'heat-3';
+      return `<div class="${cls}" style="${cel}">${count || '—'}</div>`;
     }).join('');
-    return `<tr><th style="text-align:left;padding-right:12px;white-space:nowrap;font-family:var(--fm);font-size:10px;color:var(--accelerate)">${esc(code)}</th>${cells}</tr>`;
+    return `<div style="${cod}">${esc(code)}</div>${cells}`;
   }).join('');
-  const tbl = `<div class="tbl-wrap"><table class="ab-heatmap">
-    <thead><tr><th style="text-align:left">Failure Code</th>${headerCells}</tr></thead>
-    <tbody>${bodyRows}</tbody>
-  </table></div>`;
-  return panel('failures', 'Failure Mode Heatmap', tbl);
+
+  return panel('failures', 'Failure Mode Heatmap',
+    `<div class="ab-hm-grid">${headers}${rows}</div>`
+  );
 }
 
 /* ── Panel 5: Token Cost Trend ───────────────────────────────────────────── */
@@ -274,6 +257,7 @@ function mountTokenChart(runs) {
     data: { labels, datasets },
     options: chartOpts({ yLabel: 'Tokens' })
   });
+  bindChartExpand('ab-chart-tokens', 'Token Cost Trend');
 }
 
 /* ── Panel 6: Skill Version History ─────────────────────────────────────── */
@@ -294,7 +278,7 @@ function renderSkillVersions(m) {
     }
     return `<tr>
       <td style="font-family:var(--fm);font-size:10px;color:var(--accelerate)">${esc(s.skill_file)}</td>
-      <td style="font-family:var(--fm);font-size:11px">${esc(s.last_updated ?? '—')}</td>
+      <td style="font-family:var(--fm);font-size:11px">${fmtDate(s.last_updated)}</td>
       <td style="font-size:11px">${improvement}</td>
       <td style="font-family:var(--fm);font-size:11px">${rateDelta}</td>
       <td>${commits || '<span style="color:var(--t4)">—</span>'}</td>
@@ -441,6 +425,7 @@ function mountForecastChart(runs) {
         }
       }
     });
+    bindChartExpand('ab-chart-forecast', 'Token Forecast vs Actual');
   } catch (e) {
     // silently ignore
   }
@@ -573,9 +558,36 @@ function mountTrendChart(m, runs) {
         }
       }
     });
+    bindChartExpand('ab-chart-trends', 'Metric Trend Lines');
   } catch (e) {
     // silently ignore
   }
+}
+
+/* ── Chart expand modal ──────────────────────────────────────────────────── */
+
+function openChartModal(canvasId, title) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  document.getElementById('ab-chart-modal-title').textContent = title || '';
+  document.getElementById('ab-chart-modal-img').src = canvas.toDataURL('image/png');
+  document.getElementById('ab-chart-modal').style.display = 'flex';
+}
+
+export function closeChartModal() {
+  const m = document.getElementById('ab-chart-modal');
+  if (m) m.style.display = 'none';
+}
+
+function bindChartExpand(canvasId, title) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const wrap = canvas.closest('.ab-chart-wrap');
+  if (!wrap || wrap.dataset.expandBound) return;
+  wrap.dataset.expandBound = '1';
+  wrap.style.cursor = 'zoom-in';
+  wrap.title = 'Click to expand';
+  wrap.addEventListener('click', () => openChartModal(canvasId, title));
 }
 
 /* ── Token Estimate Widget ───────────────────────────────────────────────── */
@@ -743,23 +755,26 @@ export async function loadAgentBuilds() {
       return;
     }
 
-    // KPI card HTML (outside grid — targets fixed DOM IDs in ops.html)
-    renderKpiCards(m, runs);
-
     // Render HTML panels (charts need canvas in DOM first)
     grid.innerHTML = [
-      renderRunHistory(runs),
+      // Row 1: Agent Scorecards — full width
       renderScorecards(m),
-      renderGroundingPanel(m),
-      renderFailureHeatmap(m),
-      renderTokenPanel(runs),
-      renderSkillVersions(m),
-      panel('forecast', 'Token Forecast vs Actual',
-        `<div class="ab-chart-wrap"><canvas id="ab-chart-forecast"></canvas></div>`),
-      panel('trends', 'Metric Trend Lines',
-        `<div class="ab-chart-wrap"><canvas id="ab-chart-trends"></canvas></div>`),
-      panel('estimate', 'Estimate Token Budget',
-        `<div id="ab-estimate-form"></div><div id="ab-estimate-result" style="margin-top:8px"></div>`),
+      // Row 2: Pipeline Run History (50%) + Skill File Versions (50%)
+      `<div class="ab-row ab-row-2">${renderRunHistory(runs)}${renderSkillVersions(m)}</div>`,
+      // Row 3: Token Forecast + Grounding Score Trend + Metric Trend Lines
+      `<div class="ab-row ab-row-3">
+        ${panel('forecast', 'Token Forecast vs Actual', `<div class="ab-chart-wrap"><canvas id="ab-chart-forecast"></canvas></div>`)}
+        ${renderGroundingPanel(m)}
+        ${panel('trends', 'Metric Trend Lines', `<div class="ab-chart-wrap"><canvas id="ab-chart-trends"></canvas></div>`)}
+      </div>`,
+      // Row 4: Token Cost Trend + Failure Heatmap stacked on left (50%) | Estimate Token Budget on right (50%)
+      `<div class="ab-row ab-row-2">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          ${renderTokenPanel(runs)}
+          ${renderFailureHeatmap(m)}
+        </div>
+        ${panel('estimate', 'Estimate Token Budget', `<div id="ab-estimate-form"></div><div id="ab-estimate-result" style="margin-top:8px"></div>`)}
+      </div>`,
     ].join('');
 
     // Mount Chart.js after DOM is ready
