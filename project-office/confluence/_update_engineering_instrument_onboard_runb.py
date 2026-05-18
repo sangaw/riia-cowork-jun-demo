@@ -100,9 +100,18 @@ RUNB_SECTION = (
     "  <li><strong>Other non-2xx:</strong> shows <code>detail</code> field from HTTPException response.</li>\n"
     "</ul>\n"
 
+    "<h3>RITA Dashboard — Dynamic Instrument Tabs</h3>\n"
+    "<p>The RITA dashboard instrument tab bar (<code>rita.html</code>) was converted from hardcoded buttons "
+    "to a dynamic list. On page load, <code>loadInstrumentTabs()</code> in <code>dashboard/js/rita/main.js</code> "
+    "calls <code>GET /api/v1/experience/rita/geography-overview</code>, extracts all available instruments "
+    "across regions, and renders them as tab buttons. Any instrument enabled in Ops Daily Ops "
+    "(<code>is_available=True</code>) automatically appears as a selectable tab in RITA on next load. "
+    "Falls back to the four static tabs (NIFTY/BANKNIFTY/ASML/NVIDIA) if the API is unavailable.</p>\n"
+
     "<h3>QA</h3>\n"
-    "<p>19 unit tests added in <code>tests/unit/test_instrument_onboard.py</code>; all pass (19/19). "
-    "All 12 API contract fields verified (search: 6 fields, onboard: 6 fields). "
+    "<p>21 unit tests in <code>tests/unit/test_instrument_onboard.py</code>; all pass (21/21). "
+    "Covers: search results, equity-only filtering (service layer), 400/409/502 error paths, "
+    "onboard success + all response fields, duplicate ticker, yfinance failure on both endpoints. "
     "FC-IMP gate passed &mdash; all named imports verified against source module exports.</p>\n"
 
     "<p><strong>Commit:</strong> a86669b &mdash; Branch: worktree-agent-a19ee4b2d4c56552a</p>\n"

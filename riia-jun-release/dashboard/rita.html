@@ -462,13 +462,8 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
-  <!-- Instrument selector -->
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">
-    <button class="inst-tab active" id="itab-NIFTY"     onclick="selectInstrumentTab('NIFTY')"    >NIFTY 50</button>
-    <button class="inst-tab"        id="itab-BANKNIFTY"  onclick="selectInstrumentTab('BANKNIFTY')" >BANKNIFTY</button>
-    <button class="inst-tab"        id="itab-ASML"       onclick="selectInstrumentTab('ASML')"      >ASML</button>
-    <button class="inst-tab"        id="itab-NVIDIA"     onclick="selectInstrumentTab('NVIDIA')"    >NVIDIA</button>
-  </div>
+  <!-- Instrument selector — populated dynamically from /experience/rita/geography-overview -->
+  <div id="inst-tabs-container" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px"></div>
 
   <!-- Timeframe tabs -->
   <div style="display:flex;align-items:center;gap:4px;margin-bottom:18px;border-bottom:1.5px solid var(--border);padding-bottom:0">

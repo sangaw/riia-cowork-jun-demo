@@ -1,7 +1,7 @@
 # Feature 09 — Data Pipeline: Add New Instrument — Plan Status
 
-**Status:** RUN A COMPLETE — RESUME AT QA (2026-05-18)  
-**Last updated:** 2026-05-17
+**Status:** COMPLETE — All runs done (2026-05-18)  
+**Last updated:** 2026-05-18
 
 ---
 
@@ -25,10 +25,13 @@ Requirements draft complete. Feature adds a self-service instrument onboarding p
 
 ### Run B — Frontend + Experience Layer + Specs
 
-- [ ] R8: `daily-ops.js` — add `searchInstruments()`, `selectSearchResult()`, `onboardInstrument()`, `cancelOnboard()` + window exports
-- [ ] R9: `ops.html` — targeted Edit: add search input, results list, confirm form, progress div inside Daily Ops instruments section
-- [ ] R10: `experience/rita.py` geography-overview — dynamic instrument list from DB (group by country_code → US/EU/India/Other)
-- [ ] R11: Update three spec files in same commit: `Spec_Data.md`, `Spec_RITA_App.md`, `Spec_Python_Code.md`
+- [x] R8: `daily-ops.js` — add `searchInstruments()`, `selectSearchResult()`, `onboardInstrument()`, `cancelOnboard()` + window exports
+- [x] R9: `ops.html` — targeted Edit: add search input, results list, confirm form, progress div inside Daily Ops instruments section
+- [x] R10: `experience/rita.py` geography-overview — dynamic instrument list from DB (done in Run A)
+- [x] R11: Spec files updated — `Spec_Data.md`, `Spec_RITA_App.md`, `Spec_Python_Code.md`, `Spec_JS_Code.md`
+- [x] R12: RITA dynamic instrument tabs — `rita.html` + `main.js` `loadInstrumentTabs()` (added Run B)
+- [x] QA — 21 unit tests, all passing
+- [x] TechWriter — Confluence Engineering v19, all spec files current
 
 ---
 

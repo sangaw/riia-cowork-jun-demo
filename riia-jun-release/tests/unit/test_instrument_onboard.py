@@ -449,3 +449,83 @@ class TestInstrumentOnboardMissingFields:
         client, _ = _make_client()
         resp = client.post("/api/v1/instrument/onboard", json=body)
         assert resp.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Gap 1 — ETF filtering in search_tickers() service function
+# ---------------------------------------------------------------------------
+
+class TestSearchTickersFiltersNonEquity:
+    """search_tickers() service function must return only EQUITY entries."""
+
+    def test_search_tickers_filters_non_equity(self):
+        """A mixed yfinance result (EQUITY + ETF) must yield only the EQUITY entry."""
+        import importlib
+
+        # Import the real service module bypassing the sys.modules stub so we
+        # exercise the actual filter logic.
+        import importlib.util, os
+
+        service_path = os.path.join(
+            os.path.dirname(__file__),
+            "..", "..", "src", "rita", "services", "instrument_onboard.py",
+        )
+        spec = importlib.util.spec_from_file_location(
+            "_real_instrument_onboard_service", service_path
+        )
+        real_service = importlib.util.module_from_spec(spec)
+
+        # The service does `import yfinance as yf` inside the function body, so
+        # we patch yfinance.Search before the spec is executed.
+        mock_search_instance = MagicMock()
+        mock_search_instance.quotes = [
+            {
+                "symbol": "AAPL",
+                "longname": "Apple Inc.",
+                "exchange": "NMS",
+                "currency": "USD",
+                "country": "United States",
+                "quoteType": "EQUITY",
+            },
+            {
+                "symbol": "SPY",
+                "longname": "SPDR S&P 500 ETF Trust",
+                "exchange": "PCX",
+                "currency": "USD",
+                "country": "United States",
+                "quoteType": "ETF",
+            },
+        ]
+        mock_yf = MagicMock()
+        mock_yf.Search.return_value = mock_search_instance
+
+        with patch.dict("sys.modules", {"yfinance": mock_yf}):
+            spec.loader.exec_module(real_service)
+            results = real_service.search_tickers("apple")
+
+        assert len(results) == 1, f"Expected 1 result (EQUITY only), got {len(results)}: {results}"
+        assert results[0]["ticker"] == "AAPL"
+        assert results[0]["quote_type"] == "EQUITY"
+
+
+# ---------------------------------------------------------------------------
+# Gap 2 — Search endpoint returns 502 when yfinance is unreachable
+# ---------------------------------------------------------------------------
+
+class TestSearchEndpoint502OnYfinanceFailure:
+    """GET /api/v1/instrument/search returns 502 when the underlying yfinance call fails."""
+
+    def test_search_endpoint_returns_502_on_yfinance_failure(self):
+        from fastapi import HTTPException as _HTTPException
+
+        with patch(
+            "rita.api.v1.workflow.instrument_onboard.search_tickers",
+            side_effect=_HTTPException(
+                status_code=502,
+                detail="Yahoo Finance is currently unreachable.",
+            ),
+        ):
+            client, _ = _make_client()
+            resp = client.get("/api/v1/instrument/search", params={"q": "test"})
+
+        assert resp.status_code == 502

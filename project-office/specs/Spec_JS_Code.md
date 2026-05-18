@@ -25,7 +25,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `charts.js` | Chart.js registry + defaults | `mkChart(id, config)`, `destroyChart(id)`, `C` (color palette), `chartOpts()` |
 | `chart-modal.js` | Zoom-on-click modal for charts | `openChartModal(id, title)`, `closeChartModal()` |
 | `nav.js` | Section navigation, loader registry | `show(section)`, `_sectionLoaders` map, `getCurrentSection()`. `_currentSection` defaults to `'market-signals'` (landing page). |
-| `main.js` | Entry point — wires everything | Registers `_sectionLoaders`, binds `window.*` |
+| `main.js` | Entry point — wires everything | Registers `_sectionLoaders`, binds `window.*`. `loadInstrumentTabs()` — called on page load; fetches `GET /api/v1/experience/rita/geography-overview`, renders all `is_available` instruments as tab buttons into `#inst-tabs-container`; fallback to static 4 tabs if API unavailable. |
 | `health.js` | Home KPI strip + model status | `loadHealth()`, `loadMetrics()`, `loadPerfSummary()`, `loadDrift()`, `loadProgress()` |
 | `market-signals.js` | Market Signals section + timeframe tabs + geography panels | `loadMarketSignals()`, `switchMsTab(tf)`, `loadGoalHint()`, `loadGeoPanels()`. `loadGeoPanels()` calls `GET /api/v1/experience/rita/geography-overview` and renders three side-by-side panels (US/EU/India) into `#geo-panels`. `ms-last-updated` label shows date **and** time (`D MMM YYYY HH:MM` en-GB); null/invalid → `—`. |
 | `trades.js` | Trade Journal section | `loadTrades()`, `downloadTradeJournal()`, `allocBadge(v)` |

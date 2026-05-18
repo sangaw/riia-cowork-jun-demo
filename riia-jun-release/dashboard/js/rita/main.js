@@ -51,6 +51,7 @@ _sectionLoaders.learnings         = loadLearnings;
 // ── Expose to window for inline HTML onclick attributes ────
 window.show               = show;
 window.selectInstrumentTab = selectInstrumentTab;
+window.loadInstrumentTabs = loadInstrumentTabs;
 window.switchMsTab        = switchMsTab;
 window.runGoal            = runGoal;
 window.runMarket          = runMarket;
@@ -94,12 +95,28 @@ async function refresh() {
 // Expose refresh so export.js can call it via window._ritaRefresh
 window._ritaRefresh = refresh;
 
-// ── Instrument tab selection ───────────────────────────────
-function _initInstrumentTabs() {
+// ── Instrument tabs — loaded dynamically from geography-overview ───────────────
+async function loadInstrumentTabs() {
+  const container = document.getElementById('inst-tabs-container');
+  if (!container) return;
   const saved = localStorage.getItem('ritaInstrument') || 'NIFTY';
-  document.querySelectorAll('.inst-tab').forEach(t =>
-    t.classList.toggle('active', t.id === 'itab-' + saved)
-  );
+  try {
+    const res = await fetch('/api/v1/experience/rita/geography-overview');
+    if (!res.ok) throw new Error(res.statusText);
+    const data = await res.json();
+    const instruments = (data.regions || []).flatMap(r => r.instruments || []);
+    if (!instruments.length) throw new Error('empty');
+    container.innerHTML = instruments.map(i =>
+      `<button class="inst-tab${i.id === saved ? ' active' : ''}" id="itab-${i.id}" onclick="selectInstrumentTab('${i.id}')">${i.name}</button>`
+    ).join('');
+  } catch (_) {
+    // Fallback to static tabs if API unavailable
+    container.innerHTML = [
+      ['NIFTY','NIFTY 50'],['BANKNIFTY','BANKNIFTY'],['ASML','ASML'],['NVIDIA','NVIDIA']
+    ].map(([id, label]) =>
+      `<button class="inst-tab${id === saved ? ' active' : ''}" id="itab-${id}" onclick="selectInstrumentTab('${id}')">${label}</button>`
+    ).join('');
+  }
 }
 
 async function selectInstrumentTab(id) {
@@ -137,4 +154,4 @@ async function loadActiveInstrument() {
 }
 
 // ── Init ───────────────────────────────────────────────────
-window.addEventListener('load', () => { _initInstrumentTabs(); refresh(); loadActiveInstrument(); loadMarketSignals(); });
+window.addEventListener('load', () => { loadInstrumentTabs(); refresh(); loadActiveInstrument(); loadMarketSignals(); });
