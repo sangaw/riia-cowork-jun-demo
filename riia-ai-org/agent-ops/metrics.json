@@ -1,36 +1,41 @@
 {
-  "generated_at": "2026-05-18T06:34:01",
-  "total_runs": 24,
+  "generated_at": "2026-05-18T07:28:59",
+  "total_runs": 25,
   "per_role": {
     "pm": {
-      "run_count": 16,
+      "run_count": 17,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 6090
+      "recent_first_pass_rate": 1.0,
+      "avg_token_cost": 5856
     },
     "architect": {
-      "run_count": 16,
-      "avg_adherence_score": 0.984,
-      "first_pass_rate": 0.938,
-      "avg_token_cost": 6700
+      "run_count": 17,
+      "avg_adherence_score": 0.985,
+      "first_pass_rate": 0.941,
+      "recent_first_pass_rate": 1.0,
+      "avg_token_cost": 6506
     },
     "engineer": {
-      "run_count": 16,
-      "avg_adherence_score": 0.886,
-      "first_pass_rate": 0.562,
-      "avg_token_cost": 22764
+      "run_count": 17,
+      "avg_adherence_score": 0.893,
+      "first_pass_rate": 0.588,
+      "recent_first_pass_rate": 1.0,
+      "avg_token_cost": 21731
     },
     "qa": {
-      "run_count": 16,
-      "avg_adherence_score": 0.984,
-      "first_pass_rate": 0.875,
-      "avg_token_cost": 9857
+      "run_count": 17,
+      "avg_adherence_score": 0.985,
+      "first_pass_rate": 0.882,
+      "recent_first_pass_rate": 1.0,
+      "avg_token_cost": 9442
     },
     "techwriter": {
-      "run_count": 16,
-      "avg_adherence_score": 0.917,
-      "first_pass_rate": 0.812,
-      "avg_token_cost": 6838
+      "run_count": 17,
+      "avg_adherence_score": 0.922,
+      "first_pass_rate": 0.824,
+      "recent_first_pass_rate": 1.0,
+      "avg_token_cost": 6548
     }
   },
   "per_app": {
@@ -47,8 +52,8 @@
       "fail": 1
     },
     "ops": {
-      "run_count": 7,
-      "pass": 4,
+      "run_count": 8,
+      "pass": 5,
       "pass_with_warnings": 3,
       "fail": 0
     },
@@ -171,6 +176,13 @@
       "grounding_score": 1.0,
       "checks_passed": 20,
       "checks_total": 20
+    },
+    {
+      "run_id": "20260518-0635",
+      "app": "ops",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
     }
   ],
   "failure_modes": {
@@ -227,7 +239,7 @@
     },
     "tool_permission_blocked": {
       "total": 1,
-      "recent_fires": 1,
+      "recent_fires": 0,
       "by_role": {
         "techwriter": 1
       }
@@ -261,7 +273,7 @@
       ],
       "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing; prevents 'claimed yes without doing it' pattern (5/7 historical FC-001 fires). FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports; prevents ../../ vs ../ error that caused 8-file hotfix in run 20260517-1430.",
       "before_first_pass_rate": 0.562,
-      "after_first_pass_rate": null
+      "after_first_pass_rate": 1.0
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
@@ -290,7 +302,7 @@
       ],
       "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing. FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports.",
       "before_first_pass_rate": 0.562,
-      "after_first_pass_rate": null
+      "after_first_pass_rate": 1.0
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
@@ -319,7 +331,7 @@
       ],
       "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing. FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports.",
       "before_first_pass_rate": 0.562,
-      "after_first_pass_rate": null
+      "after_first_pass_rate": 1.0
     },
     {
       "skill_file": ".claude/commands/enhance.md",
@@ -387,17 +399,18 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.667,
-    "first_attempt_success_rate": 0.667,
-    "partial_completion_rate": 0.292,
+    "tsr": 0.68,
+    "first_attempt_success_rate": 0.68,
+    "partial_completion_rate": 0.28,
     "abandonment_rate": 0.0
   },
   "quality": {
     "avg_accuracy_score": 2.86,
     "avg_relevance_score": 4.0,
     "avg_csat": 3.0,
+    "csat_count": 7,
     "planning_accuracy_rate": 0.714,
-    "grounding_pass_rate": 0.921
+    "grounding_pass_rate": 0.924
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 4.1,
@@ -440,7 +453,7 @@
   },
   "efficiency": {
     "avg_duration_minutes": 49,
-    "avg_tokens_per_run": 35741,
+    "avg_tokens_per_run": 34928,
     "avg_retry_count": 0.08,
     "avg_time_saved_hours": 11.0
   },
@@ -450,7 +463,7 @@
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.042,
+    "escalation_rate": 0.04,
     "avg_corrections_per_run": 0.08,
     "total_hitl_events": 2
   },
@@ -464,6 +477,7 @@
     "total_calls": 268,
     "unique_endpoints": 31,
     "overall_error_rate_pct": 9.7,
+    "error_rate_5xx_pct": 1.87,
     "top_5_by_calls": [
       {
         "path": "/progress",
@@ -506,6 +520,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T04:34:01.494125+00:00"
+    "generated_at": "2026-05-18T05:28:59.696836+00:00"
   }
 }

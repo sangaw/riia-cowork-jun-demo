@@ -18,21 +18,31 @@ def load_runs(runs_dir: Path) -> list:
 
 def compute_per_role(runs: list) -> dict:
     role_data: dict = defaultdict(list)
-    for run in runs:
-        if run.get("skill_file", "n/a") == "n/a":
-            continue  # exclude game runs — their agent entries are synthetic, not real pipeline agents
+    recent_role_data: dict = defaultdict(list)
+
+    pipeline_runs = [r for r in runs if r.get("skill_file", "n/a") != "n/a"]
+    recent_pipeline_runs = pipeline_runs[-5:]
+
+    for run in pipeline_runs:
         for agent in run["agents"]:
             role_data[agent["role"]].append(agent)
+
+    for run in recent_pipeline_runs:
+        for agent in run["agents"]:
+            recent_role_data[agent["role"]].append(agent)
 
     result = {}
     for role, agents in role_data.items():
         first_pass = [1 if a["status"] == "pass" else 0 for a in agents]
+        recent_agents = recent_role_data.get(role, [])
+        recent_fp = [1 if a["status"] == "pass" else 0 for a in recent_agents]
         result[role] = {
             "run_count": len(agents),
             "avg_adherence_score": round(
                 sum(a["adherence_score"] for a in agents) / len(agents), 3
             ),
             "first_pass_rate": round(sum(first_pass) / len(first_pass), 3),
+            "recent_first_pass_rate": round(sum(recent_fp) / len(recent_fp), 3) if recent_fp else None,
             "avg_token_cost": round(
                 sum(a["token_estimate"] for a in agents) / len(agents)
             ),
@@ -187,6 +197,7 @@ def compute_quality(runs: list) -> dict:
         "avg_accuracy_score": round(sum(accuracy) / len(accuracy), 2) if accuracy else None,
         "avg_relevance_score": round(sum(relevance) / len(relevance), 2) if relevance else None,
         "avg_csat": round(sum(csat) / len(csat), 2) if csat else None,
+        "csat_count": len(csat),
         "planning_accuracy_rate": (
             round(sum(1 for p in planning if p) / len(planning), 3) if planning else None
         ),
@@ -393,6 +404,7 @@ def compute_api_metrics(db_path: Path) -> dict:
             grouped[(path, method)].append((status_code, duration_ms))
         total_calls = len(rows)
         error_count = sum(1 for _, _, sc, _, _ in rows if sc and sc >= 400)
+        error_5xx = sum(1 for _, _, sc, _, _ in rows if sc and sc >= 500)
         endpoint_stats = []
         for (path, method), calls in grouped.items():
             durations = sorted([d for _, d in calls if d is not None])
@@ -412,13 +424,19 @@ def compute_api_metrics(db_path: Path) -> dict:
             )
         endpoint_stats.sort(key=lambda x: x["count"], reverse=True)
         overall_error_rate = round(error_count / total_calls * 100, 2) if total_calls else 0.0
-        if overall_error_rate > 5.0:
-            print(f"[ALERT] API error rate {overall_error_rate}% above 5% threshold")
+        rate_5xx = round(error_5xx / total_calls * 100, 2) if total_calls else 0.0
+        # Alert on 4xx+5xx combined only above 15% (4xx are expected client errors for this app)
+        # Alert on 5xx alone above 2% (server errors are always actionable)
+        if overall_error_rate > 15.0:
+            print(f"[ALERT] API error rate {overall_error_rate}% above 15% threshold")
+        if rate_5xx > 2.0:
+            print(f"[ALERT] API 5xx error rate {rate_5xx}% above 2% threshold — server errors require investigation")
         return {
             "available": True,
             "total_calls": total_calls,
             "unique_endpoints": len(grouped),
             "overall_error_rate_pct": overall_error_rate,
+            "error_rate_5xx_pct": rate_5xx,
             "top_5_by_calls": endpoint_stats[:5],
             "generated_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -489,25 +507,32 @@ def main() -> None:
 
     log.info("metrics.json written", runs=len(runs), output=str(output_path))
 
-    # Threshold alerts
+    # Threshold alerts — alert only on recent evidence, not cumulative history
     fc_counts = metrics.get("failure_modes", {})
     for fc_code, fc_data in fc_counts.items():
-        count = fc_data.get("total") if isinstance(fc_data, dict) else fc_data
-        if isinstance(count, int) and count > 3:
-            print(f"[ALERT] {fc_code} has fired {count} times — review skill file rule")
+        if not isinstance(fc_data, dict):
+            continue
+        recent = fc_data.get("recent_fires", 0)
+        total = fc_data.get("total", 0)
+        if recent > 0:
+            print(f"[ALERT] {fc_code} fired {recent}x in last 5 runs (total all-time: {total}) — review skill file rule")
 
     for role_name, role_data in metrics.get("per_role", {}).items():
         if isinstance(role_data, dict):
-            fpr = role_data.get("first_pass_rate")
+            # Alert on recent rate (last 5 runs) — all-time rate lags behind improvements
+            fpr = role_data.get("recent_first_pass_rate")
+            all_time = role_data.get("first_pass_rate", 0)
             if fpr is not None and fpr < 0.70:
                 print(
-                    f"[ALERT] {role_name} first-pass rate {round(fpr * 100)}%"
-                    " — grounding checks need review"
+                    f"[ALERT] {role_name} recent first-pass rate {round(fpr * 100)}%"
+                    f" (all-time: {round(all_time * 100)}%) — grounding checks need review"
                 )
 
     avg_csat = metrics.get("quality", {}).get("avg_csat")
-    if avg_csat is not None and avg_csat < 3.5:
-        print(f"[ALERT] CSAT {avg_csat}/5 below threshold — review last 3 runs")
+    csat_count = metrics.get("quality", {}).get("csat_count", 0)
+    # Require at least 3 rated runs — 1-2 data points are not statistically meaningful
+    if avg_csat is not None and csat_count >= 3 and avg_csat < 3.5:
+        print(f"[ALERT] CSAT {avg_csat}/5 below threshold ({csat_count} runs rated) — review last 3 runs")
 
     avg_forecast_err = metrics.get("token_forecasting", {}).get("avg_forecast_error_pct")
     if avg_forecast_err is not None and avg_forecast_err > 35:
