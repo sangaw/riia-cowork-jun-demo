@@ -84,7 +84,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `monitoring.js` | Prometheus metrics view | `loadMonitoring()` |
 | `observability.js` | Structured metrics summary | `loadObservability()` |
 | `test-results.js` | Test results grid | `loadTestResults()` |
-| `daily-ops.js` | Daily operations panel | `loadDailyOps()` |
+| `daily-ops.js` | Daily operations panel | `loadDailyOps()`, `loadInstruments()`, `toggleInstrument()`, `saveInstruments()`, `triggerSnapshot()`, `searchInstrument()`, `onboardInstrument()` |
 | `deploy.js` | Deployment management | `loadDeploy()` |
 | `chat.js` | Ops chat | `sendOpsChat()` |
 | **`users.js`** | **User management table** | `loadUsers()`, `createUser()`, `deleteUser()` |

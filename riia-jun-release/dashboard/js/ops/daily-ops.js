@@ -1,5 +1,5 @@
 // ── Daily Ops ─────────────────────────────────────────────────────────────────
-import { apiFetch, apiBase } from './api.js';
+import { apiFetch, apiBase, api } from './api.js';
 
 // ── Instrument availability ────────────────────────────────────────────────────
 
@@ -202,5 +202,71 @@ export async function triggerSnapshot(month) {
   } catch(e) {
     btn.textContent = 'Error';
     btn.disabled = false;
+  }
+}
+
+// ── Instrument Onboard ────────────────────────────────────────────────────────
+
+export async function searchInstrument() {
+  const q = document.getElementById('dops-search-input').value.trim();
+  if (q.length < 2) {
+    document.getElementById('dops-search-results').innerHTML = '<p class="text-muted">Enter at least 2 characters.</p>';
+    return;
+  }
+  document.getElementById('dops-search-results').innerHTML = '<p class="text-muted">Searching…</p>';
+  try {
+    const results = await api(`/api/v1/instrument/search?q=${encodeURIComponent(q)}`);
+    if (!results || results.length === 0) {
+      document.getElementById('dops-search-results').innerHTML = `<p class="text-muted">No results found for "${q}".</p>`;
+      return;
+    }
+    const rows = results.map(r => {
+      const displayName = r.name || r.ticker;
+      const canOnboard = r.name && r.exchange;
+      return `<div class="search-result-row d-flex justify-content-between align-items-center py-1 border-bottom">
+        <span><strong>${r.ticker}</strong> — ${displayName} (${r.exchange || '—'}, ${r.currency || '—'})</span>
+        <button class="btn btn-sm btn-outline-primary ms-2" ${canOnboard ? '' : 'disabled'}
+          onclick="onboardInstrument('${r.ticker}','${(r.name||'').replace(/'/g,"\\'")}','${r.exchange||''}','${r.currency||''}','${r.country||''}')">
+          Onboard
+        </button>
+      </div>`;
+    }).join('');
+    document.getElementById('dops-search-results').innerHTML = rows;
+  } catch (e) {
+    document.getElementById('dops-search-results').innerHTML = '<p class="text-danger">Search failed. Please try again.</p>';
+  }
+}
+
+export async function onboardInstrument(ticker, name, exchange, currency, countryCode) {
+  const statusEl = document.getElementById('dops-onboard-status');
+  statusEl.innerHTML = `<p class="text-muted">Onboarding <strong>${ticker}</strong>…</p>`;
+  try {
+    const resp = await fetch(apiBase() + '/api/v1/instrument/onboard', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ticker, name, exchange, currency, country_code: countryCode, lot_size: null })
+    });
+    if (resp.status === 409) {
+      statusEl.innerHTML = `<p class="text-warning"><strong>${ticker}</strong> is already onboarded.</p>`;
+      return;
+    }
+    if (resp.status === 502) {
+      statusEl.innerHTML = '<p class="text-danger">Yahoo Finance is unavailable — try again shortly.</p>';
+      return;
+    }
+    if (!resp.ok) {
+      let detail = 'Onboard failed.';
+      try { const j = await resp.json(); detail = j.detail || detail; } catch (_) {}
+      statusEl.innerHTML = `<p class="text-danger">${detail}</p>`;
+      return;
+    }
+    const data = await resp.json();
+    if (data.status === 'ok') {
+      statusEl.innerHTML = `<p class="text-success"><strong>${data.ticker}</strong> onboarded — ${data.rows_fetched} rows fetched, ${data.rows_seeded} seeded.</p>`;
+    } else {
+      statusEl.innerHTML = `<p class="text-warning">Onboard returned unexpected status: ${data.status}</p>`;
+    }
+  } catch (e) {
+    statusEl.innerHTML = '<p class="text-danger">Onboard request failed. Please try again.</p>';
   }
 }
