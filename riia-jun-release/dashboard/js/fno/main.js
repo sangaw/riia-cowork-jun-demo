@@ -1,5 +1,5 @@
 // ── FnO Dashboard — Entry Point ───────────────────────────────────────────────
-import { initApp, checkStatus, fetchPositions } from './api.js';
+import { initApp, checkStatus, fetchPositions } from './app-init.js';
 
 const SESSION_TRACE_ID = crypto.randomUUID();
 
