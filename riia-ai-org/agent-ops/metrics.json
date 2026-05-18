@@ -1,41 +1,41 @@
 {
-  "generated_at": "2026-05-18T12:50:17",
-  "total_runs": 29,
+  "generated_at": "2026-05-18T17:17:43",
+  "total_runs": 32,
   "per_role": {
     "pm": {
-      "run_count": 20,
+      "run_count": 22,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 8277
+      "avg_token_cost": 9525
     },
     "architect": {
-      "run_count": 20,
-      "avg_adherence_score": 0.988,
-      "first_pass_rate": 0.95,
+      "run_count": 22,
+      "avg_adherence_score": 0.989,
+      "first_pass_rate": 0.955,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 8830
+      "avg_token_cost": 10027
     },
     "engineer": {
-      "run_count": 20,
-      "avg_adherence_score": 0.909,
-      "first_pass_rate": 0.65,
-      "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 26721
+      "run_count": 22,
+      "avg_adherence_score": 0.908,
+      "first_pass_rate": 0.636,
+      "recent_first_pass_rate": 0.8,
+      "avg_token_cost": 29292
     },
     "qa": {
-      "run_count": 20,
-      "avg_adherence_score": 0.988,
-      "first_pass_rate": 0.9,
+      "run_count": 22,
+      "avg_adherence_score": 0.989,
+      "first_pass_rate": 0.909,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 17776
+      "avg_token_cost": 22069
     },
     "techwriter": {
-      "run_count": 20,
-      "avg_adherence_score": 0.934,
-      "first_pass_rate": 0.85,
+      "run_count": 22,
+      "avg_adherence_score": 0.94,
+      "first_pass_rate": 0.864,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 11266
+      "avg_token_cost": 13696
     }
   },
   "per_app": {
@@ -46,8 +46,8 @@
       "fail": 0
     },
     "invest-game": {
-      "run_count": 9,
-      "pass": 7,
+      "run_count": 10,
+      "pass": 8,
       "pass_with_warnings": 1,
       "fail": 1
     },
@@ -58,12 +58,18 @@
       "fail": 0
     },
     "ds": {
+      "run_count": 2,
+      "pass": 1,
+      "pass_with_warnings": 1,
+      "fail": 0
+    },
+    "backend + ops + rita": {
       "run_count": 1,
       "pass": 1,
       "pass_with_warnings": 0,
       "fail": 0
     },
-    "backend + ops + rita": {
+    "fno": {
       "run_count": 1,
       "pass": 1,
       "pass_with_warnings": 0,
@@ -210,6 +216,20 @@
       "grounding_score": 1.0,
       "checks_passed": 20,
       "checks_total": 20
+    },
+    {
+      "run_id": "20260518-1253",
+      "app": "fno",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
+    },
+    {
+      "run_id": "20260518-1608",
+      "app": "ds",
+      "grounding_score": 0.95,
+      "checks_passed": 19,
+      "checks_total": 20
     }
   ],
   "failure_modes": {
@@ -269,6 +289,20 @@
       "recent_fires": 0,
       "by_role": {
         "techwriter": 1
+      }
+    },
+    "FC-TIER-12-system-api-calls": {
+      "total": 1,
+      "recent_fires": 1,
+      "by_role": {
+        "engineer": 1
+      }
+    },
+    "FC-API-SIG-post-signature": {
+      "total": 1,
+      "recent_fires": 1,
+      "by_role": {
+        "engineer": 1
       }
     }
   },
@@ -365,9 +399,23 @@
       "improvement_applied": "CSAT v3: (1) QA file-path gate added to Step 5 prompt \u2014 QA must read actual schema/handler files to verify exact class names and patch paths before writing tests; prevents wrong-patch-target failures (root cause: 20260518-0545 acc=2). (2) Continuation-run detection added to PM Step 2 prompt \u2014 PM must find and read prior run brief when request mentions Phase N/Run B/continuation; documents prior deliverables in Dependencies field; prevents planning scope gaps (root cause: 20260518-0635 planning=False). Previous: CSAT v2 cross-system scope check (still active, not replaced).",
       "before_first_pass_rate": 0.667,
       "after_first_pass_rate": null
+    },
+    {
+      "skill_file": "project-office/skills/skill-add-ds-feature.md",
+      "improvement_applied": "FC-TIER v1: system-tier API compliance self-verify grep gate added to Guardrails table and DoD \u2014 Engineer must run `grep -rn api/v1/training-history|backtest-daily|risk-timeline dashboard/js/ds/` before git add; output must be empty. Root cause: 20260518-1608 had 12 system-tier API calls across 9 files caught by QA. FC-API-SIG v1: api() POST positional signature documented in Guardrails + DoD gate \u2014 Engineer must verify no `api(path, {` patterns remain; correct form is api(path, 'POST', body). Root cause: 20260518-1608 had 4 wrong-signature POST calls in pipeline.js + scenarios.js.",
+      "before_first_pass_rate": null,
+      "after_first_pass_rate": null
     }
   ],
   "game_sessions": [
+    {
+      "run_id": "20260518-1310",
+      "request": "Invest game: ASML over 10 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.7,
+      "day_count": 10,
+      "flagged_count": 0
+    },
     {
       "run_id": "20260511-1317",
       "request": "Invest game: ASML over 10 days",
@@ -426,9 +474,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.724,
-    "first_attempt_success_rate": 0.724,
-    "partial_completion_rate": 0.241,
+    "tsr": 0.719,
+    "first_attempt_success_rate": 0.719,
+    "partial_completion_rate": 0.25,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -439,10 +487,10 @@
     "csat_count": 9,
     "planning_accuracy_rate": 0.667,
     "recent_planning_accuracy_rate": 0.667,
-    "grounding_pass_rate": 0.93
+    "grounding_pass_rate": 0.936
   },
   "token_forecasting": {
-    "avg_forecast_error_pct": 1.8,
+    "avg_forecast_error_pct": 22.7,
     "by_complexity": {
       "small": {
         "avg_actual": 8673,
@@ -469,31 +517,31 @@
         "modifier": 0.6
       },
       "fno": {
-        "run_count": 0,
-        "avg_tokens": null,
+        "run_count": 1,
+        "avg_tokens": 69378,
         "modifier": 0.8
       },
       "invest-game": {
-        "run_count": 9,
-        "avg_tokens": 21800,
+        "run_count": 10,
+        "avg_tokens": 19920,
         "modifier": 1.1
       }
     }
   },
   "efficiency": {
-    "avg_duration_minutes": 47,
-    "avg_tokens_per_run": 57010,
-    "avg_retry_count": 0.07,
+    "avg_duration_minutes": 46,
+    "avg_tokens_per_run": 64242,
+    "avg_retry_count": 0.06,
     "avg_time_saved_hours": 9.3
   },
   "reliability": {
-    "error_recovery_rate": 0.765,
-    "graceful_degradation_rate": 0.875,
+    "error_recovery_rate": 0.789,
+    "graceful_degradation_rate": 0.889,
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.034,
-    "avg_corrections_per_run": 0.07,
+    "escalation_rate": 0.031,
+    "avg_corrections_per_run": 0.06,
     "total_hitl_events": 2
   },
   "agentic": {
@@ -503,52 +551,52 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 492,
-    "unique_endpoints": 33,
-    "overall_error_rate_pct": 5.69,
-    "error_rate_5xx_pct": 1.02,
+    "total_calls": 644,
+    "unique_endpoints": 50,
+    "overall_error_rate_pct": 4.97,
+    "error_rate_5xx_pct": 0.78,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 172,
+        "count": 201,
         "p50_ms": 16.0,
-        "p95_ms": 156.0,
+        "p95_ms": 141.0,
         "error_count": 0
       },
       {
         "path": "/api/v1/market-signals",
         "method": "GET",
-        "count": 33,
+        "count": 46,
         "p50_ms": 203.0,
-        "p95_ms": 610.0,
-        "error_count": 0
-      },
-      {
-        "path": "/api/v1/experience/rita/geography-overview",
-        "method": "GET",
-        "count": 33,
-        "p50_ms": 125.0,
-        "p95_ms": 468.0,
+        "p95_ms": 625.0,
         "error_count": 0
       },
       {
         "path": "/api/v1/instrument/active",
         "method": "GET",
-        "count": 32,
+        "count": 42,
         "p50_ms": 16.0,
-        "p95_ms": 110.0,
+        "p95_ms": 109.0,
         "error_count": 0
       },
       {
-        "path": "/api/v1/instrument/onboard",
+        "path": "/api/v1/experience/rita/geography-overview",
+        "method": "GET",
+        "count": 42,
+        "p50_ms": 125.0,
+        "p95_ms": 359.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/v1/commentary",
         "method": "POST",
-        "count": 31,
-        "p50_ms": 0.0,
-        "p95_ms": 16.0,
-        "error_count": 12
+        "count": 36,
+        "p50_ms": 2422.0,
+        "p95_ms": 14891.0,
+        "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T10:50:17.155206+00:00"
+    "generated_at": "2026-05-18T15:17:43.081477+00:00"
   }
 }
