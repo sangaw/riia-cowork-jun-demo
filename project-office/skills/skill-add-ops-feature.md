@@ -139,6 +139,12 @@ For every `import { name1, name2 } from './module.js'` line in the new JS file:
 
 If any name is missing: find the correct exported name in the file, or add the export — report the resolution. Do not silently skip a check.
 
+**Path depth verification for cross-directory imports:**
+For any import with a `..` path (e.g., `import { foo } from '../shared/api-cache.js'`), state the resolved absolute path explicitly before marking the import valid:
+- From `dashboard/js/ops/`: `'../shared/'` resolves to `dashboard/js/shared/` ✓
+- From `dashboard/js/ops/`: `'../../shared/'` resolves to `dashboard/shared/` — this directory does not exist
+Report: "api-cache.js is at dashboard/js/shared/ → import `'../shared/api-cache.js'` ✓" — one line per cross-directory import.
+
 ### Step 5 — Register Section Loader in main.js
 In `dashboard/js/ops/main.js`:
 ```js
@@ -158,7 +164,9 @@ File: `project-office/specs/Spec_RITA_App.md`
 - Add the new endpoint to Section 3, Experience Tier (Ops row)
 - Add the new JS module to `Spec_JS_Code.md` Section 4 (Ops module structure)
 
-Open each spec file. Read the relevant table. Add the new row. **Report the exact line you added to each file** (e.g. `| GET | /api/experience/ops/my-feature | MyOpsFeatureResponse |`). Only after reporting the exact lines may you proceed to commit.
+Open each spec file. Read the relevant table. Add the new row. **Report the exact line you added to each file** (e.g. `| GET | /api/experience/ops/my-feature | MyOpsFeatureResponse |`).
+
+Then run: `grep -n 'YOUR_ENDPOINT_PATH' project-office/specs/Spec_RITA_App.md` (substitute the actual endpoint path from your API contract) and include the grep output line in your report. If grep returns no match, you have not saved the edit — do not proceed to commit until grep confirms the row exists.
 
 ### Step 7 — TechWriter: Confluence + Human Score Prompt
 
@@ -223,6 +231,10 @@ A missing named export is a **static binding error** — the browser throws a
 `SyntaxError` at parse time, which cascades up the import chain and kills the entire
 app, not just the new section. This check must be done explicitly; it is not caught
 by the FC-004 contract check or by ruff.
+
+Also verify path depth for cross-directory imports: from `dashboard/js/ops/`, shared
+modules are at `'../shared/api-cache.js'` (one `..` up to `js/`). Using `'../../'`
+resolves to `dashboard/` which contains no `shared/` subdirectory.
 
 **FC-MERGE gate — no leftover conflict markers (run before `git add`):**
 Run: `grep -rn "^<<<<<<\|^=======\|^>>>>>>>" dashboard/js/`

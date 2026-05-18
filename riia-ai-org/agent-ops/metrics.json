@@ -1,36 +1,36 @@
 {
-  "generated_at": "2026-05-17T21:14:42",
-  "total_runs": 23,
+  "generated_at": "2026-05-18T06:14:41",
+  "total_runs": 24,
   "per_role": {
     "pm": {
-      "run_count": 15,
+      "run_count": 16,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
-      "avg_token_cost": 6356
+      "avg_token_cost": 6090
     },
     "architect": {
-      "run_count": 15,
-      "avg_adherence_score": 0.983,
-      "first_pass_rate": 0.933,
-      "avg_token_cost": 6920
+      "run_count": 16,
+      "avg_adherence_score": 0.984,
+      "first_pass_rate": 0.938,
+      "avg_token_cost": 6700
     },
     "engineer": {
-      "run_count": 15,
-      "avg_adherence_score": 0.878,
-      "first_pass_rate": 0.533,
-      "avg_token_cost": 23935
+      "run_count": 16,
+      "avg_adherence_score": 0.886,
+      "first_pass_rate": 0.562,
+      "avg_token_cost": 22764
     },
     "qa": {
-      "run_count": 15,
-      "avg_adherence_score": 0.983,
-      "first_pass_rate": 0.867,
-      "avg_token_cost": 10327
+      "run_count": 16,
+      "avg_adherence_score": 0.984,
+      "first_pass_rate": 0.875,
+      "avg_token_cost": 9857
     },
     "techwriter": {
-      "run_count": 15,
-      "avg_adherence_score": 0.911,
-      "first_pass_rate": 0.8,
-      "avg_token_cost": 7168
+      "run_count": 16,
+      "avg_adherence_score": 0.917,
+      "first_pass_rate": 0.812,
+      "avg_token_cost": 6838
     }
   },
   "per_app": {
@@ -47,8 +47,8 @@
       "fail": 1
     },
     "ops": {
-      "run_count": 6,
-      "pass": 3,
+      "run_count": 7,
+      "pass": 4,
       "pass_with_warnings": 3,
       "fail": 0
     },
@@ -164,6 +164,13 @@
       "grounding_score": 1.0,
       "checks_passed": 20,
       "checks_total": 20
+    },
+    {
+      "run_id": "20260518-0545",
+      "app": "ops",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
+      "checks_total": 20
     }
   ],
   "failure_modes": {
@@ -205,7 +212,7 @@
     },
     "FC-PARTIAL-IMPL": {
       "total": 2,
-      "recent_fires": 1,
+      "recent_fires": 0,
       "by_role": {
         "engineer": 2
       }
@@ -252,8 +259,8 @@
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
         }
       ],
-      "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 5.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
-      "before_first_pass_rate": 0.533,
+      "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing; prevents 'claimed yes without doing it' pattern (5/7 historical FC-001 fires). FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports; prevents ../../ vs ../ error that caused 8-file hotfix in run 20260517-1430.",
+      "before_first_pass_rate": 0.562,
       "after_first_pass_rate": null
     },
     {
@@ -281,8 +288,8 @@
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
         }
       ],
-      "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 5.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
-      "before_first_pass_rate": 0.533,
+      "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing. FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports.",
+      "before_first_pass_rate": 0.562,
       "after_first_pass_rate": null
     },
     {
@@ -310,8 +317,8 @@
           "message": "fix(agent-ops): improve skill rules for FC-001, FC-PARTIAL-IMPL, CSAT"
         }
       ],
-      "improvement_applied": "FC-IMP v2: named-import check promoted from DoD checklist to inline build step 4.5 \u2014 Engineer must verify each import before proceeding to main.js registration; do-not-proceed language added. CSAT v1: smoke-test gate added to TechWriter step \u2014 user confirms page loads before scoring prompt is emitted; prevents SyntaxError runtime failures from inflating inaccuracy scores.",
-      "before_first_pass_rate": 0.533,
+      "improvement_applied": "FC-001 v4: self-verify grep added to spec-update step \u2014 Engineer must run grep and include output before committing. FC-IMP v3: path-depth verification added to both inline check and DoD gate \u2014 Engineer must state resolved absolute path for cross-directory imports.",
+      "before_first_pass_rate": 0.562,
       "after_first_pass_rate": null
     },
     {
@@ -380,9 +387,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.652,
-    "first_attempt_success_rate": 0.652,
-    "partial_completion_rate": 0.304,
+    "tsr": 0.667,
+    "first_attempt_success_rate": 0.667,
+    "partial_completion_rate": 0.292,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -390,7 +397,7 @@
     "avg_relevance_score": 4.0,
     "avg_csat": 3.0,
     "planning_accuracy_rate": 0.667,
-    "grounding_pass_rate": 0.918
+    "grounding_pass_rate": 0.921
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 4.1,
@@ -432,9 +439,9 @@
     }
   },
   "efficiency": {
-    "avg_duration_minutes": 50,
-    "avg_tokens_per_run": 36626,
-    "avg_retry_count": 0.09,
+    "avg_duration_minutes": 49,
+    "avg_tokens_per_run": 35741,
+    "avg_retry_count": 0.08,
     "avg_time_saved_hours": 11.5
   },
   "reliability": {
@@ -443,8 +450,8 @@
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.043,
-    "avg_corrections_per_run": 0.09,
+    "escalation_rate": 0.042,
+    "avg_corrections_per_run": 0.08,
     "total_hitl_events": 2
   },
   "agentic": {
@@ -454,51 +461,51 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 130,
-    "unique_endpoints": 28,
-    "overall_error_rate_pct": 4.62,
+    "total_calls": 268,
+    "unique_endpoints": 31,
+    "overall_error_rate_pct": 9.7,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 45,
+        "count": 107,
         "p50_ms": 16.0,
         "p95_ms": 78.0,
         "error_count": 0
+      },
+      {
+        "path": "/api/v1/instrument/onboard",
+        "method": "POST",
+        "count": 30,
+        "p50_ms": 0.0,
+        "p95_ms": 16.0,
+        "error_count": 12
+      },
+      {
+        "path": "/api/v1/instrument/search",
+        "method": "GET",
+        "count": 25,
+        "p50_ms": 16.0,
+        "p95_ms": 1250.0,
+        "error_count": 8
       },
       {
         "path": "/api/v1/instrument/active",
         "method": "GET",
-        "count": 11,
+        "count": 13,
         "p50_ms": 16.0,
-        "p95_ms": 16.0,
-        "error_count": 0
-      },
-      {
-        "path": "/api/v1/instrument/select",
-        "method": "POST",
-        "count": 8,
-        "p50_ms": 31.0,
-        "p95_ms": 78.0,
+        "p95_ms": 62.0,
         "error_count": 0
       },
       {
         "path": "/api/experience/ops/step-log",
         "method": "GET",
-        "count": 8,
+        "count": 10,
         "p50_ms": 16.0,
         "p95_ms": 32.0,
         "error_count": 0
-      },
-      {
-        "path": "/api/experience/ops/api-metrics",
-        "method": "GET",
-        "count": 7,
-        "p50_ms": 0.0,
-        "p95_ms": 31.0,
-        "error_count": 0
       }
     ],
-    "generated_at": "2026-05-17T19:14:42.356172+00:00"
+    "generated_at": "2026-05-18T04:14:41.692933+00:00"
   }
 }

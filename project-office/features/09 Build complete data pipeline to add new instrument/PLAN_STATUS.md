@@ -76,3 +76,15 @@ None.
 - Root `PLAN_STATUS.md` should have one-line pointer to this file
 - Estimated /enhance runs: 2 (Run A backend-only, Run B frontend + experience + specs)
 - Feature number: 09 (folder: `project-office/features/09 Build complete data pipeline to add new instrument/`)
+
+
+  Done today:
+  - Feature 09 Run A fully implemented and merged (872aeaf) — all R1–R7 complete
+  - Migration fixed and applied (b35a944) — instruments.currency column live
+  - Both API endpoints live on master
+
+  Tomorrow — resume at:
+  1. QA agent (tests/unit/test_instrument_onboard.py) — mock yfinance, test 400/409/502 edge cases
+  2. TechWriter agent — Confluence + spec confirmation
+  3. Write run log JSON
+  4. /enhance ops Run B — daily-ops.js + ops.html UI (search box, results list, confirm form)
