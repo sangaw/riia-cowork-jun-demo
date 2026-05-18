@@ -10,6 +10,7 @@ class InstrumentCreate(BaseModel):
     name:          str = Field(..., max_length=100)
     exchange:      str = Field(..., max_length=20)
     country_code:  str = Field(..., max_length=5)
+    currency:      Optional[str] = Field(None, max_length=10)
     lot_size:      Optional[int] = Field(None, ge=1)
     is_available:  bool = False
 
