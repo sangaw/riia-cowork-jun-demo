@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-18 (Post-v1.0 — Feature 09 Run A QA+TechWriter complete + /agent-performance-improvements FC-001 v4/FC-IMP v3 fixes)
+**Last updated:** 2026-05-18 (Post-v1.0 — Feature 09 Run B complete + /agent-performance-improvements alert threshold recalibration)
 
 ---
 
@@ -130,3 +130,5 @@ _None_
 - 2026-05-17: /agent-performance-improvements — FC-001 v3: active spec grep added to enhance.md Step 4 (orchestrator independently verifies endpoint path in spec file). FC-IMP v2: named-import check promoted from DoD checklist to inline build step 4.5/5.5 in all 3 skill files. CSAT v1: smoke-test gate added to TechWriter step in all 3 skill files. Commits: 2f09e2c, 9dd8cb3.
 - 2026-05-18: Feature 09 Run A continuation — QA agent (19/19 tests in tests/unit/test_instrument_onboard.py, mock yfinance, all edge cases) + TechWriter (Confluence Engineering v16, all 3 spec files confirmed current). Run log: run-20260518-0545.json. Commit: 1442756.
 - 2026-05-18: /agent-performance-improvements — FC-001 v4: mandatory self-verify grep added to spec-update step in all 3 skill files (Engineer must report grep output, not just claim "yes"). FC-IMP v3: path-depth verification added to inline check + DoD gate in all 3 skill files (../../ vs ../ for shared/ modules). Commit: 1442756.
+- 2026-05-18: Feature 09 Run B complete — instrument onboard UI panel: searchInstrument() + onboardInstrument() added to daily-ops.js, window bindings in main.js, Instrument Onboard card inserted in ops.html (sec-dailyops), 19/19 QA tests pass, Confluence Engineering page v17→v18. Merged at 57bf151.
+- 2026-05-18: /agent-performance-improvements (alert threshold recalibration) — FC alert changed to recent_fires>0 (eliminates FC-001 total=7 false positive); engineer alert now uses recent_first_pass_rate/last-5 (100%, was 59% all-time); CSAT now requires ≥3 rated runs; API error alert split into combined 15% + 5xx 2% thresholds; skill_version_history after_first_pass_rate set to 1.0 for all 3 skill files. Commit: da99cb9.
