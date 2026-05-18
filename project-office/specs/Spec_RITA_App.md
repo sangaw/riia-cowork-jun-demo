@@ -109,6 +109,12 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/experience/ops/token-forecast` | Pre-run token budget estimate — query params: `feature_type`, `files_to_change`, `new_endpoint_or_model`, `frontend_scope`, `integration_type`. Returns `TokenForecastResponse` (complexity, per_role, total_forecast, confidence, basis_runs). Auth required. |
 | `GET` | `/api/experience/ops/api-metrics` | Per-endpoint call count, p50/p95 latency, error rate from api_call_log. Query params: `limit` (default 200), `method`, `path_prefix`. Returns `ApiMetricsResponse(items: list[ApiMetricsRow])`. No auth. |
 
+### Instrument Workflow Endpoints (`/api/v1/instrument` via `workflow/instrument_onboard.py`)
+
+| Method | Path | Query params | Request body | Response | Description |
+|---|---|---|---|---|---|
+| `GET` | `/api/v1/instrument/search` | `q: string` | — | `list[InstrumentSearchResult]` | Instrument ticker search via yfinance |
+| `POST` | `/api/v1/instrument/onboard` | — | `ticker, name, exchange, currency, country_code, lot_size` | `InstrumentOnboardResponse` | Full onboarding pipeline |
 
 ### RITA Experience Endpoints (`/api/experience/rita` and `/api/v1` via `experience/rita.py`)
 

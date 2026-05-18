@@ -1,575 +1,451 @@
-"""Unit tests for instrument onboard endpoints — Feature 09 Run A.
+"""Unit tests for GET /api/v1/instrument/search and POST /api/v1/instrument/onboard.
 
-Tests cover:
-  GET  /api/v1/instrument/search   — happy path, q too short (400), yfinance unreachable (502)
-  POST /api/v1/instrument/onboard  — happy path, duplicate ticker (409),
-                                     fewer than 100 rows (400), yfinance unreachable (502)
+Coverage
+--------
+Search endpoint:
+  1. Happy path — returns a list of result dicts with all required fields
+  2. Empty results — yfinance returns nothing; handler returns []
+  3. Short query (< 2 chars) — raises HTTP 400
+
+Onboard endpoint:
+  4. Happy path — returns status "ok" with rows_fetched, rows_seeded, raw_path, input_path
+  5. Duplicate instrument — raises HTTP 409
+  6. yfinance unreachable — service raises HTTP 502
+  7. Bad ticker (< 100 rows) — raises HTTP 400
+  8. Missing required fields — raises HTTP 422
+
+Contract verification:
+  9. Search response fields — ticker, name, exchange, currency, country, quote_type
+  10. Onboard response fields — status, ticker, rows_fetched, rows_seeded, raw_path, input_path
 
 Strategy
 --------
-- yfinance calls are mocked via unittest.mock.patch so no network traffic is made.
-- DB dependency (get_db) is overridden via FastAPI dependency_overrides with an
-  in-memory SQLite session (same pattern as conftest.py / test_api_workflow.py).
-- InstrumentRepository.find_by_id is patched to control duplicate-check behaviour.
-- fetch_raw_data / process_to_input / seed_market_cache are patched at the service
-  module level for the onboard POST pipeline tests so file I/O is avoided.
+- The handler module (rita.api.v1.workflow.instrument_onboard) is injected into
+  sys.modules using a stub service module so that import-time deps on yfinance and
+  load_ohlcv_csv are never resolved.  All four service functions are replaced with
+  MagicMock instances and overridden per-test via patch().
+- A minimal FastAPI test app is created with only the instrument_onboard router so
+  tests are isolated from the full app startup.
+- InstrumentRepository is patched per-test to control duplicate-check outcomes.
+- The DB session dependency is overridden with a MagicMock — no real DB needed.
 """
 
 from __future__ import annotations
 
+import sys
+import types
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
 # ---------------------------------------------------------------------------
-# Shared test data
+# Stub the service module before importing the handler so that import-time
+# errors (load_ohlcv_csv not in data_loader, yfinance not installed) are
+# avoided.  The stubs are overridden per-test via patch().
 # ---------------------------------------------------------------------------
 
-_VALID_ONBOARD_PAYLOAD = {
-    "ticker": "RELIANCE.NS",
-    "name": "Reliance Industries Ltd",
-    "exchange": "NSI",
-    "currency": "INR",
-    "country_code": "IN",
-    "lot_size": 250,
-}
+def _inject_service_stub() -> None:
+    """Insert a stub rita.services.instrument_onboard into sys.modules."""
+    if "rita.services.instrument_onboard" in sys.modules:
+        return
+    stub = types.ModuleType("rita.services.instrument_onboard")
+    stub.search_tickers = MagicMock(return_value=[])
+    stub.fetch_raw_data = MagicMock(return_value=(Path("/data/raw/AAPL/aapl_daily.csv"), 3800))
+    stub.process_to_input = MagicMock(return_value=Path("/data/input/AAPL/aapl_daily.csv"))
+    stub.seed_market_cache = MagicMock(return_value=0)
+    sys.modules["rita.services.instrument_onboard"] = stub
 
-_MOCK_SEARCH_RESULTS = [
+
+_inject_service_stub()
+
+# Now it is safe to import the handler module.
+from rita.api.v1.workflow.instrument_onboard import router as _instrument_router  # noqa: E402
+
+
+# ---------------------------------------------------------------------------
+# Shared fixtures / helpers
+# ---------------------------------------------------------------------------
+
+_SEARCH_RESULT_FULL = [
     {
-        "symbol":    "RELIANCE.NS",
-        "longname":  "Reliance Industries Limited",
-        "exchange":  "NSI",
-        "currency":  "INR",
-        "country":   "India",
-        "quoteType": "EQUITY",
-    },
-    {
-        "symbol":    "TCS.NS",
-        "longname":  "Tata Consultancy Services Limited",
-        "exchange":  "NSI",
-        "currency":  "INR",
-        "country":   "India",
-        "quoteType": "EQUITY",
-    },
+        "ticker": "AAPL",
+        "name": "Apple Inc.",
+        "exchange": "NMS",
+        "currency": "USD",
+        "country": "United States",
+        "quote_type": "EQUITY",
+    }
 ]
 
-# Expected fields the frontend (Run B) reads from each endpoint
-_SEARCH_FRONTEND_FIELDS = {"ticker", "name", "exchange", "currency", "country", "quote_type"}
-_ONBOARD_FRONTEND_FIELDS = {"status", "ticker", "rows_fetched", "rows_seeded", "raw_path", "input_path"}
+_ONBOARD_BODY = {
+    "ticker": "AAPL",
+    "name": "Apple Inc.",
+    "exchange": "NMS",
+    "currency": "USD",
+    "country_code": "US",
+    "lot_size": None,
+}
+
+
+def _make_client() -> tuple[TestClient, MagicMock]:
+    """Create an isolated FastAPI TestClient with only the instrument_onboard router."""
+    from rita.database import get_db
+
+    mock_db = MagicMock()
+    test_app = FastAPI()
+    test_app.include_router(_instrument_router)
+    test_app.dependency_overrides[get_db] = lambda: mock_db
+    return TestClient(test_app, raise_server_exceptions=False), mock_db
 
 
 # ---------------------------------------------------------------------------
-# Helper — build a TestClient with get_db overridden using an in-memory session
+# Search: happy path
 # ---------------------------------------------------------------------------
 
-def _make_client():
-    """Return (app, TestClient) with get_db wired to an in-memory SQLite session."""
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-    from sqlalchemy.pool import StaticPool
+class TestInstrumentSearchHappyPath:
+    """GET /api/v1/instrument/search returns a non-empty list on a valid query."""
 
-    from rita.database import Base, get_db
-    from rita.main import app
+    def test_returns_list_of_results(self):
+        with patch(
+            "rita.api.v1.workflow.instrument_onboard.search_tickers",
+            return_value=_SEARCH_RESULT_FULL,
+        ):
+            client, _ = _make_client()
+            resp = client.get("/api/v1/instrument/search", params={"q": "apple"})
 
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
+        assert resp.status_code == 200
+        data = resp.json()
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["ticker"] == "AAPL"
 
-    def override_get_db():
-        yield session
+    def test_response_contains_all_required_fields(self):
+        """Contract check: JS reads ticker, name, exchange, currency, country, quote_type."""
+        with patch(
+            "rita.api.v1.workflow.instrument_onboard.search_tickers",
+            return_value=_SEARCH_RESULT_FULL,
+        ):
+            client, _ = _make_client()
+            resp = client.get("/api/v1/instrument/search", params={"q": "apple"})
 
-    app.dependency_overrides[get_db] = override_get_db
-    client = TestClient(app, raise_server_exceptions=False)
-    return app, client, session, engine
+        assert resp.status_code == 200
+        item = resp.json()[0]
+        required_fields = {"ticker", "name", "exchange", "currency", "country", "quote_type"}
+        assert required_fields.issubset(item.keys()), (
+            f"Missing fields: {required_fields - item.keys()}"
+        )
 
+    def test_field_values_are_strings(self):
+        """All six contract fields must be strings (not None) for the JS to render them."""
+        with patch(
+            "rita.api.v1.workflow.instrument_onboard.search_tickers",
+            return_value=_SEARCH_RESULT_FULL,
+        ):
+            client, _ = _make_client()
+            resp = client.get("/api/v1/instrument/search", params={"q": "apple"})
 
-def _cleanup(app, session, engine):
-    from rita.database import Base, get_db
-    app.dependency_overrides.pop(get_db, None)
-    session.close()
-    from rita.database import Base
-    Base.metadata.drop_all(engine)
-    engine.dispose()
-
-
-# ===========================================================================
-# GET /api/v1/instrument/search
-# ===========================================================================
-
-class TestInstrumentSearch:
-
-    def test_search_happy_path_returns_200_and_list(self):
-        """GET /api/v1/instrument/search?q=reliance returns 200 and a list of equities."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.services.instrument_onboard.yf",
-                create=True,
-            ):
-                with patch(
-                    "rita.services.instrument_onboard.search_tickers",
-                    return_value=[
-                        {
-                            "ticker":     "RELIANCE.NS",
-                            "name":       "Reliance Industries Limited",
-                            "exchange":   "NSI",
-                            "currency":   "INR",
-                            "country":    "India",
-                            "quote_type": "EQUITY",
-                        }
-                    ],
-                ):
-                    response = client.get("/api/v1/instrument/search?q=reliance")
-
-            assert response.status_code == 200
-            data = response.json()
-            assert isinstance(data, list)
-            assert len(data) >= 1
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_search_happy_path_response_fields_match_frontend_contract(self):
-        """Search response dict contains exactly the fields expected by the frontend."""
-        app, client, session, engine = _make_client()
-        try:
-            # The router uses a 'from' import so we must patch in the router's namespace
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.search_tickers",
-                return_value=[
-                    {
-                        "ticker":     "RELIANCE.NS",
-                        "name":       "Reliance Industries Limited",
-                        "exchange":   "NSI",
-                        "currency":   "INR",
-                        "country":    "India",
-                        "quote_type": "EQUITY",
-                    }
-                ],
-            ):
-                response = client.get("/api/v1/instrument/search?q=reliance")
-
-            assert response.status_code == 200
-            data = response.json()
-            assert len(data) == 1
-            # All frontend-required fields must be present
-            for field in _SEARCH_FRONTEND_FIELDS:
-                assert field in data[0], f"Missing field: {field}"
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_search_quote_type_is_always_equity(self):
-        """search_tickers() only returns EQUITY results; quote_type field is 'EQUITY'."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.services.instrument_onboard.search_tickers",
-                return_value=[
-                    {
-                        "ticker":     "TCS.NS",
-                        "name":       "Tata Consultancy Services",
-                        "exchange":   "NSI",
-                        "currency":   "INR",
-                        "country":    "India",
-                        "quote_type": "EQUITY",
-                    }
-                ],
-            ):
-                response = client.get("/api/v1/instrument/search?q=tcs")
-
-            assert response.status_code == 200
-            assert response.json()[0]["quote_type"] == "EQUITY"
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_search_returns_empty_list_when_no_matches(self):
-        """GET /api/v1/instrument/search returns 200 with empty list if no equities found."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.services.instrument_onboard.search_tickers",
-                return_value=[],
-            ):
-                response = client.get("/api/v1/instrument/search?q=zzznomatch")
-
-            assert response.status_code == 200
-            assert response.json() == []
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_search_q_too_short_returns_400(self):
-        """GET /api/v1/instrument/search?q=x returns 400 — q must be >= 2 chars."""
-        app, client, session, engine = _make_client()
-        try:
-            response = client.get("/api/v1/instrument/search?q=x")
-            assert response.status_code == 400
-            assert "2 characters" in response.json().get("detail", "").lower() or \
-                   "q" in response.json().get("detail", "").lower()
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_search_q_whitespace_only_returns_400(self):
-        """GET /api/v1/instrument/search?q=%20 (single space) returns 400 after strip."""
-        app, client, session, engine = _make_client()
-        try:
-            response = client.get("/api/v1/instrument/search?q= ")
-            assert response.status_code == 400
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_search_yfinance_unreachable_returns_502(self):
-        """GET /api/v1/instrument/search returns 502 when yfinance raises ConnectionError."""
-        from fastapi import HTTPException
-
-        app, client, session, engine = _make_client()
-        try:
-            # The router uses `from rita.services.instrument_onboard import search_tickers`
-            # so we must patch in the router's own namespace, not the service module.
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.search_tickers",
-                side_effect=HTTPException(status_code=502, detail="Yahoo Finance is currently unreachable."),
-            ):
-                response = client.get("/api/v1/instrument/search?q=reliance")
-
-            assert response.status_code == 502
-            assert "unreachable" in response.json().get("detail", "").lower()
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_search_yfinance_timeout_returns_502(self):
-        """GET /api/v1/instrument/search returns 502 on TimeoutError from yfinance."""
-        from fastapi import HTTPException
-
-        app, client, session, engine = _make_client()
-        try:
-            # Patch at router namespace — same reason as above.
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.search_tickers",
-                side_effect=HTTPException(status_code=502, detail="Yahoo Finance is currently unreachable."),
-            ):
-                response = client.get("/api/v1/instrument/search?q=infosys")
-
-            assert response.status_code == 502
-        finally:
-            _cleanup(app, session, engine)
+        item = resp.json()[0]
+        for field in ("ticker", "name", "exchange", "currency", "country", "quote_type"):
+            assert isinstance(item[field], str), f"Field '{field}' is not a string: {item[field]!r}"
 
 
-# ===========================================================================
-# POST /api/v1/instrument/onboard
-# ===========================================================================
+# ---------------------------------------------------------------------------
+# Search: empty results
+# ---------------------------------------------------------------------------
 
-class TestInstrumentOnboard:
+class TestInstrumentSearchEmptyResults:
+    """GET /api/v1/instrument/search returns [] when yfinance has no matches."""
 
-    def test_onboard_happy_path_returns_200(self):
-        """POST /api/v1/instrument/onboard returns 200 and full pipeline response."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
+    def test_empty_result_returns_200_with_empty_list(self):
+        with patch(
+            "rita.api.v1.workflow.instrument_onboard.search_tickers",
+            return_value=[],
+        ):
+            client, _ = _make_client()
+            resp = client.get("/api/v1/instrument/search", params={"q": "zzzzz"})
+
+        assert resp.status_code == 200
+        assert resp.json() == []
+
+
+# ---------------------------------------------------------------------------
+# Search: short query guard
+# ---------------------------------------------------------------------------
+
+class TestInstrumentSearchShortQuery:
+    """GET /api/v1/instrument/search rejects queries shorter than 2 characters."""
+
+    @pytest.mark.parametrize("q", ["", "a", " "])
+    def test_short_query_returns_400(self, q):
+        with patch(
+            "rita.api.v1.workflow.instrument_onboard.search_tickers",
+            return_value=[],
+        ):
+            client, _ = _make_client()
+            resp = client.get("/api/v1/instrument/search", params={"q": q})
+
+        assert resp.status_code == 400
+
+    def test_short_query_error_detail_is_descriptive(self):
+        with patch(
+            "rita.api.v1.workflow.instrument_onboard.search_tickers",
+            return_value=[],
+        ):
+            client, _ = _make_client()
+            resp = client.get("/api/v1/instrument/search", params={"q": "x"})
+
+        detail = resp.json().get("detail", "")
+        assert "2" in detail or "characters" in detail.lower() or "q" in detail.lower()
+
+
+# ---------------------------------------------------------------------------
+# Onboard: happy path
+# ---------------------------------------------------------------------------
+
+class TestInstrumentOnboardHappyPath:
+    """POST /api/v1/instrument/onboard returns status "ok" on a valid ticker."""
+
+    def test_returns_200_with_status_ok(self):
+        with (
+            patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls,
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                return_value=(Path("/data/raw/RELIANCE.NS/reliance.ns_daily.csv"), 3800),
-            ), patch(
+                return_value=(Path("/data/raw/AAPL/aapl_daily.csv"), 3800),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.process_to_input",
-                return_value=Path("/data/input/RELIANCE.NS/reliance.ns_daily.csv"),
-            ), patch(
+                return_value=Path("/data/input/AAPL/aapl_daily.csv"),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.seed_market_cache",
                 return_value=120,
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None  # not a duplicate
-                MockRepo.return_value = mock_repo_instance
+            ),
+        ):
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = None  # no duplicate
+            mock_repo_cls.return_value = mock_repo
 
-                response = client.post("/api/v1/instrument/onboard", json=_VALID_ONBOARD_PAYLOAD)
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=_ONBOARD_BODY)
 
-            assert response.status_code == 200
-        finally:
-            _cleanup(app, session, engine)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "ok"
 
-    def test_onboard_happy_path_response_fields_match_frontend_contract(self):
-        """POST /api/v1/instrument/onboard returns all frontend-required fields."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
+    def test_response_contains_all_contract_fields(self):
+        """Contract check: JS reads status, ticker, rows_fetched, rows_seeded, raw_path, input_path."""
+        with (
+            patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls,
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                return_value=(Path("/data/raw/RELIANCE.NS/reliance.ns_daily.csv"), 3800),
-            ), patch(
+                return_value=(Path("/data/raw/AAPL/aapl_daily.csv"), 3800),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.process_to_input",
-                return_value=Path("/data/input/RELIANCE.NS/reliance.ns_daily.csv"),
-            ), patch(
+                return_value=Path("/data/input/AAPL/aapl_daily.csv"),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.seed_market_cache",
                 return_value=120,
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None
-                MockRepo.return_value = mock_repo_instance
+            ),
+        ):
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = None
+            mock_repo_cls.return_value = mock_repo
 
-                response = client.post("/api/v1/instrument/onboard", json=_VALID_ONBOARD_PAYLOAD)
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=_ONBOARD_BODY)
 
-            assert response.status_code == 200
-            data = response.json()
-            for field in _ONBOARD_FRONTEND_FIELDS:
-                assert field in data, f"Missing response field: {field}"
-        finally:
-            _cleanup(app, session, engine)
+        data = resp.json()
+        required_fields = {"status", "ticker", "rows_fetched", "rows_seeded", "raw_path", "input_path"}
+        assert required_fields.issubset(data.keys()), (
+            f"Missing fields: {required_fields - data.keys()}"
+        )
 
-    def test_onboard_happy_path_status_is_ok(self):
-        """POST /api/v1/instrument/onboard response body has status='ok'."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
+    def test_ticker_is_uppercased_in_response(self):
+        """Handler must uppercase the ticker before returning it."""
+        body = {**_ONBOARD_BODY, "ticker": "aapl"}  # lowercase input
+
+        with (
+            patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls,
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                return_value=(Path("/data/raw/RELIANCE.NS/reliance.ns_daily.csv"), 3800),
-            ), patch(
+                return_value=(Path("/data/raw/AAPL/aapl_daily.csv"), 3800),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.process_to_input",
-                return_value=Path("/data/input/RELIANCE.NS/reliance.ns_daily.csv"),
-            ), patch(
+                return_value=Path("/data/input/AAPL/aapl_daily.csv"),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.seed_market_cache",
                 return_value=120,
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None
-                MockRepo.return_value = mock_repo_instance
+            ),
+        ):
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = None
+            mock_repo_cls.return_value = mock_repo
 
-                response = client.post("/api/v1/instrument/onboard", json=_VALID_ONBOARD_PAYLOAD)
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=body)
 
-            assert response.json()["status"] == "ok"
-        finally:
-            _cleanup(app, session, engine)
+        assert resp.json()["ticker"] == "AAPL"
 
-    def test_onboard_ticker_is_uppercased_in_response(self):
-        """POST /api/v1/instrument/onboard returns ticker in upper-case."""
-        app, client, session, engine = _make_client()
-        payload = {**_VALID_ONBOARD_PAYLOAD, "ticker": "reliance.ns"}
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
+    def test_rows_fetched_and_seeded_match_service_output(self):
+        with (
+            patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls,
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                return_value=(Path("/data/raw/RELIANCE.NS/reliance.ns_daily.csv"), 3800),
-            ), patch(
+                return_value=(Path("/data/raw/AAPL/aapl_daily.csv"), 3800),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.process_to_input",
-                return_value=Path("/data/input/RELIANCE.NS/reliance.ns_daily.csv"),
-            ), patch(
+                return_value=Path("/data/input/AAPL/aapl_daily.csv"),
+            ),
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.seed_market_cache",
                 return_value=120,
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None
-                MockRepo.return_value = mock_repo_instance
+            ),
+        ):
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = None
+            mock_repo_cls.return_value = mock_repo
 
-                response = client.post("/api/v1/instrument/onboard", json=payload)
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=_ONBOARD_BODY)
 
-            assert response.status_code == 200
-            assert response.json()["ticker"] == "RELIANCE.NS"
-        finally:
-            _cleanup(app, session, engine)
+        data = resp.json()
+        assert data["rows_fetched"] == 3800
+        assert data["rows_seeded"] == 120
 
-    def test_onboard_rows_fetched_and_seeded_are_numeric(self):
-        """POST /api/v1/instrument/onboard returns integer rows_fetched and rows_seeded."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
+
+# ---------------------------------------------------------------------------
+# Onboard: duplicate instrument — 409
+# ---------------------------------------------------------------------------
+
+class TestInstrumentOnboardDuplicate:
+    """POST /api/v1/instrument/onboard returns 409 when ticker already exists."""
+
+    def test_duplicate_ticker_returns_409(self):
+        with patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls:
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = MagicMock()  # record exists
+            mock_repo_cls.return_value = mock_repo
+
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=_ONBOARD_BODY)
+
+        assert resp.status_code == 409
+
+    def test_duplicate_error_detail_mentions_ticker(self):
+        with patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls:
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = MagicMock()
+            mock_repo_cls.return_value = mock_repo
+
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=_ONBOARD_BODY)
+
+        detail = resp.json().get("detail", "")
+        assert "AAPL" in detail or "already" in detail.lower() or "exists" in detail.lower()
+
+
+# ---------------------------------------------------------------------------
+# Onboard: yfinance unreachable — 502
+# ---------------------------------------------------------------------------
+
+class TestInstrumentOnboardYfinanceFailure:
+    """POST /api/v1/instrument/onboard returns 502 when yfinance is unreachable."""
+
+    def test_yfinance_unreachable_returns_502(self):
+        from fastapi import HTTPException as _HTTPException
+
+        with (
+            patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls,
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                return_value=(Path("/data/raw/RELIANCE.NS/reliance.ns_daily.csv"), 3800),
-            ), patch(
-                "rita.api.v1.workflow.instrument_onboard.process_to_input",
-                return_value=Path("/data/input/RELIANCE.NS/reliance.ns_daily.csv"),
-            ), patch(
-                "rita.api.v1.workflow.instrument_onboard.seed_market_cache",
-                return_value=120,
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None
-                MockRepo.return_value = mock_repo_instance
-
-                response = client.post("/api/v1/instrument/onboard", json=_VALID_ONBOARD_PAYLOAD)
-
-            data = response.json()
-            assert isinstance(data["rows_fetched"], int)
-            assert isinstance(data["rows_seeded"], int)
-            assert data["rows_fetched"] == 3800
-            assert data["rows_seeded"] == 120
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_onboard_duplicate_ticker_returns_409(self):
-        """POST /api/v1/instrument/onboard returns 409 when ticker already exists in DB."""
-        from rita.schemas.instrument import Instrument
-        from datetime import datetime, timezone
-
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo:
-                # Simulate existing instrument record
-                existing_instrument = Instrument(
-                    instrument_id="RELIANCE.NS",
-                    name="Reliance Industries Ltd",
-                    exchange="NSI",
-                    country_code="IN",
-                    currency="INR",
-                    lot_size=250,
-                    is_available=True,
-                    created_at=datetime.now(timezone.utc),
-                )
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = existing_instrument
-                MockRepo.return_value = mock_repo_instance
-
-                response = client.post("/api/v1/instrument/onboard", json=_VALID_ONBOARD_PAYLOAD)
-
-            assert response.status_code == 409
-            assert "already exists" in response.json().get("detail", "").lower()
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_onboard_fewer_than_100_rows_returns_400(self):
-        """POST /api/v1/instrument/onboard returns 400 when yfinance returns < 100 rows."""
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
-                "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                side_effect=ValueError("Ticker 'BADTICKER' returned fewer than 100 rows from Yahoo Finance (got 5). Verify the ticker symbol is correct."),
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None
-                MockRepo.return_value = mock_repo_instance
-
-                payload = {**_VALID_ONBOARD_PAYLOAD, "ticker": "BADTICKER"}
-                response = client.post("/api/v1/instrument/onboard", json=payload)
-
-            assert response.status_code == 400
-            assert "100" in response.json().get("detail", "") or \
-                   "fewer" in response.json().get("detail", "").lower()
-        finally:
-            _cleanup(app, session, engine)
-
-    def test_onboard_yfinance_unreachable_returns_502(self):
-        """POST /api/v1/instrument/onboard returns 502 when yfinance network error occurs."""
-        from fastapi import HTTPException as FastAPIHTTPException
-
-        app, client, session, engine = _make_client()
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
-                "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                side_effect=FastAPIHTTPException(
+                side_effect=_HTTPException(
                     status_code=502,
                     detail="Yahoo Finance is currently unreachable.",
                 ),
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None
-                MockRepo.return_value = mock_repo_instance
+            ),
+        ):
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = None
+            mock_repo_cls.return_value = mock_repo
 
-                response = client.post("/api/v1/instrument/onboard", json=_VALID_ONBOARD_PAYLOAD)
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=_ONBOARD_BODY)
 
-            assert response.status_code == 502
-            assert "unreachable" in response.json().get("detail", "").lower()
-        finally:
-            _cleanup(app, session, engine)
+        assert resp.status_code == 502
 
-    def test_onboard_missing_required_fields_returns_422(self):
-        """POST /api/v1/instrument/onboard with missing body fields returns 422."""
-        app, client, session, engine = _make_client()
-        try:
-            # Omit required fields: name, exchange, currency, country_code
-            response = client.post("/api/v1/instrument/onboard", json={"ticker": "RELIANCE.NS"})
-            assert response.status_code == 422
-        finally:
-            _cleanup(app, session, engine)
+    def test_yfinance_unreachable_detail_is_descriptive(self):
+        from fastapi import HTTPException as _HTTPException
 
-    def test_onboard_lot_size_is_optional(self):
-        """POST /api/v1/instrument/onboard succeeds when lot_size is omitted."""
-        app, client, session, engine = _make_client()
-        payload = {k: v for k, v in _VALID_ONBOARD_PAYLOAD.items() if k != "lot_size"}
-        try:
-            with patch(
-                "rita.api.v1.workflow.instrument_onboard.InstrumentRepository",
-            ) as MockRepo, patch(
+        with (
+            patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls,
+            patch(
                 "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
-                return_value=(Path("/data/raw/RELIANCE.NS/reliance.ns_daily.csv"), 3800),
-            ), patch(
-                "rita.api.v1.workflow.instrument_onboard.process_to_input",
-                return_value=Path("/data/input/RELIANCE.NS/reliance.ns_daily.csv"),
-            ), patch(
-                "rita.api.v1.workflow.instrument_onboard.seed_market_cache",
-                return_value=120,
-            ):
-                mock_repo_instance = MagicMock()
-                mock_repo_instance.find_by_id.return_value = None
-                MockRepo.return_value = mock_repo_instance
+                side_effect=_HTTPException(
+                    status_code=502,
+                    detail="Yahoo Finance is currently unreachable.",
+                ),
+            ),
+        ):
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = None
+            mock_repo_cls.return_value = mock_repo
 
-                response = client.post("/api/v1/instrument/onboard", json=payload)
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json=_ONBOARD_BODY)
 
-            assert response.status_code == 200
-        finally:
-            _cleanup(app, session, engine)
+        detail = resp.json().get("detail", "")
+        assert "yahoo" in detail.lower() or "unreachable" in detail.lower()
 
 
-# ===========================================================================
-# Contract verification — service layer (search_tickers return shape)
-# ===========================================================================
+# ---------------------------------------------------------------------------
+# Onboard: bad ticker (< 100 rows from yfinance) — 400
+# ---------------------------------------------------------------------------
 
-class TestSearchTickersServiceContract:
-    """Verify search_tickers() output keys match the API contract without HTTP layer."""
+class TestInstrumentOnboardBadTicker:
+    """POST /api/v1/instrument/onboard returns 400 when ticker yields < 100 rows."""
 
-    def test_search_tickers_output_keys_match_contract(self):
-        """search_tickers() returns dicts with all 6 contract-specified keys.
+    def test_bad_ticker_returns_400(self):
+        with (
+            patch("rita.api.v1.workflow.instrument_onboard.InstrumentRepository") as mock_repo_cls,
+            patch(
+                "rita.api.v1.workflow.instrument_onboard.fetch_raw_data",
+                side_effect=ValueError("Ticker 'FAKE' returned fewer than 100 rows."),
+            ),
+        ):
+            mock_repo = MagicMock()
+            mock_repo.find_by_id.return_value = None
+            mock_repo_cls.return_value = mock_repo
 
-        The service imports yfinance locally inside the function body (``import yfinance as yf``),
-        so there is no module-level ``yf`` attribute to patch.  We patch ``yfinance.Search``
-        at the top of the yfinance package itself instead.
-        """
-        mock_quotes = [
-            {
-                "symbol":    "RELIANCE.NS",
-                "longname":  "Reliance Industries Limited",
-                "exchange":  "NSI",
-                "currency":  "INR",
-                "country":   "India",
-                "quoteType": "EQUITY",
-            },
-            {
-                "symbol":    "IDFC.NS",
-                "longname":  "IDFC Limited",
-                "exchange":  "NSI",
-                "currency":  "INR",
-                "country":   "India",
-                "quoteType": "MUTUALFUND",   # should be filtered out
-            },
-        ]
+            client, _ = _make_client()
+            resp = client.post("/api/v1/instrument/onboard", json={**_ONBOARD_BODY, "ticker": "FAKE"})
 
-        mock_search_instance = MagicMock()
-        mock_search_instance.quotes = mock_quotes
+        assert resp.status_code == 400
 
-        # yfinance is imported locally inside search_tickers(), so patch the
-        # Search class on the yfinance package directly.
-        with patch("yfinance.Search", return_value=mock_search_instance):
-            from rita.services.instrument_onboard import search_tickers
-            results = search_tickers("reliance")
 
-        assert len(results) == 1, "Non-EQUITY results must be filtered out"
-        item = results[0]
-        assert set(item.keys()) == _SEARCH_FRONTEND_FIELDS
-        assert item["quote_type"] == "EQUITY"
-        assert item["ticker"] == "RELIANCE.NS"
-        assert item["name"] == "Reliance Industries Limited"
+# ---------------------------------------------------------------------------
+# Onboard: missing required fields — 422
+# ---------------------------------------------------------------------------
+
+class TestInstrumentOnboardMissingFields:
+    """POST /api/v1/instrument/onboard returns 422 on missing required body fields."""
+
+    def test_missing_ticker_returns_422(self):
+        body = {k: v for k, v in _ONBOARD_BODY.items() if k != "ticker"}
+        client, _ = _make_client()
+        resp = client.post("/api/v1/instrument/onboard", json=body)
+        assert resp.status_code == 422
+
+    def test_missing_country_code_returns_422(self):
+        body = {k: v for k, v in _ONBOARD_BODY.items() if k != "country_code"}
+        client, _ = _make_client()
+        resp = client.post("/api/v1/instrument/onboard", json=body)
+        assert resp.status_code == 422

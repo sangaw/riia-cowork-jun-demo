@@ -1017,6 +1017,19 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       </div>
     </div>
 
+          <!-- Instrument Onboard -->
+          <div class="card mt-3">
+            <div class="card-hdr">Onboard New Instrument</div>
+            <div class="card-body">
+              <div class="d-flex gap-2 mb-2">
+                <input id="dops-search-input" type="text" class="form-control form-control-sm" placeholder="Search ticker or company…" style="max-width:300px;">
+                <button class="btn btn-sm btn-outline-secondary" onclick="searchInstrument()">Search</button>
+              </div>
+              <div id="dops-search-results" class="small mb-3"></div>
+              <div id="dops-onboard-status" class="small"></div>
+            </div>
+          </div>
+
     <!-- Status KPI strip -->
     <div class="kpi-strip" id="dops-kpi-strip">
       <div class="kpi"><div class="kpi-ey">Loading…</div></div>
