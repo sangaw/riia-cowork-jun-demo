@@ -11,18 +11,17 @@ const gameState = {
   warmupDays: [],
   gameDays: [],
   currentDayIndex: 0,
-  nextRowToReveal: 3,
   started: false,
+  buysLeft: 4,
+  sellsLeft: 4,
+  aiBuysLeft: 4,
+  aiSellsLeft: 4,
   user: { position: 'flat', cash: 5000, shares: 0, entryPrice: 0, portfolio: 0, cumCosts: 0, cumTax: 0, netValue: 5000, prevNetValue: 5000 },
   ai:   { position: 'flat', cash: 5000, shares: 0, entryPrice: 0, portfolio: 0, cumCosts: 0, cumTax: 0, netValue: 5000, prevNetValue: 5000 }
 };
 
 function sym() {
   return gameState.currency === 'USD' ? '$' : '€';
-}
-
-function fmtAbs(value) {
-  return sym() + Math.abs(value).toFixed(2);
 }
 
 function fmtSigned(value) {
@@ -32,42 +31,51 @@ function fmtSigned(value) {
 }
 
 function calculateDay(actor, action, closePrice) {
-  let effectiveAction = action;
-  if (action === 'BUY'  && actor.position === 'long') effectiveAction = 'HOLD';
-  if (action === 'SELL' && actor.position === 'flat') effectiveAction = 'HOLD';
+  const tranche = gameState.startingCapital / 4;
 
-  if (effectiveAction === 'BUY') {
-    const txCost = actor.cash * TRANSACTION_RATE;
+  if (action === 'BUY' && actor.cash > 0) {
+    const invest   = Math.min(tranche, actor.cash);
+    const txCost   = invest * TRANSACTION_RATE;
     actor.cumCosts += txCost;
-    actor.shares = (actor.cash - txCost) / closePrice;
-    actor.cash = 0;
-    actor.entryPrice = closePrice;
+    const newShares = (invest - txCost) / closePrice;
+    actor.entryPrice = actor.shares > 0
+      ? (actor.shares * actor.entryPrice + newShares * closePrice) / (actor.shares + newShares)
+      : closePrice;
+    actor.shares += newShares;
+    actor.cash   -= invest;
     actor.position = 'long';
-  } else if (effectiveAction === 'SELL') {
-    const proceeds = actor.shares * closePrice;
-    const txCost = proceeds * TRANSACTION_RATE;
+
+  } else if (action === 'SELL' && actor.shares > 0) {
+    const sharesToSell = Math.min(tranche / closePrice, actor.shares);
+    const proceeds     = sharesToSell * closePrice;
+    const txCost       = proceeds * TRANSACTION_RATE;
     actor.cumCosts += txCost;
+    const grossProfit  = sharesToSell * (closePrice - actor.entryPrice);
+    const tax          = grossProfit > 0 ? grossProfit * TAX_RATE : 0;
+    actor.cumTax  += tax;
+    actor.cash    += proceeds - txCost - tax;
+    actor.shares  -= sharesToSell;
+    if (actor.shares < 1e-9) { actor.shares = 0; actor.entryPrice = 0; actor.position = 'flat'; }
+
+  } else if (action === 'SELL_ALL' && actor.shares > 0) {
+    const proceeds    = actor.shares * closePrice;
+    const txCost      = proceeds * TRANSACTION_RATE;
+    actor.cumCosts   += txCost;
     const grossProfit = actor.shares * (closePrice - actor.entryPrice);
-    let tax = 0;
-    if (grossProfit > 0) {
-      tax = grossProfit * TAX_RATE;
-      actor.cumTax += tax;
-    }
-    actor.cash = proceeds - txCost - tax;
-    actor.shares = 0;
-    actor.entryPrice = 0;
-    actor.position = 'flat';
+    const tax         = grossProfit > 0 ? grossProfit * TAX_RATE : 0;
+    actor.cumTax     += tax;
+    actor.cash       += proceeds - txCost - tax;
+    actor.shares      = 0; actor.entryPrice = 0; actor.position = 'flat';
   }
-  // HOLD: no changes to cash/shares/costs/tax
 
   actor.portfolio = actor.shares * closePrice;
-  actor.netValue = actor.cash + actor.portfolio - actor.cumCosts - actor.cumTax;
+  actor.netValue  = actor.cash + actor.portfolio - actor.cumCosts - actor.cumTax;
 }
 
+// ── P&L cards ──
 function renderPnLCards() {
   const s = sym();
   const cap = gameState.startingCapital;
-
   const setCard = (prefix, actor) => {
     document.getElementById(`${prefix}-cash`).textContent      = s + actor.cash.toFixed(2);
     document.getElementById(`${prefix}-portfolio`).textContent = s + actor.portfolio.toFixed(2);
@@ -75,20 +83,32 @@ function renderPnLCards() {
     document.getElementById(`${prefix}-tax`).textContent       = '−' + s + actor.cumTax.toFixed(2);
     const netEl = document.getElementById(`${prefix}-net`);
     netEl.textContent = s + actor.netValue.toFixed(2);
-    netEl.className = 'pnl-value' + (actor.netValue > cap ? ' pos' : actor.netValue < cap ? ' neg' : '');
+    netEl.className   = 'pnl-value' + (actor.netValue > cap ? ' pos' : actor.netValue < cap ? ' neg' : '');
   };
-
   setCard('user', gameState.user);
-  setCard('ai', gameState.ai);
+  setCard('ai',   gameState.ai);
+}
+
+function renderBudgetDisplay() {
+  const el  = document.getElementById('budget-display');
+  const row = document.getElementById('budget-row');
+  if (!el) return;
+  if (row) row.style.display = '';
+  const budgetHtml = (b, s) =>
+    `<span style="color:var(--ok);font-weight:600">Buys: ${b}</span>` +
+    `<span style="color:var(--t4);margin:0 4px">/</span>` +
+    `<span style="color:var(--danger);font-weight:600">Sells: ${s}</span>`;
+  el.innerHTML = budgetHtml(gameState.buysLeft, gameState.sellsLeft);
+  const aiEl = document.getElementById('ai-budget-display');
+  if (aiEl) aiEl.innerHTML = budgetHtml(gameState.aiBuysLeft, gameState.aiSellsLeft);
 }
 
 function setEndDateMax() {
   const d = new Date();
   d.setMonth(d.getMonth() - 3);
-  const iso = d.toISOString().split('T')[0];
   const el = document.getElementById('end-date');
-  el.max = iso;
-  el.value = iso;
+  el.max = d.toISOString().split('T')[0];
+  el.value = el.max;
 }
 
 function validateDates() {
@@ -98,10 +118,9 @@ function validateDates() {
 }
 
 function lockControls() {
-  document.getElementById('pill-asml').disabled  = true;
-  document.getElementById('pill-nvidia').disabled = true;
-  document.getElementById('start-date').disabled  = true;
-  document.getElementById('end-date').disabled    = true;
+  ['pill-asml', 'pill-nvidia', 'start-date', 'end-date'].forEach(id => {
+    document.getElementById(id).disabled = true;
+  });
   document.getElementById('btn-select-days').style.display = 'none';
   document.getElementById('btn-new-game').style.display    = '';
 }
@@ -109,147 +128,159 @@ function lockControls() {
 function renderWarmupRows() {
   [1, 2].forEach((n, i) => {
     const d = gameState.warmupDays[i];
-    document.getElementById(`row${n}-date`).textContent       = d.date;
-    document.getElementById(`row${n}-instrument`).textContent = gameState.instrument;
-    document.getElementById(`row${n}-price`).textContent      = sym() + d.close.toFixed(2);
+    document.getElementById(`row${n}-date`).textContent  = d.date;
+    document.getElementById(`row${n}-price`).textContent = sym() + d.close.toFixed(2);
   });
 }
 
 function populateActiveRowData(n) {
   const d = gameState.gameDays[n - 3];
-  document.getElementById(`row${n}-date`).textContent       = d.date;
-  document.getElementById(`row${n}-instrument`).textContent = gameState.instrument;
-  document.getElementById(`row${n}-price`).textContent      = sym() + d.close.toFixed(2);
+  document.getElementById(`row${n}-date`).textContent  = d.date;
+  document.getElementById(`row${n}-price`).textContent = sym() + d.close.toFixed(2);
 }
 
 function unlockRow(n) {
-  document.getElementById(`game-row-${n}`).classList.remove('locked');
   populateActiveRowData(n);
-  const buyBtn  = document.getElementById(`buy-${n}`);
-  const sellBtn = document.getElementById(`sell-${n}`);
-  const holdBtn = document.getElementById(`hold-${n}`);
-  buyBtn.disabled  = false;
-  sellBtn.disabled = false;
-  holdBtn.disabled = false;
-  buyBtn.onclick  = () => handleUserAction(n, 'BUY');
-  sellBtn.onclick = () => handleUserAction(n, 'SELL');
-  holdBtn.onclick = () => handleUserAction(n, 'HOLD');
+
+  if (n === 10) {
+    ['buy', 'sell', 'hold'].forEach(a => {
+      const b = document.getElementById(`${a}-10`);
+      if (b) b.style.display = 'none';
+    });
+    const colActions = document.querySelector('[data-day="10"] .col-actions');
+    if (colActions && !document.getElementById('day10-auto-badge')) {
+      const badge = document.createElement('span');
+      badge.id = 'day10-auto-badge';
+      badge.style.cssText = 'font-family:var(--fm);font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase';
+      badge.textContent = 'Auto-Sell';
+      colActions.appendChild(badge);
+    }
+    setTimeout(() => {
+      const action = gameState.user.position === 'long' ? 'SELL' : 'HOLD';
+      handleUserAction(10, action);
+    }, 700);
+    return;
+  }
+
+  const canBuy  = gameState.buysLeft  > 0 && gameState.user.cash > 0;
+  const canSell = gameState.sellsLeft > 0 && gameState.user.shares > 0;
+
+  document.getElementById(`buy-${n}`).disabled  = !canBuy;
+  document.getElementById(`sell-${n}`).disabled = !canSell;
+  document.getElementById(`hold-${n}`).disabled = false;
+  document.getElementById(`buy-${n}`).onclick  = () => handleUserAction(n, 'BUY');
+  document.getElementById(`sell-${n}`).onclick = () => handleUserAction(n, 'SELL');
+  document.getElementById(`hold-${n}`).onclick = () => handleUserAction(n, 'HOLD');
+}
+
+function showAllGreyed() {
+  for (let n = 3; n <= 10; n++) {
+    document.querySelectorAll(`[data-day="${n}"]`).forEach(el => {
+      el.style.display = '';
+      el.classList.add('greyed-out');
+    });
+  }
+}
+
+
+function revealDay(n) {
+  document.querySelectorAll(`[data-day="${n}"]`).forEach(el => { el.classList.remove('greyed-out'); });
+  // Highlight active column header
+  document.querySelectorAll('.day-col.active-col').forEach(el => el.classList.remove('active-col'));
+  document.getElementById(`game-row-${n}`).classList.add('active-col');
+  unlockRow(n);
+  document.getElementById(`game-row-${n}`).scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
 }
 
 async function handleUserAction(n, action) {
-  const buyBtn  = document.getElementById(`buy-${n}`);
-  const sellBtn = document.getElementById(`sell-${n}`);
-  const holdBtn = document.getElementById(`hold-${n}`);
-  buyBtn.disabled  = true;
-  sellBtn.disabled = true;
-  holdBtn.disabled = true;
-  buyBtn.classList.toggle('selected',  action === 'BUY');
-  sellBtn.classList.toggle('selected', action === 'SELL');
-  holdBtn.classList.toggle('selected', action === 'HOLD');
+  ['buy', 'sell', 'hold'].forEach(a => { document.getElementById(`${a}-${n}`).disabled = true; });
+  document.getElementById(`buy-${n}`).classList.toggle('selected',  action === 'BUY');
+  document.getElementById(`sell-${n}`).classList.toggle('selected', action === 'SELL');
+  document.getElementById(`hold-${n}`).classList.toggle('selected', action === 'HOLD');
+
+  document.getElementById(`game-row-${n}`).classList.remove('active-col');
 
   const dayIndex   = n - 3;
   const closePrice = gameState.gameDays[dayIndex].close;
+
+  const wasBuying  = action === 'BUY'  && gameState.user.cash > 0;
+  const wasSelling = action === 'SELL' && gameState.user.shares > 0;
 
   gameState.user.prevNetValue = gameState.user.netValue;
   gameState.ai.prevNetValue   = gameState.ai.netValue;
 
   calculateDay(gameState.user, action, closePrice);
 
+  if (wasBuying)  gameState.buysLeft--;
+  if (wasSelling) gameState.sellsLeft--;
+
   let result;
   try {
     result = await runDay(gameState.gameId, dayIndex, action);
   } catch (e) {
     console.error('runDay error', e);
-    buyBtn.disabled  = false;
-    sellBtn.disabled = false;
-    holdBtn.disabled = false;
+    ['buy', 'sell', 'hold'].forEach(a => { document.getElementById(`${a}-${n}`).disabled = false; });
     return;
   }
 
-  calculateDay(gameState.ai, result.ai_action, closePrice);
+  const aiEffective  = (result.ai_action === 'SELL' && gameState.ai.shares <= 0) ? 'HOLD'
+                     : (result.ai_action === 'BUY'  && gameState.ai.cash   <= 0) ? 'HOLD'
+                     : result.ai_action;
+  const aiWasBuying  = aiEffective === 'BUY';
+  const aiWasSelling = aiEffective === 'SELL';
+  calculateDay(gameState.ai, aiEffective, closePrice);
+  if (aiWasBuying)  gameState.aiBuysLeft--;
+  if (aiWasSelling) gameState.aiSellsLeft--;
   gameState.currentDayIndex = dayIndex + 1;
 
-  // AI cell
-  const aiCell = document.getElementById(`ai-cell-${n}`);
-  const aiClass = result.ai_action === 'BUY' ? 'ai-buy' : result.ai_action === 'SELL' ? 'ai-sell' : 'ai-hold';
-  aiCell.textContent = result.ai_action;
-  aiCell.className   = `ai-cell ${aiClass}`;
-  aiCell.style.visibility = 'visible';
-
-  // Delta cells
-  const userDelta = gameState.user.netValue - gameState.user.prevNetValue;
-  const aiDelta   = gameState.ai.netValue   - gameState.ai.prevNetValue;
-  const isUserFlat = gameState.user.position === 'flat' && action === 'HOLD' && userDelta === 0 && gameState.user.shares === 0;
-  const isAiFlat   = gameState.ai.position   === 'flat' && result.ai_action === 'HOLD' && aiDelta === 0 && gameState.ai.shares === 0;
-
-  const userDeltaEl = document.getElementById(`row${n}-user-delta`);
-  userDeltaEl.textContent = isUserFlat ? '—' : fmtSigned(userDelta);
-  userDeltaEl.className   = isUserFlat ? 'pnl-cell' : `pnl-cell ${userDelta >= 0 ? 'pos' : 'neg'}`;
-
-  const aiDeltaEl = document.getElementById(`row${n}-ai-delta`);
-  aiDeltaEl.textContent = isAiFlat ? '—' : fmtSigned(aiDelta);
-  aiDeltaEl.className   = isAiFlat ? 'pnl-cell' : `pnl-cell ${aiDelta >= 0 ? 'pos' : 'neg'}`;
+  const aiCell  = document.getElementById(`ai-cell-${n}`);
+  const aiClass = aiEffective === 'BUY' ? 'ai-buy' : aiEffective === 'SELL' ? 'ai-sell' : 'ai-hold';
+  aiCell.textContent = aiEffective;
+  aiCell.className   = `day-data ai-cell ${aiClass}`;
 
   renderPnLCards();
+  renderBudgetDisplay();
 
-  const pct = ((dayIndex + 1) / 10) * 100;
-  document.getElementById('progress-fill').style.width      = `${pct}%`;
-  document.getElementById('progress-label-text').textContent = `Day ${dayIndex + 1} of 10`;
+  const pct = ((dayIndex + 1) / 8) * 100;
+  document.getElementById('progress-fill').style.width       = `${pct}%`;
+  document.getElementById('progress-label-text').textContent = `Day ${dayIndex + 1} of 8`;
 
   renderComplianceRow(n, result);
 
-  if (n < 12) {
-    document.getElementById('btn-next-day').disabled = false;
+  if (n < 10) {
+    revealDay(n + 1);
   } else {
-    document.getElementById('btn-next-day').disabled = true;
     await endGame();
   }
 }
 
 function renderComplianceRow(n, result) {
-  document.getElementById('row-compliance').style.display = '';
-  const row = document.getElementById(`comp-row-${n}`);
-  row.style.display = '';
-  document.getElementById(`comp-date-${n}`).textContent   = gameState.gameDays[n - 3].date;
-  document.getElementById(`comp-action-${n}`).textContent = result.ai_action;
   const isFlag = result.compliance_status === 'flagged';
-  document.getElementById(`comp-status-${n}`).innerHTML   = `<span class="status-badge ${isFlag ? 'flag' : 'ok'}">${isFlag ? 'FLAGGED' : 'PASS'}</span>`;
-  document.getElementById(`comp-rule-${n}`).textContent   = result.compliance_rule;
+  document.getElementById(`comp-status-${n}`).innerHTML    = `<span class="status-badge ${isFlag ? 'flag' : 'ok'}">${isFlag ? 'FLAGGED' : 'PASS'}</span>`;
+  document.getElementById(`comp-rule-${n}`).textContent    = result.compliance_rule;
   document.getElementById(`comp-insight-${n}`).textContent = result.ai_insight;
 }
 
 async function endGame() {
   try { await getResult(gameState.gameId); } catch (e) { console.error('getResult error', e); }
-
-  const userNet = gameState.user.netValue;
-  const aiNet   = gameState.ai.netValue;
-  const winner  = userNet > aiNet ? 'user' : aiNet > userNet ? 'ai' : 'draw';
-
-  const badge = document.getElementById('winner-badge');
-  if (winner === 'user') { badge.textContent = 'You Win!';     badge.className = 'you-win'; }
-  else if (winner === 'ai') { badge.textContent = 'AI Wins';   badge.className = 'ai-wins'; }
-  else                    { badge.textContent = "It's a Draw"; badge.className = 'tie'; }
-
-  document.getElementById('winner-banner').style.display = '';
 }
 
 function resetGame() {
   const cap = 5000;
   const freshActor = () => ({ position: 'flat', cash: cap, shares: 0, entryPrice: 0, portfolio: 0, cumCosts: 0, cumTax: 0, netValue: cap, prevNetValue: cap });
-
   Object.assign(gameState, {
     gameId: null, instrument: 'ASML', currency: 'EUR', startingCapital: cap,
-    warmupDays: [], gameDays: [], currentDayIndex: 0, nextRowToReveal: 3, started: false,
+    warmupDays: [], gameDays: [], currentDayIndex: 0, started: false,
+    buysLeft: 4, sellsLeft: 4, aiBuysLeft: 4, aiSellsLeft: 4,
     user: freshActor(), ai: freshActor()
   });
 
-  // Row 1
-  document.getElementById('pill-asml').disabled  = false;
-  document.getElementById('pill-nvidia').disabled = false;
+  // Controls
+  ['pill-asml', 'pill-nvidia', 'start-date', 'end-date'].forEach(id => {
+    document.getElementById(id).disabled = false;
+  });
   document.getElementById('pill-asml').classList.add('active');
   document.getElementById('pill-nvidia').classList.remove('active');
-  document.getElementById('start-date').disabled = false;
-  document.getElementById('end-date').disabled   = false;
   document.getElementById('btn-select-days').style.display = '';
   document.getElementById('btn-new-game').style.display    = 'none';
   document.getElementById('selection-label').style.display = 'none';
@@ -257,58 +288,52 @@ function resetGame() {
   document.getElementById('selected-range-text').textContent = '—';
   document.getElementById('selected-days-count').textContent = '—';
 
-  // Row 2
+  // P&L
   const s = '€';
-  document.getElementById('user-cash').textContent      = s + '5,000.00';
-  document.getElementById('user-portfolio').textContent = s + '0.00';
-  document.getElementById('user-costs').textContent     = '−' + s + '0.00';
-  document.getElementById('user-tax').textContent       = '−' + s + '0.00';
-  const uNet = document.getElementById('user-net');
-  uNet.textContent = s + '5,000.00'; uNet.className = 'pnl-value';
-  document.getElementById('ai-cash').textContent        = s + '5,000.00';
-  document.getElementById('ai-portfolio').textContent   = s + '0.00';
-  document.getElementById('ai-costs').textContent       = '−' + s + '0.00';
-  document.getElementById('ai-tax').textContent         = '−' + s + '0.00';
-  const aNet = document.getElementById('ai-net');
-  aNet.textContent = s + '5,000.00'; aNet.className = 'pnl-value';
-  document.getElementById('winner-banner').style.display = 'none';
-  document.getElementById('winner-badge').textContent = '—';
-  document.getElementById('winner-badge').className   = '';
-  document.getElementById('progress-fill').style.width      = '0%';
-  document.getElementById('progress-label-text').textContent = 'Day 0 of 10';
-  document.getElementById('row-performance').style.display  = 'none';
+  ['user', 'ai'].forEach(p => {
+    document.getElementById(`${p}-cash`).textContent      = s + '5,000.00';
+    document.getElementById(`${p}-portfolio`).textContent = s + '0.00';
+    document.getElementById(`${p}-costs`).textContent     = '−' + s + '0.00';
+    document.getElementById(`${p}-tax`).textContent       = '−' + s + '0.00';
+    const net = document.getElementById(`${p}-net`);
+    net.textContent = s + '5,000.00'; net.className = 'pnl-value';
+  });
+  const autoBadge = document.getElementById('day10-auto-badge');
+  if (autoBadge) autoBadge.remove();
+  const budgetEl  = document.getElementById('budget-display');
+  if (budgetEl) budgetEl.innerHTML = '';
+  const budgetRow = document.getElementById('budget-row');
+  if (budgetRow) budgetRow.style.display = 'none';
+
+  document.getElementById('winner-banner').style.display     = 'none';
+  document.getElementById('winner-badge').textContent        = '—';
+  document.getElementById('winner-badge').className          = '';
+  document.getElementById('progress-fill').style.width       = '0%';
+  document.getElementById('progress-label-text').textContent = 'Day 0 of 8';
+  document.getElementById('row-performance').style.display   = 'none';
 
   // Warmup rows
   [1, 2].forEach(n => {
-    ['date', 'instrument', 'price'].forEach(f => { document.getElementById(`row${n}-${f}`).textContent = '—'; });
+    document.getElementById(`row${n}-date`).textContent  = '—';
+    document.getElementById(`row${n}-price`).textContent = '—';
   });
 
-  document.getElementById('btn-next-day').disabled = true;
-
-  // Active rows
-  for (let n = 3; n <= 12; n++) {
-    const activeRow = document.getElementById(`game-row-${n}`);
-    activeRow.classList.add('locked');
-    activeRow.style.display = 'none';
+  // Active columns
+  for (let n = 3; n <= 10; n++) {
+    document.querySelectorAll(`[data-day="${n}"]`).forEach(el => { el.classList.add('greyed-out'); });
+    document.getElementById(`game-row-${n}`).classList.remove('active-col');
     ['buy', 'sell', 'hold'].forEach(a => {
       const b = document.getElementById(`${a}-${n}`);
-      b.disabled = true; b.classList.remove('selected'); b.onclick = null;
+      b.disabled = true; b.classList.remove('selected'); b.onclick = null; b.style.display = '';
     });
-    const aiCell = document.getElementById(`ai-cell-${n}`);
-    aiCell.textContent = '—'; aiCell.className = 'ai-cell'; aiCell.style.visibility = 'hidden';
-    ['date', 'instrument', 'price'].forEach(f => { document.getElementById(`row${n}-${f}`).textContent = '—'; });
-    ['user-delta', 'ai-delta'].forEach(f => {
-      const el = document.getElementById(`row${n}-${f}`);
-      el.textContent = '—'; el.className = 'pnl-cell';
-    });
-    // Compliance
-    document.getElementById(`comp-row-${n}`).style.display = 'none';
-    ['date', 'action', 'status', 'rule', 'insight'].forEach(f => {
-      document.getElementById(`comp-${f}-${n}`).textContent = '—';
-    });
-    document.getElementById(`comp-status-${n}`).innerHTML = '—';
+    document.getElementById(`ai-cell-${n}`).textContent     = '—';
+    document.getElementById(`ai-cell-${n}`).className       = 'day-data ai-cell';
+    document.getElementById(`row${n}-date`).textContent     = '—';
+    document.getElementById(`row${n}-price`).textContent    = '—';
+    document.getElementById(`comp-status-${n}`).innerHTML   = '—';
+    document.getElementById(`comp-rule-${n}`).textContent   = '—';
+    document.getElementById(`comp-insight-${n}`).textContent = '—';
   }
-  document.getElementById('row-compliance').style.display = 'none';
 
   validateDates();
 }
@@ -364,31 +389,22 @@ function initControls() {
     document.getElementById('selected-instrument').textContent = data.instrument;
     document.getElementById('selected-range-text').textContent =
       data.game_days[0].date + ' — ' + data.game_days[data.game_days.length - 1].date;
-    document.getElementById('selected-days-count').textContent = '10 trading days';
+    document.getElementById('selected-days-count').textContent = '8 trading days';
     document.getElementById('selection-label').style.display   = '';
-
     document.getElementById('row-performance').style.display   = '';
     document.getElementById('progress-fill').style.width       = '0%';
-    document.getElementById('progress-label-text').textContent = 'Day 0 of 10';
-    renderPnLCards();
+    document.getElementById('progress-label-text').textContent = 'Day 0 of 8';
 
-    gameState.nextRowToReveal = 3;
+    renderPnLCards();
+    renderBudgetDisplay();
     renderWarmupRows();
-    document.getElementById('btn-next-day').disabled = false;
+    document.querySelectorAll('.warmup').forEach(el => el.classList.remove('greyed-out'));
+    revealDay(3);
   });
 
   document.getElementById('btn-new-game').addEventListener('click', resetGame);
 
-  document.getElementById('btn-next-day').addEventListener('click', () => {
-    const n = gameState.nextRowToReveal;
-    if (n > 12) return;
-    const row = document.getElementById(`game-row-${n}`);
-    row.style.display = '';
-    unlockRow(n);
-    gameState.nextRowToReveal = n + 1;
-    document.getElementById('btn-next-day').disabled = true;
-    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  });
+  showAllGreyed();
 }
 
 document.addEventListener('DOMContentLoaded', initControls);
