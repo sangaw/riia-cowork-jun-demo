@@ -104,6 +104,7 @@ Write the [PM] Validation section into {BRIEF_PATH}. Fill in every field:
 - Sprint alignment: state whether this is in scope for the current sprint and why
 - Risk flags: list any technical risks, dependencies, or blockers you identify. Write "none" if there are none.
 - Dependencies: list prerequisite tasks or external dependencies. Write "none" if there are none.
+- Cross-system scope check: state which dashboards/apps this feature touches beyond the primary target. For each dashboard not in the primary target (rita, fno, ops, ds), explicitly answer: "Does this feature affect [dashboard]? Yes/No — reason." If yes, flag it in Risk flags so the Architect includes it in files-to-touch.
 - Approved to proceed: write "yes" or "no". Write "yes" unless there is a clear blocker (out of scope for sprint, hard dependency unmet, risk too high). Default to yes for reasonable feature additions.
 
 Save the updated brief file after writing your section.

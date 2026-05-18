@@ -180,11 +180,13 @@ def compute_quality(runs: list) -> dict:
         for r in runs
         if r.get("human_score") and r["human_score"].get("csat") is not None
     ]
+    recent_csat = csat[-3:] if len(csat) >= 3 else csat
     planning = [
         r["human_score"]["planning_ok"]
         for r in runs
         if r.get("human_score") and r["human_score"].get("planning_ok") is not None
     ]
+    recent_planning = planning[-3:] if len(planning) >= 3 else planning
     grounding_scores = []
     for r in runs:
         for agent in r.get("agents", []):
@@ -197,9 +199,13 @@ def compute_quality(runs: list) -> dict:
         "avg_accuracy_score": round(sum(accuracy) / len(accuracy), 2) if accuracy else None,
         "avg_relevance_score": round(sum(relevance) / len(relevance), 2) if relevance else None,
         "avg_csat": round(sum(csat) / len(csat), 2) if csat else None,
+        "recent_avg_csat": round(sum(recent_csat) / len(recent_csat), 2) if recent_csat else None,
         "csat_count": len(csat),
         "planning_accuracy_rate": (
             round(sum(1 for p in planning if p) / len(planning), 3) if planning else None
+        ),
+        "recent_planning_accuracy_rate": (
+            round(sum(1 for p in recent_planning if p) / len(recent_planning), 3) if recent_planning else None
         ),
         "grounding_pass_rate": (
             round(sum(grounding_scores) / len(grounding_scores), 3) if grounding_scores else None
@@ -544,11 +550,14 @@ def main() -> None:
                     f" (all-time: {round(all_time * 100)}%) — grounding checks need review"
                 )
 
-    avg_csat = metrics.get("quality", {}).get("avg_csat")
     csat_count = metrics.get("quality", {}).get("csat_count", 0)
-    # Require at least 3 rated runs — 1-2 data points are not statistically meaningful
-    if avg_csat is not None and csat_count >= 3 and avg_csat < 3.5:
-        print(f"[ALERT] CSAT {avg_csat}/5 below threshold ({csat_count} runs rated) — review last 3 runs")
+    recent_avg_csat = metrics.get("quality", {}).get("recent_avg_csat")
+    avg_csat = metrics.get("quality", {}).get("avg_csat")
+    # Use recent_avg_csat (last 3) when available — all-time drags from early sessions
+    csat_check = recent_avg_csat if recent_avg_csat is not None else avg_csat
+    if csat_check is not None and csat_count >= 3 and csat_check < 3.5:
+        label = "recent (last 3)" if recent_avg_csat is not None else "all-time"
+        print(f"[ALERT] CSAT {csat_check}/5 {label} below threshold ({csat_count} runs rated) — review last 3 runs")
 
     avg_forecast_err = metrics.get("token_forecasting", {}).get("avg_forecast_error_pct")
     if avg_forecast_err is not None and avg_forecast_err > 35:

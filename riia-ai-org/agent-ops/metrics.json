@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-18T08:44:36",
+  "generated_at": "2026-05-18T08:50:38",
   "total_runs": 27,
   "per_role": {
     "pm": {
@@ -348,8 +348,8 @@
     },
     {
       "skill_file": ".claude/commands/enhance.md",
-      "improvement_applied": "FC-001 v3: active spec grep verification added to Step 4 validation \u2014 orchestrator independently greps Spec_RITA_App.md for the new endpoint path after reading spec_updated=yes from brief; closes trust gap where Engineer self-reported yes without actually updating spec (5 of 7 FC-001 fires were this pattern).",
-      "before_first_pass_rate": 0.533,
+      "improvement_applied": "CSAT v2: cross-system scope check added to PM prompt \u2014 PM must explicitly answer whether each non-primary dashboard (rita/fno/ops/ds) is affected, and flag any yes answers in risk flags so Architect includes them in files-to-touch. Prevents planning_ok=False from scope blind spots in multi-run features (2/4 recent runs had this).",
+      "before_first_pass_rate": 0.667,
       "after_first_pass_rate": null
     }
   ],
@@ -421,8 +421,10 @@
     "avg_accuracy_score": 3.0,
     "avg_relevance_score": 4.0,
     "avg_csat": 3.11,
+    "recent_avg_csat": 3.33,
     "csat_count": 9,
     "planning_accuracy_rate": 0.667,
+    "recent_planning_accuracy_rate": 0.667,
     "grounding_pass_rate": 0.925
   },
   "token_forecasting": {
@@ -533,6 +535,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T06:44:36.047760+00:00"
+    "generated_at": "2026-05-18T06:50:38.396535+00:00"
   }
 }
