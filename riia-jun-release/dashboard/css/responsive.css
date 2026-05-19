@@ -207,3 +207,29 @@ body.nav-open::before {
   .tbl-wrap { overflow-x: auto; }
   th, td { white-space: nowrap; }
 }
+
+/* ── Language Capsule ────────────────────────────────── */
+.lang-capsule {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.lang-btn {
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.lang-btn:hover {
+  background: var(--surface-2, rgba(255,255,255,0.07));
+}
+.lang-btn.active {
+  background: var(--build);
+  color: #fff;
+}

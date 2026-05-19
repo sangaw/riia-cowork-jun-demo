@@ -16,6 +16,7 @@ import { loadTechnicalAnalysis } from './technical-analysis.js';
 import { loadLearnings, toggleLearnCard } from './learnings.js';
 import { useChip, sendChatMsg, clearChat, updateChips, showAlerts, refreshChatChips } from './chat.js';
 import { openChartModal, closeChartModal } from './chart-modal.js';
+import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
 
 // ── Populate section loaders map ───────────────────────────
 _sectionLoaders.market            = async () => { refreshChatChips(); clearChat(); const data = await warmupChat(); if (data) { updateChips(data.chips); showAlerts(data.alerts); } };
@@ -68,6 +69,7 @@ window.loadTrades         = loadTrades;
 window.loadTechnicalAnalysis = loadTechnicalAnalysis;
 window.loadLearnings      = loadLearnings;
 window.toggleLearnCard    = toggleLearnCard;
+window.setLanguage        = setLanguage;
 
 // ── Refresh all home KPIs & active section ─────────────────
 async function refresh() {
@@ -138,4 +140,5 @@ async function loadActiveInstrument() {
 }
 
 // ── Init ───────────────────────────────────────────────────
+initI18n(); applyTranslations();
 window.addEventListener('load', () => { loadInstrumentTabs(); refresh(); loadActiveInstrument(); loadMarketSignals(); });

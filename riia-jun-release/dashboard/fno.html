@@ -383,6 +383,11 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
       <span class="status-dot ok" id="sdot"></span>
       <span id="stxt">Checking...</span>
     </div>
+    <div class="lang-capsule">
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" data-lang="nl" onclick="setLanguage('nl')">NL</button>
+      <button class="lang-btn" data-lang="fr" onclick="setLanguage('fr')">FR</button>
+    </div>
   </div>
 </div>
 
@@ -414,22 +419,22 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
   <div class="nav-section">
     <div class="nav-label">Pages</div>
     <div class="nav-item p01 active" data-page="overview">
-      <span class="nav-icon">◈</span> Dashboard
+      <span class="nav-icon">◈</span> <span data-i18n="nav.overview">Dashboard</span>
     </div>
     <div class="nav-item p02" data-page="positions">
-      <span class="nav-icon">≡</span> Positions
+      <span class="nav-icon">≡</span> <span data-i18n="nav.positions">Positions</span>
     </div>
     <div class="nav-item p03" data-page="margin">
-      <span class="nav-icon">◎</span> Margin Tracker
+      <span class="nav-icon">◎</span> <span data-i18n="nav.margin">Margin Tracker</span>
     </div>
     <div class="nav-item p04" data-page="risk">
-      <span class="nav-icon">⬡</span> Risk &amp; Greeks
+      <span class="nav-icon">⬡</span> <span data-i18n="nav.risk">Risk &amp; Greeks</span>
     </div>
     <div class="nav-item p01" data-page="scenarios">
-      <span class="nav-icon">↔</span> Risk-Reward
+      <span class="nav-icon">↔</span> <span data-i18n="nav.scenarios">Risk-Reward</span>
     </div>
     <div class="nav-item p03" data-page="hedge" id="nav-hedge">
-      <span class="nav-icon">⚠</span> Hedge Radar
+      <span class="nav-icon">⚠</span> <span data-i18n="nav.hedge">Hedge Radar</span>
       <span id="nav-hedge-badge" style="display:none;margin-left:auto;background:var(--neg);color:#fff;font-family:var(--fm);font-size:9px;font-weight:600;padding:1px 6px;border-radius:100px;"></span>
     </div>
     <div class="nav-item p02" data-page="history">

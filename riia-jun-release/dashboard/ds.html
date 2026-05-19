@@ -305,6 +305,11 @@ tr:hover td{background:var(--surface2);}
       <span class="status-dot" id="status-dot"></span>
       <span id="status-text" style="font-family:var(--fm);font-size:11px">Connecting</span>
     </div>
+    <div class="lang-capsule">
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" data-lang="nl" onclick="setLanguage('nl')">NL</button>
+      <button class="lang-btn" data-lang="fr" onclick="setLanguage('fr')">FR</button>
+    </div>
   </div>
 </header>
 
@@ -313,7 +318,7 @@ tr:hover td{background:var(--surface2);}
   <div class="nav-section">
     <div class="nav-label">Visualize</div>
     <div class="nav-item c-ds active" data-s="understand" onclick="show('understand',this)">
-      <span class="nav-icon">🔬</span> Understand
+      <span class="nav-icon">🔬</span> <span data-i18n="nav.understand">Understand</span>
     </div>
   </div>
   <div class="nav-section">
@@ -322,19 +327,19 @@ tr:hover td{background:var(--surface2);}
       <span class="nav-icon">◈</span> Dashboard
     </div>
     <div class="nav-item c-ds" data-s="pipeline" onclick="show('pipeline',this)">
-      <span class="nav-icon">🏗</span> Build
+      <span class="nav-icon">🏗</span> <span data-i18n="nav.pipeline">Build</span>
     </div>
     <div class="nav-item c-build" data-s="performance" onclick="show('performance',this)">
-      <span class="nav-icon">📈</span> Performance
+      <span class="nav-icon">📈</span> <span data-i18n="nav.performance">Performance</span>
     </div>
     <div class="nav-item c-build" data-s="risk" onclick="show('risk',this)">
-      <span class="nav-icon">🛡</span> Risk View
+      <span class="nav-icon">🛡</span> <span data-i18n="nav.risk">Risk View</span>
     </div>
     <div class="nav-item c-build" data-s="trades" onclick="show('trades',this)">
-      <span class="nav-icon">📊</span> Trade Journal
+      <span class="nav-icon">📊</span> <span data-i18n="nav.trades">Trade Journal</span>
     </div>
     <div class="nav-item c-build" data-s="explain" onclick="show('explain',this)">
-      <span class="nav-icon">🔍</span> Explainability
+      <span class="nav-icon">🔍</span> <span data-i18n="heading.explainability">Explainability</span>
     </div>
   </div>
   <div class="nav-section">

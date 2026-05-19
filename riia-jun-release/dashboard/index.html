@@ -117,6 +117,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       <span class="status-dot"></span>
       <span>System ready</span>
     </div>
+    <div class="lang-capsule">
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" data-lang="nl" onclick="setLanguage('nl')">NL</button>
+      <button class="lang-btn" data-lang="fr" onclick="setLanguage('fr')">FR</button>
+    </div>
   </div>
 </header>
 
@@ -230,6 +235,23 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 </main>
 
 <script>
+  // ── Minimal i18n for home page ────────────────────────────
+  (function() {
+    var VALID = ['en','nl','fr'];
+    var KEY = 'ritaLanguage';
+    function _lang() { try { var s=localStorage.getItem(KEY); return VALID.includes(s)?s:'en'; } catch { return 'en'; } }
+    window.setLanguage = function(lang) {
+      if (!VALID.includes(lang)) return;
+      try { localStorage.setItem(KEY, lang); } catch {}
+      document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===lang); });
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+      var lang = _lang();
+      document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===lang); });
+    });
+  })();
+  // ─────────────────────────────────────────────────────────
+
   // Save JWT token if arriving from Google Callback
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');

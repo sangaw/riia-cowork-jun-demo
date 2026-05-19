@@ -251,6 +251,58 @@ html, body {
 
 </style>
 <script>window.RITA_API_BASE = 'http://localhost:8000';</script>
+<script>
+// ── i18n ─────────────────────────────────────────────────────────
+const _I18N_LOCALES = {
+  en: {
+    'mobile.home': 'Home', 'mobile.goal': 'Goal', 'mobile.market': 'Market',
+    'mobile.signal_hero': 'Signal', 'mobile.strategy': 'Strategy',
+    'mobile.today': 'Today', 'mobile.overview': 'Overview',
+    'mobile.market_feed': 'Market Feed', 'mobile.portfolio': 'Portfolio',
+    'mobile.live_toggle': 'Live', 'mobile.greeting': 'Good morning',
+    'ui.loading': 'Loading…', 'ui.no_data': 'No data',
+    'btn.refresh': 'Refresh', 'nav.overview': 'Overview',
+  },
+  nl: {
+    'mobile.home': 'Start', 'mobile.goal': 'Doel', 'mobile.market': 'Markt',
+    'mobile.signal_hero': 'Signaal', 'mobile.strategy': 'Strategie',
+    'mobile.today': 'Vandaag', 'mobile.overview': 'Overzicht',
+    'mobile.market_feed': 'Marktfeed', 'mobile.portfolio': 'Portefeuille',
+    'mobile.live_toggle': 'Live', 'mobile.greeting': 'Goedemorgen',
+    'ui.loading': 'Laden…', 'ui.no_data': 'Geen gegevens',
+    'btn.refresh': 'Vernieuwen', 'nav.overview': 'Overzicht',
+  },
+  fr: {
+    'mobile.home': 'Accueil', 'mobile.goal': 'Objectif', 'mobile.market': 'Marché',
+    'mobile.signal_hero': 'Signal', 'mobile.strategy': 'Stratégie',
+    'mobile.today': "Aujourd'hui", 'mobile.overview': "Vue d'ensemble",
+    'mobile.market_feed': 'Flux de Marché', 'mobile.portfolio': 'Portefeuille',
+    'mobile.live_toggle': 'En Direct', 'mobile.greeting': 'Bonjour',
+    'ui.loading': 'Chargement…', 'ui.no_data': 'Aucune donnée',
+    'btn.refresh': 'Actualiser', 'nav.overview': "Vue d'ensemble",
+  },
+};
+let _i18nLang = 'en';
+function _getI18nLang() {
+  try { const s = localStorage.getItem('ritaLanguage'); return ['en','nl','fr'].includes(s) ? s : 'en'; } catch { return 'en'; }
+}
+function t(key) {
+  const d = _I18N_LOCALES[_i18nLang] || _I18N_LOCALES.en;
+  return d[key] ?? _I18N_LOCALES.en[key] ?? key;
+}
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('.lang-btn').forEach(b => { b.classList.toggle('active', b.dataset.lang === _i18nLang); });
+}
+function setLanguage(lang) {
+  if (!['en','nl','fr'].includes(lang)) return;
+  _i18nLang = lang;
+  try { localStorage.setItem('ritaLanguage', lang); } catch {}
+  applyTranslations();
+}
+document.addEventListener('DOMContentLoaded', () => { _i18nLang = _getI18nLang(); applyTranslations(); });
+// ─────────────────────────────────────────────────────────────────
+</script>
 </head>
 <body>
 
@@ -264,6 +316,13 @@ html, body {
       <!-- ══ SCREEN 0: HOME (LAUNCHER TILES) ══════════════════════ -->
       <div class="screen" id="s0">
         <div class="screen-inner">
+
+          <!-- Language capsule -->
+          <div class="lang-capsule" style="margin:8px auto;text-align:center;">
+            <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+            <button class="lang-btn" data-lang="nl" onclick="setLanguage('nl')">NL</button>
+            <button class="lang-btn" data-lang="fr" onclick="setLanguage('fr')">FR</button>
+          </div>
 
           <!-- Greeting -->
           <div style="padding:26px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;">
@@ -306,7 +365,7 @@ html, body {
               <div style="width:36px;height:36px;border-radius:12px;background:var(--build-bg);display:flex;align-items:center;justify-content:center;margin-bottom:22px;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--build)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l3-3 4 4 7-7M14 6h4v4"/></svg>
               </div>
-              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);">Today</div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);" data-i18n="mobile.today">Today</div>
               <div id="s0-tile-today" style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4;">4 signals · bull</div>
             </div>
 
@@ -315,7 +374,7 @@ html, body {
               <div style="width:36px;height:36px;border-radius:12px;background:var(--run-bg);display:flex;align-items:center;justify-content:center;margin-bottom:22px;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--run)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v14M3 10h14"/></svg>
               </div>
-              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);">Goal</div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);" data-i18n="mobile.goal">Goal</div>
               <div id="s0-tile-goal" style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4;">7.4% of 10%</div>
             </div>
 
@@ -324,7 +383,7 @@ html, body {
               <div style="width:36px;height:36px;border-radius:12px;background:var(--mon-bg);display:flex;align-items:center;justify-content:center;margin-bottom:22px;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--mon)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16l4-4 3 3 7-7"/></svg>
               </div>
-              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);">Market</div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);" data-i18n="mobile.market">Market</div>
               <div id="s0-tile-market" style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4;">ASML.AS · +1.80%</div>
             </div>
 
@@ -342,7 +401,7 @@ html, body {
               <div style="width:36px;height:36px;border-radius:12px;background:var(--chatBg);display:flex;align-items:center;justify-content:center;margin-bottom:22px;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--chat)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 5-9"/></svg>
               </div>
-              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);">Strategy</div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);" data-i18n="mobile.strategy">Strategy</div>
               <div id="s0-tile-strategy" style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4;">Swing-Mom v3 · +€8,240</div>
             </div>
 
@@ -351,7 +410,7 @@ html, body {
               <div style="width:36px;height:36px;border-radius:12px;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;margin-bottom:22px;">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="var(--danger)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h14v3H3zM3 9h14v3H3zM3 14h14v3H3z"/></svg>
               </div>
-              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);">Portfolio</div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-0.01em;color:var(--text);" data-i18n="mobile.portfolio">Portfolio</div>
               <div id="s0-tile-portfolio" style="font-size:11px;color:var(--t3);margin-top:4px;line-height:1.4;">€124,820 · +2.4%</div>
             </div>
 
