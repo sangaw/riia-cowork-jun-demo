@@ -1,5 +1,5 @@
 # Feature 14 — Dutch and French Language Support (i18n)
-**Status:** IN PROGRESS — Phase 1 merged, defects under testing  
+**Status:** IN PROGRESS — Phase 2 partial (RITA main sections done); Ops/FnO loaders pending  
 **Last updated:** 2026-05-19  
 **Requirements:** `REQUIREMENTS.md` (same folder)  
 **Task brief:** `project-office/task-briefs/task-brief-20260519-1001.md`
@@ -22,26 +22,27 @@ Run via `/enhance rita`. Four commits merged to master and pushed to remote.
 | Spec_JS_Code.md — i18n.js row in shared modules table | `[x]` | 6871240 | line 104 confirmed |
 | Fix: remove capsule from app pages (rita/fno/ops/ds) | `[x]` | ee10cd5 | capsule on index.html only; flows via localStorage |
 | Fix: capsule styling — inline CSS in index.html | `[x]` | 1b116de | matches topbar .status-pill design |
+| Fix: translate main screen labels (b8cc652) — health, market-signals, trades, fno/dashboard.js | `[x]` | b8cc652 | KPIs use t() at render time |
+| Fix: performance.js, risk.js, scenarios.js, explainability.js — t() + 30 new locale keys | `[x]` | ba4b905 | perf.bnh, risk.*, scenarios.*, explain.* added to en/nl/fr |
 
 ---
 
 ## Pending — Next Session
 
-### Defect 2 — Main screen labels not translating (HIGH)
+### Defect 2 — Remaining loaders not translating (LOW–MEDIUM)
 
-**Symptom:** Switching language changes left nav items but main content area stays in English — section headings, KPI card labels, button text within sections, table column headers all remain English.
+RITA main sections are now done. Remaining files with hardcoded English strings:
 
-**Root cause:** JS section loaders (health.js, trades.js, market-signals.js, etc.) build HTML strings dynamically via `setEl(id, html)`. Those strings contain hardcoded English text. They need to call `t(key)` at render time. The `data-i18n` approach only works for static HTML elements already in the DOM — dynamic renders bypass it.
+| File | Dashboard | Notes |
+|---|---|---|
+| `agent-panel.js` | RITA | Long English narrative text; status badges |
+| `ai-compliance.js` | RITA | Section labels |
+| `technical-analysis.js` | RITA | Section labels |
+| `learnings.js` | RITA | Section labels |
+| `positions.js`, `margin.js`, others | FnO | Most loaders; only dashboard.js done |
+| `overview.js`, `agent-builds.js`, others | Ops | No section loaders have t() |
 
-**Fix approach (Phase 2 from Requirements.md §7):**
-1. Import `{ t }` into each section loader that renders HTML strings with static labels
-2. Replace hardcoded English strings with `t('key')` calls — e.g. `'Sharpe Ratio'` → `t('kpi.sharpe_ratio')`
-3. Priority modules (most visible labels): `health.js`, `market-signals.js`, `trades.js`, `risk.js`, `performance.js`
-4. FnO: `dashboard.js`, `positions.js`, `margin.js`
-5. Ops: `overview.js`, `agent-builds.js`
-6. Test by switching language AFTER a section has loaded — labels should update on next section load
-
-**Scope note:** This is a large change — ~10 JS files across rita/fno/ops need t() call substitution. Best run as a focused engineer task, not a full /enhance cycle.
+**Fix approach:** For each file — add `import { t } from '../shared/i18n.js';`, replace hardcoded label strings with `t('key')` calls, add missing keys to en/nl/fr locale files.
 
 ---
 
@@ -88,4 +89,4 @@ None
 
 ## Resume Prompt (next session)
 
-> "Continue Feature 14 — fix Defect 2: main screen labels not translating. JS section loaders in rita/fno/ops use hardcoded English strings in setEl() calls. Import t() into each and replace static label strings with t('key') calls. Start with rita/health.js, market-signals.js, trades.js. Context: project-office/features/14 Support for Dutch and French language/PLAN_STATUS.md"
+> "Continue Feature 14 — fix remaining Defect 2 loaders. RITA main sections done (health, market-signals, trades, performance, risk, scenarios, explainability). Remaining: rita/agent-panel.js, ai-compliance.js, technical-analysis.js, learnings.js; all FnO section loaders except dashboard.js; all Ops section loaders. Add import { t } from '../shared/i18n.js' and replace hardcoded label strings with t('key') calls. Add new keys to en/nl/fr locale files. Context: project-office/features/14 Support for Dutch and French language/PLAN_STATUS.md"
