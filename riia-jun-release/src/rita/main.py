@@ -357,7 +357,7 @@ if _mobile_dir.exists():
 
 @app.get("/onboarding", include_in_schema=False)
 def onboarding():
-    _path = Path(__file__).parent.parent.parent.parent / "rita-build-portfolio" / "investor-flow" / "v2" / "invest-dashboard.html"
+    _path = Path(__file__).parent.parent.parent / "mobileapp" / "investor-flow" / "v2" / "invest-dashboard.html"
     return FileResponse(_path)
 
 
