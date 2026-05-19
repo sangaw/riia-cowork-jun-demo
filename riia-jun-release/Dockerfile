@@ -39,6 +39,10 @@ COPY config/ /app/config/
 COPY alembic/ /app/alembic/
 COPY alembic.ini /app/alembic.ini
 
+# Copy dashboard static files (served by FastAPI StaticFiles mount in main.py)
+COPY dashboard/ /app/dashboard/
+COPY mobileapp/ /app/mobileapp/
+
 ENV PATH="/app/venv/bin:$PATH"
 ENV PYTHONPATH="/app/src"
 

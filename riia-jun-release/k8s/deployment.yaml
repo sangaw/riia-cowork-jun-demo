@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: rita
-          # GHCR registry placeholder. Your GitHub Actions CD pipeline will replace this tag.
-          image: ghcr.io/PLACEHOLDER/rita:latest
+          # Replaced at deploy time by envsubst: GHCR_IMAGE=ghcr.io/<owner>/<repo>/rita:latest
+          image: ${GHCR_IMAGE}
           imagePullPolicy: Always
           ports:
             - containerPort: 8000

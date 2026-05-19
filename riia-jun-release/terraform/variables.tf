@@ -52,7 +52,7 @@ variable "subnet_cidr" {
 # ── EC2 Configuration ─────────────────────────────────────────────────────────
 
 variable "instance_type" {
-  description = "EC2 instance size (must be at least 2 vCPU and 4GB RAM for k3s + API)"
+  description = "EC2 instance size. t2.micro is free-tier eligible (1 vCPU, 1 GB RAM)."
   type        = string
-  default     = "t3a.medium"
+  default     = "t2.micro"
 }

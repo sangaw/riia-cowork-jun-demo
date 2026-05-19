@@ -117,32 +117,32 @@ resource "aws_instance" "rita" {
   key_name               = aws_key_pair.rita.key_name
 
   root_block_device {
-    volume_size = 50
+    # 30 GB stays within the AWS free tier EBS allowance
+    volume_size = 30
     volume_type = "gp3"
   }
 
-  # Inject bootstrap script natively via cloud-init
   user_data = <<-EOF
     #!/bin/bash
     set -e
 
-    # 1. Setup Data directories for SQLite/Flat files persistence
+    # 1. Data directories — mounted as bind volumes into the RITA container
     mkdir -p /opt/rita_input
     mkdir -p /opt/rita_output
-    chown -R 1000:1000 /opt/rita_input /opt/rita_output
+    chown -R ubuntu:ubuntu /opt/rita_input /opt/rita_output
 
-    # 2. Install K3s (Lightweight Kubernetes) without Traefik (allows custom ingress config)
-    curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="server --disable traefik" sh -
-    sleep 10
-    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    # 2. Install Docker (official convenience script)
+    curl -fsSL https://get.docker.com | sh
+    usermod -aG docker ubuntu
 
-    # Notice: In a real deploy, the repository code or built docker images would be pushed here.
-    # The Kubernetes manifests from github or ECR pulls would be run automatically via Flux/ArgoCD
-    # or a standalone kubectl apply pipeline.
+    # 3. Log in to GHCR anonymously (public image — no credentials needed)
+    #    If the GHCR package is private, pass a token here instead.
+    systemctl enable docker
+    systemctl start docker
   EOF
 
   tags = {
-    Name = "${local.app_name}-k3s-node"
+    Name = "${local.app_name}-node"
   }
 }
 
