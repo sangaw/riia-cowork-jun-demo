@@ -1,41 +1,41 @@
 {
-  "generated_at": "2026-05-18T22:02:41",
-  "total_runs": 41,
+  "generated_at": "2026-05-19T08:03:24",
+  "total_runs": 42,
   "per_role": {
     "pm": {
-      "run_count": 22,
+      "run_count": 23,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 9525
+      "avg_token_cost": 10067
     },
     "architect": {
-      "run_count": 22,
+      "run_count": 23,
       "avg_adherence_score": 0.989,
-      "first_pass_rate": 0.955,
+      "first_pass_rate": 0.957,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 10027
+      "avg_token_cost": 10548
     },
     "engineer": {
-      "run_count": 22,
-      "avg_adherence_score": 0.908,
-      "first_pass_rate": 0.636,
+      "run_count": 23,
+      "avg_adherence_score": 0.912,
+      "first_pass_rate": 0.652,
       "recent_first_pass_rate": 0.8,
-      "avg_token_cost": 29292
+      "avg_token_cost": 30410
     },
     "qa": {
-      "run_count": 22,
+      "run_count": 23,
       "avg_adherence_score": 0.989,
-      "first_pass_rate": 0.909,
+      "first_pass_rate": 0.913,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 22069
+      "avg_token_cost": 23935
     },
     "techwriter": {
-      "run_count": 22,
-      "avg_adherence_score": 0.94,
-      "first_pass_rate": 0.864,
+      "run_count": 23,
+      "avg_adherence_score": 0.942,
+      "first_pass_rate": 0.87,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 13696
+      "avg_token_cost": 14753
     }
   },
   "per_app": {
@@ -52,8 +52,8 @@
       "fail": 1
     },
     "ops": {
-      "run_count": 9,
-      "pass": 6,
+      "run_count": 10,
+      "pass": 7,
       "pass_with_warnings": 3,
       "fail": 0
     },
@@ -229,6 +229,13 @@
       "app": "ds",
       "grounding_score": 0.95,
       "checks_passed": 19,
+      "checks_total": 20
+    },
+    {
+      "run_id": "20260519-0740",
+      "app": "ops",
+      "grounding_score": 1.0,
+      "checks_passed": 20,
       "checks_total": 20
     }
   ],
@@ -546,9 +553,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.78,
-    "first_attempt_success_rate": 0.78,
-    "partial_completion_rate": 0.195,
+    "tsr": 0.786,
+    "first_attempt_success_rate": 0.786,
+    "partial_completion_rate": 0.19,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -559,10 +566,10 @@
     "csat_count": 10,
     "planning_accuracy_rate": 0.7,
     "recent_planning_accuracy_rate": 0.667,
-    "grounding_pass_rate": 0.906
+    "grounding_pass_rate": 0.908
   },
   "token_forecasting": {
-    "avg_forecast_error_pct": 22.7,
+    "avg_forecast_error_pct": 19.5,
     "by_complexity": {
       "small": {
         "avg_actual": 8673,
@@ -584,8 +591,8 @@
         "modifier": 1.0
       },
       "ops": {
-        "run_count": 9,
-        "avg_tokens": 35864,
+        "run_count": 10,
+        "avg_tokens": 52355,
         "modifier": 0.6
       },
       "fno": {
@@ -602,7 +609,7 @@
   },
   "efficiency": {
     "avg_duration_minutes": 36,
-    "avg_tokens_per_run": 50799,
+    "avg_tokens_per_run": 54370,
     "avg_retry_count": 0.05,
     "avg_time_saved_hours": 8.9
   },
@@ -623,8 +630,8 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 1073,
-    "unique_endpoints": 70,
+    "total_calls": 1074,
+    "unique_endpoints": 71,
     "overall_error_rate_pct": 3.91,
     "error_rate_5xx_pct": 0.47,
     "top_5_by_calls": [
@@ -669,6 +676,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T20:02:41.977490+00:00"
+    "generated_at": "2026-05-19T06:03:24.716851+00:00"
   }
 }

@@ -131,7 +131,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/{game_id}/result` | Finalise game: returns winner + full day log; writes run log JSON + regenerates metrics.json | `game_id`, `winner`, `user_final_pnl`, `ai_final_pnl`, `day_log[]` |
 
 **Session storage:** in-process `SESSION_DATA` dict keyed by `game_id` (UUID).
-**Run log output:** `riia-ai-org/agent-ops/runs/run-{YYYYMMDD-HHMM}.json` — auto-regenerates `metrics.json` via `aggregate_metrics.py` after each game.
+**Run log output:** `riia-jun-release/data/agent-ops/runs/run-{YYYYMMDD-HHMM}.json` — auto-regenerates `metrics.json` via `aggregate_metrics.py` (at `project-office/scripts/agent-ops/`) after each game.
 
 ### Portfolio Tier — No auth, heavy computation
 
