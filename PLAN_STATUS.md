@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-19 (Feature 14 i18n Phase 1 merged — EN/NL/FR capsule live; Defect 2 main-screen labels pending next session)
+**Last updated:** 2026-05-19 (Feature 15 AWS deploy — code + docs + Confluence complete; deployment execution pending user study. See `project-office/features/15 Deploy to AWS Cloud/PLAN_STATUS.md`)
 
 ---
 
@@ -142,3 +142,4 @@ _None_
 - 2026-05-18: Feature 13 (Build an Agent Dashboard) — COMPLETE (off-cycle). Click-to-expand chart zoom modal added to Agent Builds screen (4 charts; ✕/backdrop/Escape dismiss; matches DS pattern). Commit: 24e8d79. See `project-office/features/13 Build a Agent Dashboard/PLAN_STATUS.md`.
 - 2026-05-19: Feature 12A (agent-ops path migration) closed — Confluence Engineering page updated v25→v26; run-20260519-0740.json + metrics.json + Spec_RITA_App.md committed (d1b5c2d).
 - 2026-05-19: Feature 12B (mobile UI restructure) — all rita-build-portfolio/ UI files relocated to riia-jun-release/mobileapp/; /mobileapp StaticFiles mount added to main.py; /onboarding route path fixed; rita-build-portfolio/ added to .gitignore and removed from git index (git rm --cached). Commits: df905db, 84b5d22.
+- 2026-05-19: Feature 15 (AWS Cloud Deployment) — code scaffold fixed (Dockerfile missing COPY dashboard/mobileapp, deploy.yaml incomplete, branch trigger main→master, secrets.yaml hardcoded placeholders); switched from K3s to plain Docker on t2.micro (free tier); Terraform updated; DEPLOYMENT_GUIDE.md + TERRAFORM_EXPLAINED.md written; 3 Confluence pages published under Operations (IDs: 83820554, 83951618, 83984385). Commit: bf44c89. Deployment execution PENDING — user studying docs. See `project-office/features/15 Deploy to AWS Cloud/PLAN_STATUS.md`.

@@ -140,8 +140,8 @@ ssh_command = "ssh -i generated-key.pem ubuntu@1.2.3.4"</code></pre>
 <h2>Phase 4: Upload Data Files (one-time)</h2>
 <p>Wait ~2 minutes after <code>terraform apply</code> for Docker to install on the instance, then:</p>
 <pre><code># From riia-jun-release/ on your local machine
-scp -i terraform\generated-key.pem -r rita_input\* ubuntu@YOUR_PUBLIC_IP:/opt/rita_input/
-scp -i terraform\generated-key.pem -r rita_output\* ubuntu@YOUR_PUBLIC_IP:/opt/rita_output/</code></pre>
+scp -i terraform/generated-key.pem -r rita_input/* ubuntu@YOUR_PUBLIC_IP:/opt/rita_input/
+scp -i terraform/generated-key.pem -r rita_output/* ubuntu@YOUR_PUBLIC_IP:/opt/rita_output/</code></pre>
 
 <h2>Phase 5: Trigger First Deploy</h2>
 <pre><code>git commit --allow-empty -m "chore: trigger initial AWS deploy"
