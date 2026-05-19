@@ -41,6 +41,7 @@ All specs: `project-office/specs/` — read spec first, source file second.
 | `Spec-Agent-Workflow.md` | Agent intent coverage, agentic AI architecture |
 | `Spec_Mobile_App.md` | PWA at `riia-jun-release/mobileapp/index.html` — served at `/mobileapp` |
 | `Spec_MCP_Server.md` | MCP server, mcp_logger, `/api/v1/mcp-calls`, Claude Desktop config |
+| `SPEC_Prod_Deploy.md` | Production deployment — two-repo setup, EC2, Docker, secrets, common failures |
 
 **Definition of Done:** Any change to an API contract, data schema, or architectural pattern must update the relevant spec in the same commit.
 
