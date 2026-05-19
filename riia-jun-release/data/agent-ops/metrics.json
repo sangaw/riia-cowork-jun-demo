@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-19T08:03:24",
-  "total_runs": 42,
+  "generated_at": "2026-05-19T09:33:57",
+  "total_runs": 43,
   "per_role": {
     "pm": {
       "run_count": 23,
@@ -52,8 +52,8 @@
       "fail": 1
     },
     "ops": {
-      "run_count": 10,
-      "pass": 7,
+      "run_count": 11,
+      "pass": 8,
       "pass_with_warnings": 3,
       "fail": 0
     },
@@ -553,18 +553,18 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.786,
-    "first_attempt_success_rate": 0.786,
-    "partial_completion_rate": 0.19,
+    "tsr": 0.791,
+    "first_attempt_success_rate": 0.791,
+    "partial_completion_rate": 0.186,
     "abandonment_rate": 0.0
   },
   "quality": {
-    "avg_accuracy_score": 3.1,
+    "avg_accuracy_score": 3.0,
     "avg_relevance_score": 4.0,
-    "avg_csat": 3.1,
-    "recent_avg_csat": 3.0,
-    "csat_count": 10,
-    "planning_accuracy_rate": 0.7,
+    "avg_csat": 3.0,
+    "recent_avg_csat": 2.67,
+    "csat_count": 11,
+    "planning_accuracy_rate": 0.727,
     "recent_planning_accuracy_rate": 0.667,
     "grounding_pass_rate": 0.908
   },
@@ -591,8 +591,8 @@
         "modifier": 1.0
       },
       "ops": {
-        "run_count": 10,
-        "avg_tokens": 52355,
+        "run_count": 11,
+        "avg_tokens": 47668,
         "modifier": 0.6
       },
       "fno": {
@@ -609,9 +609,9 @@
   },
   "efficiency": {
     "avg_duration_minutes": 36,
-    "avg_tokens_per_run": 54370,
+    "avg_tokens_per_run": 53124,
     "avg_retry_count": 0.05,
-    "avg_time_saved_hours": 8.9
+    "avg_time_saved_hours": 8.8
   },
   "reliability": {
     "error_recovery_rate": 0.789,
@@ -619,7 +619,7 @@
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.024,
+    "escalation_rate": 0.023,
     "avg_corrections_per_run": 0.05,
     "total_hitl_events": 2
   },
@@ -630,10 +630,10 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 1074,
-    "unique_endpoints": 71,
-    "overall_error_rate_pct": 3.91,
-    "error_rate_5xx_pct": 0.47,
+    "total_calls": 1095,
+    "unique_endpoints": 77,
+    "overall_error_rate_pct": 3.84,
+    "error_rate_5xx_pct": 0.46,
     "top_5_by_calls": [
       {
         "path": "/progress",
@@ -662,7 +662,7 @@
       {
         "path": "/api/v1/market-signals",
         "method": "GET",
-        "count": 49,
+        "count": 52,
         "p50_ms": 188.0,
         "p95_ms": 625.0,
         "error_count": 0
@@ -676,6 +676,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-19T06:03:24.716851+00:00"
+    "generated_at": "2026-05-19T07:33:57.517088+00:00"
   }
 }

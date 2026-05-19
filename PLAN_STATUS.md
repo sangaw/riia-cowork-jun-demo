@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-18 (Feature 10 Phases 3 + 4 complete; /enhance ds support added; /agent-performance-improvements run)
+**Last updated:** 2026-05-19 (Feature 12A agent-ops path migration closed; Feature 12B mobile PWA relocated to riia-jun-release/mobileapp)
 
 ---
 
@@ -140,3 +140,5 @@ _None_
 - 2026-05-18: /agent-performance-improvements — FC-TIER guardrail (banned system-tier API self-verify grep gate) + FC-API-SIG guardrail (api() POST positional signature) added to skill-add-ds-feature.md; skill_version_history entry added to metrics.json.
 - 2026-05-18: Feature 11 (Improve Invest Game UI) — COMPLETE (off-cycle). Independent fractional buys/sells fixed; AI SELL display corrected (effective action computed pre-calculateDay). Commit: 5cde347. See `project-office/features/11 Improve Invest Game UI/PLAN_STATUS.md`.
 - 2026-05-18: Feature 13 (Build an Agent Dashboard) — COMPLETE (off-cycle). Click-to-expand chart zoom modal added to Agent Builds screen (4 charts; ✕/backdrop/Escape dismiss; matches DS pattern). Commit: 24e8d79. See `project-office/features/13 Build a Agent Dashboard/PLAN_STATUS.md`.
+- 2026-05-19: Feature 12A (agent-ops path migration) closed — Confluence Engineering page updated v25→v26; run-20260519-0740.json + metrics.json + Spec_RITA_App.md committed (d1b5c2d).
+- 2026-05-19: Feature 12B (mobile UI restructure) — all rita-build-portfolio/ UI files relocated to riia-jun-release/mobileapp/; /mobileapp StaticFiles mount added to main.py; /onboarding route path fixed; rita-build-portfolio/ added to .gitignore and removed from git index (git rm --cached). Commits: df905db, 84b5d22.
