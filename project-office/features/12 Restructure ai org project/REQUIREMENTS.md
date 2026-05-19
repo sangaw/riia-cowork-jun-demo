@@ -1,7 +1,8 @@
 # Feature 12 — Restructure ai-org: Relocate Agent-Ops Data and Scripts
 
-**Status:** Requirements Draft  
+**Status:** Complete  
 **Date:** 2026-05-19  
+**Closed:** 2026-05-19 (commits 7c771aa + d1b5c2d)  
 **Owner:** San G  
 **Approach:** /enhance multi-agent orchestration
 
@@ -179,16 +180,16 @@ git commit -m "chore: relocate agent-ops data+scripts; drop riia-ai-org from git
 
 ## 8. Acceptance Criteria
 
-- [ ] `riia-jun-release/data/agent-ops/metrics.json` exists and contains all 7 KPI sections
-- [ ] `riia-jun-release/data/agent-ops/runs/` contains all run JSON files (count matches `riia-ai-org/agent-ops/runs/`)
-- [ ] `GET /api/experience/ops/agent-builds` returns 200 with non-empty `per_role` and `metrics_extra` populated
-- [ ] `GET /api/experience/ops/token-forecast?feature_type=rita&files_to_change=medium&new_endpoint_or_model=one&frontend_scope=panel&integration_type=extends` returns 200 (not 503)
-- [ ] `ruff check riia-jun-release/src/rita/api/experience/ops.py` passes with no errors
-- [ ] `project-office/scripts/agent-ops/aggregate_metrics.py` runs without error from any working directory and writes to `riia-jun-release/data/agent-ops/metrics.json`
-- [ ] `project-office/scripts/agent-ops/write_run_to_db.py <path-to-any-run.json>` runs without import errors
-- [ ] `riia-ai-org/` is listed in `.gitignore`
-- [ ] `git status` shows no tracked files under `riia-ai-org/`
-- [ ] No references to `riia-ai-org` remain in any file under `riia-jun-release/`
+- [x] `riia-jun-release/data/agent-ops/metrics.json` exists and contains all 7 KPI sections
+- [x] `riia-jun-release/data/agent-ops/runs/` contains all run JSON files (count matches `riia-ai-org/agent-ops/runs/`)
+- [x] `GET /api/experience/ops/agent-builds` returns 200 with non-empty `per_role` and `metrics_extra` populated
+- [x] `GET /api/experience/ops/token-forecast?feature_type=rita&files_to_change=medium&new_endpoint_or_model=one&frontend_scope=panel&integration_type=extends` returns 200 (not 503)
+- [x] `ruff check riia-jun-release/src/rita/api/experience/ops.py` passes with no errors
+- [x] `project-office/scripts/agent-ops/aggregate_metrics.py` runs without error from any working directory and writes to `riia-jun-release/data/agent-ops/metrics.json`
+- [x] `project-office/scripts/agent-ops/write_run_to_db.py <path-to-any-run.json>` runs without import errors
+- [x] `riia-ai-org/` is listed in `.gitignore`
+- [x] `git status` shows no tracked files under `riia-ai-org/`
+- [x] No references to `riia-ai-org` remain in any file under `riia-jun-release/`
 
 ---
 
