@@ -1,12 +1,11 @@
 # ── Stage 1: builder ────────────────────────────────────────────────────────
 FROM python:3.11-slim AS builder
 
-WORKDIR /build
+WORKDIR /app
 
-# Install dependencies into a venv before copying the full source so that
-# Docker can cache this layer when only application code changes.
-RUN python -m venv /build/venv
-ENV PATH="/build/venv/bin:$PATH"
+# Build venv at /app/venv so shebang paths match the runtime container
+RUN python -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
 
 COPY pyproject.toml .
 # Install dependencies first (layer cached when only app code changes), then
@@ -31,7 +30,7 @@ FROM python:3.11-slim AS runtime
 WORKDIR /app
 
 # Copy only the pre-built venv from the builder stage
-COPY --from=builder /build/venv /app/venv
+COPY --from=builder /app/venv /app/venv
 
 # Copy application source and config
 COPY src/ /app/src/
@@ -42,14 +41,16 @@ COPY alembic.ini /app/alembic.ini
 # Copy dashboard static files (served by FastAPI StaticFiles mount in main.py)
 COPY dashboard/ /app/dashboard/
 COPY mobileapp/ /app/mobileapp/
+COPY ops/ /app/ops/
 
 ENV PATH="/app/venv/bin:$PATH"
 ENV PYTHONPATH="/app/src"
 
 # Run as a non-root user
-RUN useradd --uid 1000 --no-create-home --shell /sbin/nologin rita
+RUN useradd --uid 1000 --no-create-home --shell /sbin/nologin rita && \
+    mkdir -p /app/logs && chown rita:rita /app/logs
 USER rita
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn rita.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "/app/venv/bin/alembic upgrade head && /app/venv/bin/uvicorn rita.main:app --host 0.0.0.0 --port 8000"]

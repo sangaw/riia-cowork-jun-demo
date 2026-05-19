@@ -1,6 +1,6 @@
 # Feature 15 — Deploy to AWS Cloud: Handoff Status
 
-**Last updated:** 2026-05-19 (session 2)
+**Last updated:** 2026-05-19 (session 3)
 **Status:** Site is LIVE. Post-deploy defect fixing in progress.
 
 ---
@@ -46,22 +46,29 @@
 
 ---
 
-## Current State (end of session 2)
+## Current State (end of session 3)
 
-**Last push:** `fix: copy ops/ into image; fix agent-ops-data path (4 parents -> 3)`
-- This push was in-flight when context was cleared
-- It should resolve the 4 x 404 errors for ops static JSON files
+**Last push:** `ec9cd7f fix: copy ops/ into image; fix agent-ops-data path (4 parents -> 3)`
 
-**Defects that were visible at context clear:**
-```
-ops/metrics/source-availability.json  404
-ops/metrics/functional-kpis.json      404
-ops/alerts/active-alerts.json         404
-/agent-ops-data/metrics.json          404
-```
-The last push should fix all four. After the deploy completes, verify by reloading Ops dashboard and checking browser console.
+**Code-level analysis complete — all fixes verified in source:**
 
-**Known remaining issue:**
+| Fix | Verified |
+|---|---|
+| `COPY ops/ /app/ops/` in Dockerfile | ✅ |
+| `main.py` path uses 3 parents → `/app/ops/` and `/app/data/agent-ops` | ✅ |
+| `randomUUID()` safe fallback used in all 3 callsites | ✅ |
+| NVIDIA CSV exists at `data/raw/NVIDIA/nvda_daily_25yr_rounded.csv` | ✅ |
+| `selectInstrumentTab` already calls `loadMarketSignals()` | ✅ |
+| All JS named imports match their source module exports | ✅ |
+
+**`UI-Defect.txt` is outdated** — both root causes it documents are already resolved. Do not act on it.
+
+**Pending — user has not yet verified live site browser console:**
+- Need to open `http://<EC2_IP>/dashboard/ops.html` and `rita.html`, check DevTools Console
+- Expected: ops 404s are gone; no new errors
+- If 404s remain, the GitHub Actions deploy after `ec9cd7f` may not have completed — check Actions tab on `san-work-ravionics/riia-jun-release-prod`
+
+**Known non-issue:**
 - Node.js 20 deprecation warning in GitHub Actions (not an error — safe until Sep 2026)
 
 ---
@@ -108,7 +115,7 @@ docker image prune -a -f
 
 ## Resume Prompt
 
-> "Continuing Feature 15 AWS deployment defect fixing. Read `project-office/features/15 Deploy to AWS Cloud/PLAN_STATUS.md` for full context. Last push fixed ops static JSON 404s. Check if those are resolved and continue fixing remaining browser console errors."
+> "Continuing Feature 15 AWS deployment defect fixing. Read `project-office/features/15 Deploy to AWS Cloud/PLAN_STATUS.md` for full context. Code analysis is complete — all known fixes are in the last push (`ec9cd7f`). The only remaining step is live site verification: ask the user to open `http://<EC2_IP>/dashboard/ops.html` and `rita.html` in a browser, check the DevTools Console, and report any errors still visible."
 
 ---
 

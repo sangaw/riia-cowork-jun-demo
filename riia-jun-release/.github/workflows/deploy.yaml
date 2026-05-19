@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     outputs:
       image: ${{ steps.meta.outputs.image }}
     steps:
@@ -54,6 +57,7 @@ jobs:
             RITA_JWT_SECRET='${{ secrets.RITA_JWT_SECRET }}' \
             GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' \
             GOOGLE_CLIENT_SECRET='${{ secrets.GOOGLE_CLIENT_SECRET }}' \
+            RITA_BASE_URL='${{ secrets.RITA_BASE_URL }}' \
             IMAGE='${{ env.IMAGE }}' \
             bash << 'ENDSSH'
               set -e
@@ -74,7 +78,8 @@ jobs:
                 -e RITA_JWT_SECRET="$RITA_JWT_SECRET" \
                 -e RITA_GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
                 -e RITA_GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
-                -v /opt/rita_input:/app/rita_input:ro \
+                -e RITA_BASE_URL="$RITA_BASE_URL" \
+                -v /opt/rita_input:/app/data:ro \
                 -v /opt/rita_output:/app/rita_output \
                 --memory 900m \
                 "$IMAGE"

@@ -52,7 +52,7 @@ variable "subnet_cidr" {
 # ── EC2 Configuration ─────────────────────────────────────────────────────────
 
 variable "instance_type" {
-  description = "EC2 instance size. t2.micro is free-tier eligible (1 vCPU, 1 GB RAM)."
+  description = "EC2 instance size. t3.micro is free-tier eligible in ap-south-1 (1 vCPU, 1 GB RAM)."
   type        = string
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
