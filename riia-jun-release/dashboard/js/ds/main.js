@@ -19,6 +19,7 @@ import { loadModelObservability } from './model-observability.js';
 import { loadModelMcp } from './model-mcp.js';
 import { loadModelAudit } from './model-audit.js';
 import { closeChartModal } from './utils.js';
+import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
 
 // ── Section loader registry ──────────────────────────────────────────────────
 const _sectionLoaders = {
@@ -65,12 +66,14 @@ window.switchPerfTab          = switchPerfTab;
 window.switchTrainTab         = switchTrainTab;
 window.runPortfolioScenario   = runPortfolioScenario;
 window.downloadExperimentResults = downloadExperimentResults;
+window.setLanguage               = setLanguage;
 
 // ── Keyboard escape handlers (replicate inline listeners from ds.html) ────────
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeChartModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeVizModal(); });
 
 // ── Init (DOMContentLoaded) ───────────────────────────────────────────────────
+initI18n(); applyTranslations();
 // Replicates the inline init() function from ds.html verbatim.
 document.addEventListener('DOMContentLoaded', async () => {
   // Default simulation end date to today so charts always show current data

@@ -17,6 +17,7 @@ import { loadSourceAvailability } from './source-availability.js';
 import { loadFunctionalKPIs } from './functional-kpis.js';
 import { loadUtilities, runGoal, runMarket, runStrategy, runFullPipeline, doReset } from './utils.js';
 import { loadApiMetrics, filterApiMetrics } from './api-metrics.js';
+import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
 
 // ── Populate section loader registry ─────────────────────────────────────────
 sectionLoaders['overview']             = loadOverview;
@@ -63,8 +64,10 @@ window.runFullPipeline        = runFullPipeline;
 window.doReset                = doReset;
 window.loadApiMetrics         = loadApiMetrics;
 window.filterApiMetrics       = filterApiMetrics;
+window.setLanguage            = setLanguage;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
+initI18n(); applyTranslations();
 document.addEventListener('DOMContentLoaded', () => {
   loadOverview();
   loadAlerts();

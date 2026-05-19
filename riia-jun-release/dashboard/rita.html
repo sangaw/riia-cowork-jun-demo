@@ -304,6 +304,11 @@ tr:hover td{background:var(--surface2);}
       <span class="status-dot" id="status-dot"></span>
       <span id="status-text" style="font-family:var(--fm);font-size:11px">Connecting</span>
     </div>
+    <div class="lang-capsule">
+      <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+      <button class="lang-btn" data-lang="nl" onclick="setLanguage('nl')">NL</button>
+      <button class="lang-btn" data-lang="fr" onclick="setLanguage('fr')">FR</button>
+    </div>
   </div>
 </header>
 
@@ -311,22 +316,22 @@ tr:hover td{background:var(--surface2);}
 <nav class="sidebar">
 
   <div class="nav-item p00 active" data-s="market-signals" onclick="show('market-signals',this)">
-    <span class="nav-icon">◎</span> Overview
+    <span class="nav-icon">◎</span> <span data-i18n="nav.overview">Overview</span>
   </div>
 
   <div class="nav-section">
     <div class="nav-label" style="color:var(--build)">Phase 01 — Plan</div>
 <div class="nav-item p01" data-s="goal" onclick="show('goal',this)">
-      <span class="nav-icon">◎</span> Financial Goal
+      <span class="nav-icon">◎</span> <span data-i18n="heading.financial_goal">Financial Goal</span>
     </div>
     <div class="nav-item p01" data-s="market" onclick="show('market',this)">
-      <span class="nav-icon">◎</span> Market Analysis
+      <span class="nav-icon">◎</span> <span data-i18n="heading.market_analysis">Market Analysis</span>
     </div>
     <div class="nav-item p01" data-s="technical-analysis" onclick="show('technical-analysis',this)">
-      <span class="nav-icon">📈</span>Technical Analysis
+      <span class="nav-icon">📈</span><span data-i18n="nav.technical_analysis">Technical Analysis</span>
     </div>
     <div class="nav-item p01" data-s="strategy" onclick="show('strategy',this)">
-      <span class="nav-icon">◎</span> Strategy
+      <span class="nav-icon">◎</span> <span data-i18n="heading.strategy">Strategy</span>
     </div>
   </div>
 
@@ -346,10 +351,10 @@ tr:hover td{background:var(--surface2);}
       <span class="nav-icon">◈</span> Model Overview
     </div>
     <div class="nav-item p03" data-s="performance" onclick="show('performance',this)">
-      <span class="nav-icon">◎</span> Performance
+      <span class="nav-icon">◎</span> <span data-i18n="nav.performance">Performance</span>
     </div>
     <div class="nav-item p03" data-s="explain" onclick="show('explain',this)">
-      <span class="nav-icon">◎</span> Explainability
+      <span class="nav-icon">◎</span> <span data-i18n="heading.explainability">Explainability</span>
     </div>
   </div>
 

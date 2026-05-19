@@ -58,7 +58,12 @@ window.manToggleView    = manToggleView;
 window.manSaveCsv       = manSaveCsv;
 window.manSaveSnapshot  = manSaveSnapshot;
 
+import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
+
+window.setLanguage = setLanguage;
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
+initI18n(); applyTranslations();
 window.addEventListener('load', () => {
   initNav();
   initApp();

@@ -101,6 +101,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `shared/charts.js` | Chart.js registry (moved from rita/; shared by all apps) | `mkChart(id, config)`, `destroyChart(id)`, `chartOpts(label, tickCb, labels)`, `C` (color palette) |
 | `shared/nav-base.js` | Lazy-loader registry factory | `createNavRegistry()` → `{ register, load, reset, loaders }` |
 | `shared/api-cache.js` | Session-scoped API response cache factory. Cleared on page reload. | `createCache(apiFn)` — returns `cachedApi(path, ttlMs)` |
+| `shared/i18n.js` | Client-side i18n module | `t(key)`, `setLanguage(lang)`, `getLanguage()`, `applyTranslations()`, `initI18n()` |
 
 ---
 
