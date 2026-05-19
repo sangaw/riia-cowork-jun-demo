@@ -39,7 +39,7 @@ All specs: `project-office/specs/` — read spec first, source file second.
 | `Spec_HTML_Code.md` | Any HTML in `dashboard/` |
 | `Spec_Chat_Feature.md` | Chat pipeline, classifier, `/api/v1/chat` |
 | `Spec-Agent-Workflow.md` | Agent intent coverage, agentic AI architecture |
-| `Spec_Mobile_App.md` | PWA at `rita-build-portfolio/android-mobile-app/index.html` |
+| `Spec_Mobile_App.md` | PWA at `riia-jun-release/mobileapp/index.html` — served at `/mobileapp` |
 | `Spec_MCP_Server.md` | MCP server, mcp_logger, `/api/v1/mcp-calls`, Claude Desktop config |
 
 **Definition of Done:** Any change to an API contract, data schema, or architectural pattern must update the relevant spec in the same commit.
@@ -136,7 +136,7 @@ Full audit: `project-office/features/08 API Layer Rationalization/REQUIREMENTS.m
 
 ## What NOT to Do
 
-- Do not read `rita.html`, `fno.html`, or `rita-build-portfolio/android-mobile-app/index.html` directly — use specs
+- Do not read `rita.html`, `fno.html`, or `riia-jun-release/mobileapp/index.html` directly — use specs
 - Do not delete or overwrite files in `rita_input/`
 - Do not modify `core/` without QA running Greeks reference tests first
 - Do not commit `confluence-api-key.txt` or `.env` files

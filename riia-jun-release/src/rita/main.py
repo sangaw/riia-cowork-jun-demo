@@ -350,6 +350,10 @@ _ops_dir = Path(__file__).parent.parent.parent / "ops"
 if _ops_dir.exists():
     app.mount("/ops", StaticFiles(directory=_ops_dir), name="ops")
 
+_mobile_dir = Path(__file__).parent.parent.parent / "mobileapp"
+if _mobile_dir.exists():
+    app.mount("/mobileapp", StaticFiles(directory=_mobile_dir, html=True), name="mobileapp")
+
 
 @app.get("/onboarding", include_in_schema=False)
 def onboarding():

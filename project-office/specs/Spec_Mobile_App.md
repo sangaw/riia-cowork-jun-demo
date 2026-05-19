@@ -2,7 +2,7 @@
 
 High-density reference for AI agents working on the RITA mobile PWA.
 
-**File:** `rita-build-portfolio/android-mobile-app/index.html`
+**File:** `riia-jun-release/mobileapp/index.html`
 **Type:** Single-file Progressive Web App (PWA) — 1,311+ lines
 **Platform target:** Android Chrome (installable via manifest.json)
 
