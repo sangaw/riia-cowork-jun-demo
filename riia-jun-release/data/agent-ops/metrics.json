@@ -316,7 +316,7 @@
   "skill_version_history": [
     {
       "skill_file": "project-office/skills/skill-add-rita-feature.md",
-      "last_updated": "1442756",
+      "last_updated": "8419a21",
       "recent_commits": [
         {
           "hash": "1442756",
@@ -345,7 +345,7 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-fno-feature.md",
-      "last_updated": "1442756",
+      "last_updated": "8419a21",
       "recent_commits": [
         {
           "hash": "1442756",
@@ -374,7 +374,7 @@
     },
     {
       "skill_file": "project-office/skills/skill-add-ops-feature.md",
-      "last_updated": "1442756",
+      "last_updated": "8419a21",
       "recent_commits": [
         {
           "hash": "1442756",
@@ -411,7 +411,8 @@
       "skill_file": ".claude/commands/add-mobile-feature.md",
       "improvement_applied": "CSAT v1: file-relocation clarification gate added at top of skill. 'Move' tasks must confirm: copy to new path + update all references + git rm --cached from old path. Prevents copy-vs-move ambiguity (root cause: run-20260519-1500 csat=2, user had to rephrase requirements twice). Also updated description frontmatter from old rita-build-portfolio path to new riia-jun-release/mobileapp path.",
       "before_first_pass_rate": null,
-      "after_first_pass_rate": null
+      "after_first_pass_rate": null,
+      "last_updated": "8419a21"
     },
     {
       "skill_file": "project-office/skills/skill-add-ds-feature.md",
