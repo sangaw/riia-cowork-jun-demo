@@ -247,6 +247,14 @@ Also verify path depth for cross-directory imports: from `dashboard/js/fno/`, sh
 modules are at `'../shared/api-cache.js'` (one `..` up to `js/`). Using `'../../'`
 resolves to `dashboard/` which contains no `shared/` subdirectory.
 
+**FC-TIER gate — system-tier API compliance (run before `git add`):**
+Run: `grep -rn "api/v1/training-history\|api/v1/backtest-daily\|api/v1/risk-timeline" dashboard/js/fno/`
+Output must be empty. Any match = banned system-tier call still in JS. Replace with the correct experience-tier path (`/api/v1/experience/rita/...`) before committing.
+
+**FC-API-SIG gate — api() POST signature (run before `git add`):**
+Run: `grep -rn "api(.*{" dashboard/js/fno/`
+Output must show zero instances of `api(path, {` patterns. All POST calls must use the positional form: `api(path, 'POST', body)`. The object-options form silently breaks all POST operations.
+
 **FC-MERGE gate — no leftover conflict markers (run before `git add`):**
 Run: `grep -rn "^<<<<<<\|^=======\|^>>>>>>>" dashboard/js/`
 Output must be empty. Any `<<<<<<<` / `=======` / `>>>>>>>` left in a JS file is a

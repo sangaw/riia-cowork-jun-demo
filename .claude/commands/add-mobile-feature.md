@@ -1,10 +1,24 @@
 ---
-description: Add or update a feature in the RITA Mobile PWA (rita-build-portfolio/android-mobile-app/index.html)
+description: Add or update a feature in the RITA Mobile PWA (riia-jun-release/mobileapp/index.html)
 ---
 
 You are an Engineer agent adding or updating a feature in the RITA Mobile PWA.
 
 **Task:** $ARGUMENTS
+
+---
+
+## IMPORTANT — Relocation vs Feature Tasks
+
+Before writing any code, determine which type of task this is:
+
+**Type A — File relocation / restructuring** (e.g. "move files", "restructure folders", "relocate screens"):
+- "Move" always means: copy to new path + update all references (main.py, specs, CLAUDE.md) + add old path to `.gitignore` + `git rm --cached -r <old-path>/`
+- Do NOT just copy files and leave the originals tracked. That is not a move.
+- Confirm with the user if the scope is ambiguous: "To confirm — move means copy to new location, update all references, then remove old path from git tracking. Correct?"
+
+**Type B — Feature addition / modification** (adding a screen, binding API data, modifying UI):
+- Proceed with the instructions below.
 
 ---
 
