@@ -1,5 +1,5 @@
 # RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-19 (Feature 12A agent-ops path migration closed; Feature 12B mobile PWA relocated to riia-jun-release/mobileapp)
+**Last updated:** 2026-05-19 (Feature 14 i18n Phase 1 merged — EN/NL/FR capsule live; Defect 2 main-screen labels pending next session)
 
 ---
 
