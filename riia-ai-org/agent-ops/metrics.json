@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-05-18T17:25:31",
-  "total_runs": 32,
+  "generated_at": "2026-05-18T22:02:41",
+  "total_runs": 41,
   "per_role": {
     "pm": {
       "run_count": 22,
@@ -46,8 +46,8 @@
       "fail": 0
     },
     "invest-game": {
-      "run_count": 10,
-      "pass": 8,
+      "run_count": 19,
+      "pass": 17,
       "pass_with_warnings": 1,
       "fail": 1
     },
@@ -409,6 +409,78 @@
   ],
   "game_sessions": [
     {
+      "run_id": "20260518-2002",
+      "request": "Invest game: ASML over 8 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.2,
+      "day_count": 8,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1956",
+      "request": "Invest game: ASML over 8 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.2,
+      "day_count": 8,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1953",
+      "request": "Invest game: ASML over 8 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.4,
+      "day_count": 8,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1950",
+      "request": "Invest game: ASML over 8 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.3,
+      "day_count": 8,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1938",
+      "request": "Invest game: ASML over 8 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.2,
+      "day_count": 8,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1935",
+      "request": "Invest game: ASML over 8 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.8,
+      "day_count": 8,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1926",
+      "request": "Invest game: ASML over 8 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.2,
+      "day_count": 8,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1916",
+      "request": "Invest game: ASML over 10 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.4,
+      "day_count": 10,
+      "flagged_count": 0
+    },
+    {
+      "run_id": "20260518-1915",
+      "request": "Invest game: ASML over 10 days",
+      "overall_status": "pass",
+      "duration_minutes": 0.3,
+      "day_count": 10,
+      "flagged_count": 0
+    },
+    {
       "run_id": "20260518-1310",
       "request": "Invest game: ASML over 10 days",
       "overall_status": "pass",
@@ -474,9 +546,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.719,
-    "first_attempt_success_rate": 0.719,
-    "partial_completion_rate": 0.25,
+    "tsr": 0.78,
+    "first_attempt_success_rate": 0.78,
+    "partial_completion_rate": 0.195,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -487,7 +559,7 @@
     "csat_count": 10,
     "planning_accuracy_rate": 0.7,
     "recent_planning_accuracy_rate": 0.667,
-    "grounding_pass_rate": 0.936
+    "grounding_pass_rate": 0.906
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 22.7,
@@ -522,16 +594,16 @@
         "modifier": 0.8
       },
       "invest-game": {
-        "run_count": 10,
-        "avg_tokens": 19920,
+        "run_count": 19,
+        "avg_tokens": 11905,
         "modifier": 1.1
       }
     }
   },
   "efficiency": {
-    "avg_duration_minutes": 46,
-    "avg_tokens_per_run": 64242,
-    "avg_retry_count": 0.06,
+    "avg_duration_minutes": 36,
+    "avg_tokens_per_run": 50799,
+    "avg_retry_count": 0.05,
     "avg_time_saved_hours": 8.9
   },
   "reliability": {
@@ -540,8 +612,8 @@
     "loop_event_total": 0
   },
   "hitl": {
-    "escalation_rate": 0.031,
-    "avg_corrections_per_run": 0.06,
+    "escalation_rate": 0.024,
+    "avg_corrections_per_run": 0.05,
     "total_hitl_events": 2
   },
   "agentic": {
@@ -551,52 +623,52 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 644,
-    "unique_endpoints": 50,
-    "overall_error_rate_pct": 4.97,
-    "error_rate_5xx_pct": 0.78,
+    "total_calls": 1073,
+    "unique_endpoints": 70,
+    "overall_error_rate_pct": 3.91,
+    "error_rate_5xx_pct": 0.47,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 201,
-        "p50_ms": 16.0,
-        "p95_ms": 141.0,
-        "error_count": 0
-      },
-      {
-        "path": "/api/v1/market-signals",
-        "method": "GET",
-        "count": 46,
-        "p50_ms": 203.0,
-        "p95_ms": 625.0,
-        "error_count": 0
-      },
-      {
-        "path": "/api/v1/instrument/active",
-        "method": "GET",
-        "count": 42,
+        "count": 304,
         "p50_ms": 16.0,
         "p95_ms": 109.0,
         "error_count": 0
       },
       {
-        "path": "/api/v1/experience/rita/geography-overview",
-        "method": "GET",
-        "count": 42,
-        "p50_ms": 125.0,
-        "p95_ms": 359.0,
+        "path": "/api/experience/invest-game/run-day",
+        "method": "POST",
+        "count": 105,
+        "p50_ms": 0.0,
+        "p95_ms": 16.0,
         "error_count": 0
       },
       {
-        "path": "/api/v1/commentary",
-        "method": "POST",
-        "count": 36,
-        "p50_ms": 2422.0,
-        "p95_ms": 14891.0,
+        "path": "/api/v1/instrument/active",
+        "method": "GET",
+        "count": 66,
+        "p50_ms": 16.0,
+        "p95_ms": 78.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/v1/market-signals",
+        "method": "GET",
+        "count": 49,
+        "p50_ms": 188.0,
+        "p95_ms": 625.0,
+        "error_count": 0
+      },
+      {
+        "path": "/api/v1/experience/rita/geography-overview",
+        "method": "GET",
+        "count": 45,
+        "p50_ms": 125.0,
+        "p95_ms": 359.0,
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-18T15:25:31.985275+00:00"
+    "generated_at": "2026-05-18T20:02:41.977490+00:00"
   }
 }

@@ -1,0 +1,6 @@
+1. First row should show Agent Scorecards. Makr it 5 columns grid and then show toekn cost trend
+2. In second row, extend pipeline run history to 50% of the page and show skill file version in next 50%
+3. In thrid row, token forcast, grounding score trend, failure mode heatmap
+4. in fourth row, show failure mode heatmap in 50% and Estimate token budget in rest 50%
+
+So this becomes 4 rows view.
