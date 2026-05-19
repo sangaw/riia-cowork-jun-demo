@@ -86,6 +86,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 .tile-arrow{font-size:14px;transition:transform .15s;}
 .tile:hover .tile-arrow{transform:translateX(3px);}
 
+/* ── Language Capsule ────────────────────────────────────── */
+.lang-capsule{display:inline-flex;align-items:center;border:1px solid var(--border);border-radius:100px;overflow:hidden;background:var(--surface2);}
+.lang-btn{padding:3px 10px;font-family:var(--fm);font-size:11px;font-weight:500;letter-spacing:.04em;background:transparent;color:var(--t2);border:none;cursor:pointer;transition:background .15s,color .15s;line-height:1.4;}
+.lang-btn:hover{color:var(--text);}
+.lang-btn.active{background:var(--build);color:#fff;border-radius:100px;}
+
 /* ── Footer ──────────────────────────────────────────────── */
 .footer{padding:20px 28px;text-align:center;font-family:var(--fm);font-size:10px;color:var(--t4);border-top:1px solid var(--border);}
 
