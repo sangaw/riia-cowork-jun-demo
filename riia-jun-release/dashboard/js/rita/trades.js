@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, chartOpts, C } from './charts.js';
 import { createCache } from '../shared/api-cache.js';
+import { t } from '../shared/i18n.js';
 
 const cachedApi = createCache(api);
 
@@ -23,7 +24,7 @@ export async function loadTrades() {
       api(`/api/v1/training-split?instrument=${instrument}`).catch(() => null),
     ]);
     if (!rows || !rows.length) {
-      setEl('trades-table-wrap', '<div class="empty">No data — run pipeline first.</div>');
+      setEl('trades-table-wrap', `<div class="empty">${t('trades.no_data')}</div>`);
       return;
     }
     _tjRows = rows;
@@ -71,30 +72,30 @@ export async function loadTrades() {
 
     const trainCard = latest ? `
       <div style="border:1px solid ${cfgTr.color};border-radius:7px;padding:12px 14px;background:${cfgTr.bg};height:100%">
-        <div style="font-weight:700;color:${cfgTr.color};margin-bottom:8px;font-size:12px">Train</div>
+        <div style="font-weight:700;color:${cfgTr.color};margin-bottom:8px;font-size:12px">${t('trades.train')}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
-          <div><span style="color:var(--t3)">Sharpe</span><div style="font-weight:600">${_fs(latest.train_sharpe)}</div></div>
-          <div><span style="color:var(--t3)">MDD %</span><div style="font-weight:600">${_fv(latest.train_mdd_pct)}</div></div>
-          <div><span style="color:var(--t3)">Return %</span><div style="font-weight:600">${_fv(latest.train_return_pct)}</div></div>
-          <div><span style="color:var(--t3)">Trades</span><div style="font-weight:600">${_fi(latest.train_trades)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_sharpe')}</span><div style="font-weight:600">${_fs(latest.train_sharpe)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_mdd')}</span><div style="font-weight:600">${_fv(latest.train_mdd_pct)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_return')}</span><div style="font-weight:600">${_fv(latest.train_return_pct)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_trades')}</span><div style="font-weight:600">${_fi(latest.train_trades)}</div></div>
         </div>
       </div>` : `<div style="border:1px solid ${cfgTr.color};border-radius:7px;padding:12px 14px;background:${cfgTr.bg}">
-        <div style="font-weight:700;color:${cfgTr.color};margin-bottom:4px;font-size:12px">Train</div>
-        <div style="font-size:11px;color:var(--t3)">No data</div>
+        <div style="font-weight:700;color:${cfgTr.color};margin-bottom:4px;font-size:12px">${t('trades.train')}</div>
+        <div style="font-size:11px;color:var(--t3)">${t('trades.no_data_short')}</div>
       </div>`;
 
     const testCard = latest ? `
       <div style="border:1px solid ${cfgVa.color};border-radius:7px;padding:12px 14px;background:${cfgVa.bg};height:100%">
-        <div style="font-weight:700;color:${cfgVa.color};margin-bottom:8px;font-size:12px">Test</div>
+        <div style="font-weight:700;color:${cfgVa.color};margin-bottom:8px;font-size:12px">${t('trades.test')}</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
-          <div><span style="color:var(--t3)">Sharpe</span><div style="font-weight:600">${_fs(latest.val_sharpe)}</div></div>
-          <div><span style="color:var(--t3)">MDD %</span><div style="font-weight:600">${_fv(latest.val_mdd_pct)}</div></div>
-          <div><span style="color:var(--t3)">Return %</span><div style="font-weight:600">${_fv(latest.val_return_pct)}</div></div>
-          <div><span style="color:var(--t3)">Trades</span><div style="font-weight:600">${_fi(latest.val_trades)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_sharpe')}</span><div style="font-weight:600">${_fs(latest.val_sharpe)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_mdd')}</span><div style="font-weight:600">${_fv(latest.val_mdd_pct)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_return')}</span><div style="font-weight:600">${_fv(latest.val_return_pct)}</div></div>
+          <div><span style="color:var(--t3)">${t('trades.label_trades')}</span><div style="font-weight:600">${_fi(latest.val_trades)}</div></div>
         </div>
       </div>` : `<div style="border:1px solid ${cfgVa.color};border-radius:7px;padding:12px 14px;background:${cfgVa.bg}">
-        <div style="font-weight:700;color:${cfgVa.color};margin-bottom:4px;font-size:12px">Test</div>
-        <div style="font-size:11px;color:var(--t3)">No data</div>
+        <div style="font-weight:700;color:${cfgVa.color};margin-bottom:4px;font-size:12px">${t('trades.test')}</div>
+        <div style="font-size:11px;color:var(--t3)">${t('trades.no_data_short')}</div>
       </div>`;
 
     // Backtest — 8 metrics (4 from risk-timeline + 4 from training-history)
@@ -114,16 +115,16 @@ export async function loadTrades() {
 
       backtestCard = `
         <div style="border:1px solid ${cfgBt.color};border-radius:7px;padding:12px 14px;background:${cfgBt.bg};height:100%">
-          <div style="font-weight:700;color:${cfgBt.color};margin-bottom:8px;font-size:12px">Backtest</div>
+          <div style="font-weight:700;color:${cfgBt.color};margin-bottom:8px;font-size:12px">${t('trades.backtest')}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;font-size:11px">
-            <div><span style="color:var(--t3)">Days</span><div style="font-weight:600">${btRows.length || '—'}</div></div>
-            <div><span style="color:var(--t3)">Sharpe</span><div style="font-weight:600">${btSharpe}</div></div>
-            <div><span style="color:var(--t3)">Max DD</span><div style="font-weight:600">${maxDD != null ? maxDD.toFixed(2) + '%' : '—'}</div></div>
-            <div><span style="color:var(--t3)">MDD %</span><div style="font-weight:600">${btMdd}</div></div>
-            <div><span style="color:var(--t3)">Cash</span><div style="font-weight:600">${cashDays}d</div></div>
-            <div><span style="color:var(--t3)">Return %</span><div style="font-weight:600">${btReturn}</div></div>
-            <div><span style="color:var(--t3)">Half / Full</span><div style="font-weight:600">${halfDays}d / ${fullDays}d</div></div>
-            <div><span style="color:var(--t3)">Trades</span><div style="font-weight:600">${btTrades}</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_days')}</span><div style="font-weight:600">${btRows.length || '—'}</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_sharpe')}</span><div style="font-weight:600">${btSharpe}</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_max_dd')}</span><div style="font-weight:600">${maxDD != null ? maxDD.toFixed(2) + '%' : '—'}</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_mdd')}</span><div style="font-weight:600">${btMdd}</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_cash')}</span><div style="font-weight:600">${cashDays}d</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_return')}</span><div style="font-weight:600">${btReturn}</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_half_full')}</span><div style="font-weight:600">${halfDays}d / ${fullDays}d</div></div>
+            <div><span style="color:var(--t3)">${t('trades.label_trades')}</span><div style="font-weight:600">${btTrades}</div></div>
           </div>
         </div>`;
     }
@@ -161,8 +162,8 @@ export async function loadTrades() {
     setEl('trades-table-wrap', `
       <table>
         <thead><tr>
-          <th>Date</th><th>Phase</th><th>Allocation</th>
-          <th>Portfolio (norm)</th><th>Drawdown %</th><th>Regime</th>
+          <th>${t('trades.col_date')}</th><th>${t('trades.col_phase')}</th><th>${t('trades.col_allocation')}</th>
+          <th>${t('trades.col_portfolio')}</th><th>${t('trades.col_drawdown')}</th><th>${t('trades.col_regime')}</th>
         </tr></thead>
         <tbody>${rows.map(r => {
           const cfg = TJ_PHASE[r.phase] || {};
@@ -181,7 +182,7 @@ export async function loadTrades() {
         </tbody>
       </table>`);
   } catch (e) {
-    setEl('trades-table-wrap', '<div class="empty">Error loading trade data.</div>');
+    setEl('trades-table-wrap', `<div class="empty">${t('trades.error')}</div>`);
   }
 }
 
@@ -201,8 +202,8 @@ export function downloadTradeJournal() {
 export function allocBadge(v) {
   if (v == null) return '<span class="badge neu">—</span>';
   const pct = parseFloat(v) * 100;
-  if (pct === 0) return '<span class="badge warn">HOLD 0%</span>';
-  if (pct === 50) return '<span class="badge run">HALF 50%</span>';
-  if (pct >= 99) return '<span class="badge ok">FULL 100%</span>';
+  if (pct === 0) return `<span class="badge warn">${t('trades.hold')}</span>`;
+  if (pct === 50) return `<span class="badge run">${t('trades.half')}</span>`;
+  if (pct >= 99) return `<span class="badge ok">${t('trades.full')}</span>`;
   return `<span class="badge neu">${pct.toFixed(0)}%</span>`;
 }

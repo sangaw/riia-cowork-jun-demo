@@ -2,6 +2,7 @@
 import { state, activePositions } from './state.js';
 import { fmt, fmtPnl, pnlClass } from './utils.js';
 import { loadHistory } from './rr.js';
+import { t } from '../shared/i18n.js';
 
 export function renderDashboard() {
   renderDashKpis();
@@ -26,11 +27,11 @@ export function renderDashKpis() {
   const closedCnt = state.closedPositions.filter(p => state.currentUnd === 'ALL' || p.underlying === state.currentUnd).length;
 
   document.getElementById('dash-kpis').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Active Positions</div><div class="kpi-value">${filtered.length}</div><div class="kpi-sub">${subLine}</div></div>
-    <div class="kpi"><div class="kpi-label">Unrealized P&amp;L</div><div class="kpi-value ${pnlClass(unreal)}">${fmtPnl(unreal)}</div><div class="kpi-sub">Open positions</div></div>
-    <div class="kpi"><div class="kpi-label">Realized P&amp;L</div><div class="kpi-value ${pnlClass(realized)}">${fmtPnl(realized)}</div><div class="kpi-sub ${realized > 0 ? 'pos' : ''}">${state.currentUnd === 'BANKNIFTY' ? 'No closed BANKNIFTY trades' : `${closedCnt} closed trades`}</div></div>
-    <div class="kpi"><div class="kpi-label">Net P&amp;L</div><div class="kpi-value ${pnlClass(net)}">${fmtPnl(net)}</div><div class="kpi-sub">Realized + Unrealized</div></div>
-    <div class="kpi"><div class="kpi-label">Net Delta</div><div class="kpi-value ${netDelta < 0 ? 'neg' : 'pos'}">${netDelta > 0 ? '+' : ''}${netDelta}</div><div class="kpi-sub ${netDelta < 0 ? 'neg' : 'pos'}">${netDelta < 0 ? 'Net short / bearish' : 'Net long / bullish'}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('fno.active_positions')}</div><div class="kpi-value">${filtered.length}</div><div class="kpi-sub">${subLine}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('fno.unrealized_pnl')}</div><div class="kpi-value ${pnlClass(unreal)}">${fmtPnl(unreal)}</div><div class="kpi-sub">${t('fno.open_positions_sub')}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('fno.realized_pnl')}</div><div class="kpi-value ${pnlClass(realized)}">${fmtPnl(realized)}</div><div class="kpi-sub ${realized > 0 ? 'pos' : ''}">${state.currentUnd === 'BANKNIFTY' ? 'No closed BANKNIFTY trades' : `${closedCnt} closed trades`}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('fno.net_pnl')}</div><div class="kpi-value ${pnlClass(net)}">${fmtPnl(net)}</div><div class="kpi-sub">${t('fno.real_unreal')}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('fno.net_delta')}</div><div class="kpi-value ${netDelta < 0 ? 'neg' : 'pos'}">${netDelta > 0 ? '+' : ''}${netDelta}</div><div class="kpi-sub ${netDelta < 0 ? 'neg' : 'pos'}">${netDelta < 0 ? t('fno.net_short') : t('fno.net_long')}</div></div>
   `;
 }
 
@@ -69,10 +70,10 @@ export function renderMarketSnapshot() {
       </div>
       <div class="mkt-range-bar" style="margin-top:8px;"><div class="mkt-range-fill ${u.toLowerCase()}" style="left:0;width:${rangePct}%;"></div></div>
       <div class="mkt-ohlc">
-        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">Open</div><div class="mkt-ohlc-val">${d.open.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
-        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">High</div><div class="mkt-ohlc-val" style="color:var(--pos)">${d.high.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
-        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">Low</div><div class="mkt-ohlc-val" style="color:var(--neg)">${d.low.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
-        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">Close</div><div class="mkt-ohlc-val">${d.close.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
+        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">${t('fno.ohlc_open')}</div><div class="mkt-ohlc-val">${d.open.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
+        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">${t('fno.ohlc_high')}</div><div class="mkt-ohlc-val" style="color:var(--pos)">${d.high.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
+        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">${t('fno.ohlc_low')}</div><div class="mkt-ohlc-val" style="color:var(--neg)">${d.low.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
+        <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">${t('fno.ohlc_close')}</div><div class="mkt-ohlc-val">${d.close.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></div>
       </div>
       <div class="mkt-stats">
         <span>Range: ${range.toFixed(2)} pts</span>

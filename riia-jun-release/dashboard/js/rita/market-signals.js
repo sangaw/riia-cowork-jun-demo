@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
 import { loadOverviewCommentary } from './commentary.js';
+import { t } from '../shared/i18n.js';
 
 let _msTimeframe = 'daily';
 
@@ -51,7 +52,7 @@ export async function loadMarketSignals() {
 
     // ── Data range label ────────────────────────────────────
     const firstDate = rows.find(r => r.date)?.date || '—';
-    const tfLabel = _msTimeframe === 'monthly' ? 'Monthly' : _msTimeframe === 'weekly' ? 'Weekly' : 'Daily';
+    const tfLabel = _msTimeframe === 'monthly' ? t('ms.timeframe_monthly') : _msTimeframe === 'weekly' ? t('ms.timeframe_weekly') : t('ms.timeframe_daily');
     setEl('ms-data-range', `${tfLabel} · ${firstDate} → ${last.date || '—'} &nbsp;|&nbsp; ${rows.length} bars`);
     const _luRaw = last.date ? new Date(last.date + 'T00:00:00') : null;
     setEl('ms-last-updated', (_luRaw && !isNaN(_luRaw.getTime()))
@@ -71,19 +72,19 @@ export async function loadMarketSignals() {
     const rsi = parseFloat(last.rsi_14);
     setEl('ms-rsi-val', isNaN(rsi) ? '—' : rsi.toFixed(1));
     document.getElementById('ms-rsi-val').className = 'kpi-value ' + (rsi > 60 ? 'neg' : rsi < 30 ? 'pos' : 'neu');
-    setEl('ms-rsi-sig', rsi > 60 ? 'Overbought' : rsi < 30 ? 'Oversold' : 'Neutral');
+    setEl('ms-rsi-sig', rsi > 60 ? t('ms.overbought') : rsi < 30 ? t('ms.oversold') : t('ms.neutral'));
 
     const macdVal = parseFloat(last.macd);
     const sigVal  = parseFloat(last.macd_signal);
     const macdBull = macdVal > sigVal;
     setEl('ms-macd-val', isNaN(macdVal) ? '—' : macdVal.toFixed(2));
     document.getElementById('ms-macd-val').className = 'kpi-value ' + (macdBull ? 'pos' : 'neg');
-    setEl('ms-macd-sig', macdBull ? 'Bullish crossover' : 'Bearish crossover');
+    setEl('ms-macd-sig', macdBull ? t('ms.bullish_crossover') : t('ms.bearish_crossover'));
 
     const bbPct = parseFloat(last.bb_pct_b);
     setEl('ms-bb-val', isNaN(bbPct) ? '—' : bbPct.toFixed(2));
     document.getElementById('ms-bb-val').className = 'kpi-value ' + (bbPct > 0.8 ? 'neg' : bbPct < 0.2 ? 'pos' : 'neu');
-    setEl('ms-bb-sig', bbPct > 0.8 ? 'Near upper band' : bbPct < 0.2 ? 'Near lower band' : 'Mid-band');
+    setEl('ms-bb-sig', bbPct > 0.8 ? t('ms.near_upper_band') : bbPct < 0.2 ? t('ms.near_lower_band') : t('ms.mid_band'));
 
     const price  = parseFloat(last.Close);
     const ema5   = parseFloat(last.ema_5);
@@ -94,13 +95,13 @@ export async function loadMarketSignals() {
     const abv26  = price > ema26;
     setEl('ms-ema5-val',  isNaN(ema5)  ? '—' : ema5.toFixed(0));
     document.getElementById('ms-ema5-val').className  = 'kpi-value ' + (abv5  ? 'pos' : 'neg');
-    setEl('ms-ema5-sig',  abv5  ? 'Above EMA5'  : 'Below EMA5');
+    setEl('ms-ema5-sig',  abv5  ? t('ms.above_ema5')  : t('ms.below_ema5'));
     setEl('ms-ema13-val', isNaN(ema13) ? '—' : ema13.toFixed(0));
     document.getElementById('ms-ema13-val').className = 'kpi-value ' + (abv13 ? 'pos' : 'neg');
-    setEl('ms-ema13-sig', abv13 ? 'Above EMA13' : 'Below EMA13');
+    setEl('ms-ema13-sig', abv13 ? t('ms.above_ema13') : t('ms.below_ema13'));
     setEl('ms-ema26-val', isNaN(ema26) ? '—' : ema26.toFixed(0));
     document.getElementById('ms-ema26-val').className = 'kpi-value ' + (abv26 ? 'pos' : 'neg');
-    setEl('ms-ema26-sig', abv26 ? 'Above EMA26' : 'Below EMA26');
+    setEl('ms-ema26-sig', abv26 ? t('ms.above_ema26') : t('ms.below_ema26'));
 
     // Update historical avg hint on the Financial Goal section
     const histHint = document.getElementById('historical-avg-hint');
@@ -114,12 +115,12 @@ export async function loadMarketSignals() {
     const atrPct  = (!isNaN(atrRaw) && price) ? (atrRaw / price * 100) : NaN;
     setEl('ms-atr-val', isNaN(atrPct) ? '—' : atrPct.toFixed(2) + '%');
     document.getElementById('ms-atr-val').className = 'kpi-value ' + (atrPct > 1.5 ? 'neg' : atrPct < 0.8 ? 'pos' : 'neu');
-    setEl('ms-atr-sig', atrPct > 1.5 ? 'High volatility' : atrPct < 0.8 ? 'Compressed' : 'Normal range');
+    setEl('ms-atr-sig', atrPct > 1.5 ? t('ms.high_volatility') : atrPct < 0.8 ? t('ms.compressed') : t('ms.normal_range'));
 
     const trendVal = parseFloat(last.trend_score);
     setEl('ms-trend-val', isNaN(trendVal) ? '—' : trendVal.toFixed(2));
     document.getElementById('ms-trend-val').className = 'kpi-value ' + (trendVal > 0.2 ? 'pos' : trendVal < -0.2 ? 'neg' : 'neu');
-    setEl('ms-trend-sig', trendVal > 0.5 ? 'Strong uptrend' : trendVal > 0.2 ? 'Mild uptrend' : trendVal < -0.5 ? 'Strong downtrend' : trendVal < -0.2 ? 'Mild downtrend' : 'Sideways');
+    setEl('ms-trend-sig', trendVal > 0.5 ? t('ms.strong_uptrend') : trendVal > 0.2 ? t('ms.mild_uptrend') : trendVal < -0.5 ? t('ms.strong_downtrend') : trendVal < -0.2 ? t('ms.mild_downtrend') : t('ms.sideways'));
 
     // ── Price + Volume chart ────────────────────────────────
     mkChart('chart-ms-pv', {
@@ -157,8 +158,8 @@ export async function loadMarketSignals() {
     else if (rsi < 40)       alerts.push(mkAlert('warn', `RSI Approaching OS ${rsi.toFixed(1)}`));
 
     // MACD
-    if      (macdBull)       alerts.push(mkAlert('ok',  'MACD Bullish Cross'));
-    else                     alerts.push(mkAlert('err', 'MACD Bearish Cross'));
+    if      (macdBull)       alerts.push(mkAlert('ok',  t('ms.macd_bullish')));
+    else                     alerts.push(mkAlert('err', t('ms.macd_bearish')));
 
     // BB
     if      (bbPct > 0.8)    alerts.push(mkAlert('err',  `BB Near Upper Band ${bbPct.toFixed(2)}`));
@@ -194,7 +195,7 @@ export async function loadMarketSignals() {
 
     document.getElementById('ms-alerts').innerHTML = alerts.length
       ? alerts.join('')
-      : mkAlert('neu', 'No significant signals');
+      : mkAlert('neu', t('ms.no_signals'));
 
     await loadGeoPanels();
     await loadOverviewCommentary();

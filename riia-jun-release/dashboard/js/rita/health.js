@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
 import { createCache } from '../shared/api-cache.js';
+import { t } from '../shared/i18n.js';
 
 const cachedApi = createCache(api);
 
@@ -12,7 +13,7 @@ export async function loadHealth() {
     const dot = document.getElementById('status-dot');
     const txt = document.getElementById('status-text');
     dot.className = 'status-dot ok';
-    txt.textContent = d.model_exists ? 'Model loaded' : 'API online';
+    txt.textContent = d.model_exists ? t('health.model_loaded') : t('health.api_online');
 
     // Sidebar footer
     setEl('sb-model-info', d.model_exists
@@ -20,15 +21,14 @@ export async function loadHealth() {
       : 'Model: not trained');
 
     // Model status card
-    const mb = d.model_exists ? '<span class="badge ok">Loaded</span>' : '<span class="badge warn">Not Found</span>';
-    setEl('model-badge', d.model_exists ? 'Loaded' : 'Not Found');
+    setEl('model-badge', d.model_exists ? t('health.model_loaded') : t('health.missing'));
     document.getElementById('model-badge').className = 'badge ' + (d.model_exists ? 'ok' : 'warn');
     setEl('model-details', `
       <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--t2)">
-        <div style="display:flex;justify-content:space-between"><span>Model file</span><span class="badge ${d.model_exists ? 'ok' : 'err'}">${d.model_exists ? 'Present' : 'Missing'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Age</span><span style="font-family:var(--fm)">${d.model_age_days != null ? d.model_age_days + ' days' : '—'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Last run</span><span style="font-family:var(--fm);font-size:11px">${d.last_pipeline_run || '—'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>CSV loaded</span><span class="badge ${d.csv_loaded ? 'ok' : 'err'}">${d.csv_loaded ? 'Yes' : 'No'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>${t('health.model_file')}</span><span class="badge ${d.model_exists ? 'ok' : 'err'}">${d.model_exists ? t('health.present') : t('health.missing')}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>${t('health.age')}</span><span style="font-family:var(--fm)">${d.model_age_days != null ? d.model_age_days + ' days' : '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>${t('health.last_run')}</span><span style="font-family:var(--fm);font-size:11px">${d.last_pipeline_run || '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>${t('health.csv_loaded')}</span><span class="badge ${d.csv_loaded ? 'ok' : 'err'}">${d.csv_loaded ? t('status.active') : t('ui.no_data')}</span></div>
       </div>
     `);
 
@@ -37,12 +37,12 @@ export async function loadHealth() {
     const daysOld = fresh.days_since_latest;
     const freshOk = daysOld != null && daysOld < 30;
     document.getElementById('data-badge').className = 'badge ' + (freshOk ? 'ok' : 'warn');
-    setEl('data-badge', freshOk ? 'Fresh' : (daysOld != null ? daysOld + 'd old' : '—'));
+    setEl('data-badge', freshOk ? t('status.active') : (daysOld != null ? daysOld + 'd old' : '—'));
     setEl('data-details', `
       <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--t2)">
-        <div style="display:flex;justify-content:space-between"><span>Latest date</span><span style="font-family:var(--fm)">${fresh.latest_date || '—'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Days old</span><span style="font-family:var(--fm)">${daysOld != null ? daysOld : '—'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Status</span><span class="badge ${freshOk ? 'ok' : 'warn'}">${fresh.status || '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>${t('health.latest_date')}</span><span style="font-family:var(--fm)">${fresh.latest_date || '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>${t('health.days_old')}</span><span style="font-family:var(--fm)">${daysOld != null ? daysOld : '—'}</span></div>
+        <div style="display:flex;justify-content:space-between"><span>${t('kpi.regime')}</span><span class="badge ${freshOk ? 'ok' : 'warn'}">${fresh.status || '—'}</span></div>
       </div>
     `);
 
@@ -76,12 +76,12 @@ export async function loadHealth() {
       }));
     } else if (trendWrap) {
       trendWrap.style.display = '';
-      trendWrap.innerHTML = '<span style="font-size:11px;color:var(--t3)">Not enough runs yet</span>';
+      trendWrap.innerHTML = `<span style="font-size:11px;color:var(--t3)">${t('health.not_enough_runs')}</span>`;
     }
   } catch (e) {
     const dot = document.getElementById('status-dot');
     dot.className = 'status-dot err';
-    document.getElementById('status-text').textContent = 'API offline';
+    document.getElementById('status-text').textContent = t('health.api_offline');
   }
 }
 
@@ -146,13 +146,13 @@ export async function loadPerfSummary() {
     const allMet   = sharpeOk && mddOk;
     if (document.getElementById('constraints-badge')) {
       document.getElementById('constraints-badge').className = 'badge ' + (allMet ? 'ok' : 'err');
-      setEl('constraints-badge', allMet ? 'All Met' : 'Not Met');
+      setEl('constraints-badge', allMet ? t('health.all_met') : t('health.not_met'));
       setEl('constraints-details', `
         <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--t2)">
-          <div style="display:flex;justify-content:space-between"><span>Sharpe ≥ 1.0</span><span class="badge ${sharpeOk ? 'ok' : 'err'}">${sharpeOk ? 'Met' : 'Not Met'}</span></div>
-          <div style="display:flex;justify-content:space-between"><span>Max DD &lt; 10%</span><span class="badge ${mddOk ? 'ok' : 'err'}">${mddOk ? 'Met' : 'Not Met'}</span></div>
-          <div style="display:flex;justify-content:space-between"><span>CAGR</span><span style="font-family:var(--fm)">${fmtPct(isNaN(cagr) ? null : cagr)}</span></div>
-          <div style="display:flex;justify-content:space-between"><span>Total days</span><span style="font-family:var(--fm)">${d.total_days || '—'}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>${t('health.sharpe_gate')}</span><span class="badge ${sharpeOk ? 'ok' : 'err'}">${sharpeOk ? t('health.all_met') : t('health.not_met')}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>${t('health.mdd_gate')}</span><span class="badge ${mddOk ? 'ok' : 'err'}">${mddOk ? t('health.all_met') : t('health.not_met')}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>${t('health.cagr')}</span><span style="font-family:var(--fm)">${fmtPct(isNaN(cagr) ? null : cagr)}</span></div>
+          <div style="display:flex;justify-content:space-between"><span>${t('health.total_days')}</span><span style="font-family:var(--fm)">${d.total_days || '—'}</span></div>
         </div>
       `);
     }
