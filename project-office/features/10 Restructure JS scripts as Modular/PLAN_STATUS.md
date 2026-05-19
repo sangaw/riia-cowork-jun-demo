@@ -98,16 +98,16 @@ Restructure the dashboard JS codebase from 4 siloed app directories with duplica
 
 ## Acceptance Criteria (from REQUIREMENTS.md)
 
-- [ ] `shared/api.js`, `shared/utils.js`, `shared/charts.js` exist and imported by rita, fno, ops
-- [ ] No duplicate `api()` function in app-local files
-- [ ] `fmt()` signature consistent: `fmt(v, decimals=2)` returning `'—'` on null
-- [ ] `badge()` signature consistent: `badge(status)` with CSS class map
-- [ ] `fno/api.js` ≤ 20 lines (HTTP wrapper only)
-- [ ] `ops/utils.js` + `ops/utilities.js` merged into one file
-- [ ] `dashboard/js/ds/` directory exists with at least `main.js`, `nav.js`, `api.js`
-- [ ] `ds.html` uses `<script type="module">` — no inline `<script>` blocks
-- [ ] All 4 apps load in browser without console errors after each phase
-- [ ] `Spec_JS_Code.md` updated to reflect shared module table
+- [x] `shared/api.js`, `shared/utils.js`, `shared/charts.js` exist and imported by rita, fno, ops
+- [x] No duplicate `api()` function in app-local files
+- [x] `fmt()` signature consistent: `fmt(v, decimals=2)` returning `'—'` on null
+- [x] `badge()` signature consistent: `badge(status)` with CSS class map
+- [x] `fno/api.js` ≤ 20 lines (HTTP wrapper only)
+- [x] `ops/utils.js` + `ops/utilities.js` merged into one file
+- [x] `dashboard/js/ds/` directory exists with at least `main.js`, `nav.js`, `api.js`
+- [x] `ds.html` uses `<script type="module">` — no inline `<script>` blocks
+- [x] All 4 apps load in browser without console errors after each phase
+- [x] `Spec_JS_Code.md` updated to reflect shared module table
 
 ---
 

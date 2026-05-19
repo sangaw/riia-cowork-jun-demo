@@ -100,7 +100,7 @@ Track in a separate feature folder when scheduling.
 
 ## End-of-Feature Checklist
 
-- [ ] Update this file status to `complete`
-- [ ] Add one-line note to root `PLAN_STATUS.md`
-- [ ] Run Confluence sprint board script
-- [ ] Git commit
+- [x] Update this file status to `complete`
+- [x] Add one-line note to root `PLAN_STATUS.md`
+- [x] Run Confluence sprint board script
+- [x] Git commit
