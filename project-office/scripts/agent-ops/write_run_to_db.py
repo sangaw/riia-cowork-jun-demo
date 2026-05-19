@@ -7,7 +7,7 @@ from pathlib import Path
 
 # Locate riia-jun-release/ relative to this script and add src/ to sys.path
 _script_dir = Path(__file__).resolve().parent
-_repo_root = _script_dir.parents[1]
+_repo_root = _script_dir.parents[2]
 _app_src = _repo_root / "riia-jun-release" / "src"
 if str(_app_src) not in sys.path:
     sys.path.insert(0, str(_app_src))

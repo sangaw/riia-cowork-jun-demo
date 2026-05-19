@@ -109,3 +109,6 @@ terraform.rc
 *.bak
 *.swp
 ~$*
+
+# ── POC folder — local only, not deployed ────────────────────────────────────
+riia-ai-org/

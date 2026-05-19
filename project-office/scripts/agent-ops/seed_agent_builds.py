@@ -1,7 +1,7 @@
 """One-time migration: import all run-*.json files into the agent_build_runs DB.
 
 Run from riia-cowork-jun/ project root:
-    python riia-ai-org/agent-ops/seed_agent_builds.py
+    python project-office/scripts/agent-ops/seed_agent_builds.py
 
 Safe to re-run — skips runs already present in the DB (keyed on run_id).
 """
@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-repo_root = Path(__file__).parents[2]
+repo_root = Path(__file__).parents[3]
 sys.path.insert(0, str(repo_root / "riia-jun-release" / "src"))
 
 from sqlalchemy import create_engine  # noqa: E402
@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session  # noqa: E402
 from rita.models.agent_builds import AgentBuildAgentModel, AgentBuildRunModel  # noqa: E402
 from rita.database import Base  # noqa: E402
 
-RUNS_DIR = repo_root / "riia-ai-org" / "agent-ops" / "runs"
+RUNS_DIR = repo_root / "riia-jun-release" / "data" / "agent-ops" / "runs"
 DB_PATH = repo_root / "riia-jun-release" / "rita_output" / "rita.db"
 
 engine = create_engine(f"sqlite:///{DB_PATH}")

@@ -24,8 +24,8 @@ _CSV_PATHS = {
     "NVIDIA": _DATA_ROOT / "NVIDIA" / "nvda_daily_25yr_rounded.csv",
 }
 _AGENT_OPS_RUNS = (
-    Path(__file__).parent.parent.parent.parent.parent.parent
-    / "riia-ai-org"
+    Path(__file__).parents[4]
+    / "data"
     / "agent-ops"
     / "runs"
 )
