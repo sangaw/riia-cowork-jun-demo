@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
 import { mkChart, chartOpts, C } from './charts.js';
 import { createCache } from '../shared/api-cache.js';
+import { t } from '../shared/i18n.js';
 
 const cachedApi = createCache(api);
 
@@ -58,17 +59,17 @@ export async function loadPerfSummaryFull() {
     const d = await cachedApi('/api/v1/performance-summary', 120000);
     setEl('p-return', fmtPct(d.portfolio_total_return_pct));
     document.getElementById('p-return').className = 'kpi-value ' + (parseFloat(d.portfolio_total_return_pct) > 0 ? 'pos' : 'neg');
-    setEl('p-return-bnh', 'B&H ' + fmtPct(d.benchmark_total_return_pct));
+    setEl('p-return-bnh', t('perf.bnh') + ' ' + fmtPct(d.benchmark_total_return_pct));
     setEl('p-cagr', fmtPct(d.portfolio_cagr_pct));
-    setEl('p-cagr-bnh', 'B&H ' + fmtPct(d.benchmark_cagr_pct));
+    setEl('p-cagr-bnh', t('perf.bnh') + ' ' + fmtPct(d.benchmark_cagr_pct));
     setEl('p-sharpe', fmt(d.sharpe_ratio, 3));
     document.getElementById('p-sharpe').className = 'kpi-value ' + (parseFloat(d.sharpe_ratio) >= 1 ? 'pos' : 'neg');
     setEl('p-mdd', fmtPct(d.max_drawdown_pct));
     document.getElementById('p-mdd').className = 'kpi-value ' + (Math.abs(parseFloat(d.max_drawdown_pct)) < 10 ? 'pos' : 'neg');
     setEl('p-vol', fmtPct(d.annual_volatility_pct));
     setEl('p-wr', fmtPct(d.win_rate_pct));
-    setEl('p-days', d.total_days + ' days');
+    setEl('p-days', d.total_days + ' ' + t('ui.days'));
     const met = String(d.constraints_met).toLowerCase() === 'true';
-    setEl('p-constraints', met ? '<span class="badge ok">All Met</span>' : '<span class="badge err">Not Met</span>');
+    setEl('p-constraints', met ? `<span class="badge ok">${t('health.all_met')}</span>` : `<span class="badge err">${t('health.not_met')}</span>`);
   } catch (e) { }
 }

@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { fmt, fmtPct, setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
 import { createCache } from '../shared/api-cache.js';
+import { t } from '../shared/i18n.js';
 
 const cachedApi = createCache(api);
 
@@ -10,7 +11,7 @@ export async function loadRisk() {
   try {
     const rows = await cachedApi('/api/v1/experience/rita/risk-timeline', 60000);
     if (!rows || !rows.length) {
-      setEl('risk-regime-wrap', '<div class="empty">No risk data — run pipeline first.</div>');
+      setEl('risk-regime-wrap', `<div class="empty">${t('risk.no_data')}</div>`);
       return;
     }
     const last = rows[rows.length - 1] || {};
@@ -55,7 +56,7 @@ export async function loadRisk() {
     });
     setEl('risk-regime-wrap', `
       <table>
-        <thead><tr><th>Regime</th><th>Days</th><th>% of Period</th><th>Avg Allocation</th></tr></thead>
+        <thead><tr><th>${t('risk.col_regime')}</th><th>${t('risk.col_days')}</th><th>${t('risk.col_pct_period')}</th><th>${t('risk.col_avg_alloc')}</th></tr></thead>
         <tbody>${Object.entries(regimes).map(([rg, v]) => `
           <tr>
             <td>${rg}</td>
@@ -66,6 +67,6 @@ export async function loadRisk() {
         </tbody>
       </table>`);
   } catch (e) {
-    setEl('risk-regime-wrap', '<div class="empty">Error loading risk data.</div>');
+    setEl('risk-regime-wrap', `<div class="empty">${t('risk.error')}</div>`);
   }
 }

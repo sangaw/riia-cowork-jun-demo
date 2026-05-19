@@ -4,6 +4,7 @@ import { setEl } from './utils.js';
 import { mkChart, chartOpts, C } from './charts.js';
 import { loadHealth, loadProgress } from './health.js';
 import { createCache } from '../shared/api-cache.js';
+import { t } from '../shared/i18n.js';
 
 const cachedApi = createCache(api);
 
@@ -29,15 +30,15 @@ export async function loadScenarios() {
 export async function runScenarioBacktest() {
   const from = document.getElementById('inp-bt-from').value;
   const to   = document.getElementById('inp-bt-to').value;
-  if (!from || !to)   { alert('Select both start and end dates.'); return; }
-  if (from >= to)     { alert('Start date must be before end date.'); return; }
+  if (!from || !to)   { alert(t('scenarios.alert_dates_required')); return; }
+  if (from >= to)     { alert(t('scenarios.alert_date_order')); return; }
 
   const btn     = document.getElementById('btn-scenario');
   const spinner = document.getElementById('scenario-spinner');
   const badge   = document.getElementById('scenario-status');
-  btn.disabled = true; btn.textContent = '⏳ Running…';
+  btn.disabled = true; btn.textContent = '⏳ ' + t('ui.loading');
   spinner.style.display = '';
-  badge.className = 'badge run'; badge.textContent = 'Running';
+  badge.className = 'badge run'; badge.textContent = t('status.running');
   setEl('scenario-result', '');
 
   try {
@@ -61,21 +62,21 @@ export async function runScenarioBacktest() {
       cachedApi('/api/v1/performance-summary', 120000),
       cachedApi('/api/v1/experience/rita/backtest-daily', 120000),
     ]);
-    badge.className = 'badge ok'; badge.textContent = 'Done';
+    badge.className = 'badge ok'; badge.textContent = t('status.complete');
     renderScenarioResults(perf, daily, from, to);
     updateGoalRecommendation(perf);
     loadProgress(); loadHealth();
   } catch (e) {
-    badge.className = 'badge err'; badge.textContent = 'Error';
+    badge.className = 'badge err'; badge.textContent = t('status.failed');
     setEl('scenario-result', `<div class="result-panel"><div style="color:var(--danger);font-size:12px">Error: ${e.message}</div></div>`);
   } finally {
-    btn.disabled = false; btn.textContent = '▶ Run Backtest';
+    btn.disabled = false; btn.textContent = '▶ ' + t('btn.run_backtest');
     spinner.style.display = 'none';
   }
 }
 
 export function renderScenarioResults(perf, daily, from, to) {
-  if (!perf || typeof perf !== 'object' || !Object.keys(perf).length) { setEl('scenario-result', '<div class="empty">No results.</div>'); return; }
+  if (!perf || typeof perf !== 'object' || !Object.keys(perf).length) { setEl('scenario-result', `<div class="empty">${t('ui.no_data')}</div>`); return; }
   // perf is a flat dict {metric: value} from /api/v1/performance-summary.
   // Use null-safe helper: check the raw value before calling parseFloat so we
   // never produce "NaN" in the UI (parseFloat(null) === NaN, and NaN != null).
@@ -91,18 +92,18 @@ export function renderScenarioResults(perf, daily, from, to) {
   const days    = perf.total_days    !== null && perf.total_days    !== undefined ? perf.total_days    : '—';
   const sharpeCls = _f(perf.sharpe_ratio) !== null && _f(perf.sharpe_ratio) >= 1.0 ? 'pos' : 'neu';
   const mddCls    = _f(perf.max_drawdown_pct) !== null && Math.abs(_f(perf.max_drawdown_pct)) <= 5 ? 'pos' : 'warn';
-  const label = (from && to) ? `${from} → ${to}` : 'Last backtest';
+  const label = (from && to) ? `${from} → ${to}` : t('scenarios.last_backtest');
 
   let html = `
     <div class="card-hdr" style="margin-bottom:10px">
-      <span class="card-title">Results — ${label}</span>
-      <span class="badge ok" style="margin-left:8px">${days} days</span>
+      <span class="card-title">${t('scenarios.results')} — ${label}</span>
+      <span class="badge ok" style="margin-left:8px">${days} ${t('ui.days')}</span>
     </div>
     <div class="kpi-row-4" style="margin-bottom:14px">
-      <div class="kpi"><div class="kpi-label">Sharpe Ratio</div><div class="kpi-value ${sharpeCls}">${sharpe}</div><div class="kpi-delta">target ≥ 1.0</div></div>
-      <div class="kpi"><div class="kpi-label">Max Drawdown</div><div class="kpi-value ${mddCls}">${mdd}</div><div class="kpi-delta">target &lt; 10%</div></div>
-      <div class="kpi"><div class="kpi-label">Portfolio Return</div><div class="kpi-value neu">${ret}</div><div class="kpi-delta">B&amp;H ${bnh}</div></div>
-      <div class="kpi"><div class="kpi-label">CAGR</div><div class="kpi-value neu">${cagr}</div><div class="kpi-delta">${trades} trades · WR ${wr}</div></div>
+      <div class="kpi"><div class="kpi-label">${t('kpi.sharpe_ratio')}</div><div class="kpi-value ${sharpeCls}">${sharpe}</div><div class="kpi-delta">target ≥ 1.0</div></div>
+      <div class="kpi"><div class="kpi-label">${t('kpi.max_drawdown')}</div><div class="kpi-value ${mddCls}">${mdd}</div><div class="kpi-delta">target &lt; 10%</div></div>
+      <div class="kpi"><div class="kpi-label">${t('scenarios.portfolio_return')}</div><div class="kpi-value neu">${ret}</div><div class="kpi-delta">${t('perf.bnh')} ${bnh}</div></div>
+      <div class="kpi"><div class="kpi-label">${t('health.cagr')}</div><div class="kpi-value neu">${cagr}</div><div class="kpi-delta">${trades} trades · WR ${wr}</div></div>
     </div>`;
 
   if (daily && daily.length) {
@@ -143,7 +144,7 @@ export function updateGoalRecommendation(perf) {
 
   const onTrack  = target === null || cagr >= target;
   const statusCls = onTrack ? 'ok' : 'warn';
-  const statusLabel = onTrack ? 'On Track' : 'Below Target';
+  const statusLabel = onTrack ? t('scenarios.on_track') : t('scenarios.below_target');
   const advice = target !== null
     ? (onTrack
         ? `RITA's backtest CAGR of ${cagr.toFixed(1)}% meets your ${target.toFixed(1)}% target. Strategy is viable.`
@@ -152,15 +153,15 @@ export function updateGoalRecommendation(perf) {
 
   const recHtml = `<div class="result-panel" id="backtest-recommendation">
     <div class="card-hdr" style="margin-bottom:10px">
-      <span class="card-title">Backtest Recommendation</span>
+      <span class="card-title">${t('scenarios.recommendation')}</span>
       <span class="badge ${statusCls}" style="margin-left:8px">${statusLabel}</span>
     </div>
     <div style="font-size:12px;color:var(--t2);margin-bottom:10px">${advice}</div>
     <div class="kpi-row-4">
-      <div class="kpi"><div class="kpi-label">RITA CAGR</div><div class="kpi-value ${onTrack ? 'pos' : 'neg'}">${cagr.toFixed(2)}%</div><div class="kpi-delta">from backtest</div></div>
-      ${target !== null ? `<div class="kpi"><div class="kpi-label">Your Target</div><div class="kpi-value">${target.toFixed(1)}%</div><div class="kpi-delta">annual return</div></div>` : ''}
-      ${sharpe !== null ? `<div class="kpi"><div class="kpi-label">Sharpe Ratio</div><div class="kpi-value ${sharpe >= 1 ? 'pos' : 'neg'}">${sharpe.toFixed(3)}</div><div class="kpi-delta">target ≥ 1.0</div></div>` : ''}
-      ${mdd !== null ? `<div class="kpi"><div class="kpi-label">Max Drawdown</div><div class="kpi-value ${Math.abs(mdd) < 10 ? 'pos' : 'warn'}">${mdd.toFixed(2)}%</div><div class="kpi-delta">target &lt; 10%</div></div>` : ''}
+      <div class="kpi"><div class="kpi-label">${t('scenarios.rita_cagr')}</div><div class="kpi-value ${onTrack ? 'pos' : 'neg'}">${cagr.toFixed(2)}%</div><div class="kpi-delta">${t('scenarios.from_backtest')}</div></div>
+      ${target !== null ? `<div class="kpi"><div class="kpi-label">${t('scenarios.your_target')}</div><div class="kpi-value">${target.toFixed(1)}%</div><div class="kpi-delta">${t('scenarios.annual_return')}</div></div>` : ''}
+      ${sharpe !== null ? `<div class="kpi"><div class="kpi-label">${t('kpi.sharpe_ratio')}</div><div class="kpi-value ${sharpe >= 1 ? 'pos' : 'neg'}">${sharpe.toFixed(3)}</div><div class="kpi-delta">target ≥ 1.0</div></div>` : ''}
+      ${mdd !== null ? `<div class="kpi"><div class="kpi-label">${t('kpi.max_drawdown')}</div><div class="kpi-value ${Math.abs(mdd) < 10 ? 'pos' : 'warn'}">${mdd.toFixed(2)}%</div><div class="kpi-delta">target &lt; 10%</div></div>` : ''}
     </div>
   </div>`;
 

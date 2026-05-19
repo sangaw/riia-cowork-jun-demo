@@ -2,12 +2,13 @@
 import { api } from './api.js';
 import { setEl } from './utils.js';
 import { mkChart, C } from './charts.js';
+import { t } from '../shared/i18n.js';
 
 export async function loadExplain() {
   try {
     const rows = await api('/api/v1/shap');
     if (!rows || !rows.length) {
-      setEl('shap-table-wrap', '<div class="empty">No SHAP data — run pipeline (steps 6+) first.</div>');
+      setEl('shap-table-wrap', `<div class="empty">${t('explain.no_data')}</div>`);
       return;
     }
     const features = rows.map(r => r.feature);
@@ -51,7 +52,7 @@ export async function loadExplain() {
 
     setEl('shap-table-wrap', `
       <table>
-        <thead><tr><th>Feature</th><th>Cash (0%)</th><th>Half (50%)</th><th>Full (100%)</th><th>Overall</th></tr></thead>
+        <thead><tr><th>${t('explain.col_feature')}</th><th>${t('explain.col_cash')}</th><th>${t('explain.col_half')}</th><th>${t('explain.col_full')}</th><th>${t('explain.col_overall')}</th></tr></thead>
         <tbody>${rows.map(r => `
           <tr>
             <td>${r.feature}</td>
@@ -63,6 +64,6 @@ export async function loadExplain() {
         </tbody>
       </table>`);
   } catch (e) {
-    setEl('shap-table-wrap', '<div class="empty">Error loading SHAP data.</div>');
+    setEl('shap-table-wrap', `<div class="empty">${t('explain.error')}</div>`);
   }
 }
