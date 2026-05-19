@@ -467,12 +467,14 @@ def compute_api_metrics(db_path: Path) -> dict:
 
 
 def main() -> None:
-    script_dir = Path(__file__).parent
-    runs_dir = script_dir / "runs"
-    # script_dir = riia-ai-org/agent-ops/  →  parent.parent = riia-cowork-jun/
-    repo_root = script_dir.parent.parent
+    # __file__ = project-office/scripts/agent-ops/aggregate_metrics.py
+    # .parents[3] = riia-cowork-jun/
+    _data_dir = Path(__file__).resolve().parents[3] / "riia-jun-release" / "data" / "agent-ops"
+    runs_dir = _data_dir / "runs"
+    # script_dir.parent.parent.parent = riia-cowork-jun/ for git log calls
+    repo_root = Path(__file__).resolve().parents[3]
 
-    output_path = script_dir / "metrics.json"
+    output_path = _data_dir / "metrics.json"
     runs = load_runs(runs_dir)
 
     if not runs:

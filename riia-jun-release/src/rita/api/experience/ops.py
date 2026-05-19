@@ -450,7 +450,7 @@ def get_agent_builds(
 
     # Read metrics.json for the 7 extended metric sections + skill_version_history
     _metrics_extra: dict[str, Any] = {}
-    _runs_dir = Path(__file__).parents[5] / "riia-ai-org" / "agent-ops"
+    _runs_dir = Path(__file__).parents[4] / "data" / "agent-ops"
     _metrics_path = _runs_dir / "metrics.json"
     _metrics_svh_lookup: dict[str, dict] = {}
     if _metrics_path.exists():
@@ -572,9 +572,8 @@ def get_token_forecast(
     """Return a pre-run token budget forecast based on 4 complexity signals."""
     # Resolve metrics.json path at call time — never at module level
     # __file__ = riia-jun-release/src/rita/api/experience/ops.py
-    # .parents[5] = riia-cowork-jun/
-    repo_root = Path(__file__).parents[5]
-    metrics_path = repo_root / "riia-ai-org" / "agent-ops" / "metrics.json"
+    # .parents[4] = riia-jun-release/
+    metrics_path = Path(__file__).parents[4] / "data" / "agent-ops" / "metrics.json"
 
     if not metrics_path.exists():
         raise HTTPException(status_code=503, detail="metrics.json unavailable")

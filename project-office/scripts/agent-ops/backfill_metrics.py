@@ -5,7 +5,7 @@ Adds the following fields ONLY IF not already present (never overwrites):
   - Engineer grounding_checks.memory_used, grounding_checks.tool_error_handled
 
 Invocation:
-    python riia-ai-org/agent-ops/backfill_metrics.py
+    python project-office/scripts/agent-ops/backfill_metrics.py
 
 Must never touch any file under rita_input/.
 """
@@ -59,8 +59,10 @@ def compute_token_forecast(run: dict, basis_runs: int) -> dict:
 
 
 def main() -> None:
-    script_dir = Path(__file__).parent
-    runs_dir = script_dir / "runs"
+    # __file__ = project-office/scripts/agent-ops/backfill_metrics.py
+    # .parents[3] = riia-cowork-jun/
+    _data_dir = Path(__file__).resolve().parents[3] / "riia-jun-release" / "data" / "agent-ops"
+    runs_dir = _data_dir / "runs"
 
     pattern = str(runs_dir / "run-*.json")
     run_files = sorted(glob.glob(pattern))
