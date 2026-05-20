@@ -15,7 +15,7 @@ RITA (Risk Informed Trading Approach) is a Nifty 50 Double DQN reinforcement lea
 | **FnO Dashboard** | `fno.html` — Options portfolio, Greeks, manoeuvres. |
 | **Ops Dashboard** | `ops.html` — CI/CD, monitoring, test results, users, agent panel. |
 | **DS Dashboard** | `ds.html` (separate page) — Data science, training, portfolio backtest. |
-| **Mobile PWA** | `rita-build-portfolio/android-mobile-app/index.html` — 10-screen single-file PWA. |
+| **Mobile PWA** | `riia-jun-release/mobileapp/index.html` — 10-screen single-file PWA. Served at `/mobileapp` via StaticFiles mount in `main.py`. |
 
 ---
 
@@ -39,6 +39,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 - `/reset` — stateless acknowledgement
 - `/readyz` — readiness probe (SELECT 1 on DB)
 - `/dashboard` — static file mount (catch-all)
+- `/mobileapp` — static file mount for `riia-jun-release/mobileapp/` (added Feature 12B)
 
 ---
 
@@ -126,12 +127,28 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 
 | Method | Path | Description | Response fields |
 |---|---|---|---|
-| `POST` | `/select-days` | Start a new game: pick instrument + date range, returns 12-day slice (2 warm-up + 10 active) | `game_id`, `instrument`, `warmup_days[]`, `game_days[]` |
-| `POST` | `/run-day` | Submit user action for one active day; runs 6-agent chain for AI action | `game_id`, `day_index`, `user_action`, `ai_action`, `compliance_status`, `compliance_reason`, `narrator_note`, `user_pnl`, `ai_pnl` |
-| `GET` | `/{game_id}/result` | Finalise game: returns winner + full day log; writes run log JSON + regenerates metrics.json | `game_id`, `winner`, `user_final_pnl`, `ai_final_pnl`, `day_log[]` |
+| `POST` | `/select-days` | Start a new game: pick instrument + date range; returns 12-day slice (2 warm-up + 10 active) | `game_id`, `instrument`, `currency`, `starting_capital`, `warmup_days[]`, `game_days[]` |
+| `POST` | `/run-day` | Submit user action for one active day; runs 5-agent chain for AI action | `ai_action`, `compliance_status`, `compliance_rule`, `ai_insight` |
+| `GET` | `/{game_id}/result` | Finalise game: writes run log JSON + regenerates metrics.json | `winner`, `day_log[]` |
 
-**Session storage:** in-process `SESSION_DATA` dict keyed by `game_id` (UUID).
-**Run log output:** `riia-jun-release/data/agent-ops/runs/run-{YYYYMMDD-HHMM}.json` — auto-regenerates `metrics.json` via `aggregate_metrics.py` (at `project-office/scripts/agent-ops/`) after each game.
+**Request body — `/select-days`:** `{ instrument: "ASML"|"NVIDIA", start_date: "YYYY-MM-DD", end_date: "YYYY-MM-DD" }`
+**Request body — `/run-day`:** `{ game_id: string, day_index: int (0–9), user_action: "BUY"|"SELL"|"HOLD" }`
+**Session storage:** in-process `SESSION_DATA` dict keyed by `game_id` (UUID). Lost on server restart.
+**AI agent chain:** Context → Strategy → Probability → Portfolio Manager → Compliance Gate → Narrator (5 pure-function agents, no async I/O).
+**Run log output:** `riia-jun-release/data/agent-ops/runs/run-{YYYYMMDD-HHMM}.json` — auto-regenerates `metrics.json` via `aggregate_metrics.py` after game result is fetched.
+**Data sources:** `data/raw/ASML/asml_2001-2026.csv` (col: `date`) and `data/raw/NVIDIA/nvda_daily_25yr_rounded.csv` (col: `Date`) — both normalised to lowercase at load time.
+
+#### Invest Game — Frontend Files
+
+Two UIs exist for the same backend. Both use `MOCK_MODE` flag to bypass the real API during development.
+
+| File | Path | UX Paradigm | Status |
+|---|---|---|---|
+| `investgame.html` | `dashboard/investgame.html` | **Spreadsheet** — days as columns, all visible at once; inline Buy/Sell/Hold text buttons per column; P&L as a compact table; JS in external `dashboard/js/invest-game/main.js` | Production-ready; no mobile breakpoints |
+| `investgame_v2.html` | `dashboard/investgame_v2.html` | **Arcade** — one day revealed at a time; large round 3D BUY/HOLD/SELL buttons; journey track node rail; You-vs-AI score cards; reveal bar after each action; game log builds as rows; fully self-contained HTML | Committed 2026-05-20; `MOCK_MODE=true` pending review; has ≤640px mobile breakpoints |
+
+**To activate v2 live backend:** set `MOCK_MODE = false` in `investgame_v2.html` line ~373.
+**Nav link:** no link to v2 from main dashboard yet — access directly at `/dashboard/investgame_v2.html`.
 
 ### Portfolio Tier — No auth, heavy computation
 
