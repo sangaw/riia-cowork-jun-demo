@@ -92,6 +92,8 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `agent-builds.js` | Agent Builds pipeline runs + performance metrics panels — API calls to `/api/experience/ops/agent-builds` and `/api/experience/ops/token-forecast` | `loadAgentBuilds()`, `renderTokenEstimateWidget()`, `submitTokenEstimate()`, `toggleEstimateWidget()`. Updated signatures: `mountTrendChart(m, runs)` and `renderTrendPanel(m, runs)` take runs array to derive TSR/CSAT/adherence; `renderKpiCards(metrics, runs)` takes runs for cache hit rate KPI. Run History table shows "Est / Actual" tokens column (colour-coded) replacing "Forecast Δ". Token chart shows dashed actual lines alongside solid estimate lines. |
 | `api-metrics.js` | API call log metrics panel — reads from `/api/experience/ops/api-metrics` | `loadApiMetrics()`, `filterApiMetrics()` |
 
+**Feature 16 Run A note:** No new JS module added. The data refresh endpoint (`POST /api/v1/instrument/refresh-all`) is invoked via the `/refresh-all-instruments-data` slash command and the standalone script `project-office/scripts/run_data_refresh.py`. A UI trigger panel may be added to `daily-ops.js` in a future run.
+
 **Shared modules (`dashboard/js/shared/`):**
 
 | File | Responsibility | Key exports |

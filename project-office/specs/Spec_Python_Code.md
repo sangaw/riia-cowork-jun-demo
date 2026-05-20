@@ -422,6 +422,7 @@ Business logic layer called by workflow routers. Do not call repositories direct
 | `portfolio_service.py` | `compute_portfolio_summary()` | Cross-instrument portfolio KPIs |
 | `manoeuvre_service.py` | `evaluate_manoeuvres()` | FnO manoeuvre P&L computation |
 | `instrument_onboard.py` | `search_tickers()`, `fetch_raw_data()`, `process_to_input()`, `seed_market_cache()` | Feature 09 — yfinance data fetch, normalize, DB seeding for new instruments |
+| `data_refresh.py` | `check_gap()`, `fetch_and_write_raw()`, `rebuild_input()`, `upsert_cache_delta()`, `refresh_all()` | Feature 16 — delta data refresh for all instruments via yfinance. Skips ATHER. Per-instrument errors do not abort the loop. `upsert_cache_delta` uses `db.add_all()` with explicit date-existence check — no `db.merge()`, no DELETE. |
 
 ### `instrument_onboard.py` (Feature 09)
 
