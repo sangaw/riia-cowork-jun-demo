@@ -116,6 +116,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 |---|---|---|---|---|---|
 | `GET` | `/api/v1/instrument/search` | `q: string` | — | `list[InstrumentSearchResult]` | Instrument ticker search via yfinance |
 | `POST` | `/api/v1/instrument/onboard` | — | `ticker, name, exchange, currency, country_code, lot_size` | `InstrumentOnboardResponse` | Full onboarding pipeline |
+| `POST` | `/api/v1/instrument/refresh-all` | — | — | `RefreshAllResponse` | Refresh all instruments' price data from yfinance (Feature 16) |
 
 ### RITA Experience Endpoints (`/api/experience/rita` and `/api/v1` via `experience/rita.py`)
 
