@@ -19,7 +19,7 @@
 - ATHER instrument — onboard via Ops dashboard when yfinance indexes it
 - Feature 14 i18n Phase 2 — remaining section loaders (agent-panel, technical-analysis, learnings, FnO/Ops loaders)
 - Invest Game v2 — arcade layout in progress
-- Feature 17 follow-up: update GitHub secret `RITA_BASE_URL` → `https://riia.ravionics.nl`; update Google OAuth redirect URI; update `production.yaml` cors_origins
+- Feature 17 follow-up: ~~update GitHub secret `RITA_BASE_URL`~~ ✅ ~~update Google OAuth redirect URI~~ ✅ ~~update `production.yaml` cors_origins~~ ✅ — all done
 
 ---
 
