@@ -1,28 +1,25 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-21 — Feature 16 (Data Refresh Command) COMPLETE. Geography panel redesign complete. Pushed to prod (7 commits).
+**Last updated:** 2026-05-21 (session 2) — Production outage recovered. Feature 17 (Domain + SSL) COMPLETE. Site live at `https://riia.ravionics.nl`.
 
 **Session work:**
-- Bug fix: applied Alembic migration `20260520_add_yf_ticker` — column was missing, causing all instrument queries to fail silently (only 4 original instruments showing, geography panel empty)
-- main.py seed: all 12 `_SEED_INSTRUMENTS` entries now include `yf_ticker=` values; one-time startup backfill populates existing rows (logged `instruments.yf_ticker_backfilled count=11`)
-- Geography panel layout: moved below Overview heading; region labels now India / United States / Europe (flag emoji stripped); ATHER excluded (no yfinance data)
-- Geography panel instrument names: "Dow Jones Industrial Average" → "Dow Jones", "Nasdaq Composite" → "Nasdaq" via `_GEO_INST_NAMES` map in `market-signals.js`
-- Geography panel KPI tiles: font size reduced, padding tightened (~20%), name always occupies 2 lines (`min-height:2.6em`) with price and trend below
-- **Geography tiles are now the instrument selector** — clicking any tile calls `selectGeoInstrument(id)`, highlights with `geo-kpi-active` CSS, and refreshes all signal data. Separate instrument tab row (`#inst-tabs-container`) and `loadInstrumentTabs()` removed entirely
-- Pushed to prod: `e920177..bf59163` (7 commits) — deploy running
+- **Production outage — accidental `terraform destroy`** ran from inside `terraform/` directory; entire EC2 infrastructure destroyed mid-day
+- Recovery: `terraform state rm` for gone resources → `terraform destroy` (VPC cleanup) → `terraform apply` → data re-upload via SCP → GitHub Actions deploy → nginx manual setup → site restored (~45 min)
+- **Infra fix:** nginx reverse-proxy config baked into `terraform/main.tf` `user_data` — future rebuilds include nginx automatically (commit `8ea39ce`)
+- **Instrument seed fix:** original 4 instruments (NIFTY, BANKNIFTY, NVIDIA, ASML) were seeded with `is_available=False`; TRU missing from seed entirely → production showed only 7/8 instruments instead of 13. Fixed: all set to `True`, TRU added, startup SQL UPDATE corrects existing DBs on next restart (commit `1113c2e`)
+- **Feature 17 COMPLETE:** Cloudflare DNS migration done; `riia.ravionics.nl` A record added (Proxied/orange cloud); SSL/TLS mode set to Flexible → `https://riia.ravionics.nl` live with Cloudflare-managed SSL. No certbot needed.
+- Cloudflare lesson: `ravionics.nl` and `www` records must stay DNS only (grey cloud) — proxying them broke the Strato-hosted main site
 
-**Previous session (2026-05-20):**
-- 7 new instruments added end-to-end: RELIANCE, SBIN, ASRNL, ATO, AEX, DJI, IXIC — CSVs committed, main.py seeding extended to 12 instruments (upsert-on-startup), geography overview + DS dropdown fully dynamic
-- ATHER: yfinance has no data yet (IPO 2025) — onboard via Ops → Daily Ops when available
-- Deploy pipeline: `deploy` job now checks out repo + rsyncs `data/raw/` + `data/input/` to EC2 on every push — no more manual SCP for new instrument CSVs
-- DS dropdown fix: `loadInstruments()` filters by `data_ready !== false`; `/api/experience/ds/` filters by `is_available`
-- Test suite: `test_geography_overview.py` broken test fixed (missing InstrumentRepository mock); `TestDSExperienceRouter` added to `test_api_experience.py`
-- Old mobileapp wireframes archived to `mobileapp/archive/`; `investgame_v2.html` committed
+**Previous session (2026-05-21 session 1):**
+- Bug fix: applied Alembic migration `20260520_add_yf_ticker` — column was missing, causing all instrument queries to fail silently
+- main.py seed: all 12 `_SEED_INSTRUMENTS` entries now include `yf_ticker=` values; one-time startup backfill
+- Geography panel redesign: tiles replace instrument tab selector; region labels India / United States / Europe; ATHER excluded (no yfinance data)
+- Pushed to prod: `e920177..bf59163` (7 commits)
 
 **Pending:**
 - ATHER instrument — onboard via Ops dashboard when yfinance indexes it
 - Feature 14 i18n Phase 2 — remaining section loaders (agent-panel, technical-analysis, learnings, FnO/Ops loaders)
-- Feature 15 — browser verify on live EC2 site
 - Invest Game v2 — arcade layout in progress
+- Feature 17 follow-up: update GitHub secret `RITA_BASE_URL` → `https://riia.ravionics.nl`; update Google OAuth redirect URI; update `production.yaml` cors_origins
 
 ---
 
