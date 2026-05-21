@@ -297,6 +297,12 @@ Implementation order:
     `riia-jun-release/` and confirm the output shows `Running upgrade {prev} -> {new}`.
     Only then stage and commit. Committing the file without applying it causes a runtime
     crash (`OperationalError: no such column`) visible to the user immediately on page load.
+7d. **File move/relocation gate — copy is NOT a move.**
+    If any file in the Architect's "Files to touch" table is described as "move", "relocate",
+    or "rename": the operation MUST be: (1) write content to the new path, (2) update ALL
+    references in other files to the new path, (3) delete the old file — `git rm <old_path>`
+    for git-tracked files, or `rm <old_path>` for untracked. Leaving the original file in
+    place is an incomplete move (FC-PARTIAL-IMPL). Confirm old path is gone before committing.
 8. Update Spec_RITA_App.md — add the new endpoint to the correct tier table
 9. Update Spec_JS_Code.md — add the new JS module to the {APP} module structure table
 10. Run: ruff check src/ — fix any errors before proceeding
