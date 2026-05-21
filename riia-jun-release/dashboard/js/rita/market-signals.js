@@ -197,8 +197,8 @@ export async function loadMarketSignals() {
       ? alerts.join('')
       : mkAlert('neu', t('ms.no_signals'));
 
-    await loadGeoPanels();
-    await loadOverviewCommentary();
+    loadGeoPanels();
+    loadOverviewCommentary();
 
   } catch (e) {
     console.warn('market signals error', e);
@@ -207,6 +207,9 @@ export async function loadMarketSignals() {
     setEl('ms-last-updated', '—');
   }
 }
+
+const _GEO_REGION_NAMES = { India: 'India', US: 'United States', EU: 'Europe' };
+const _GEO_INST_NAMES  = { 'Dow Jones Industrial Average': 'Dow Jones', 'Nasdaq Composite': 'Nasdaq' };
 
 function _geoKpiClass(signal) {
   if (signal === 'bullish') return 'pos';
@@ -225,22 +228,30 @@ export async function loadGeoPanels() {
       container.innerHTML = '<div class="card"><div class="empty">No geography data configured</div></div>';
       return;
     }
-    container.innerHTML = data.regions.map(r => `
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">${r.flag || ''} ${r.region}</span>
+    const activeId = localStorage.getItem('ritaInstrument') || 'NIFTY';
+    container.innerHTML = data.regions.map(r => {
+      const label = _GEO_REGION_NAMES[r.region] || r.region;
+      const instruments = (r.instruments || []).filter(i => i.id !== 'ATHER');
+      if (!instruments.length) return '';
+      return `
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">${label}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:6px;padding:4px 0">
+            ${instruments.map(i => `
+              <div class="kpi geo-kpi${i.id === activeId ? ' geo-kpi-active' : ''}"
+                   style="padding:5px 6px" data-id="${i.id}"
+                   onclick="selectGeoInstrument('${i.id}')">
+                <div class="kpi-label" style="font-size:10px;font-weight:600;line-height:1.3;min-height:2.6em">${_GEO_INST_NAMES[i.name] || i.name}</div>
+                <div class="kpi-value ${_geoKpiClass(i.signal)}" style="font-size:13px">${i.close != null ? i.close.toFixed(2) : '—'}</div>
+                <div class="kpi-delta" style="font-size:10px">${i.signal.charAt(0).toUpperCase() + i.signal.slice(1)}</div>
+              </div>
+            `).join('')}
+          </div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:4px 0">
-          ${r.instruments.map(i => `
-            <div class="kpi">
-              <div class="kpi-label">${i.name}</div>
-              <div class="kpi-value ${_geoKpiClass(i.signal)}">${i.close != null ? i.close.toFixed(2) : '—'}</div>
-              <div class="kpi-delta">${i.signal.charAt(0).toUpperCase() + i.signal.slice(1)}</div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).filter(Boolean).join('');
   } catch (e) {
     container.innerHTML = '<div class="card"><div class="empty">—</div></div>';
   }

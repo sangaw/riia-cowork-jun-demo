@@ -1,4 +1,4 @@
-# Feature 14 — Dutch and French Language Support (i18n)
+﻿# Feature 14 — Dutch and French Language Support (i18n)
 **Status:** IN PROGRESS — Phase 2 partial (RITA main sections done); Ops/FnO loaders pending  
 **Last updated:** 2026-05-19  
 **Requirements:** `REQUIREMENTS.md` (same folder)  
@@ -89,4 +89,4 @@ None
 
 ## Resume Prompt (next session)
 
-> "Continue Feature 14 — fix remaining Defect 2 loaders. RITA main sections done (health, market-signals, trades, performance, risk, scenarios, explainability). Remaining: rita/agent-panel.js, ai-compliance.js, technical-analysis.js, learnings.js; all FnO section loaders except dashboard.js; all Ops section loaders. Add import { t } from '../shared/i18n.js' and replace hardcoded label strings with t('key') calls. Add new keys to en/nl/fr locale files. Context: project-office/features/14 Support for Dutch and French language/PLAN_STATUS.md"
+> "Continue Feature 14 — fix remaining Defect 2 loaders. RITA main sections done (health, market-signals, trades, performance, risk, scenarios, explainability). Remaining: rita/agent-panel.js, ai-compliance.js, technical-analysis.js, learnings.js; all FnO section loaders except dashboard.js; all Ops section loaders. Add import { t } from '../shared/i18n.js' and replace hardcoded label strings with t('key') calls. Add new keys to en/nl/fr locale files. Context: project-office/features/May/14 Support for Dutch and French language/PLAN_STATUS.md"

@@ -1,4 +1,4 @@
-# RITA Production Refactor — Project Guide for Claude
+﻿# RITA Production Refactor — Project Guide for Claude
 
 Auto-loaded every session. Navigation map only — detail lives in `project-office/context/`.
 
@@ -114,7 +114,7 @@ Dashboard JS **must only call** Experience or Workflow tier endpoints. Calling s
 2. If not, create the experience endpoint first (in `src/rita/api/experience/`)
 3. Never call system tier (`/api/v1/system/` or raw CRUD routes) directly from dashboard JS
 
-Full audit: `project-office/features/08 API Layer Rationalization/REQUIREMENTS.md`
+Full audit: `project-office/features/May/08 API Layer Rationalization/REQUIREMENTS.md`
 
 ---
 
@@ -126,6 +126,7 @@ Full audit: `project-office/features/08 API Layer Rationalization/REQUIREMENTS.m
 | `End day` | 1. Update PLAN_STATUS.md → 2. Update `project-office/program-roadmap.html` → 3. Run sprint board Confluence script → 4. git commit |
 | `What's next?` | Read PLAN_STATUS.md → report current day and tasks |
 | `Show blockers` | Read PLAN_STATUS.md → list blocked items |
+| `Fix defect: <description>` | 1. Identify affected layer (spec → source slice) → 2. Launch Engineer agent with `isolation: "worktree"` scoped to that slice → 3. Launch QA agent to add/update regression test → 4. Update PLAN_STATUS.md with fix summary → 5. git commit |
 
 ## Context Detail Files (load on demand)
 

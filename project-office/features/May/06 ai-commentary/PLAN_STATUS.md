@@ -1,4 +1,4 @@
-# AI Commentary — Feature Plan Status
+﻿# AI Commentary — Feature Plan Status
 **Last updated:** 2026-05-15
 **Overall status:** Complete — merged to master 2026-05-15
 
@@ -32,7 +32,7 @@ Fully local — no external LLM. Deterministic reasoning layer today; `_build_na
 | Monitor KPIs | Add `commentary_count`, `commentary_avg_latency_ms`, `commentary_error_count` to `/api/v1/chat/monitor` — read from `commentary_logs` table |
 | UI pattern | `_showCommentaryNarrator()` in new `commentary.js` — wraps agent-panel typewriter |
 
-Full requirements: `project-office/features/06 ai-commentary/requirements.md`
+Full requirements: `project-office/features/May/06 ai-commentary/requirements.md`
 
 ---
 

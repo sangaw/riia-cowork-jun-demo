@@ -1,4 +1,4 @@
-# Session Handoff — 2026-05-17 (Run B)
+﻿# Session Handoff — 2026-05-17 (Run B)
 
 ## What completed this session
 
@@ -140,7 +140,7 @@
 ## Remaining features
 
 **Feature 08 R6** — CLAUDE.md API routing rules update (small, standalone)
-**Feature 09** — TBD (see `project-office/features/09 Build a Agent Dashboard/`)
+**Feature 09** — TBD (see `project-office/features/May/09 Build a Agent Dashboard/`)
 
 Next session picks up at:
   1. /enhance Step 5 — QA Agent (unit tests for /api/experience/ops/api-metrics, FC-004 contract check)

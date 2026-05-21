@@ -10,7 +10,7 @@ from typing import Any, Optional
 from fastapi import Depends, FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -118,10 +118,22 @@ async def lifespan(app: FastAPI):
         from rita.database import SessionLocal
 
         _SEED_INSTRUMENTS = [
-            _Instrument(instrument_id="NIFTY",     name="Nifty 50",  exchange="NSE",    country_code="IN", lot_size=75,   is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
-            _Instrument(instrument_id="BANKNIFTY", name="Bank Nifty", exchange="NSE",    country_code="IN", lot_size=30,   is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
-            _Instrument(instrument_id="NVIDIA",    name="Nvidia",     exchange="NASDAQ", country_code="US", lot_size=None, is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
-            _Instrument(instrument_id="ASML",      name="ASML",       exchange="AMS",    country_code="NL", lot_size=None, is_available=False, created_at=_dt.datetime.now(_dt.timezone.utc)),
+            # Original 4
+            _Instrument(instrument_id="NIFTY",     name="Nifty 50",                     exchange="NSE",    country_code="IN", lot_size=75,   is_available=False, yf_ticker="^NSEI",       created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="BANKNIFTY", name="Bank Nifty",                   exchange="NSE",    country_code="IN", lot_size=30,   is_available=False, yf_ticker="^NSEBANK",    created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="NVIDIA",    name="Nvidia",                       exchange="NASDAQ", country_code="US", lot_size=None, is_available=False, yf_ticker="NVDA",        created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="ASML",      name="ASML",                         exchange="AMS",    country_code="NL", lot_size=None, is_available=False, yf_ticker="ASML.AS",     created_at=_dt.datetime.now(_dt.timezone.utc)),
+            # India — added 2026-05-20
+            _Instrument(instrument_id="ATHER",     name="Ather Energy",                 exchange="NSE",    country_code="IN", lot_size=None, is_available=True,  yf_ticker=None,          created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="RELIANCE",  name="Reliance Industries",          exchange="NSE",    country_code="IN", lot_size=None, is_available=True,  yf_ticker="RELIANCE.NS", created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="SBIN",      name="State Bank of India",          exchange="NSE",    country_code="IN", lot_size=None, is_available=True,  yf_ticker="SBIN.NS",     created_at=_dt.datetime.now(_dt.timezone.utc)),
+            # EU — added 2026-05-20
+            _Instrument(instrument_id="ASRNL",     name="ASR Nederland",                exchange="AMS",    country_code="NL", lot_size=None, is_available=True,  yf_ticker="ASRNL.AS",   created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="ATO",       name="Atos SE",                      exchange="PAR",    country_code="FR", lot_size=None, is_available=True,  yf_ticker="ATO.PA",      created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="AEX",       name="AEX Index",                    exchange="AMS",    country_code="NL", lot_size=None, is_available=True,  yf_ticker="^AEX",        created_at=_dt.datetime.now(_dt.timezone.utc)),
+            # US — added 2026-05-20
+            _Instrument(instrument_id="DJI",       name="Dow Jones Industrial Average", exchange="DJI",    country_code="US", lot_size=None, is_available=True,  yf_ticker="^DJI",        created_at=_dt.datetime.now(_dt.timezone.utc)),
+            _Instrument(instrument_id="IXIC",      name="Nasdaq Composite",             exchange="NASDAQ", country_code="US", lot_size=None, is_available=True,  yf_ticker="^IXIC",       created_at=_dt.datetime.now(_dt.timezone.utc)),
         ]
 
         _db = SessionLocal()
@@ -138,10 +150,33 @@ async def lifespan(app: FastAPI):
                 log.info("instruments.renamed", old="NVDA", new="NVIDIA")
                 existing_ids = {("NVIDIA" if i == "NVDA" else i) for i in existing_ids}
 
-            if not existing_ids:
-                for inst in _SEED_INSTRUMENTS:
-                    _repo.upsert(inst)
-                log.info("instruments.seeded", count=len(_SEED_INSTRUMENTS))
+            # One-time backfill: populate yf_ticker for instruments where it is NULL
+            _YF_BACKFILL = {
+                "NIFTY": "^NSEI", "BANKNIFTY": "^NSEBANK",
+                "ASML": "ASML.AS", "NVIDIA": "NVDA",
+                "RELIANCE": "RELIANCE.NS", "SBIN": "SBIN.NS",
+                "ASRNL": "ASRNL.AS", "ATO": "ATO.PA",
+                "AEX": "^AEX", "DJI": "^DJI", "IXIC": "^IXIC",
+            }
+            _backfilled = 0
+            for _iid, _yticker in _YF_BACKFILL.items():
+                _res = _db.execute(
+                    text("UPDATE instruments SET yf_ticker = :yf WHERE instrument_id = :iid AND yf_ticker IS NULL"),
+                    {"yf": _yticker, "iid": _iid},
+                )
+                _backfilled += _res.rowcount
+            _db.commit()
+            if _backfilled:
+                log.info("instruments.yf_ticker_backfilled", count=_backfilled)
+
+            # Upsert any seed instruments not yet in DB (runs on every startup, not just fresh)
+            _added = 0
+            for _inst in _SEED_INSTRUMENTS:
+                if _inst.instrument_id not in existing_ids:
+                    _repo.upsert(_inst)
+                    _added += 1
+            if _added:
+                log.info("instruments.seeded", count=_added)
         finally:
             _db.close()
     except Exception as _exc:
@@ -162,7 +197,7 @@ async def lifespan(app: FastAPI):
             repo = MarketDataCacheRepository(db)
             seeded = {r.underlying for r in repo.read_all()}
 
-            for _inst in ["NIFTY", "BANKNIFTY", "ASML", "NVIDIA"]:
+            for _inst in ["NIFTY", "BANKNIFTY", "ASML", "NVIDIA", "ATHER", "RELIANCE", "SBIN", "ASRNL", "ATO", "AEX", "DJI", "IXIC"]:
                 if _inst in seeded:
                     continue
                 try:
@@ -353,6 +388,11 @@ if _ops_dir.exists():
 _mobile_dir = Path(__file__).parent.parent.parent / "mobileapp"
 if _mobile_dir.exists():
     app.mount("/mobileapp", StaticFiles(directory=_mobile_dir, html=True), name="mobileapp")
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse(url="/dashboard", status_code=302)
 
 
 @app.get("/onboarding", include_in_schema=False)

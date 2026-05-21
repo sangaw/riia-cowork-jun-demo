@@ -19,6 +19,7 @@ High-density reference for AI agents working on the RITA mobile PWA.
 | Backend URL | `API_BASE = 'http://localhost:8000'` (hardcoded constant) — change for production |
 | Chat | Hardcoded overlay — no backend API connection |
 | Home screen | Hardcoded — user will redesign later |
+| i18n | Language capsule (EN/NL/FR pill buttons) on home screen (s0) — reads/writes `localStorage('ritaLanguage')`. Applies `data-i18n` attribute translations. Part of Feature 14. |
 
 ---
 

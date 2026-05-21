@@ -1,4 +1,4 @@
-# Feature 09 — Data Pipeline: Add New Instrument — Plan Status
+﻿# Feature 09 — Data Pipeline: Add New Instrument — Plan Status
 
 **Status:** COMPLETE — All runs done (2026-05-18)  
 **Last updated:** 2026-05-18
@@ -78,7 +78,7 @@ None.
 - Full requirements: `REQUIREMENTS.md`
 - Root `PLAN_STATUS.md` should have one-line pointer to this file
 - Estimated /enhance runs: 2 (Run A backend-only, Run B frontend + experience + specs)
-- Feature number: 09 (folder: `project-office/features/09 Build complete data pipeline to add new instrument/`)
+- Feature number: 09 (folder: `project-office/features/May/09 Build complete data pipeline to add new instrument/`)
 
 
   Done today:
