@@ -88,6 +88,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `experience/ds.py` | `/api/experience/ds` | DS dashboard instruments + training history + split dates |
 | `experience/agent_panel.py` | `/api/v1/agent-panel` | LangGraph 6-agent simulation for ASML |
 | `experience/invest_game.py` | `/api/experience/invest-game` | User-vs-AI investing game — session management, agent chain per day, run log writer |
+| `experience/users.py` | `/api/v1/experience/users` | User traffic KPIs and 30-day daily login breakdown — no PII |
 
 ### RITA Experience Endpoints (`/api/v1/experience/rita`)
 
@@ -109,6 +110,12 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/experience/ops/agent-builds` | Returns agent build run history + aggregated metrics from DB. `AgentBuildRunOut` includes `human_score_csat: Optional[float]` (from run JSON `human_score.csat`). `AgentOut` includes `actual_tokens: Optional[dict]` (input/output/cache/total from Claude API). `SkillVersion.recent_commits` is `list[dict]` with `{hash, message}` objects. |
 | `GET` | `/api/experience/ops/token-forecast` | Pre-run token budget estimate — query params: `feature_type`, `files_to_change`, `new_endpoint_or_model`, `frontend_scope`, `integration_type`. Returns `TokenForecastResponse` (complexity, per_role, total_forecast, confidence, basis_runs). Auth required. |
 | `GET` | `/api/experience/ops/api-metrics` | Per-endpoint call count, p50/p95 latency, error rate from api_call_log. Query params: `limit` (default 200), `method`, `path_prefix`. Returns `ApiMetricsResponse(items: list[ApiMetricsRow])`. No auth. |
+
+### Users Experience Endpoints (`/api/v1/experience/users`)
+
+| Method | Path | Description | Auth |
+|---|---|---|---|
+| `GET` | `/api/v1/experience/users/traffic` | Returns aggregated login KPIs and 30-day daily breakdown — no PII. `UserTrafficResponse` with `summary` (total_users, active_today, active_this_week, active_this_month, total_logins_all_time) and `daily` list (date, unique_users, total_logins, new_registrations) | JWT |
 
 ### Instrument Workflow Endpoints (`/api/v1/instrument` via `workflow/instrument_onboard.py`)
 
