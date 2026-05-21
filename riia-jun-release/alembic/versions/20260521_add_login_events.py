@@ -1,7 +1,7 @@
 """add login_events table and first_login_date column
 
 Revision ID: 20260521_add_login_events
-Revises: 20260517_add_currency
+Revises: 20260520_add_yf_ticker
 Create Date: 2026-05-21 19:56:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "20260521_add_login_events"
-down_revision: Union[str, Sequence[str], None] = "20260517_add_currency"
+down_revision: Union[str, Sequence[str], None] = "20260520_add_yf_ticker"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
