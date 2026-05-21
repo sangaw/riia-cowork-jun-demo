@@ -107,7 +107,17 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 ---
 
-## 5. Module Structure — `dashboard/js/ds/`
+## 5. Module Structure — `dashboard/js/users/`
+
+Standalone user traffic page — no ops sidebar, no shared api.js dependency.
+
+| File | Responsibility |
+|---|---|
+| `users/main.js` | Standalone entry point — fetches `/api/v1/experience/users/traffic`, renders KPI tiles, Chart.js bar chart, daily breakdown table. JWT redirect guard on load. |
+
+---
+
+## 6. Module Structure — `dashboard/js/ds/`
 
 **Feature 10 Phase 4 complete (2026-05-18).** All inline scripts extracted from `ds.html` into ES modules at `dashboard/js/ds/`. `ds.html` now loads via `<script type="module" src="js/ds/main.js">`.
 
