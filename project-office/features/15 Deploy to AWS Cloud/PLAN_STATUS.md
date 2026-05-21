@@ -1,7 +1,7 @@
 # Feature 15 — Deploy to AWS Cloud: Handoff Status
 
-**Last updated:** 2026-05-19 (session 3)
-**Status:** Site is LIVE. Post-deploy defect fixing in progress.
+**Last updated:** 2026-05-21 (session 4)
+**Status:** COMPLETE — site live at `https://riia.ravionics.nl` (HTTP via EC2 IP also works).
 
 ---
 
@@ -46,30 +46,59 @@
 
 ---
 
-## Current State (end of session 3)
+## Current State (end of session 4 — 2026-05-21)
 
-**Last push:** `ec9cd7f fix: copy ops/ into image; fix agent-ops-data path (4 parents -> 3)`
+**Last push:** `1113c2e fix(seed): enable all 13 instruments and add TRU to seed`
 
-**Code-level analysis complete — all fixes verified in source:**
+**All fixes verified and live:**
 
-| Fix | Verified |
-|---|---|
-| `COPY ops/ /app/ops/` in Dockerfile | ✅ |
-| `main.py` path uses 3 parents → `/app/ops/` and `/app/data/agent-ops` | ✅ |
-| `randomUUID()` safe fallback used in all 3 callsites | ✅ |
-| NVIDIA CSV exists at `data/raw/NVIDIA/nvda_daily_25yr_rounded.csv` | ✅ |
-| `selectInstrumentTab` already calls `loadMarketSignals()` | ✅ |
-| All JS named imports match their source module exports | ✅ |
+| Fix | Commit | Status |
+|---|---|---|
+| nginx baked into Terraform cloud-init | `8ea39ce` | ✅ |
+| All 13 instruments seeded with `is_available=True` | `1113c2e` | ✅ |
+| TRU added to `_SEED_INSTRUMENTS` | `1113c2e` | ✅ |
+| Startup SQL UPDATE fixes `is_available` on existing DBs | `1113c2e` | ✅ |
+| Site accessible at `https://riia.ravionics.nl` | Feature 17 | ✅ |
 
-**`UI-Defect.txt` is outdated** — both root causes it documents are already resolved. Do not act on it.
+---
 
-**Pending — user has not yet verified live site browser console:**
-- Need to open `http://<EC2_IP>/dashboard/ops.html` and `rita.html`, check DevTools Console
-- Expected: ops 404s are gone; no new errors
-- If 404s remain, the GitHub Actions deploy after `ec9cd7f` may not have completed — check Actions tab on `san-work-ravionics/riia-jun-release-prod`
+## Session 4 Incident — Accidental `terraform destroy` (2026-05-21)
 
-**Known non-issue:**
-- Node.js 20 deprecation warning in GitHub Actions (not an error — safe until Sep 2026)
+### What happened
+Infrastructure was fully destroyed mid-day. EC2 instance and Elastic IP disappeared from AWS console. `terraform destroy` was run accidentally from the `terraform/` directory in a terminal that was also being used for SSH/ops commands.
+
+### Recovery steps taken
+1. `terraform state rm` for already-gone resources (instance, EIP, key pair)
+2. `terraform destroy` to clean up remaining VPC resources
+3. `terraform apply` to rebuild — same Elastic IP reattached, same SSH key reused
+4. Updated GitHub Secret `AWS_EC2_IP` with new instance IP (`34.239.207.17`)
+5. Re-uploaded data files via SCP: `scp -r data\* ubuntu@34.239.207.17:/opt/rita_input/`
+6. Manually installed nginx (cloud-init only had Docker)
+7. Pushed empty commit to trigger GitHub Actions deploy
+8. Site restored
+
+### Time to recover: ~45 minutes
+
+### Root cause
+Running ops commands (SSH, SCP) from inside the `terraform/` directory. `terraform destroy` was typed/triggered accidentally in the same terminal.
+
+**Prevention:** Always run SSH and SCP commands from `riia-jun-release/` root, referencing the key as `terraform\generated-key.pem`. Never work inside `terraform/` for routine ops.
+
+### Infrastructure fix applied
+nginx install + reverse-proxy config added to `terraform/main.tf` `user_data` block (commit `8ea39ce`). Future `terraform apply` rebuilds will include nginx automatically — no manual SSH step needed.
+
+---
+
+## Instrument Seed Fix (2026-05-21)
+
+Production DB showed only 7 instruments (8 with ATHER) instead of 13. Root causes:
+1. Original 4 instruments (NIFTY, BANKNIFTY, NVIDIA, ASML) were seeded with `is_available=False`
+2. TRU was missing from `_SEED_INSTRUMENTS` entirely
+
+Fix in `main.py` (commit `1113c2e`):
+- Set `is_available=True` for all 13 seed instruments
+- Added TRU (TransUnion, NYSE, `yf_ticker="TRU"`)
+- Added startup SQL `UPDATE instruments SET is_available=1` to fix existing DBs on next restart
 
 ---
 
