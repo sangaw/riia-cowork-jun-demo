@@ -304,8 +304,12 @@ def load_ohlcv_csv(path: str) -> pd.DataFrame:
 
 load_nifty_csv = load_ohlcv_csv  # backward-compat alias
 
-def load_instrument_data(instrument_id: str) -> pd.DataFrame:
-    """Loads the correct CSV for any instrument via find_instrument_csv."""
+def load_instrument_data(instrument: str) -> pd.DataFrame:
+    """Load full OHLCV history for an instrument, merging three sources:
+    1. Primary CSV via find_instrument_csv(instrument)
+    2. Manual supplement: data/input/DAILY-DATA/{lower}_manual.csv (if exists)
+    3. yfinance companion: data/raw/{INSTRUMENT}/{lower}_yf.csv (if exists — Feature 16)
+    Deduplicates with keep='last' at each merge step. Returns date-sorted DataFrame."""
 ```
 
 ### `trading_env.py`
@@ -442,6 +446,26 @@ def seed_market_cache(db: Session, ticker: str, currency: str) -> int:
     """Bulk insert 2025+ rows into market_data_cache. Skips if already seeded.
     Returns count inserted (0 if skipped)."""
 ```
+
+### `data_refresh.py` (Feature 16)
+
+**File:** `src/rita/services/data_refresh.py`
+
+**Constants:**
+- `YF_TICKER_MAP` — maps instrument ID to yfinance ticker (11 instruments)
+- `COMPANION_FILE_INSTRUMENTS` — `{"NIFTY", "BANKNIFTY"}` — full-overwrite _yf.csv strategy
+- `SKIP_INSTRUMENTS` — `{"ATHER"}` — excluded from all refresh runs
+
+**Functions:**
+- `check_gap(instrument_id, db) -> dict` — returns last_date, gap_days, yf_ticker from market_data_cache
+- `fetch_and_write_raw(instrument_id, yf_ticker, last_date) -> tuple[Path, int]` — downloads delta from yfinance; NIFTY/BANKNIFTY overwrite companion _yf.csv; others append to _daily.csv
+- `rebuild_input(instrument_id) -> Path` — calls load_instrument_data(), writes normalized output CSV
+- `upsert_cache_delta(db, instrument_id) -> int` — inserts only new (instrument, date) pairs into market_data_cache; no deletes
+- `refresh_all(db) -> list[dict]` — orchestrates full pipeline for all instruments; per-instrument errors caught, loop continues
+
+**Endpoint:** `POST /api/v1/instrument/refresh-all` → returns `RefreshAllResponse`
+**Slash command:** `/refresh-all-instruments-data`
+**Standalone script:** `project-office/scripts/run_data_refresh.py`
 
 ---
 
