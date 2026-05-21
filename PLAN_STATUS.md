@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-21 (session 2) — Production outage recovered. Feature 17 (Domain + SSL) COMPLETE. Site live at `https://riia.ravionics.nl`.
+**Last updated:** 2026-05-21 (session 3) — Feature 18 (User Traffic Dashboard + Google OAuth) COMPLETE. Fixed jose `at_hash` JWTClaimsError in OAuth callback; switched to `get_unverified_claims()`.
 
 **Session work:**
 - **Production outage — accidental `terraform destroy`** ran from inside `terraform/` directory; entire EC2 infrastructure destroyed mid-day
@@ -20,6 +20,7 @@
 - Feature 14 i18n Phase 2 — remaining section loaders (agent-panel, technical-analysis, learnings, FnO/Ops loaders)
 - Invest Game v2 — arcade layout in progress
 - Feature 17 follow-up: ~~update GitHub secret `RITA_BASE_URL`~~ ✅ ~~update Google OAuth redirect URI~~ ✅ ~~update `production.yaml` cors_origins~~ ✅ — all done
+- Feature 18 (User Traffic Dashboard): COMPLETE — all phases merged and verified in prod
 
 ---
 
