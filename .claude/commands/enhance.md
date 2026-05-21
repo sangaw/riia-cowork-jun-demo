@@ -297,6 +297,11 @@ Implementation order:
     `riia-jun-release/` and confirm the output shows `Running upgrade {prev} -> {new}`.
     Only then stage and commit. Committing the file without applying it causes a runtime
     crash (`OperationalError: no such column`) visible to the user immediately on page load.
+    **Worktree note:** you are in a worktree — `alembic upgrade head` here runs against
+    the worktree's DB, NOT the user's live `rita_output/rita.db`. After merge, the
+    orchestrator MUST tell the user: "This session added migration {revision} — run
+    `python -m alembic upgrade head` from `riia-jun-release/` before restarting the app."
+    Failure to surface this causes silent runtime breakage that damages user CSAT.
 7d. **File move/relocation gate — copy is NOT a move.**
     If any file in the Architect's "Files to touch" table is described as "move", "relocate",
     or "rename": the operation MUST be: (1) write content to the new path, (2) update ALL
