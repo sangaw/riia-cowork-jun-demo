@@ -1,14 +1,12 @@
 const API = window.RITA_API_BASE || "";
 
 async function loadUserTraffic() {
-    const token = localStorage.getItem("auth_token");
-    if (!token) { window.location.href = "/dashboard/index.html"; return; }
+    const token = localStorage.getItem("auth_token") || "";
 
     try {
-        const res = await fetch(`${API}/api/v1/experience/users/traffic`, {
-            headers: { "Authorization": `Bearer ${token}` }
-        });
-        if (res.status === 401) { window.location.href = "/dashboard/index.html"; return; }
+        const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+        const res = await fetch(`${API}/api/v1/experience/users/traffic`, { headers });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
