@@ -25,9 +25,9 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `charts.js` | Thin re-export wrapper → `shared/charts.js` | `mkChart(id, config)`, `destroyChart(id)`, `C` (color palette), `chartOpts()` |
 | `chart-modal.js` | Zoom-on-click modal for charts | `openChartModal(id, title)`, `closeChartModal()` |
 | `nav.js` | Section navigation, loader registry | `show(section)`, `_sectionLoaders` map, `getCurrentSection()`. `_currentSection` defaults to `'market-signals'` (landing page). |
-| `main.js` | Entry point — wires everything | Registers `_sectionLoaders`, binds `window.*`. `loadInstrumentTabs()` — called on page load; fetches `GET /api/v1/experience/rita/geography-overview`, renders all `is_available` instruments as tab buttons into `#inst-tabs-container`; fallback to static 4 tabs if API unavailable. |
+| `main.js` | Entry point — wires everything | Registers `_sectionLoaders`, binds `window.*`. `selectGeoInstrument(id)` — instrument selector: sets `localStorage('ritaInstrument')`, toggles `.geo-kpi-active` on geo panel tiles, posts to `/api/v1/instrument/select`, refreshes health KPIs + active section. `loadInstrumentTabs` and `#inst-tabs-container` removed (2026-05-21) — geo panel tiles are now the selector. |
 | `health.js` | Home KPI strip + model status | `loadHealth()`, `loadMetrics()`, `loadPerfSummary()`, `loadDrift()`, `loadProgress()` |
-| `market-signals.js` | Market Signals section + timeframe tabs + geography panels | `loadMarketSignals()`, `switchMsTab(tf)`, `loadGoalHint()`, `loadGeoPanels()`. `loadGeoPanels()` calls `GET /api/v1/experience/rita/geography-overview` and renders three side-by-side panels (US/EU/India) into `#geo-panels`. `ms-last-updated` label shows date **and** time (`D MMM YYYY HH:MM` en-GB); null/invalid → `—`. |
+| `market-signals.js` | Market Signals section + timeframe tabs + geography panels | `loadMarketSignals()`, `switchMsTab(tf)`, `loadGoalHint()`, `loadGeoPanels()`. `loadGeoPanels()` fetches `GET /api/v1/experience/rita/geography-overview`, renders `.geo-kpi` tiles into `#geo-panels`. Each tile has `onclick="selectGeoInstrument(id)"` and `data-id`. Active instrument (from `localStorage`) gets `.geo-kpi-active` class on every render. Region names via `_GEO_REGION_NAMES` (`India`, `US`→`United States`, `EU`→`Europe`); flag emoji stripped. Instrument display names via `_GEO_INST_NAMES` (e.g. `Dow Jones Industrial Average`→`Dow Jones`). ATHER excluded (`i.id !== 'ATHER'`). Name occupies 2 lines (`min-height:2.6em`); price and trend always on lines 3–4. Called non-blocking from `loadMarketSignals()`. `ms-last-updated` label: `D MMM YYYY HH:MM` en-GB; null → `—`. |
 | `trades.js` | Trade Journal section | `loadTrades()`, `downloadTradeJournal()`, `allocBadge(v)` |
 | `observability.js` | Ops monitoring panel | `loadObservability()` |
 | `scenarios.js` | Backtest scenario runner | `loadScenarios()`, `runScenarioBacktest()`, `renderScenarioResults()` |
@@ -99,7 +99,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | File | Responsibility | Key exports |
 |---|---|---|
 | `shared/api.js` | Canonical HTTP client (shared by all apps) | `apiBase()`, `api(path, method?, body?)`, `apiFetch(url, options?)` |
-| `shared/utils.js` | Canonical DOM helpers + formatters (shared by all apps) | `setEl(id, html)`, `badge(status)`, `fmt(v, d?)`, `fmtPct(v)`, `fmtMs(v)`, `appendResult(containerId, html)` |
+| `shared/utils.js` | Canonical DOM helpers + formatters (shared by all apps) | `setEl(id, html)`, `badge(status)`, `fmt(v, d?)`, `fmtPct(v)`, `fmtMs(v)`, `appendResult(containerId, html)`, `randomUUID()` (safe fallback — `crypto.randomUUID` requires HTTPS; uses `Math.random` hex fallback on HTTP) |
 | `shared/charts.js` | Chart.js registry (moved from rita/; shared by all apps) | `mkChart(id, config)`, `destroyChart(id)`, `chartOpts(label, tickCb, labels)`, `C` (color palette) |
 | `shared/nav-base.js` | Lazy-loader registry factory | `createNavRegistry()` → `{ register, load, reset, loaders }` |
 | `shared/api-cache.js` | Session-scoped API response cache factory. Cleared on page reload. | `createCache(apiFn)` — returns `cachedApi(path, ttlMs)` |
@@ -206,7 +206,7 @@ _sectionLoaders['ai-compliance']  = loadAiCompliance;
 ```js
 let apState = {
   dayIndex: 0,              // 0–15 (ASML April 2026, 16 trading days)
-  threadId: crypto.randomUUID(),  // unique per session
+  threadId: randomUUID(),  // unique per session — uses shared/utils.js safe fallback (HTTP-compatible)
   loaded: false,
 };
 let _twToken = 0;           // cancellation token for typewriter animation

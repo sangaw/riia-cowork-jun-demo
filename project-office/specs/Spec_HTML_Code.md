@@ -39,6 +39,20 @@ This document outlines the architecture, design constraints, and purposes of the
   - **Phase 04 (Monitor)**: Live Risk Views, Training Progress, and Observability.
   - **Phase 05 (Agentic AI)**: Agent Panel + AI Compliance — multi-agent ASML simulation demo.
 - **Interacts with**: `/api/experience/dashboard`, `/api/v1/agent-panel`, and underlying `workflow` triggers.
+
+#### Overview section (`#sec-market-signals`) layout (updated 2026-05-21)
+
+DOM order inside `<section id="sec-market-signals">`:
+1. `.page-hdr` — "Overview" title + last-updated label + Refresh button
+2. `#geo-panels` (`.card-row`) — geography instrument tiles; each tile is `.geo-kpi` with `onclick="selectGeoInstrument(id)"`. Clicking selects the instrument and refreshes signal data. Active tile gets `.geo-kpi-active`.
+3. `#commentary-overview-box` — AI commentary narrator (hidden until populated)
+4. Timeframe tabs (Daily / Weekly / Monthly)
+5. Signal KPI strip (`#ms-signals`)
+6. Alert strip (`#ms-alerts`)
+7. Price & Volume chart
+
+**Removed:** `#inst-tabs-container` and the `.inst-tab` button row — geography tiles are the instrument selector.
+
 - **Trade Journal section (`#sec-trades`) layout:**
   - Phase legend row (`display:flex; justify-content:space-between`) contains the colour-coded phase labels on the left and `#trades-model-info` (Rounds · Algorithm · Timesteps · Model ver, injected by `trades.js`) on the right.
   - `#trades-kpi-strip` uses `grid-template-columns: 1fr 1fr 2fr` — Train (25%) | Test (25%) | Backtest (50% with 8 metrics in a 4-column inner grid).
@@ -198,6 +212,7 @@ Tab switcher: `switchTrainTab(tab, el)` — toggles `.train-tab.active` + `.trai
 
 #### Key CSS classes
 
+- `.geo-kpi` / `.geo-kpi-active` — geography panel instrument tiles (selectable; hover = subtle border, active = `--run` border + `--run-bg` background)
 - `.kpi` / `.kpi-row-{3|4|5|6}` — metric cards
 - `.card` / `.card-hdr` / `.card-row` / `.card-row-3` — content panels
 - `.chart-wrap` / `.chart-box` / `.h180` `.h220` `.h260` `.h300` `.h340` — chart containers
