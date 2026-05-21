@@ -3,13 +3,21 @@ export async function loadUsers() {
     tbody.innerHTML = '<tr><td colspan="7" class="loading">Loading...</td></tr>';
     
     try {
-        const token = localStorage.getItem('auth_token') || 'rita-dev'; // legacy fallback if running locally
+        const token = localStorage.getItem('auth_token');
+        if (!token) {
+            tbody.innerHTML = `<tr><td colspan="7" style="color:var(--t3); text-align:center; padding: 20px;">Login required — <a href="/dashboard/index.html">sign in</a> to access User Management.</td></tr>`;
+            return;
+        }
         const res = await fetch('/api/v1/users', {
             headers: {'Authorization': `Bearer ${token}`}
         });
-        
+
+        if (res.status === 403) {
+            tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center; padding: 20px;">Access denied — your account does not have ops access. Ask an admin to enable it.</td></tr>`;
+            return;
+        }
         if (!res.ok) {
-            tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center; padding: 20px;">Auth Denied. Only ops members holds access.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="color:var(--danger); text-align:center; padding: 20px;">Failed to load users (${res.status}).</td></tr>`;
             return;
         }
         
@@ -56,8 +64,9 @@ export async function saveUserRoles(userId) {
         can_access_ops: document.getElementById(`chk-ops-${userId}`).checked
     };
     
-    const token = localStorage.getItem('auth_token') || 'rita-dev';
-    
+    const token = localStorage.getItem('auth_token');
+    if (!token) { btn.textContent = 'Login required'; setTimeout(() => { btn.textContent = 'Save'; }, 2000); return; }
+
     try {
         const res = await fetch(`/api/v1/users/${userId}/roles`, {
             method: 'PUT',
