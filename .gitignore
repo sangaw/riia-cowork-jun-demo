@@ -110,6 +110,9 @@ terraform.rc
 *.swp
 ~$*
 
+# ── Claude Code harness — local worktrees and session state ─────────────────
+.claire/
+
 # ── POC folders — local only, not deployed ───────────────────────────────────
 riia-ai-org/
 rita-build-portfolio/
