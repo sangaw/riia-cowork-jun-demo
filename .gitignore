@@ -90,6 +90,7 @@ dist/
 # Ignore contents but not the dir, so commands/ sub-exception works
 .claude/*
 !.claude/commands/
+!.claude/settings.json
 
 # ── Terraform ─────────────────────────────────────────────────────────────────
 **/.terraform/

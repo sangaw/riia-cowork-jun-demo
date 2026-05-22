@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python -c \"import sys,json; d=json.load(sys.stdin); cmd=d.get('command',''); print('TWO-REPO REMINDER: To trigger a prod deploy, push from riia-jun-release/ (remote: riia-jun-release-prod). Pushing from the outer repo does NOT deploy. See project-office/specs/SPEC_Prod_Deploy.md.') if 'git push' in cmd else None\""
+          }
+        ]
+      }
+    ]
+  }
+}
