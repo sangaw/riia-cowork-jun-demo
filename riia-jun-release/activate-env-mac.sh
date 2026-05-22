@@ -17,3 +17,10 @@ fi
 
 source "$ENV_PATH/bin/activate"
 echo "Activated shared environment: $TARGET_ENV"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export RITA_DATA_RAW_DIR="$SCRIPT_DIR/data/raw"
+export RITA_DATA_INPUT_DIR="$SCRIPT_DIR/data/input"
+export RITA_DATA_OUTPUT_DIR="$SCRIPT_DIR/data/output"
+export RITA_MODEL_PATH="$SCRIPT_DIR/models"
+echo "[env] Data paths set relative to $SCRIPT_DIR"
