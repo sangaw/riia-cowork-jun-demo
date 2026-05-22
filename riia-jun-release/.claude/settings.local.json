@@ -52,7 +52,10 @@
       "Bash(curl -s http://34.239.207.17/api/experience/ds/instruments)",
       "Bash(curl -s http://34.239.207.17/api/v1/experience/rita/geography-overview)",
       "Bash(curl -s http://34.239.207.17/api/experience/ds/)",
-      "Bash(curl -s http://34.239.207.17/api/v1/system/instruments)"
+      "Bash(curl -s http://34.239.207.17/api/v1/system/instruments)",
+      "Bash(chmod +x *)",
+      "Bash(python3.11 --version)",
+      "Bash(python3.12 --version)"
     ]
   }
 }
