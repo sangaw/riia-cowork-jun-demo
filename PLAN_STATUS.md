@@ -1,8 +1,18 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-21 (session 3) — Feature 18 (User Traffic Dashboard + Google OAuth) COMPLETE. Fixed jose `at_hash` JWTClaimsError in OAuth callback; switched to `get_unverified_claims()`.
+**Last updated:** 2026-05-23 — Production deploy stabilisation: SSH key, OOM swap, split-SSH pipeline, CPU-only Docker image, CloudWatch observability, instrument seeding fix.
 
-**Session work:**
-- **Production outage — accidental `terraform destroy`** ran from inside `terraform/` directory; entire EC2 infrastructure destroyed mid-day
+**Session work (2026-05-23):**
+- **SSH key mismatch fixed:** `SSH_PRIVATE_KEY` GitHub secret was stale; updated via GitHub API (PyNaCl) to match `terraform/generated-key.pem`
+- **Swap added:** EC2 t3.micro now has 2GB swap — prevents OOM kills during `docker pull`
+- **Chat monitor write path:** `chat_monitor.py` was writing to read-only `/app/data` volume; `chat.monitor_dir` config key added pointing to writable `rita_output/`
+- **Instrument seeding bug fixed:** SQLite `IN :ids` tuple binding raised `OperationalError` on every startup — entire seed block skipped, instruments table empty, geography panel blank. Fixed with per-id UPDATE loop
+- **Deploy pipeline refactored:** single long SSH heredoc replaced with 3 short calls (pull / `docker run -d` / HTTP health poll from runner) — no session lives long enough to be OOM-killed
+- **CloudWatch Logs + alarms:** `awslogs` Docker log driver → `/rita/app` log group; 2 alarms (CPU >80%, status check fail) + SNS email to contact@ravionics.nl; IAM role `rita-ec2-role` attached to EC2; Terraform IaC added
+- **Docker image 9.4 GB → ~2 GB:** `sentence-transformers` was pulling full NVIDIA CUDA stack via PyTorch; pre-install CPU-only torch with `--extra-index-url https://download.pytorch.org/whl/cpu`
+- **SPEC_Prod_Deploy.md updated:** 6 new failure rows, Observability section, EC2 setup checklist, disk cleanup procedure
+- Geography panel verified live: India 5 / US 4 / EU 4 instruments
+
+**Previous session (2026-05-21 session 3) — Production outage — accidental `terraform destroy`** ran from inside `terraform/` directory; entire EC2 infrastructure destroyed mid-day
 - Recovery: `terraform state rm` for gone resources → `terraform destroy` (VPC cleanup) → `terraform apply` → data re-upload via SCP → GitHub Actions deploy → nginx manual setup → site restored (~45 min)
 - **Infra fix:** nginx reverse-proxy config baked into `terraform/main.tf` `user_data` — future rebuilds include nginx automatically (commit `8ea39ce`)
 - **Instrument seed fix:** original 4 instruments (NIFTY, BANKNIFTY, NVIDIA, ASML) were seeded with `is_available=False`; TRU missing from seed entirely → production showed only 7/8 instruments instead of 13. Fixed: all set to `True`, TRU added, startup SQL UPDATE corrects existing DBs on next restart (commit `1113c2e`)
@@ -169,3 +179,4 @@ _None_
 - 2026-05-20: mobileapp archive cleanup (e3468cb) — 25 unused design artifacts (RITA Mobile prototypes, JSX components, wireframes, zip backup, draft backups) moved to mobileapp/archive/. Active tree: PWA shell + v1 invest-flow-app (00–08 screens) + v2 invest-dashboard. Mobile breakpoints added to invest-flow-app/styles.css (≤480px: phone shell fills device viewport instead of fixed 360×780px mockup). investgame_v2.html also got ≤640px breakpoints (stacked arcade panel, scrollable day track, hidden nav links).
 - 2026-05-21: Feature 16 (All Instruments Data Refresh Command) — COMPLETE. Run A (e920177) + Run B (8e7aa40) merged to master. yf_ticker column added to instruments table (Alembic migration applied + backfill on startup); POST /api/v1/instrument/refresh-all fetches delta OHLCV from yfinance for all 11 instruments, rebuilds input CSVs, upserts cache; /refresh-all-instruments-data slash command; project-office/scripts/run_data_refresh.py; 8 unit tests; specs + Confluence Engineering page updated (v28). NIFTY/BANKNIFTY manual CSV workflow retired. See `project-office/features/16 Data Refresh Command/PLAN_STATUS.md`.
 - 2026-05-21: Geography panel redesign — tiles replace instrument tab row (selectGeoInstrument() on click, geo-kpi-active highlight); region labels India/United States/Europe; instrument names shortened; KPI tile padding tightened; name always occupies 2 lines. Alembic migration 20260520_add_yf_ticker applied to live DB (was missing, causing 4-instrument display bug). Pushed to prod e920177..bf59163.
+- 2026-05-23: Production deploy stabilisation — SSH key rotation, 2GB swap, split-SSH pipeline, CPU-only PyTorch (image 9.4GB→~2GB), CloudWatch Logs + alarms, instrument seeding SQLite fix, SPEC_Prod_Deploy.md updated with 6 new failure rows. Geography panel live (India 5 / US 4 / EU 4). See session notes above.
