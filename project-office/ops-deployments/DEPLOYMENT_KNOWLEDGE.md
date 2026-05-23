@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-05-23
+**Last updated:** 2026-05-23 (smoke test deploy — /aws-production-deploy command verified)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -124,6 +124,22 @@ _None currently active._
 
 ---
 
+### PATTERN-009 — Prod repo `.git` missing on new machine — `git -C riia-jun-release` silently runs against dev repo
+
+- **Symptom:** `git -C riia-jun-release remote -v` shows `sangaw/riia-cowork-jun-demo` (dev repo remote) instead of `san-work-ravionics/riia-jun-release-prod`; status checks show dev repo state, not prod repo state
+- **Root cause:** `riia-jun-release/` has no `.git` directory on this machine. Git traverses up to the parent dev repo's `.git`. All prod repo commands silently operate on the dev repo instead.
+- **Fix:**
+  1. `git init` inside `riia-jun-release/` — creates inner `.git`, `master` branch
+  2. `git -C riia-jun-release remote add origin https://<PAT>@github.com/san-work-ravionics/riia-jun-release-prod.git`
+  3. `git -C riia-jun-release fetch origin`
+  4. `git -C riia-jun-release reset --hard origin/master`
+  5. `git -C riia-jun-release branch --set-upstream-to=origin/master master`
+- **Prevention:** After cloning the dev repo on any new machine, immediately check for the inner `.git`: `ls riia-jun-release/.git`. If absent, run the fix steps before any deployment attempt. The `/aws-production-deploy` command pre-flight (Phase 1d) will catch this automatically.
+- **Date first seen:** 2026-05-23
+- **Recurrences:** 0
+
+---
+
 ## Successful Deploys Log
 
 | Date | Commit | Notes |
@@ -132,6 +148,7 @@ _None currently active._
 | 2026-05-21 | `8ea39ce` | nginx baked into Terraform cloud-init after accidental destroy recovery |
 | 2026-05-21 | `1113c2e` | All 13 instruments seeded with `is_available=True`; TRU added |
 | 2026-05-21 | `4dfcaf6` | OAuth `at_hash` fix (PATTERN-005); Feature 18 User Traffic complete |
+| 2026-05-23 | `a599ca8` | Smoke test — `/aws-production-deploy` command first run; prod repo `.git` initialised on Mac; pipeline green; health ok |
 
 ---
 

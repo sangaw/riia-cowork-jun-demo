@@ -1,7 +1,7 @@
 # Feature 19 — Ops Engineer Skill: Plan Status
 
 **Date started:** 2026-05-23
-**Status:** IN PROGRESS — Phases 1–2 complete, Phase 3 (smoke test) next
+**Status:** IN PROGRESS — Phases 1–3 complete, Phase 4 (first real incident update) ongoing
 
 ---
 
@@ -11,7 +11,7 @@
 |---|---|---|
 | 1 — Skill + Knowledge Base | Write `skill-ops-engineer.md` + seed `DEPLOYMENT_KNOWLEDGE.md` with 8 known patterns | `[x]` |
 | 2 — Deploy Command | Write `.claude/commands/aws-production-deploy.md` with all 7 phases | `[ ]` |
-| 3 — Smoke Test | User runs `/aws-production-deploy` against a real deploy; verify all phases execute correctly | `[ ]` |
+| 3 — Smoke Test | User runs `/aws-production-deploy` against a real deploy; verify all phases execute correctly | `[x]` Done 2026-05-23 — pipeline green, health ok |
 | 4 — First Incident Update | After first real deployment, log outcome in `DEPLOYMENT_KNOWLEDGE.md` | `[ ]` |
 
 ---
