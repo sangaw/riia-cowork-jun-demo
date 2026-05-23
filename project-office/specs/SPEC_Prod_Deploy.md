@@ -1,6 +1,6 @@
 # SPEC — Production Deployment
 
-**Last updated:** 2026-05-20 (deploy fixes: GHCR auth, SSH heredoc pattern, OAuth http vs https)
+**Last updated:** 2026-05-23 (deploy fixes: SSH key mismatch, swap for OOM, chat monitor write path)
 **Status:** Live on AWS EC2
 
 ---
@@ -83,6 +83,71 @@ git push origin master   # uses san-work-ravionics PAT — no login needed
 
 ---
 
+## EC2 Instance Setup Checklist (first boot / after rebuild)
+
+Run these once after any new EC2 instance is provisioned — before the first deploy.
+
+```bash
+# SSH in with the terraform key
+ssh -i terraform/generated-key.pem -o StrictHostKeyChecking=no ubuntu@<EC2_IP>
+
+# 1. Add 2GB swap — t3.micro has 1GB RAM; docker pull OOMs without it
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+free -h   # confirm Swap: 2.0Gi
+
+# 2. Verify authorized_keys matches the terraform-generated key
+#    (the GitHub SSH_PRIVATE_KEY secret must match this key)
+cat ~/.ssh/authorized_keys
+```
+
+**After rebuilding the EC2 instance with Terraform:** the `generated-key.pem` changes.
+Update the `SSH_PRIVATE_KEY` GitHub secret to match — see "Rotating the SSH key" below.
+
+---
+
+## Rotating the SSH key
+
+If the `SSH_PRIVATE_KEY` GitHub secret and the key on EC2 get out of sync, CI fails with:
+```
+Connection closed by <IP> port 22
+Error: Process completed with exit code 255
+```
+
+Fix:
+```python
+# Run this locally to update the secret via GitHub API
+# (requires: pip install PyNaCl)
+import base64, json, urllib.request
+from nacl import encoding, public
+
+PAT = "<GHCR_PAT>"          # san-work-ravionics PAT with repo scope
+REPO = "san-work-ravionics/riia-jun-release-prod"
+SECRET_NAME = "SSH_PRIVATE_KEY"
+KEY_FILE = "riia-jun-release/terraform/generated-key.pem"
+
+with open(KEY_FILE) as f:
+    secret_value = f.read()
+
+headers = {"Authorization": f"token {PAT}", "Accept": "application/vnd.github+json",
+           "X-GitHub-Api-Version": "2022-11-28"}
+req = urllib.request.Request(f"https://api.github.com/repos/{REPO}/actions/secrets/public-key", headers=headers)
+with urllib.request.urlopen(req) as r:
+    pk = json.loads(r.read())
+
+encrypted = public.SealedBox(public.PublicKey(base64.b64decode(pk["key"]))).encrypt(secret_value.encode())
+payload = json.dumps({"encrypted_value": base64.b64encode(encrypted).decode(), "key_id": pk["key_id"]}).encode()
+req = urllib.request.Request(f"https://api.github.com/repos/{REPO}/actions/secrets/{SECRET_NAME}",
+    data=payload, headers={**headers, "Content-Type": "application/json"}, method="PUT")
+with urllib.request.urlopen(req) as r:
+    print(f"HTTP {r.status}")  # 204 = success
+```
+
+---
+
 ## Docker / EC2 Ops Commands
 
 ```bash
@@ -118,6 +183,9 @@ df -h /
 | Google OAuth callback returns 500 — `JWTClaimsError: No access_token provided to compare against at_hash claim` | `jose.jwt.decode()` validates the `at_hash` claim in Google's ID token even when `verify_signature=False`; requires an `access_token` we don't pass | Replace `jwt.decode(id_token, "", options=...)` with `jwt.get_unverified_claims(id_token)` — safe since the token came via server-to-server TLS |
 | Volume mount → app can't find data files | Volume was `/app/rita_input` but Dockerfile copies to `/app/data` | Volume mount must be `/opt/rita_input:/app/data:ro` |
 | No deploy triggered after push | Pushed to dev repo (`sangaw/riia-cowork-jun-demo`), not prod repo | Always push code fixes from `riia-jun-release/` git, not the parent repo |
+| `Connection closed by <IP> port 22` (exit 255) on deploy SSH step | `SSH_PRIVATE_KEY` secret is stale — doesn't match the public key in `~/.ssh/authorized_keys` on EC2 (happens after Terraform recreates the instance and generates a new key pair) | Re-run the "Rotating the SSH key" script above; then push an empty commit to retrigger |
+| `docker pull` hangs; instance becomes unresponsive; deploy times out | t3.micro has 1GB RAM — no swap means the kernel OOM-kills docker pull mid-download | Add 2GB swap before first deploy (see "EC2 Instance Setup Checklist"); swap persists across reboots via `/etc/fstab` |
+| `chat_monitor.csv` write fails in production; chat endpoint returns 500 | `data/output` is inside the read-only `/app/data` bind mount on EC2; `chat_monitor.py` was writing there | `chat.monitor_dir` config key now points to `rita_output/` (read-write mount); wrap `_log_query` in try/except so a write failure doesn't break chat |
 
 ---
 
