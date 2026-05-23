@@ -1,6 +1,6 @@
 # SPEC — Production Deployment
 
-**Last updated:** 2026-05-23 (deploy fixes: SSH key mismatch, swap for OOM, chat monitor write path)
+**Last updated:** 2026-05-23 (deploy fixes: SSH key, swap, split SSH, CPU torch, CloudWatch logs + alarms, instrument seeding)
 **Status:** Live on AWS EC2
 
 ---
@@ -25,7 +25,12 @@
 2. GitHub Actions picks up `.github/workflows/deploy.yaml`
 3. `build-and-push` job: builds Docker image → pushes to GHCR
 4. `deploy` job: checks out repo → rsyncs `data/raw/` + `data/input/` to `/opt/rita_input/` on EC2 → pulls new image → restarts container
-5. Health check polls `http://localhost/health` for up to 60 seconds
+5. Health check polls `http://<EC2_IP>/health` from the **GitHub Actions runner** (not SSH) for up to 3 minutes
+
+**Deploy pipeline structure (updated 2026-05-23):** The deploy job runs three short SSH calls instead of one long heredoc. This prevents the session being killed by the OOM spike during container swap on the 1 GB t3.micro:
+1. **Pull image** — `docker login` + `docker pull` (network I/O only)
+2. **Swap container** — `docker stop` + `docker rm` + `docker run -d` (returns immediately, detached)
+3. **Health check** — `curl http://<EC2_IP>/health` polled from the runner, no SSH
 
 **Instrument CSV auto-sync (added 2026-05-20):** The `deploy` job now checks out the repo and rsyncs instrument CSVs to EC2 before container restart. To add a new instrument's data to EC2: commit the CSV files to `data/raw/{TICKER}/` and `data/input/{TICKER}/` in the prod repo — the next push deploys them automatically. No manual SCP needed.
 
@@ -83,6 +88,27 @@ git push origin master   # uses san-work-ravionics PAT — no login needed
 
 ---
 
+## Observability (added 2026-05-23)
+
+### Container logs — CloudWatch
+Docker uses the `awslogs` driver. Logs stream to **CloudWatch → Log groups → `/rita/app` → stream `rita-container`**.
+No SSH needed. The EC2 instance has an IAM role (`rita-ec2-role`) with `CloudWatchLogsFullAccess`.
+
+**Never `docker logs` over SSH to debug production** — on a 1 GB instance, SSH + log streaming causes OOM and kills the container.
+
+### Alarms — SNS email to contact@ravionics.nl
+| Alarm | Trigger | Action |
+|---|---|---|
+| `rita-cpu-high` | CPU > 80% for 10 min | Email alert |
+| `rita-status-check-failed` | EC2 status check fails | Email alert |
+
+Terraform resources for both alarms and the SNS topic are in `terraform/main.tf`.
+
+### After attaching a new IAM role to EC2
+The `awslogs` Docker log driver reads credentials from the EC2 instance metadata service. The IAM role must be attached **before** the first deploy that uses `awslogs`, otherwise `docker run` hangs trying to reach CloudWatch and the SSH session times out with "Broken pipe".
+
+---
+
 ## EC2 Instance Setup Checklist (first boot / after rebuild)
 
 Run these once after any new EC2 instance is provisioned — before the first deploy.
@@ -106,6 +132,10 @@ cat ~/.ssh/authorized_keys
 
 **After rebuilding the EC2 instance with Terraform:** the `generated-key.pem` changes.
 Update the `SSH_PRIVATE_KEY` GitHub secret to match — see "Rotating the SSH key" below.
+
+**After provisioning:** also attach the `rita-ec2-role` IAM instance profile via
+AWS Console → EC2 → Instance → Actions → Security → Modify IAM role, and create
+the CloudWatch log group `/rita/app` with 30-day retention before the first deploy.
 
 ---
 
@@ -154,8 +184,8 @@ with urllib.request.urlopen(req) as r:
 # SSH in
 ssh -i terraform/generated-key.pem -o StrictHostKeyChecking=no ubuntu@<EC2_IP>
 
-# Live container logs
-docker logs rita --tail 50 -f
+# !! Do NOT run docker logs over SSH on prod — use CloudWatch instead !!
+# AWS Console → CloudWatch → Log groups → /rita/app → rita-container
 
 # Check volume mounts
 docker inspect rita --format '{{json .HostConfig.Binds}}'
@@ -163,11 +193,18 @@ docker inspect rita --format '{{json .HostConfig.Binds}}'
 # Restart container manually
 docker restart rita
 
-# Clean old images (if disk full)
-docker image prune -a -f
-
-# Check disk
+# Check disk — keep > 8 GB free or docker pull will fail
 df -h /
+sudo du -sh /var/lib/containerd/
+
+# Free disk: remove old images + clean containerd blobs from failed pulls
+docker image prune -a -f
+# If containerd blobs are large (sudo du -sh /var/lib/containerd/io.containerd.content.v1.content/):
+sudo systemctl stop docker
+sudo rm -rf /var/lib/containerd/io.containerd.content.v1.content/ingest/
+sudo mkdir -p /var/lib/containerd/io.containerd.content.v1.content/ingest/
+sudo systemctl start docker
+# Then retrigger deploy with an empty commit
 ```
 
 ---
@@ -186,6 +223,11 @@ df -h /
 | `Connection closed by <IP> port 22` (exit 255) on deploy SSH step | `SSH_PRIVATE_KEY` secret is stale — doesn't match the public key in `~/.ssh/authorized_keys` on EC2 (happens after Terraform recreates the instance and generates a new key pair) | Re-run the "Rotating the SSH key" script above; then push an empty commit to retrigger |
 | `docker pull` hangs; instance becomes unresponsive; deploy times out | t3.micro has 1GB RAM — no swap means the kernel OOM-kills docker pull mid-download | Add 2GB swap before first deploy (see "EC2 Instance Setup Checklist"); swap persists across reboots via `/etc/fstab` |
 | `chat_monitor.csv` write fails in production; chat endpoint returns 500 | `data/output` is inside the read-only `/app/data` bind mount on EC2; `chat_monitor.py` was writing there | `chat.monitor_dir` config key now points to `rita_output/` (read-write mount); wrap `_log_query` in try/except so a write failure doesn't break chat |
+| `client_loop: send disconnect: Broken pipe` (exit 255) mid-deploy after `docker pull` completes | Single long-running SSH heredoc is alive when the OOM spike hits during container swap — kernel kills sshd | Split deploy into 3 short SSH calls: (1) pull, (2) `docker run -d`, (3) health poll via HTTP from runner. `-d` returns immediately so SSH closes before memory spike |
+| `docker run` hangs silently; deploy times out with "Broken pipe" | `awslogs` log driver initialises synchronously — if no IAM role is attached to the EC2 instance, it blocks indefinitely trying to reach CloudWatch | Attach `rita-ec2-role` IAM instance profile to EC2 **before** the first deploy that uses `awslogs`; see EC2 Instance Setup Checklist |
+| `failed to extract layer … libcufft.so.12: no space left on device` | `sentence-transformers` → PyTorch → full NVIDIA CUDA stack installed in image (~7 GB); disk fills after 1–2 failed pull attempts leave blobs in `/var/lib/containerd/` | Pre-install CPU-only torch in Dockerfile with `--extra-index-url https://download.pytorch.org/whl/cpu`; image drops from ~9 GB to ~2 GB. Clean dead blobs: stop Docker, remove `ingest/` contents, recreate dir, restart Docker |
+| `mkdir /var/lib/containerd/…/ingest/…: no such file or directory` on next pull after cleanup | Deleting the `ingest/` directory itself (rather than its contents) leaves containerd unable to create sub-entries | Always recreate the directory after cleanup: `sudo mkdir -p …/ingest/` then `sudo systemctl restart docker` |
+| Geography panel empty; no instruments shown | `startup seed` block raises `sqlite3.OperationalError: near "?": syntax error` on `UPDATE instruments … WHERE instrument_id IN :ids` — SQLite does not support tuple binding via SQLAlchemy `text()` | Replace the single `IN :ids` statement with a per-id loop: `for id in ids: db.execute(text("… WHERE instrument_id = :id"), {"id": id})` |
 
 ---
 
