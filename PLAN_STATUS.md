@@ -1,7 +1,14 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-23 — Production deploy stabilisation: SSH key, OOM swap, split-SSH pipeline, CPU-only Docker image, CloudWatch observability, instrument seeding fix.
+**Last updated:** 2026-05-24 — Ops observability fix: live functional-kpis endpoint, API Metrics panel CSS/nav fixes, deployed to prod.
 
-**Session work (2026-05-23):**
+**Session work (2026-05-24):**
+- **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
+- **API Metrics panel fixed (3 bugs):** (1) `api-metrics` missing from `SECTIONS` array in `nav.js` — section was never shown on nav click; (2) `sec-api-metrics` had inline `style="display:none"` overriding `.sec.on { display:block }` CSS rule due to specificity; (3) HTML used non-existent CSS classes (`kpi-row`, `kpi-card`, `data-table`) — replaced with ops design system classes (`kpi-strip`, `kpi`, `kpi-ey`, `kpi-val`, `tbl-wrap`).
+- **29 unit tests added** in `tests/unit/test_functional_kpis.py` — 3 test classes covering schema validation, endpoint happy path + edge cases, and JS contract verification.
+- **Deployed to production** — commit `7b30b73`, GitHub Actions green, health check passed at `https://riia.ravionics.nl/health`.
+- **Feedback saved:** Engineer agents generate invalid CSS class names in `ops.html`; Architect prompts must specify exact ops design system classes going forward.
+
+**Previous session (2026-05-23):**
 - **SSH key mismatch fixed:** `SSH_PRIVATE_KEY` GitHub secret was stale; updated via GitHub API (PyNaCl) to match `terraform/generated-key.pem`
 - **Swap added:** EC2 t3.micro now has 2GB swap — prevents OOM kills during `docker pull`
 - **Chat monitor write path:** `chat_monitor.py` was writing to read-only `/app/data` volume; `chat.monitor_dir` config key added pointing to writable `rita_output/`
@@ -180,3 +187,4 @@ _None_
 - 2026-05-21: Feature 16 (All Instruments Data Refresh Command) — COMPLETE. Run A (e920177) + Run B (8e7aa40) merged to master. yf_ticker column added to instruments table (Alembic migration applied + backfill on startup); POST /api/v1/instrument/refresh-all fetches delta OHLCV from yfinance for all 11 instruments, rebuilds input CSVs, upserts cache; /refresh-all-instruments-data slash command; project-office/scripts/run_data_refresh.py; 8 unit tests; specs + Confluence Engineering page updated (v28). NIFTY/BANKNIFTY manual CSV workflow retired. See `project-office/features/16 Data Refresh Command/PLAN_STATUS.md`.
 - 2026-05-21: Geography panel redesign — tiles replace instrument tab row (selectGeoInstrument() on click, geo-kpi-active highlight); region labels India/United States/Europe; instrument names shortened; KPI tile padding tightened; name always occupies 2 lines. Alembic migration 20260520_add_yf_ticker applied to live DB (was missing, causing 4-instrument display bug). Pushed to prod e920177..bf59163.
 - 2026-05-23: Production deploy stabilisation — SSH key rotation, 2GB swap, split-SSH pipeline, CPU-only PyTorch (image 9.4GB→~2GB), CloudWatch Logs + alarms, instrument seeding SQLite fix, SPEC_Prod_Deploy.md updated with 6 new failure rows. Geography panel live (India 5 / US 4 / EU 4). See session notes above.
+- 2026-05-24: Ops observability fix — live /api/experience/ops/functional-kpis endpoint; API Metrics panel 3-bug fix (SECTIONS, inline style, CSS classes); 29 unit tests; deployed to prod (7b30b73). Feedback: Engineer CSS class generation guardrail saved to memory.
