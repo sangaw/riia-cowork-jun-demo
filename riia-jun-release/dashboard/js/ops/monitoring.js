@@ -1,6 +1,7 @@
 // ── Monitoring ────────────────────────────────────────────────────────────────
 import { apiFetch } from './api.js';
 import { fmt, badge, stepName } from './utils.js';
+import { loadApiMetrics } from './api-metrics.js';
 
 export async function loadMonitoring() {
   const [metrics, stepLog] = await Promise.all([
@@ -81,4 +82,7 @@ export async function loadMonitoring() {
   } else {
     logEl.innerHTML = '<div class="empty">No step log entries yet</div>';
   }
+
+  // Load embedded panels
+  loadApiMetrics();
 }

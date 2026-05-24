@@ -81,16 +81,18 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `nav.js` | Section navigation | `show(section)`, `_sectionLoaders` |
 | `main.js` | Entry point | Registers loaders, binds `window.*` |
 | `overview.js` | Ops overview dashboard | `loadOverview()` |
-| `cicd.js` | CI/CD pipeline view | `loadCicd()` |
-| `monitoring.js` | Prometheus metrics view | `loadMonitoring()` |
-| `observability.js` | Structured metrics summary | `loadObservability()` |
+| `monitoring.js` | API metrics, alerts, functional KPIs, step log — embeds `loadApiMetrics()` at end of load | `loadMonitoring()` |
+| `observability.js` | Drift detection, data freshness, Sharpe trend, source availability, MCP call log | `loadObservability()` |
 | `test-results.js` | Test results grid | `loadTestResults()` |
 | `daily-ops.js` | Daily operations panel | `loadDailyOps()`, `loadInstruments()`, `toggleInstrument()`, `saveInstruments()`, `triggerSnapshot()`, `searchInstrument()`, `onboardInstrument()` |
 | `deploy.js` | Deployment management | `loadDeploy()` |
 | `chat.js` | Ops chat | `sendOpsChat()` |
 | **`users.js`** | **User management table** | `loadUsers()`, `createUser()`, `deleteUser()` |
 | `agent-builds.js` | Agent Builds pipeline runs + performance metrics panels — API calls to `/api/experience/ops/agent-builds` and `/api/experience/ops/token-forecast` | `loadAgentBuilds()`, `renderTokenEstimateWidget()`, `submitTokenEstimate()`, `toggleEstimateWidget()`. Updated signatures: `mountTrendChart(m, runs)` and `renderTrendPanel(m, runs)` take runs array to derive TSR/CSAT/adherence; `renderKpiCards(metrics, runs)` takes runs for cache hit rate KPI. Run History table shows "Est / Actual" tokens column (colour-coded) replacing "Forecast Δ". Token chart shows dashed actual lines alongside solid estimate lines. |
-| `api-metrics.js` | API call log metrics panel — reads from `/api/experience/ops/api-metrics` | `loadApiMetrics()`, `filterApiMetrics()` |
+| `api-metrics.js` | API call log metrics panel — reads from `/api/experience/ops/api-metrics`; DOM target now inside `sec-monitoring` | `loadApiMetrics()`, `filterApiMetrics()` |
+| `alerts.js` | Active alerts panel — reads from `/ops/alerts/active-alerts.json`; DOM target now inside `sec-monitoring` | `loadAlerts()` |
+| `source-availability.js` | Source availability chart — reads from `/ops/metrics/source-availability.json`; DOM target now inside `sec-observability` | `loadSourceAvailability()` |
+| `functional-kpis.js` | KPI strip — reads from `/api/experience/ops/functional-kpis`; DOM target now inside `sec-monitoring` | `loadFunctionalKPIs()` |
 
 **Feature 16 Run A note:** No new JS module added. The data refresh endpoint (`POST /api/v1/instrument/refresh-all`) is invoked via the `/refresh-all-instruments-data` slash command and the standalone script `project-office/scripts/run_data_refresh.py`. A UI trigger panel may be added to `daily-ops.js` in a future run.
 
