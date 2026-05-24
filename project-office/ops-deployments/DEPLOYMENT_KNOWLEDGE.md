@@ -11,7 +11,7 @@
 
 > Short-lived warnings — remove when resolved.
 
-_None currently active._
+- **Current EC2 IP:** `13.206.230.76` (ap-south-1 Mumbai) — update GitHub Secret `AWS_EC2_IP` and Google OAuth redirect URI if this changes after a `terraform apply`
 
 ---
 
@@ -258,6 +258,22 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 - **Prevention:** Ensure `sim_start` and `sim_end` are valid ISO date strings (`YYYY-MM-DD`) when calling the pipeline API. Do not pass timezone-aware strings to these fields
 - **Date first seen:** 2026-05-24
 - **Recurrences:** 0
+
+---
+
+### BUILD-PATTERN-008 — Pipeline POST silently fails with 401 — missing Authorization header in shared api()
+
+- **Symptom:** Pipeline button in DS dashboard appears to do nothing or shows a red error badge; dashboard polls `/progress` and `/api/v1/training-progress` continuously but no `POST /api/v1/pipeline` ever appears in container logs; curl test of the endpoint returns `{"detail":"Not authenticated"}`
+- **Root cause:** `dashboard/js/shared/api.js` `api()` function never attaches the JWT token from `localStorage.getItem('auth_token')`. All calls to JWT-protected endpoints (`POST /api/v1/pipeline`, `POST /api/v1/instrument/select`) silently fail with 401 — the error is caught in the pipeline.js `catch(e)` block but may not render visibly
+- **Fix:** Add token injection to `shared/api.js` `api()`:
+  ```js
+  const token = localStorage.getItem('auth_token');
+  const opts = { method, headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) } };
+  ```
+- **Prevention:** Any new JWT-protected endpoint called from the dashboard must be tested while NOT logged in to verify the 401 surfaces correctly, and while logged in to verify the token is attached
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+- **Commit fix:** `e4e4599` (api.js Bearer header), `4a64d44` (ds.html auth guard + post-login redirect)
 
 ---
 

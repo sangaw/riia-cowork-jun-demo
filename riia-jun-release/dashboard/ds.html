@@ -1373,6 +1373,20 @@ tr:hover td{background:var(--surface2);}
 <!-- ── Nav toggle (desktop collapse) ─────────────────────── -->
 <script>
 (function(){
+  (function(){
+    var t = localStorage.getItem('auth_token');
+    var expired = false;
+    if (t) { try { var p = JSON.parse(atob(t.split('.')[1])); expired = p.exp && (Date.now()/1000 > p.exp); } catch(e){} }
+    if (!t || expired) {
+      localStorage.removeItem('auth_token');
+      localStorage.setItem('post_login_redirect', window.location.href);
+      window.location.href = '/auth/google/login';
+    }
+  })();
+})();
+</script>
+<script>
+(function(){
   var KEY='rita_nav_collapsed';
   var btn=document.getElementById('nav-toggle');
   var shell=document.querySelector('.shell');
