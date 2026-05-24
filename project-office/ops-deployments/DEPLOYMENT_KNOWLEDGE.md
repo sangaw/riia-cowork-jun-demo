@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-05-23 (smoke test deploy — /aws-production-deploy command verified)
+**Last updated:** 2026-05-24 (debug session — BUILD-PATTERN-011 datetime tz mismatch, BUILD-PATTERN-012 train_best_of_n missing progress_fn; both fixed and deployed)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
