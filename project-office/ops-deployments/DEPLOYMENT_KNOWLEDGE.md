@@ -277,6 +277,19 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 
 ---
 
+### BUILD-PATTERN-009 — Cloudflare caches stale JS after deploy — pipeline button does nothing
+
+- **Symptom:** Build was recently deployed but pipeline button still silently fails. Nginx access log shows the user's browser (Cloudflare IP `172.69.xxx.xxx`) only makes `/health` requests — no instrument loads, no `POST /api/v1/pipeline`. Curl check confirms `CF-Cache-Status: HIT` and `age: <N>` on JS files. The old JS (e.g., `api.js` without Bearer token) is being served by Cloudflare edge cache.
+- **Root cause:** Cloudflare caches static JS/CSS files based on `Cache-Control: max-age=14400` returned by the origin. After a deploy, the new JS is on EC2 but Cloudflare serves the stale cached version for up to 4 hours. Users never receive the fix until the cache expires or is purged.
+- **Fix (immediate):** Purge the Cloudflare cache: Cloudflare Dashboard → `riia.ravionics.nl` → **Caching → Purge Cache → Purge Everything**. Then ask the user to hard-refresh (`Cmd+Shift+R`).
+- **Fix (permanent):** nginx must send `Cache-Control: no-store, no-cache, must-revalidate` for all `.js` and `.css` files. This is now baked into `terraform/rita.nginx.conf` and the live nginx config on EC2 (applied 2026-05-24). Future deploys will include this automatically.
+- **Prevention:** After every deploy that changes JS files, verify with `curl -sI https://riia.ravionics.nl/dashboard/js/shared/api.js | grep CF-Cache-Status`. A `BYPASS` or `MISS` result means Cloudflare is not caching. A `HIT` result means users are getting stale JS.
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+- **Commit fix:** `aaecd42` (nginx no-store for JS/CSS)
+
+---
+
 ## How to Add a New Model Build Pattern
 
 After any model build incident, append a new `### BUILD-PATTERN-NNN` block following this template:
