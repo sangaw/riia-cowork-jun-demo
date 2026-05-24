@@ -290,6 +290,27 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 
 ---
 
+### BUILD-PATTERN-010 — PermissionError: model dir not writable — relative path resolves inside image layer
+
+- **Symptom:** `pipeline.failed` logged immediately after `POST /api/v1/pipeline 202`; exception: `PermissionError: [Errno 13] Permission denied: 'models/NIFTY'`; no model ZIP ever created; training run stays in `pending` or moves to `failed` within seconds
+- **Root cause:** `config/base.yaml` sets `model.path: "models"` (relative). In the container, this resolves to `/app/models/NIFTY` — inside the Docker image layer, which is read-only. The writable bind mount is at `/app/rita_output/` (`/opt/rita_output` on EC2). `production.yaml` did not override `model.path` or `data.output_dir`, so both remained relative.
+- **Fix:** Add absolute paths to `config/production.yaml`:
+  ```yaml
+  data:
+    raw_dir: "/app/data/raw"
+    input_dir: "/app/data/input"
+    output_dir: "/app/rita_output/data_output"
+  model:
+    path: "/app/rita_output/models"
+  ```
+  Then redeploy (push to prod repo triggers GitHub Actions → new container image).
+- **Prevention:** Any config path that the application writes to must be absolute and point to `/app/rita_output/` in production. After any change to `base.yaml` data/model paths, verify `production.yaml` overrides them. Check with: `docker exec rita python3 -c "from rita.config import settings; print(settings.model.path, settings.data.output_dir)"`
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+- **Commit fix:** `9ef0b1c` (production.yaml absolute paths)
+
+---
+
 ## How to Add a New Model Build Pattern
 
 After any model build incident, append a new `### BUILD-PATTERN-NNN` block following this template:
