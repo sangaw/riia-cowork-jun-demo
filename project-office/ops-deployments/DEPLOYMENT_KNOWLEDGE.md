@@ -140,6 +140,22 @@
 
 ---
 
+### PATTERN-010 — EC2 disk full during Docker image layer extraction
+
+- **Symptom:** GitHub Actions deploy step fails with `write ... libtorch_cpu.so: no space left on device` during `docker pull`; new container never starts; old container keeps running
+- **Root cause:** Accumulated stale Docker images on EC2 consume all available disk space. Each deploy pushes a new image (~3–4 GB due to PyTorch) without removing old ones. After several deploys the volume fills
+- **Fix:**
+  1. SSH into EC2: `ssh -i riia-jun-release/terraform/generated-key.pem ubuntu@<EC2_IP>`
+  2. Check disk: `df -h /` — if >90%, prune immediately
+  3. Prune all unused images: `docker image prune -a -f`
+  4. Confirm free space: `df -h /` — target <50% used
+  5. Re-trigger deploy: push an empty commit `git commit --allow-empty -m "chore: trigger redeploy after EC2 disk cleanup" && git push origin master`
+- **Prevention:** After every successful deploy, SSH in and run `docker image prune -a -f`. The active image is never pruned (Docker protects running containers). Consider adding an automatic prune step to `deploy.yaml` before `docker pull`
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
 ## Successful Deploys Log
 
 | Date | Commit | Notes |
@@ -149,6 +165,8 @@
 | 2026-05-21 | `1113c2e` | All 13 instruments seeded with `is_available=True`; TRU added |
 | 2026-05-21 | `4dfcaf6` | OAuth `at_hash` fix (PATTERN-005); Feature 18 User Traffic complete |
 | 2026-05-23 | `a599ca8` | Smoke test — `/aws-production-deploy` command first run; prod repo `.git` initialised on Mac; pipeline green; health ok |
+| 2026-05-24 | `34d8095` | scenarios.js cache fix (backtest period selection); ASML/NVIDIA/BANKNIFTY/NIFTY CSVs added; EC2 disk full (PATTERN-010) — pruned stale images, redeployed |
+| 2026-05-24 | `7b30b73` | Ops observability fix — live /api/experience/ops/functional-kpis endpoint; nav.js SECTIONS fix for api-metrics; ops.html CSS class fixes for sec-api-metrics |
 
 ---
 
