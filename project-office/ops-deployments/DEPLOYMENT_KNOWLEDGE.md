@@ -327,6 +327,18 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 
 ---
 
+### BUILD-PATTERN-012 — train_best_of_n() missing progress_fn — multi-seed training crashes immediately
+
+- **Symptom:** Pipeline POST returns 202, but `training.failed` logged within seconds: `train_best_of_n() got an unexpected keyword argument 'progress_fn'`. Only affects instruments configured with `n_seeds > 1`. Single-seed instruments (NIFTY default) work fine.
+- **Root cause:** `train_best_of_n()` in `trading_env.py` was never updated when `progress_fn` was added to `train_agent()`. `ml_dispatch.py` passes `progress_fn=progress_fn` to both paths unconditionally.
+- **Fix:** Add `progress_fn=None` to `train_best_of_n()` signature and pass it to each `train_agent()` call inside the seed loop.
+- **Prevention:** Any new kwarg added to `train_agent()` must also be added to `train_best_of_n()`. Both functions share the same call site in `ml_dispatch.py`.
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+- **Commit fix:** `8c5f684` (trading_env.py — progress_fn for multi-seed path)
+
+---
+
 ## How to Add a New Model Build Pattern
 
 After any model build incident, append a new `### BUILD-PATTERN-NNN` block following this template:
