@@ -311,6 +311,22 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 
 ---
 
+### BUILD-PATTERN-011 — TypeError: naive/aware datetime subtraction in post-training duration calc
+
+- **Symptom:** Training completes (model ZIP written, DB run marked `complete`), but `pipeline.failed` is logged immediately after. `training_history.csv` never written. Dashboard shows backtest step spinning indefinitely. Exception: `TypeError: can't subtract offset-naive and offset-aware datetimes` in `workflow_service.py _run_training_job`.
+- **Root cause:** SQLite strips timezone info from `TIMESTAMP` columns on read-back, returning a naive `datetime`. `started_at` is stored with `datetime.now(timezone.utc)` (aware) but read back as naive. `ended_at = datetime.now(timezone.utc)` is aware. Python raises `TypeError` when subtracting the two. The crash happens at line 118 in `workflow_service.py` — after the `upsert` that marks the run `complete`, but before `TrainingTracker.record_round()`, so the CSV is never updated.
+- **Fix:** Normalise `started_at` to UTC before subtraction:
+  ```python
+  _started = run.started_at.replace(tzinfo=timezone.utc) if run.started_at and run.started_at.tzinfo is None else run.started_at
+  duration_s = round((ended_at - _started).total_seconds(), 1) if _started else None
+  ```
+- **Prevention:** Whenever computing `timedelta` from DB-sourced datetimes, always normalise `tzinfo` first. SQLite + SQLAlchemy will silently drop timezone on read; never assume a datetime read from DB has the same tz-awareness as one created in-process.
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+- **Commit fix:** `d9da9e8` (workflow_service.py — naive/aware datetime fix)
+
+---
+
 ## How to Add a New Model Build Pattern
 
 After any model build incident, append a new `### BUILD-PATTERN-NNN` block following this template:
