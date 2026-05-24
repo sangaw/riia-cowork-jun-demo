@@ -152,6 +152,135 @@ _None currently active._
 
 ---
 
+---
+
+## Known Model Build Failure Patterns
+
+Model build failures are diagnosed via `/debug-model-build`. See `project-office/skills/skill-model-build-debug.md` for the full diagnostic skill.
+
+---
+
+### BUILD-PATTERN-001 — CSV not found for instrument
+
+- **Symptom:** Container logs show `FileNotFoundError` or `instrument_defaults.not_found` near `ml_dispatch.load_data`; pipeline thread crashes immediately after submission
+- **Root cause:** The instrument's OHLCV CSV files were not synced to EC2 before triggering the pipeline. `find_instrument_csv()` searches `/app/data/raw/{INSTRUMENT}/` (bind-mounted from `/opt/rita_input/raw/{INSTRUMENT}/`) — if the directory is empty or missing, it raises immediately
+- **Fix:**
+  1. Confirm files exist locally: `ls riia-jun-release/data/raw/{INSTRUMENT}/`
+  2. If missing locally, add CSVs to `riia-jun-release/data/raw/{INSTRUMENT}/` and commit
+  3. Push to prod repo — `deploy.yaml` rsyncs `data/raw/` to EC2 automatically
+  4. Re-trigger pipeline after deploy completes
+- **Prevention:** Before running a pipeline for a new instrument, verify `ls /opt/rita_input/raw/{INSTRUMENT}/` on EC2 shows at least one OHLCV CSV
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
+### BUILD-PATTERN-002 — OOM kill during training (container exits mid-run)
+
+- **Symptom:** `docker inspect rita --format '{{.State.OOMKilled}}'` returns `true`; container restarted; training run stuck in `running` with no `ended_at`; `ml_dispatch.training_complete` never logged
+- **Root cause:** stable-baselines3 DQN training with large `buffer_size` or `timesteps` exhausts EC2 instance memory. The kernel OOM-killer terminates the container process mid-training
+- **Fix:**
+  1. Re-trigger pipeline with reduced parameters: `timesteps=100000, buffer_size=25000`
+  2. If OOM persists, add swap: `sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile`
+  3. Mark the stuck training run in DB: `sqlite3 /opt/rita_output/rita.db "UPDATE training_runs SET status='failed', ended_at=datetime('now') WHERE status='running';"`
+- **Prevention:** Check `free -h` on EC2 before triggering training. For the t3.micro/t3.small instances, keep `buffer_size ≤ 50000` and `timesteps ≤ 200000`
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
+### BUILD-PATTERN-003 — Training run stuck in `pending` — thread never started
+
+- **Symptom:** `POST /api/v1/pipeline` returned 202 with a `train_run_id`, but DB row stays `pending` indefinitely; no `ml_dispatch.load_data` log line ever appears
+- **Root cause:** The daemon thread was launched but the container restarted between the 202 response and the thread's first log line, wiping the in-flight thread. Daemon threads do not survive container restarts
+- **Fix:**
+  1. Confirm container restart: `docker inspect rita --format '{{.RestartCount}}'` — if > 0, container cycled
+  2. Mark stuck run as failed: `sqlite3 /opt/rita_output/rita.db "UPDATE training_runs SET status='failed', ended_at=datetime('now') WHERE status='pending';"`
+  3. Investigate why container restarted (check `docker logs rita --tail 50` for crash before the gap)
+  4. Re-trigger pipeline once container is stable
+- **Prevention:** Resolve any container restart loops before triggering long-running builds. Check `docker ps` for `Restarting` status before initiating a pipeline run
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
+### BUILD-PATTERN-004 — Model ZIP not written despite `ml_dispatch.training_complete` log
+
+- **Symptom:** Logs show `ml_dispatch.training_complete` but `ls /opt/rita_output/models/{INSTRUMENT}/` shows no new `.zip` file; training run may be marked `complete` in DB
+- **Root cause:** Disk full on EC2 — `model.save()` in stable-baselines3 fails silently or with a low-level OS error that is not caught by the training wrapper. The log event fires before the actual disk write
+- **Fix:**
+  1. Check disk: `df -h /opt/rita_output/` — if >90% full, clean old model ZIPs: `ls -t /opt/rita_output/models/{INSTRUMENT}/*.zip | tail -n +4 | xargs rm -f`
+  2. Clean Docker layers: `docker image prune -a -f`
+  3. Re-trigger pipeline with `force_retrain=true`
+- **Prevention:** Monitor EC2 disk after every training run. Keep at most 3 ZIP files per instrument. Add a disk-check step to `/debug-model-build` Phase 3f
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
+### BUILD-PATTERN-005 — Validation Sharpe = 0 after successful training
+
+- **Symptom:** `ml_dispatch.training_complete` logged, ZIP exists, `training_tracker.round_recorded` logged, but `training_history.csv` shows `val_sharpe=0.0` and `val_trades=0`
+- **Root cause:** The validation episode (`run_episode(model, val_df)`) raised an exception that was silently caught in the `try/except` block in `ml_dispatch.train()` (lines 174–183). The exception is not logged — metrics default to 0
+- **Fix:**
+  1. Check container logs for any exception between `ml_dispatch.training_complete` and `ml_dispatch.validation_complete`
+  2. Common cause: `val_df` is too short (< episode_length rows) after the 80/20 split — check `ml_dispatch.data_loaded` row count
+  3. If val_df is too short: the input CSV may be truncated — verify `wc -l /opt/rita_input/raw/{INSTRUMENT}/*.csv`
+  4. Add more historical data or reduce `episode_length` in `config/instruments/{instrument}.yaml`
+- **Prevention:** The validation episode exception should be logged at WARNING level, not silently swallowed. (Known tech-debt: track in backlog)
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
+### BUILD-PATTERN-006 — Pipeline trained wrong instrument (active_instrument_id mismatch)
+
+- **Symptom:** Pipeline completed, ZIP exists, but model is for NIFTY when user wanted BANKNIFTY (or vice versa); `instrument` field in DB training run shows unexpected value
+- **Root cause:** `POST /api/v1/pipeline` takes an `instrument` parameter, but if triggered from the dashboard without specifying it, it defaults to whatever `active_instrument_id` is set to in `config_overrides` — which may not match the user's intent
+- **Fix:**
+  1. Confirm what ran: `sqlite3 /opt/rita_output/rita.db "SELECT instrument, status FROM training_runs ORDER BY recorded_at DESC LIMIT 3;"`
+  2. Update active instrument if needed: `POST /api/v1/instrument/select` with correct `instrument_id`
+  3. Re-trigger pipeline with the correct instrument explicitly in the request body
+- **Prevention:** Always specify `instrument` explicitly in pipeline API calls. When triggering from the dashboard, verify the instrument selector shows the intended instrument before clicking Run
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
+### BUILD-PATTERN-007 — Backtest never starts after pipeline training completes
+
+- **Symptom:** `ml_dispatch.training_complete` logged, model ZIP exists, but no backtest run appears in the dashboard; `backtest_run_id` from the pipeline response stays in `pending`
+- **Root cause:** `_run_backtest_job()` is called in the same background thread after training. If `sim_start`/`sim_end` date parsing fails (invalid ISO string) or `BacktestRunsRepository.upsert()` raises a DB constraint error, the backtest silently never executes
+- **Fix:**
+  1. Check logs for any exception after `ml_dispatch.validation_complete` in the pipeline thread
+  2. Check backtest run status: `sqlite3 /opt/rita_output/rita.db "SELECT run_id, status FROM backtest_runs ORDER BY recorded_at DESC LIMIT 3;"`
+  3. If stuck in `pending` with no logs: trigger a standalone backtest via `POST /api/v1/backtest` with the correct instrument and date range
+- **Prevention:** Ensure `sim_start` and `sim_end` are valid ISO date strings (`YYYY-MM-DD`) when calling the pipeline API. Do not pass timezone-aware strings to these fields
+- **Date first seen:** 2026-05-24
+- **Recurrences:** 0
+
+---
+
+## How to Add a New Model Build Pattern
+
+After any model build incident, append a new `### BUILD-PATTERN-NNN` block following this template:
+
+```markdown
+### BUILD-PATTERN-NNN — <Short descriptive title>
+
+- **Symptom:** What the user or logs show — be specific
+- **Root cause:** Why it happens
+- **Fix:** Exact commands or steps that resolve it
+- **Prevention:** Rule to follow to avoid this in future
+- **Date first seen:** YYYY-MM-DD
+- **Recurrences:** 0
+- **Commit fix:** <sha> (if applicable)
+```
+
+Increment the counter from the last BUILD-PATTERN above. If the same pattern recurs, increment **Recurrences** on the existing entry and add a dated note below the fix.
+
+---
+
 ## How to Add a New Pattern
 
 After any incident, append a new `### PATTERN-NNN` block following this template:
