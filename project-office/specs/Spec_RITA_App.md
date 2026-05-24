@@ -110,6 +110,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/experience/ops/agent-builds` | Returns agent build run history + aggregated metrics from DB. `AgentBuildRunOut` includes `human_score_csat: Optional[float]` (from run JSON `human_score.csat`). `AgentOut` includes `actual_tokens: Optional[dict]` (input/output/cache/total from Claude API). `SkillVersion.recent_commits` is `list[dict]` with `{hash, message}` objects. |
 | `GET` | `/api/experience/ops/token-forecast` | Pre-run token budget estimate — query params: `feature_type`, `files_to_change`, `new_endpoint_or_model`, `frontend_scope`, `integration_type`. Returns `TokenForecastResponse` (complexity, per_role, total_forecast, confidence, basis_runs). Auth required. |
 | `GET` | `/api/experience/ops/api-metrics` | Per-endpoint call count, p50/p95 latency, error rate from api_call_log. Query params: `limit` (default 200), `method`, `path_prefix`. Returns `ApiMetricsResponse(items: list[ApiMetricsRow])`. No auth. |
+| `GET` | `/api/experience/ops/functional-kpis` | KPI time-series for training success rate, error rates, p95 latency (last 24h hourly buckets). Query param: `hours` (default 24, 1–168). Returns `FunctionalKPIsResponse`. No auth. |
 
 ### Users Experience Endpoints (`/api/v1/experience/users`)
 
