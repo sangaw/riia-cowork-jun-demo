@@ -167,6 +167,7 @@
 | 2026-05-23 | `a599ca8` | Smoke test — `/aws-production-deploy` command first run; prod repo `.git` initialised on Mac; pipeline green; health ok |
 | 2026-05-24 | `34d8095` | scenarios.js cache fix (backtest period selection); ASML/NVIDIA/BANKNIFTY/NIFTY CSVs added; EC2 disk full (PATTERN-010) — pruned stale images, redeployed |
 | 2026-05-24 | `7b30b73` | Ops observability fix — live /api/experience/ops/functional-kpis endpoint; nav.js SECTIONS fix for api-metrics; ops.html CSS class fixes for sec-api-metrics |
+| 2026-05-24 | `5df7fb5` | Agent Builds data fix — seeded agent_build_runs/agent_build_agents from 61 JSON run files; deploy.yaml now rsyncs data/agent-ops/ to EC2 and runs idempotent DB seed on every deploy |
 
 ---
 
