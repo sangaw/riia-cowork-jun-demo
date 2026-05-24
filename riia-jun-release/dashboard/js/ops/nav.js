@@ -15,7 +15,7 @@ export function nav(el, id) {
     if (sec) sec.classList.toggle('on', s === id);
   });
   // Live data sections always reload; others load once
-  const liveReload = ['chat', 'observability'];
+  const liveReload = ['chat', 'observability', 'monitoring'];
   if (liveReload.includes(id)) {
     loadSection(id);
   } else if (!loadedSections.has(id)) {

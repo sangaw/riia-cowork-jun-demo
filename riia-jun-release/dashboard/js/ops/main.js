@@ -60,6 +60,7 @@ window.setLanguage            = setLanguage;
 initI18n(); applyTranslations();
 document.addEventListener('DOMContentLoaded', () => {
   loadOverview();
+  loadMonitoring();
   loadAlerts();
   loadSourceAvailability();
   loadFunctionalKPIs();
