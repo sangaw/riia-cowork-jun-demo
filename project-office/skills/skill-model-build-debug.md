@@ -19,12 +19,15 @@ The Model Build Debugger knows the full RITA training pipeline end-to-end: how d
 
 Use this skill when the user reports:
 - Training run stuck in `pending` or `running` status
+- Pipeline button appears to do nothing (no spinner, no status update)
 - Pipeline triggered but no `.zip` model file appears
 - Training appears to complete but metrics are zero or suspicious
 - Container exits or OOM-kills during a training run
 - Backtest never starts after pipeline triggers
 - Wrong instrument trained (active instrument misconfigured)
 - `training_history.csv` not updated after a run
+- `401 Unauthorized` on `POST /api/v1/pipeline` in browser console
+- `PermissionError` or `pipeline.failed` immediately after 202 Accepted
 - Any `ml_dispatch.*`, `pipeline.*`, or `training_tracker.*` log errors
 
 ---
@@ -79,6 +82,33 @@ POST /api/v1/pipeline
 
 ---
 
+## Pre-Debug Checklist — Run These First
+
+Before diving into container logs, rule out the two most common silent failures:
+
+**1. Cloudflare serving stale JS (BUILD-PATTERN-009)**
+```bash
+curl -sI https://riia.ravionics.nl/dashboard/js/shared/api.js | grep -i cf-cache-status
+```
+If result is `CF-Cache-Status: HIT` → users are getting old JS. Fix: Cloudflare Dashboard → Caching → Purge Everything. Then ask user to hard-refresh (`Cmd+Shift+R`).
+
+**2. User JWT expired (60-min TTL)**
+Check the nginx access log for real browser traffic:
+```bash
+ssh -i riia-jun-release/terraform/generated-key.pem -o StrictHostKeyChecking=no ubuntu@<EC2_IP> \
+  "tail -50 /var/log/nginx/access.log | grep -v '127.0.0.1'"
+```
+If only `GET /health` requests appear from `172.69.x.x` (Cloudflare IPs) — no POSTs, no instrument calls — the user's token is likely expired or JS is stale. Distinguish using the Cloudflare cache check above.
+
+**3. Production config paths correct**
+```bash
+ssh -i riia-jun-release/terraform/generated-key.pem -o StrictHostKeyChecking=no ubuntu@<EC2_IP> \
+  "docker exec rita python3 -c \"from rita.config import settings; print('model:', settings.model.path)\""
+```
+Expected: `/app/rita_output/models`. If it shows `models` (relative) → BUILD-PATTERN-010 — `production.yaml` missing absolute path override.
+
+---
+
 ## EC2 Diagnostic Commands
 
 ```bash
@@ -87,6 +117,9 @@ ssh -i riia-jun-release/terraform/generated-key.pem -o StrictHostKeyChecking=no 
 
 # Tail last 200 lines of container log, filtered to pipeline events
 docker logs rita --tail 200 2>&1 | grep -E "ml_dispatch|pipeline|training_tracker|instrument"
+
+# Real browser traffic (nginx access log — exclude local curl from 127.0.0.1)
+tail -100 /var/log/nginx/access.log | grep -v '127.0.0.1'
 
 # Check model ZIPs for an instrument
 ls -lh /opt/rita_output/models/NIFTY/
@@ -106,9 +139,17 @@ docker stats rita --no-stream
 # Check EC2 system memory
 free -h
 
-# Curl health + training progress from inside EC2
-curl -s http://localhost/health
-curl -s http://localhost/api/v1/training-progress
+# Generate a fresh JWT for testing (use actual user email from users table)
+docker exec rita python3 -c "from rita.auth import create_access_token; print(create_access_token('user@email.com'))"
+
+# Test pipeline endpoint with valid JWT
+curl -s -X POST http://localhost/api/v1/pipeline \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"instrument":"NIFTY","force_retrain":true,"n_seeds":1,"timesteps":100000}'
+
+# Check who is in the users table
+sqlite3 /opt/rita_output/rita.db "SELECT id, last_login_date FROM users ORDER BY last_login_date DESC LIMIT 5;"
 ```
 
 ---

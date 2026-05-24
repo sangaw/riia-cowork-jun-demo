@@ -86,6 +86,56 @@ Use this skill when the user asks to:
 
 ---
 
+## Post-Deploy Verification Checklist
+
+Run these **after every push** that changes JS, CSS, config, or Python:
+
+```bash
+# 1. Confirm GitHub Actions completed (check in browser or gh CLI)
+# https://github.com/san-work-ravionics/riia-jun-release-prod/actions
+
+# 2. Health check
+curl -s https://riia.ravionics.nl/health | python3 -m json.tool
+
+# 3. Verify Cloudflare is NOT caching JS files (must be BYPASS or MISS, never HIT)
+curl -sI https://riia.ravionics.nl/dashboard/js/shared/api.js | grep -i cf-cache-status
+# Expected: CF-Cache-Status: BYPASS  (nginx sends no-store; Cloudflare should bypass)
+# If HIT: old JS is still being served — purge cache from Cloudflare Dashboard →
+#   riia.ravionics.nl → Caching → Purge Cache → Purge Everything
+
+# 4. Confirm production config paths are correct (writable volume)
+docker exec rita python3 -c "from rita.config import settings; print('model:', settings.model.path, '| output:', settings.data.output_dir)"
+# Expected: model: /app/rita_output/models | output: /app/rita_output/data_output
+
+# 5. Test a JWT-protected endpoint with a fresh token
+docker exec rita python3 -c "from rita.auth import create_access_token; print(create_access_token('your@email.com'))"
+# Then: curl -s http://localhost/api/v1/instrument/active -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Nginx Diagnostics — Reading Traffic Sources
+
+The nginx access log at `/var/log/nginx/access.log` is the ground truth for what's reaching EC2.
+
+| IP pattern | Source | Meaning |
+|---|---|---|
+| `172.69.x.x`, `172.71.x.x`, `104.x.x.x` | Cloudflare edge | Real browser traffic passing through Cloudflare |
+| `127.0.0.1` | Local (curl/SSH) | Your own test commands from inside EC2 |
+| `172.17.0.1` | Docker bridge | Container → host requests |
+
+**Gotcha:** When debugging, the container logs show `172.17.0.1` for ALL requests (nginx → Docker bridge). Use nginx access log for real user traffic, not container logs.
+
+```bash
+# Real browser traffic in the last 5 min (exclude local curl):
+tail -100 /var/log/nginx/access.log | grep -v '127.0.0.1'
+
+# Check for errors:
+tail -20 /var/log/nginx/error.log
+```
+
+---
+
 ## EC2 Ops Commands (run from `riia-jun-release/` root — never from `terraform/`)
 
 ```bash
@@ -146,4 +196,6 @@ Then monitor at: `https://github.com/san-work-ravionics/riia-jun-release-prod/ac
 - [ ] Push made from `riia-jun-release/` (prod repo), not dev repo
 - [ ] GitHub Actions run completed without red steps
 - [ ] `https://riia.ravionics.nl/health` returns `{"status": "ok"}`
+- [ ] Cloudflare JS cache verified: `curl -sI https://riia.ravionics.nl/dashboard/js/shared/api.js | grep CF-Cache-Status` returns `BYPASS` (not `HIT`)
+- [ ] Production config paths verified: `docker exec rita python3 -c "from rita.config import settings; print(settings.model.path)"` returns `/app/rita_output/models`
 - [ ] Any incident logged to `DEPLOYMENT_KNOWLEDGE.md` with symptom + root cause + fix + prevention rule
