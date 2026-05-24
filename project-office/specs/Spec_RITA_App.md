@@ -13,7 +13,7 @@ RITA (Risk Informed Trading Approach) is a Nifty 50 Double DQN reinforcement lea
 | **Backend API** | FastAPI + SQLite via SQLAlchemy 2.x. Stateless REST API. |
 | **RITA Dashboard** | Vanilla JS ES modules — `rita.html`. Main trading & model view. |
 | **FnO Dashboard** | `fno.html` — Options portfolio, Greeks, manoeuvres. |
-| **Ops Dashboard** | `ops.html` — CI/CD, monitoring, test results, users, agent panel. |
+| **Ops Dashboard** | `ops.html` — monitoring, test results, users, agent panel. **Feature 15 (2026-05-24):** Consolidated nav from 15 to 10 items. `sec-cicd`, `sec-alerts`, `sec-source-availability`, `sec-functional-kpis`, `sec-api-metrics` removed as standalone sections; KPI strip, alerts table, and API metrics absorbed into `sec-monitoring`; source availability absorbed into `sec-observability`. |
 | **DS Dashboard** | `ds.html` (separate page) — Data science, training, portfolio backtest. |
 | **Mobile PWA** | `riia-jun-release/mobileapp/index.html` — 10-screen single-file PWA. Served at `/mobileapp` via StaticFiles mount in `main.py`. |
 
