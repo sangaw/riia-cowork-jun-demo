@@ -685,20 +685,31 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
 
     <div class="card" style="margin-top:14px">
       <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>API Metrics</div>
-      <div class="kpi-row">
-        <div class="kpi-card"><span class="kpi-label">Total Calls</span><span class="kpi-value" id="ops-api-metrics-total">—</span></div>
-        <div class="kpi-card"><span class="kpi-label">Unique Endpoints</span><span class="kpi-value" id="ops-api-metrics-unique">—</span></div>
-        <div class="kpi-card"><span class="kpi-label">Error Rate</span><span class="kpi-value" id="ops-api-metrics-error-rate">—</span></div>
+      <div class="g3" style="margin-bottom:12px">
+        <div class="card">
+          <div class="c-ey">Total Calls</div>
+          <div class="bv" id="ops-api-metrics-total">—</div>
+        </div>
+        <div class="card">
+          <div class="c-ey">Unique Endpoints</div>
+          <div class="bv" id="ops-api-metrics-unique">—</div>
+        </div>
+        <div class="card">
+          <div class="c-ey">Error Rate</div>
+          <div class="bv" id="ops-api-metrics-error-rate">—</div>
+        </div>
       </div>
-      <div class="filter-row" style="margin-bottom:12px;">
-        <label>Method: <input id="ops-api-metrics-filter-method" type="text" placeholder="GET / POST" style="width:80px" onchange="filterApiMetrics()"></label>
-        <label style="margin-left:16px;">Path prefix: <input id="ops-api-metrics-filter-prefix" type="text" placeholder="/api/v1/experience" style="width:200px" onchange="filterApiMetrics()"></label>
+      <div style="display:flex;gap:12px;margin-bottom:10px;align-items:center">
+        <label style="font-size:12px;color:var(--t2)">Method: <input id="ops-api-metrics-filter-method" type="text" placeholder="GET / POST" style="width:80px;margin-left:4px" onchange="filterApiMetrics()"></label>
+        <label style="font-size:12px;color:var(--t2)">Path prefix: <input id="ops-api-metrics-filter-prefix" type="text" placeholder="/api/v1/experience" style="width:200px;margin-left:4px" onchange="filterApiMetrics()"></label>
       </div>
-      <table class="data-table">
-        <thead><tr><th>Path</th><th>Method</th><th>Calls</th><th>p50 (ms)</th><th>p95 (ms)</th><th>Errors</th><th>Error Rate</th><th>Last seen</th></tr></thead>
-        <tbody id="ops-api-metrics-tbody"></tbody>
-      </table>
-      <div id="ops-api-metrics-empty" style="display:none; padding:16px; color:#888;">No data available.</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Path</th><th>Method</th><th>Calls</th><th>p50 (ms)</th><th>p95 (ms)</th><th>Errors</th><th>Error Rate</th><th>Last seen</th></tr></thead>
+          <tbody id="ops-api-metrics-tbody"></tbody>
+        </table>
+        <div id="ops-api-metrics-empty" class="empty" style="display:none">No API calls logged yet</div>
+      </div>
     </div>
   </section>
 
