@@ -1,6 +1,4 @@
-// ── Strategy Comparison (Card 5 — Learnings) ─────────────────────────────────
-// Runs 5 rule-based strategies against any instrument/year and renders a
-// 7-panel Chart.js performance dashboard + summary table + AI commentary.
+// ── Strategy Compare page ──────────────────────────────────────────────────────
 import { api } from './api.js';
 import { apiFetch } from '../shared/api.js';
 import { mkChart, C } from './charts.js';
@@ -8,6 +6,7 @@ import { mkChart, C } from './charts.js';
 // ── Module state ──────────────────────────────────────────────────────────────
 let _scInstrument = 'NIFTY';
 let _scYear = 2025;
+let _typewriterTimer = null;
 const _INSTRUMENTS = [
   'NIFTY', 'BANKNIFTY', 'NVIDIA', 'ASML', 'AEX',
   'ASRNL', 'ATO', 'DJI', 'IXIC', 'RELIANCE', 'SBIN',
@@ -59,8 +58,22 @@ function _renderPills() {
 
 function _renderYearToggle() {
   document.querySelectorAll('.sc-year-btn').forEach(el => {
-    el.classList.toggle('sc-year-active', Number(el.dataset.year) === _scYear);
+    const active = Number(el.dataset.year) === _scYear;
+    el.style.background    = active ? 'var(--run-bg, #dbeafe)' : 'var(--bg2)';
+    el.style.borderColor   = active ? 'var(--run)'             : 'var(--border)';
+    el.style.color         = active ? 'var(--run)'             : 'var(--t2)';
+    el.style.fontWeight    = active ? '700'                    : '500';
   });
+}
+
+function _typewrite(el, text, speed = 16) {
+  if (_typewriterTimer) clearInterval(_typewriterTimer);
+  el.textContent = '';
+  let i = 0;
+  _typewriterTimer = setInterval(() => {
+    el.textContent += text[i++];
+    if (i >= text.length) { clearInterval(_typewriterTimer); _typewriterTimer = null; }
+  }, speed);
 }
 
 async function _fetchAndRender() {
@@ -225,24 +238,20 @@ function _renderSummaryTable(data) {
 
 async function _fireCommentary() {
   const titleEl = document.getElementById('sc-commentary-title');
-  const textEl = document.getElementById('sc-commentary-text');
-  const box = document.getElementById('sc-commentary-box');
+  const textEl  = document.getElementById('sc-commentary-text');
   if (!textEl) return;
-  if (titleEl) titleEl.textContent = 'Generating commentary…';
-  if (box) box.style.display = 'block';
-  textEl.textContent = '—';
+  if (titleEl) titleEl.textContent = 'Agent Commentary';
+  textEl.textContent = '…';
   try {
     const res = await api('/api/v1/commentary', 'POST', {
-      app: 'rita',
-      page: 'strategy-comparison',
-      instrument: _scInstrument,
+      app: 'rita', page: 'strategy-comparison', instrument: _scInstrument,
     });
     if (res && res.commentary) {
-      textEl.textContent = res.commentary;
-      if (titleEl) titleEl.textContent = 'AI Commentary';
+      _typewrite(textEl, res.commentary);
+    } else {
+      textEl.textContent = '—';
     }
   } catch (_) {
     textEl.textContent = '—';
-    if (titleEl) titleEl.textContent = 'Commentary unavailable';
   }
 }
