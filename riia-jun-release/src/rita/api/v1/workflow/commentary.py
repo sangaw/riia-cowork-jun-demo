@@ -312,11 +312,65 @@ def _handle_strategy(req: CommentaryRequest) -> dict[str, Any]:
     return {"commentary": commentary, "instruments_analyzed": [inst]}
 
 
+def _handle_strategy_comparison(req: CommentaryRequest) -> dict[str, Any]:
+    """Conceptual narrative comparing the 5 rule-based strategies for the Strategy Comparison card."""
+    inst = (req.instrument or "NIFTY").upper()
+
+    narratives = {
+        "Buy and Hold": (
+            "Buy and Hold is the simplest benchmark — enter once, hold throughout. "
+            "It captures the full market return with no transaction costs, but exposes "
+            "the portfolio to every drawdown without any defensive exit."
+        ),
+        "Value Investing": (
+            "Value Investing (RSI-14 oversold/overbought) enters when the market is "
+            "statistically cheap (RSI < 30) and exits when it becomes expensive (RSI > 70). "
+            "It tends to produce fewer trades with higher per-trade win rates, but can "
+            "miss extended trends if RSI oscillates without triggering thresholds."
+        ),
+        "Momentum Investing": (
+            "Momentum Investing follows the SMA-20 crossover. It buys breakouts and "
+            "sells breakdowns, capturing trending moves. In volatile sideways markets "
+            "this can generate whipsaws and elevated transaction costs."
+        ),
+        "Swing Trading": (
+            "Swing Trading exploits short-term mean reversion by entering at 5-day "
+            "local lows and exiting at 5-day local highs. It produces the highest "
+            "number of trades and works best in range-bound, oscillating markets."
+        ),
+        "Support-Resistance": (
+            "Support-Resistance (52-Week H/L) is a macro mean-reversion strategy. "
+            "It buys near the 52-week low (within 5%) and sells near the 52-week high "
+            "(within 5%). It produces very few trades — often just one or two per year — "
+            "but each trade targets a large structural price move."
+        ),
+    }
+
+    strategy_lines = "\n".join(
+        f"• {name}: {desc}" for name, desc in narratives.items()
+    )
+
+    commentary = (
+        f"Strategy comparison for {inst}:\n\n"
+        f"{strategy_lines}\n\n"
+        "Each strategy embodies a distinct market philosophy: passive indexing, "
+        "mean reversion, trend-following, swing trading, and macro support/resistance. "
+        "Their relative performance for any given instrument and year depends on whether "
+        "the market trended, ranged, or oscillated during that period. "
+        "A strategy that excels on a trending instrument like NVIDIA may underperform "
+        "on a range-bound index. Use Sharpe ratio and maximum drawdown together "
+        "to compare risk-adjusted efficiency rather than raw returns alone."
+    )
+
+    return {"commentary": commentary, "instruments_analyzed": [inst]}
+
+
 # ── Dispatch table ────────────────────────────────────────────────────────────
 
 _DISPATCH: dict[tuple[str, str], Callable] = {
     ("rita", "overview"): _handle_overview,
     ("rita", "strategy"): _handle_strategy,
+    ("rita", "strategy-comparison"): _handle_strategy_comparison,
 }
 
 

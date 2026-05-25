@@ -98,6 +98,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/v1/experience/rita/backtest-daily` | Daily backtest results for charting — date, portfolio_value, benchmark_value, allocation, close_price | No |
 | `GET` | `/api/v1/experience/rita/risk-timeline` | Risk timeline from latest backtest — drawdowns, VaR, vol, regime. Query: phase, instrument | No |
 | `GET` | `/api/v1/experience/rita/training-history` | Training run history — all KPIs newest-first. Query: instrument | No |
+| `GET` | `/api/v1/experience/rita/strategy-comparison` | 5-strategy OHLCV performance comparison (Buy&Hold, Value, Momentum, Swing, S/R). Query: `instrument` (default: active), `year` (2024/2025, default 2025). Returns `StrategyComparisonResponse` with equity curves, summary metrics, dates. LRU-cached per (instrument, year). | No |
 
 ### Ops Experience Endpoints (`/api/experience/ops`)
 
