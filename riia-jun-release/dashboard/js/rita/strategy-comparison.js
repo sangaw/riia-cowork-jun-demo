@@ -31,9 +31,8 @@ export async function loadStrategyComparison() {
 
 export function scSelectInstrument(id) {
   _scInstrument = id;
-  // Update pill active state
   document.querySelectorAll('.sc-pill').forEach(el => {
-    el.classList.toggle('sc-pill-active', el.dataset.id === id);
+    el.classList.toggle('geo-kpi-active', el.dataset.id === id);
   });
   _fetchAndRender();
   _fireCommentary();
@@ -53,8 +52,8 @@ function _renderPills() {
   const container = document.getElementById('sc-pills');
   if (!container) return;
   container.innerHTML = _INSTRUMENTS.map(id => {
-    const active = id === _scInstrument ? ' sc-pill-active' : '';
-    return `<button class="sc-pill${active}" data-id="${id}" onclick="scSelectInstrument('${id}')">${id}</button>`;
+    const active = id === _scInstrument ? ' geo-kpi-active' : '';
+    return `<button class="sc-pill geo-kpi${active}" data-id="${id}" onclick="scSelectInstrument('${id}')" style="padding:4px 12px;font-size:12px;font-weight:600;border-radius:100px;border:1.5px solid transparent;background:var(--surface2);cursor:pointer">${id}</button>`;
   }).join('');
 }
 

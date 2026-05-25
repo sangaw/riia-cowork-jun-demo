@@ -1150,9 +1150,13 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
-  <!-- Instrument pill selector -->
-  <div style="margin-bottom:12px">
-    <div id="sc-pills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  <!-- Instrument capsule selector -->
+  <div id="sc-pills" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px"></div>
+
+  <!-- Commentary narrator box -->
+  <div id="sc-commentary-box" style="background:var(--bg2);border-radius:8px;padding:14px 16px;border-left:3px solid var(--run);margin-bottom:16px">
+    <div id="sc-commentary-title" style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px">AI Commentary</div>
+    <div id="sc-commentary-text" style="font-size:13px;color:var(--t2);line-height:1.6;white-space:pre-wrap">—</div>
   </div>
 
   <!-- Year toggle -->
@@ -1164,47 +1168,47 @@ tr:hover td{background:var(--surface2);}
       style="padding:3px 12px;border-radius:12px;border:1px solid var(--border);background:var(--bg2);font-size:12px;cursor:pointer">2024</button>
   </div>
 
-  <!-- Chart grid: 7 panels -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+  <!-- Chart grid: Portfolio Growth full-width + 3×2 grid for 6 metric panels -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
     <!-- Portfolio Growth (full width) -->
     <div class="chart-wrap" style="grid-column:1/-1">
       <div class="chart-title" style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Portfolio Growth ($10 000 initial)</div>
-      <div style="height:220px"><canvas id="chart-sc-portfolio-growth"></canvas></div>
+      <div style="height:200px"><canvas id="chart-sc-portfolio-growth"></canvas></div>
     </div>
     <!-- Total Return -->
     <div class="chart-wrap">
       <div class="chart-title" style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Total Return %</div>
-      <div style="height:180px"><canvas id="chart-sc-total-returns"></canvas></div>
+      <div style="height:160px"><canvas id="chart-sc-total-returns"></canvas></div>
     </div>
     <!-- Sharpe Ratio -->
     <div class="chart-wrap">
       <div class="chart-title" style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Sharpe Ratio</div>
-      <div style="height:180px"><canvas id="chart-sc-sharpe"></canvas></div>
+      <div style="height:160px"><canvas id="chart-sc-sharpe"></canvas></div>
     </div>
     <!-- Max Drawdown -->
     <div class="chart-wrap">
       <div class="chart-title" style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Max Drawdown %</div>
-      <div style="height:180px"><canvas id="chart-sc-drawdown"></canvas></div>
+      <div style="height:160px"><canvas id="chart-sc-drawdown"></canvas></div>
     </div>
     <!-- Trade Frequency -->
     <div class="chart-wrap">
       <div class="chart-title" style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Trade Frequency</div>
-      <div style="height:180px"><canvas id="chart-sc-frequency"></canvas></div>
+      <div style="height:160px"><canvas id="chart-sc-frequency"></canvas></div>
     </div>
     <!-- Win Rate -->
     <div class="chart-wrap">
       <div class="chart-title" style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Win Rate %</div>
-      <div style="height:180px"><canvas id="chart-sc-accuracy"></canvas></div>
+      <div style="height:160px"><canvas id="chart-sc-accuracy"></canvas></div>
     </div>
     <!-- Final Portfolio Value -->
     <div class="chart-wrap">
       <div class="chart-title" style="font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px">Final Portfolio Value</div>
-      <div style="height:180px"><canvas id="chart-sc-final-value"></canvas></div>
+      <div style="height:160px"><canvas id="chart-sc-final-value"></canvas></div>
     </div>
   </div>
 
   <!-- Summary metrics table -->
-  <div style="overflow-x:auto;margin-bottom:20px">
+  <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead>
         <tr style="background:var(--bg2)">
@@ -1221,12 +1225,6 @@ tr:hover td{background:var(--surface2);}
         <tr><td colspan="7" style="text-align:center;color:var(--t3);padding:12px">Loading…</td></tr>
       </tbody>
     </table>
-  </div>
-
-  <!-- Commentary narrator box -->
-  <div id="sc-commentary-box" style="background:var(--bg2);border-radius:8px;padding:14px 16px;border-left:3px solid var(--run)">
-    <div id="sc-commentary-title" style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:6px">AI Commentary</div>
-    <div id="sc-commentary-text" style="font-size:13px;color:var(--t2);line-height:1.6;white-space:pre-wrap">—</div>
   </div>
 
 </section>
