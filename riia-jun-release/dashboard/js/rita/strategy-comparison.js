@@ -39,9 +39,7 @@ export function scSelectInstrument(id) {
 
 export function scSelectYear(year) {
   _scYear = Number(year);
-  document.querySelectorAll('.sc-year-btn').forEach(el => {
-    el.classList.toggle('sc-year-active', Number(el.dataset.year) === _scYear);
-  });
+  _renderYearToggle();
   _fetchAndRender();
 }
 
