@@ -1890,7 +1890,7 @@ def experience_strategy_comparison(
     Experience tier — read-only. No db.commit().
     LRU-cached per (instrument, year).
     """
-    if year not in (2024, 2025):
+    if year not in (2025, 2026):
         year = 2025
 
     inst = (instrument or _get_active_instrument_id(db)).upper()
