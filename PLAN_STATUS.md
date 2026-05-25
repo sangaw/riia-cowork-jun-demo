@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-24 — Ops observability fix: live functional-kpis endpoint, API Metrics panel CSS/nav fixes, deployed to prod.
+**Last updated:** 2026-05-25 — Feature 16 (May) Strategy Comparison COMPLETE — 7 Chart.js panels, 5 strategies, commentary, 39 unit tests, deployed to production.
 
 **Session work (2026-05-24):**
 - **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
@@ -32,7 +32,12 @@
 - Geography panel redesign: tiles replace instrument tab selector; region labels India / United States / Europe; ATHER excluded (no yfinance data)
 - Pushed to prod: `e920177..bf59163` (7 commits)
 
+**Session work (2026-05-25):**
+- **Strategy Comparison analysis (ASML 2025):** Standalone script `project-office/scripts/strategy_checks_asml.py` written and validated against ASML 2025 data (255 trading days). Results: B&H +34.8% (MDD 26.3%), Value Investing +18.5% (best risk-adjusted: Sharpe 1.25, MDD 7.3%), Swing Trading +29.2%, SR-52W +25.0%, Momentum +12.3% (worst — choppy Jan–Apr whipsawed SMA crossover). Value Investing only strategy within both risk targets (Sharpe > 1.0, MDD < 10%).
+- **Feature 16 (May) — Strategy Comparison COMPLETE.** Spec: `project-office/features/May/16 Strategy Comparison/REQUIREMENTS.md`. Delivered: experience endpoint `GET /api/v1/experience/rita/strategy-comparison`, commentary handler `("rita","strategy-comparison")`, `strategy-comparison.js` with 7 Chart.js panels (portfolio growth full-width, 3 horizontal + 3 vertical metric bars), instrument pills with active highlight, year toggle (2025/2026), summary metrics table, 39 unit tests (contract verified 14/14 fields). Deployed to production at `https://riia.ravionics.nl`.
+
 **Pending:**
+- ~~**Feature 16 (May) — Strategy Comparison:**~~ ✅ COMPLETE — merged to master, deployed to production 2026-05-25.
 - ATHER instrument — onboard via Ops dashboard when yfinance indexes it
 - Feature 14 i18n Phase 2 — remaining section loaders (agent-panel, technical-analysis, learnings, FnO/Ops loaders)
 - Invest Game v2 — arcade layout in progress

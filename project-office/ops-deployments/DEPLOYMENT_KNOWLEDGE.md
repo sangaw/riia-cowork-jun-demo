@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-05-24 (debug session — BUILD-PATTERN-011 datetime tz mismatch, BUILD-PATTERN-012 train_best_of_n missing progress_fn; both fixed and deployed)
+**Last updated:** 2026-05-25 (Strategy Comparison Feature 16 deployed — d21cde4; health ok)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -168,6 +168,8 @@
 | 2026-05-24 | `34d8095` | scenarios.js cache fix (backtest period selection); ASML/NVIDIA/BANKNIFTY/NIFTY CSVs added; EC2 disk full (PATTERN-010) — pruned stale images, redeployed |
 | 2026-05-24 | `7b30b73` | Ops observability fix — live /api/experience/ops/functional-kpis endpoint; nav.js SECTIONS fix for api-metrics; ops.html CSS class fixes for sec-api-metrics |
 | 2026-05-24 | `5df7fb5` | Agent Builds data fix — seeded agent_build_runs/agent_build_agents from 61 JSON run files; deploy.yaml now rsyncs data/agent-ops/ to EC2 and runs idempotent DB seed on every deploy |
+| 2026-05-25 | `fc7e9f4` | Ops monitoring overhaul — single-row stats, GitHub Deploys table, CloudWatch active alerts, endpoint availability as drift-style grid, pipeline status removed from sidebar |
+| 2026-05-25 | `d21cde4` | Strategy Comparison (Feature 16) — year toggle, scenario selector, chart, 39 unit tests; strategy-comparison.js + schema + tests deployed |
 
 ---
 

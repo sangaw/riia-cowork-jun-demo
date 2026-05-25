@@ -450,16 +450,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
     User Traffic
   </a>
 
-  <div class="s-foot">
-    <div class="mc">
-      <div class="mc-ey">Pipeline Status</div>
-      <div class="mc-nm" id="mc-status-text">Loading…</div>
-      <div class="mc-r"><span>Steps done</span><span class="mc-v info" id="mc-steps">—</span></div>
-      <div class="mc-r"><span>Model</span><span class="mc-v" id="mc-model">—</span></div>
-      <div class="mc-r"><span>Last run</span><span class="mc-v info" id="mc-lastrun">—</span></div>
-      <div class="mc-bar"><div class="mc-bar-fill" id="mc-bar" style="width:0%"></div></div>
-    </div>
-  </div>
 </nav>
 
 <!-- ── Main ── -->
@@ -595,42 +585,48 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       <div class="ph-badge sense">Monitoring</div>
       <div>
         <div class="ph-t">API &amp; Metrics</div>
-        <div class="ph-g">Request statistics, error rates, and pipeline step timing</div>
+        <div class="ph-g">Request statistics, error rates, and deploy history</div>
       </div>
     </div>
 
-    <div class="g3" id="mon-stats">
-      <div class="card">
-        <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>API Requests</div>
-        <div class="bv" id="mon-total">—</div>
-        <div class="sv">total requests logged</div>
-        <div class="sb-row" style="margin-top:10px">
-          <div class="sb"><div class="sb-l">Errors</div><div class="sb-v" id="mon-errors">—</div></div>
-          <div class="sb"><div class="sb-l">Avg Latency</div><div class="sb-v" id="mon-ips">—</div></div>
-        </div>
+    <div id="mon-stats" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <div class="card" style="flex:1;min-width:110px;padding:12px 14px">
+        <div class="c-ey" style="font-size:10px;margin-bottom:4px"><div class="ey-d" style="background:var(--sense)"></div>API Requests</div>
+        <div class="bv" id="mon-total" style="font-size:22px;line-height:1.2">—</div>
+        <div class="sv" style="font-size:10px">total logged</div>
       </div>
+      <div class="card" style="flex:1;min-width:110px;padding:12px 14px">
+        <div class="c-ey" style="font-size:10px;margin-bottom:4px"><div class="ey-d" style="background:#ef4444"></div>Errors</div>
+        <div class="bv" id="mon-errors" style="font-size:22px;line-height:1.2">—</div>
+        <div class="sv" style="font-size:10px">requests</div>
+      </div>
+      <div class="card" style="flex:1;min-width:110px;padding:12px 14px">
+        <div class="c-ey" style="font-size:10px;margin-bottom:4px"><div class="ey-d" style="background:var(--sense)"></div>Avg Latency</div>
+        <div class="bv" id="mon-ips" style="font-size:18px;line-height:1.2">—</div>
+        <div class="sv" style="font-size:10px">response time</div>
+      </div>
+      <div class="card" style="flex:1;min-width:110px;padding:12px 14px">
+        <div class="c-ey" style="font-size:10px;margin-bottom:4px"><div class="ey-d" style="background:var(--sense)"></div>Pipeline Runs</div>
+        <div class="bv" id="mon-completed" style="font-size:22px;line-height:1.2">—</div>
+        <div class="sv" style="font-size:10px">completed steps</div>
+      </div>
+      <div class="card" style="flex:1;min-width:110px;padding:12px 14px">
+        <div class="c-ey" style="font-size:10px;margin-bottom:4px"><div class="ey-d" style="background:#ef4444"></div>Failed</div>
+        <div class="bv" id="mon-failed" style="font-size:22px;line-height:1.2">—</div>
+        <div class="sv" style="font-size:10px">steps</div>
+      </div>
+      <div class="card" style="flex:1;min-width:110px;padding:12px 14px">
+        <div class="c-ey" style="font-size:10px;margin-bottom:4px"><div class="ey-d" style="background:var(--sense)"></div>Training Rounds</div>
+        <div class="bv" id="mon-rounds" style="font-size:22px;line-height:1.2">—</div>
+        <div class="sv" style="font-size:10px">completed</div>
+      </div>
+    </div>
+
+    <div class="g2" style="margin-bottom:14px">
       <div class="card">
         <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Top Endpoint</div>
         <div class="bv" style="font-size:16px;line-height:1.3;word-break:break-all" id="mon-top-ep">—</div>
         <div class="sv" id="mon-top-cnt">— requests</div>
-      </div>
-      <div class="card">
-        <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Pipeline Runs</div>
-        <div class="bv" id="mon-completed">—</div>
-        <div class="sv">completed steps</div>
-        <div class="sb-row" style="margin-top:10px">
-          <div class="sb"><div class="sb-l">Failed</div><div class="sb-v" id="mon-failed">—</div></div>
-          <div class="sb"><div class="sb-l">Training rounds</div><div class="sb-v" id="mon-rounds">—</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="g2">
-      <div class="card">
-        <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Step Timing Averages</div>
-        <div class="bar-wrap" id="mon-timing">
-          <div class="loading">Loading…</div>
-        </div>
       </div>
       <div class="card">
         <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Alerts</div>
@@ -638,22 +634,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--fd);font-size:13px
       </div>
     </div>
 
-    <div class="card">
-      <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Recent Step Log</div>
-      <div class="tbl-wrap" id="mon-steplog">
+    <div class="card" style="margin-bottom:14px">
+      <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>GitHub Deploys</div>
+      <div class="tbl-wrap" id="mon-github-deploys">
         <div class="loading">Loading…</div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:14px">
-      <div class="c-ey"><div class="ey-d" style="background:var(--sense)"></div>Pipeline Utilities</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px">
-        <button class="btn-sm" onclick="runGoal()">Run Goal</button>
-        <button class="btn-sm" onclick="runMarket()">Run Market</button>
-        <button class="btn-sm" onclick="runStrategy()">Run Strategy</button>
-        <button class="btn-sm" onclick="runFullPipeline()">Run Full Pipeline</button>
-        <button class="btn-sm err" onclick="doReset()">Reset</button>
-        <span id="util-status" style="font-size:12px;color:var(--t3);margin-left:8px"></span>
       </div>
     </div>
 
