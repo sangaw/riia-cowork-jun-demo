@@ -317,13 +317,13 @@ def _handle_strategy_comparison(req: CommentaryRequest) -> dict[str, Any]:
     inst = (req.instrument or "NIFTY").upper()
 
     commentary = (
-        f"{inst} — five strategies, one instrument, one year.\n\n"
-        "Buy & Hold captures the full market move with zero costs. "
-        "RSI Value picks oversold entries and overbought exits — fewer trades, higher precision. "
-        "SMA-20 Momentum follows breakouts; it shines in trends but whipsaws in sideways markets. "
-        "Swing Trading targets 5-day lows and highs — highest trade count, best in ranging conditions. "
-        "52-Week S/R is the macro contrarian: one or two trades a year targeting structural reversals.\n\n"
-        "Compare Sharpe and Max Drawdown, not raw returns, to judge which style suits this instrument."
+        f"{inst} — five strategies, one year.\n\n"
+        "B&H captures the full move at zero cost. "
+        "RSI Value buys oversold, sells overbought — precise but slow. "
+        "SMA-20 Momentum rides trends; whipsaws in ranges. "
+        "Swing targets 5-day extremes — most trades. "
+        "52-Week S/R fires once or twice, targets structural turns.\n\n"
+        "Use Sharpe + Max DD to compare, not raw returns."
     )
 
     return {"commentary": commentary, "instruments_analyzed": [inst]}
