@@ -46,6 +46,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | **`ai-compliance.js`** | **AI Compliance panel (reads agent history)** | `loadAiCompliance()`, `switchAcTab(tabId, viewId)` |
 | `technical-analysis.js` | Technical Analysis section — commentary + PV/ATR/RSI charts | `loadTechnicalAnalysis()` |
 | `learnings.js` | Learnings section — accordion cards + live market-trend charts | `loadLearnings()`, `toggleLearnCard(id)` |
+| `strategy-comparison.js` | Strategy Comparison card (Card 5 in Learnings) — 5-strategy OHLCV dashboard; 7 Chart.js panels; instrument pills; year toggle; commentary | `loadStrategyComparison()`, `scSelectInstrument(id)`, `scSelectYear(year)` |
 
 ---
 
@@ -486,6 +487,8 @@ mkChart('chart-my-id', { type: 'line', data: {...}, options: {...} });
 7. **`val_sharpe` backfill (2026-04-21)** — Historical `training_runs` records had `val_sharpe=NULL`. Fixed by SQL backfill. New runs write all fields correctly.
 
 8. **Trade Journal layout** — `#trades-kpi-strip` uses `grid-template-columns: 1fr 1fr 2fr`. Both APIs called with `?instrument=` from `localStorage.getItem('ritaInstrument')`.
+
+9. **Strategy Comparison (`strategy-comparison.js`)** — reads `GET /api/v1/experience/rita/strategy-comparison?instrument=X&year=Y`. Response fields: `instrument`, `year`, `dates` (ISO strings), `strategies` (list of `{name, equity, color}`), `summary` (list of `{name, total_return_pct, sharpe, max_drawdown_pct, n_trades, win_rate_pct, final_value}`), `error` (nullable). Commentary via `POST /api/v1/commentary` with `{app:"rita", page:"strategy-comparison", instrument}`. Instrument pills from hardcoded `_INSTRUMENTS` list. `apiFetch` imported from `'../shared/api.js'` (not `./api.js` which only re-exports `api`).
 
 ---
 
