@@ -131,112 +131,68 @@ function _renderEquityCurve(data) {
   });
 }
 
-function _renderTotalReturns(data) {
-  const names = (data.summary || []).map(s => s.name);
-  const values = (data.summary || []).map(s => s.total_return_pct || 0);
-  const colors = names.map(n => _STRATEGY_COLORS[n] || '#888');
-  mkChart('chart-sc-total-returns', {
+function _hBar(id, label, values, names, colors, tickCb) {
+  mkChart(id, {
     type: 'bar',
-    data: { labels: names, datasets: [{ label: 'Total Return %', data: values, backgroundColor: colors }] },
+    data: { labels: names, datasets: [{ label, data: values, backgroundColor: colors, borderRadius: 3 }] },
     options: {
+      indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: { ticks: { font: { size: 10 }, callback: v => v.toFixed(1) + '%' } },
+        x: { ticks: { font: { size: 10 }, callback: tickCb } },
+        y: { ticks: { font: { size: 10 } } },
       },
     },
   });
+}
+
+function _renderTotalReturns(data) {
+  const names = (data.summary || []).map(s => s.name);
+  _hBar('chart-sc-total-returns', 'Total Return %',
+    names.map(n => (data.summary.find(s => s.name === n)?.total_return_pct || 0)),
+    names, names.map(n => _STRATEGY_COLORS[n] || '#888'),
+    v => v.toFixed(1) + '%');
 }
 
 function _renderSharpe(data) {
   const names = (data.summary || []).map(s => s.name);
-  const values = (data.summary || []).map(s => s.sharpe || 0);
-  const colors = names.map(n => _STRATEGY_COLORS[n] || '#888');
-  mkChart('chart-sc-sharpe', {
-    type: 'bar',
-    data: { labels: names, datasets: [{ label: 'Sharpe Ratio', data: values, backgroundColor: colors }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: { ticks: { font: { size: 10 }, callback: v => v.toFixed(2) } },
-      },
-    },
-  });
+  _hBar('chart-sc-sharpe', 'Sharpe Ratio',
+    names.map(n => (data.summary.find(s => s.name === n)?.sharpe || 0)),
+    names, names.map(n => _STRATEGY_COLORS[n] || '#888'),
+    v => v.toFixed(2));
 }
 
 function _renderDrawdown(data) {
   const names = (data.summary || []).map(s => s.name);
-  const values = (data.summary || []).map(s => s.max_drawdown_pct || 0);
-  const colors = names.map(n => _STRATEGY_COLORS[n] || '#888');
-  mkChart('chart-sc-drawdown', {
-    type: 'bar',
-    data: { labels: names, datasets: [{ label: 'Max Drawdown %', data: values, backgroundColor: colors }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: { ticks: { font: { size: 10 }, callback: v => v.toFixed(1) + '%' } },
-      },
-    },
-  });
+  _hBar('chart-sc-drawdown', 'Max Drawdown %',
+    names.map(n => (data.summary.find(s => s.name === n)?.max_drawdown_pct || 0)),
+    names, names.map(n => _STRATEGY_COLORS[n] || '#888'),
+    v => v.toFixed(1) + '%');
 }
 
 function _renderFrequency(data) {
   const names = (data.summary || []).map(s => s.name);
-  const values = (data.summary || []).map(s => s.n_trades || 0);
-  const colors = names.map(n => _STRATEGY_COLORS[n] || '#888');
-  mkChart('chart-sc-frequency', {
-    type: 'bar',
-    data: { labels: names, datasets: [{ label: 'Number of Trades', data: values, backgroundColor: colors }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: { ticks: { font: { size: 10 }, stepSize: 1 } },
-      },
-    },
-  });
+  _hBar('chart-sc-frequency', 'Number of Trades',
+    names.map(n => (data.summary.find(s => s.name === n)?.n_trades || 0)),
+    names, names.map(n => _STRATEGY_COLORS[n] || '#888'),
+    v => v);
 }
 
 function _renderAccuracy(data) {
   const names = (data.summary || []).map(s => s.name);
-  const values = (data.summary || []).map(s => s.win_rate_pct || 0);
-  const colors = names.map(n => _STRATEGY_COLORS[n] || '#888');
-  mkChart('chart-sc-accuracy', {
-    type: 'bar',
-    data: { labels: names, datasets: [{ label: 'Win Rate %', data: values, backgroundColor: colors }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: { min: 0, max: 100, ticks: { font: { size: 10 }, callback: v => v + '%' } },
-      },
-    },
-  });
+  _hBar('chart-sc-accuracy', 'Win Rate %',
+    names.map(n => (data.summary.find(s => s.name === n)?.win_rate_pct || 0)),
+    names, names.map(n => _STRATEGY_COLORS[n] || '#888'),
+    v => v + '%');
 }
 
 function _renderFinalValue(data) {
   const names = (data.summary || []).map(s => s.name);
-  const values = (data.summary || []).map(s => s.final_value || 0);
-  const colors = names.map(n => _STRATEGY_COLORS[n] || '#888');
-  mkChart('chart-sc-final-value', {
-    type: 'bar',
-    data: { labels: names, datasets: [{ label: 'Final Portfolio Value ($)', data: values, backgroundColor: colors }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { font: { size: 10 } } },
-        y: { ticks: { font: { size: 10 }, callback: v => '$' + v.toFixed(0) } },
-      },
-    },
-  });
+  _hBar('chart-sc-final-value', 'Final Portfolio Value ($)',
+    names.map(n => (data.summary.find(s => s.name === n)?.final_value || 0)),
+    names, names.map(n => _STRATEGY_COLORS[n] || '#888'),
+    v => '$' + v.toFixed(0));
 }
 
 function _renderSummaryTable(data) {
