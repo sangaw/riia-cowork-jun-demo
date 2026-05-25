@@ -170,6 +170,7 @@
 | 2026-05-24 | `5df7fb5` | Agent Builds data fix — seeded agent_build_runs/agent_build_agents from 61 JSON run files; deploy.yaml now rsyncs data/agent-ops/ to EC2 and runs idempotent DB seed on every deploy |
 | 2026-05-25 | `fc7e9f4` | Ops monitoring overhaul — single-row stats, GitHub Deploys table, CloudWatch active alerts, endpoint availability as drift-style grid, pipeline status removed from sidebar |
 | 2026-05-25 | `d21cde4` | Strategy Comparison (Feature 16) — year toggle, scenario selector, chart, 39 unit tests; strategy-comparison.js + schema + tests deployed |
+| 2026-05-25 | `0e0f032` | users.html nav fix (Chat Analytics + Daily Ops missing items); Strategy Comparison run-20260525-1559 added to agent-ops/runs for Agent Builds page |
 
 ---
 
