@@ -59,10 +59,10 @@ function _renderPills() {
 function _renderYearToggle() {
   document.querySelectorAll('.sc-year-btn').forEach(el => {
     const active = Number(el.dataset.year) === _scYear;
-    el.style.background    = active ? 'var(--run-bg, #dbeafe)' : 'var(--bg2)';
-    el.style.borderColor   = active ? 'var(--run)'             : 'var(--border)';
-    el.style.color         = active ? 'var(--run)'             : 'var(--t2)';
-    el.style.fontWeight    = active ? '700'                    : '500';
+    el.style.background  = active ? 'var(--run-bg)' : 'var(--surface2)';
+    el.style.borderColor = active ? 'var(--run)'    : 'var(--border)';
+    el.style.color       = active ? 'var(--run)'    : 'var(--t3)';
+    el.style.fontWeight  = active ? '700'           : '400';
   });
 }
 
