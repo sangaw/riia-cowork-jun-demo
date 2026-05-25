@@ -1,34 +1,34 @@
 {
-  "generated_at": "2026-05-25T14:52:27",
-  "total_runs": 62,
+  "generated_at": "2026-05-25T14:54:55",
+  "total_runs": 61,
   "per_role": {
     "pm": {
-      "run_count": 27,
+      "run_count": 26,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 11391
+      "avg_token_cost": 11444
     },
     "architect": {
-      "run_count": 27,
-      "avg_adherence_score": 0.991,
-      "first_pass_rate": 0.963,
+      "run_count": 26,
+      "avg_adherence_score": 0.99,
+      "first_pass_rate": 0.962,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 11985
+      "avg_token_cost": 11869
     },
     "engineer": {
-      "run_count": 27,
-      "avg_adherence_score": 0.91,
-      "first_pass_rate": 0.667,
-      "recent_first_pass_rate": 0.8,
-      "avg_token_cost": 34979
+      "run_count": 26,
+      "avg_adherence_score": 0.907,
+      "first_pass_rate": 0.654,
+      "recent_first_pass_rate": 0.6,
+      "avg_token_cost": 33247
     },
     "qa": {
-      "run_count": 27,
-      "avg_adherence_score": 0.991,
-      "first_pass_rate": 0.926,
+      "run_count": 26,
+      "avg_adherence_score": 0.99,
+      "first_pass_rate": 0.923,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 28352
+      "avg_token_cost": 28674
     },
     "techwriter": {
       "run_count": 26,
@@ -40,8 +40,8 @@
   },
   "per_app": {
     "rita": {
-      "run_count": 10,
-      "pass": 7,
+      "run_count": 9,
+      "pass": 6,
       "pass_with_warnings": 3,
       "fail": 0
     },
@@ -258,13 +258,6 @@
       "grounding_score": 1.0,
       "checks_passed": 20,
       "checks_total": 20
-    },
-    {
-      "run_id": "20260525-1140",
-      "app": "rita",
-      "grounding_score": 0.938,
-      "checks_passed": 15,
-      "checks_total": 16
     }
   ],
   "failure_modes": {
@@ -328,14 +321,14 @@
     },
     "FC-TIER-12-system-api-calls": {
       "total": 1,
-      "recent_fires": 0,
+      "recent_fires": 1,
       "by_role": {
         "engineer": 1
       }
     },
     "FC-API-SIG-post-signature": {
       "total": 1,
-      "recent_fires": 0,
+      "recent_fires": 1,
       "by_role": {
         "engineer": 1
       }
@@ -714,20 +707,20 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.839,
-    "first_attempt_success_rate": 0.839,
-    "partial_completion_rate": 0.145,
+    "tsr": 0.836,
+    "first_attempt_success_rate": 0.836,
+    "partial_completion_rate": 0.148,
     "abandonment_rate": 0.0
   },
   "quality": {
-    "avg_accuracy_score": 3.0,
+    "avg_accuracy_score": 2.92,
     "avg_relevance_score": 4.0,
-    "avg_csat": 3.0,
-    "recent_avg_csat": 2.67,
-    "csat_count": 13,
-    "planning_accuracy_rate": 0.769,
+    "avg_csat": 2.92,
+    "recent_avg_csat": 2.33,
+    "csat_count": 12,
+    "planning_accuracy_rate": 0.75,
     "recent_planning_accuracy_rate": 1.0,
-    "grounding_pass_rate": 0.873
+    "grounding_pass_rate": 0.872
   },
   "token_forecasting": {
     "avg_forecast_error_pct": 17.7,
@@ -747,8 +740,8 @@
     },
     "by_feature_type": {
       "rita": {
-        "run_count": 10,
-        "avg_tokens": 105834,
+        "run_count": 9,
+        "avg_tokens": 103704,
         "modifier": 1.0
       },
       "ops": {
@@ -770,9 +763,9 @@
   },
   "efficiency": {
     "avg_duration_minutes": 28,
-    "avg_tokens_per_run": 48041,
+    "avg_tokens_per_run": 46779,
     "avg_retry_count": 0.03,
-    "avg_time_saved_hours": 8.7
+    "avg_time_saved_hours": 8.8
   },
   "reliability": {
     "error_recovery_rate": 0.8,
@@ -791,17 +784,17 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 1550,
+    "total_calls": 1564,
     "unique_endpoints": 66,
-    "overall_error_rate_pct": 2.32,
+    "overall_error_rate_pct": 2.3,
     "error_rate_5xx_pct": 0.0,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 510,
+        "count": 511,
         "p50_ms": 5.2,
-        "p95_ms": 66.1,
+        "p95_ms": 66.7,
         "error_count": 0
       },
       {
@@ -815,9 +808,9 @@
       {
         "path": "/api/experience/ops/functional-kpis",
         "method": "GET",
-        "count": 101,
-        "p50_ms": 11.2,
-        "p95_ms": 248.0,
+        "count": 102,
+        "p50_ms": 11.7,
+        "p95_ms": 252.1,
         "error_count": 6
       },
       {
@@ -831,12 +824,12 @@
       {
         "path": "/api/experience/ops/metrics/summary",
         "method": "GET",
-        "count": 91,
-        "p50_ms": 34.1,
-        "p95_ms": 160.0,
+        "count": 94,
+        "p50_ms": 36.1,
+        "p95_ms": 161.5,
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-25T12:52:27.627136+00:00"
+    "generated_at": "2026-05-25T12:54:55.499738+00:00"
   }
 }
