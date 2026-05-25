@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-25 — Feature 16 (May) Strategy Comparison COMPLETE — 7 Chart.js panels, 5 strategies, commentary, 39 unit tests, deployed to production.
+**Last updated:** 2026-05-25 — Bug fixes: users.html nav (Chat Analytics + Daily Ops missing), Agent Builds run log gap. Both deployed to production (`0e0f032`).
 
 **Session work (2026-05-24):**
 - **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
@@ -31,6 +31,11 @@
 - main.py seed: all 12 `_SEED_INSTRUMENTS` entries now include `yf_ticker=` values; one-time startup backfill
 - Geography panel redesign: tiles replace instrument tab selector; region labels India / United States / Europe; ATHER excluded (no yfinance data)
 - Pushed to prod: `e920177..bf59163` (7 commits)
+
+**Session work (2026-05-25) — continued:**
+- **Bug fix: users.html nav** — Chat Analytics and FnO Daily Ops items were missing from the left sidebar when navigating to User Traffic page (`dashboard/users.html`). Root cause: `users.html` is a separate page with its own nav that omitted those two items. Fix: added both items with `href="ops.html#chat"` and `href="ops.html#dailyops"` links. Commits: `16fa9a2`, `70c5008`.
+- **Bug fix: Agent Builds run gap** — Strategy Comparison `/enhance` run `20260525-1559` was in `riia-ai-org/agent-ops/runs/` (gitignored) but not in `riia-jun-release/data/agent-ops/runs/` — deploy pipeline never seeded it to production DB. Copied run JSON into prod repo; production Agent Builds page now shows the run.
+- **Production deploy** — `0e0f032` pushed to `san-work-ravionics/riia-jun-release-prod`; GitHub Actions green; health check passed at `https://riia.ravionics.nl/health`.
 
 **Session work (2026-05-25):**
 - **Strategy Comparison analysis (ASML 2025):** Standalone script `project-office/scripts/strategy_checks_asml.py` written and validated against ASML 2025 data (255 trading days). Results: B&H +34.8% (MDD 26.3%), Value Investing +18.5% (best risk-adjusted: Sharpe 1.25, MDD 7.3%), Swing Trading +29.2%, SR-52W +25.0%, Momentum +12.3% (worst — choppy Jan–Apr whipsawed SMA crossover). Value Investing only strategy within both risk targets (Sharpe > 1.0, MDD < 10%).
