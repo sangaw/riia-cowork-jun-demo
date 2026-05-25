@@ -33,7 +33,7 @@ _sectionLoaders.trades            = loadTrades;
 _sectionLoaders.export            = loadExport;
 _sectionLoaders['technical-analysis'] = loadTechnicalAnalysis;
 _sectionLoaders.learnings             = loadLearnings;
-_sectionLoaders['strategy-comparison'] = loadStrategyComparison;
+_sectionLoaders['strategy-compare']    = loadStrategyComparison;
 
 // ── Expose to window for inline HTML onclick attributes ────
 window.show                = show;
@@ -97,7 +97,7 @@ async function selectGeoInstrument(id) {
     if (data) { updateChips(data.chips); showAlerts(data.alerts); }
   }
   await loadActiveInstrument();
-  const instrumentSections = new Set(['trades', 'performance', 'scenarios', 'risk', 'market-signals', 'diagnostics', 'explain', 'technical-analysis', 'learnings']);
+  const instrumentSections = new Set(['trades', 'performance', 'scenarios', 'risk', 'market-signals', 'diagnostics', 'explain', 'technical-analysis', 'learnings', 'strategy-compare']);
   await Promise.all([
     loadHealth(), loadPerfSummary(), loadDrift(), loadProgress(), loadMarketSignals(),
     ...(instrumentSections.has(section) && _sectionLoaders[section] ? [_sectionLoaders[section]()] : []),
