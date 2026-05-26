@@ -1,5 +1,9 @@
 # Skill: Add API Endpoint
 
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26  
+**Spec source:** `Spec_Python_Code.md` + `Spec_DB.md`
+
 ## When to use this skill
 Use when adding or modifying any FastAPI route in `src/rita/api/`. Covers creating the router, handler, service, repository, and Pydantic schemas, and verifying the JS frontend contract.
 

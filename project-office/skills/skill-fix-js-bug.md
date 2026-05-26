@@ -1,5 +1,9 @@
 # Skill: Fix JS Frontend Bug
 
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26  
+**Spec source:** `Spec_JS_Code.md` + `Spec_HTML_Code.md`
+
 ## When to use this skill
 Use when a defect is reported from manual testing of the RITA dashboard (`rita.html`, `fno.html`, `ops.html`). Covers diagnosing and fixing bugs in `dashboard/js/` ES modules.
 

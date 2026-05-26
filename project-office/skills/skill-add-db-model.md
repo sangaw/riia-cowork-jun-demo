@@ -1,5 +1,9 @@
 # Skill: Add DB Model and Repository
 
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26  
+**Spec source:** `Spec_DB.md` + `Spec_Python_Code.md`
+
 ## When to use this skill
 Use when adding a new SQLAlchemy ORM model, its matching repository class, and an Alembic migration. Covers the full chain: model → repository → Alembic migration → `alembic/env.py` registration → startup seeding (if needed).
 

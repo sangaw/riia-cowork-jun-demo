@@ -20,6 +20,8 @@ Dashboard JS **must only call** Experience or Workflow tier endpoints. Calling s
 | `/api/v1/agent-panel/*`, `/api/v1/mcp-calls` | ✅ Allowed | Agent/MCP read |
 | `/health`, `/progress`, `/reset` | ✅ Allowed | App-root routes |
 | `/api/v1/market-signals`, `/api/v1/shap` | ✅ Allowed | Raw indicators/ML artifacts |
+| `/api/experience/ops/drift` | ✅ Allowed | Experience-tier drift/health checks (use this, not `/api/v1/drift`) |
+| `/api/v1/drift` | ❌ Never from JS | System tier — use `/api/experience/ops/drift` (Feature 18 gap-close) |
 | `/api/v1/backtest-daily` | ❌ Never from JS | System tier — use `/api/v1/experience/rita/backtest-daily` |
 | `/api/v1/risk-timeline` | ❌ Never from JS | System tier — use `/api/v1/experience/rita/risk-timeline` |
 | `/api/v1/training-history` | ❌ Never from JS | System tier — use `/api/v1/experience/rita/training-history` |

@@ -2,6 +2,8 @@
 **App:** Ops dashboard (`ops.html` + `dashboard/js/ops/`)
 **Use for:** New UI sections in the Ops monitoring/admin dashboard (CI/CD, metrics, users, deployments)
 **Compiled from:** `Spec_RITA_App.md` + `Spec_JS_Code.md`
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26
 
 ---
 

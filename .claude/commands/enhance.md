@@ -63,7 +63,31 @@ If no `<usage>` block appears in the result, store `null` for that role.
 
 ---
 
-## Step 1 — Create Task Brief
+## Step 1 — Create Task Brief + Feature Folder
+
+### Step 1a — Auto-create feature folder
+
+Identify the next available feature number in `project-office/features/May/`:
+```bash
+ls project-office/features/May/ | grep -E '^[0-9]+' | sort -n | tail -1
+```
+Set `FEATURE_NUM` = that number + 1 (zero-pad to 2 digits if ≤ 9).  
+Set `FEATURE_FOLDER` = `project-office/features/May/{FEATURE_NUM} {APP}-{DESCRIPTION[:30].replace(' ','-').lower()}/`
+
+Create the folder and copy the three template stubs:
+```bash
+mkdir -p "{FEATURE_FOLDER}"
+cp project-office/features/TEMPLATE/REQUIREMENTS.md "{FEATURE_FOLDER}/REQUIREMENTS.md"
+cp project-office/features/TEMPLATE/PLAN_STATUS.md  "{FEATURE_FOLDER}/PLAN_STATUS.md"
+cp project-office/features/TEMPLATE/eng-context.md  "{FEATURE_FOLDER}/eng-context.md"
+```
+
+In `{FEATURE_FOLDER}/REQUIREMENTS.md` replace the title placeholders:
+- `Feature NN` → `Feature {FEATURE_NUM}`
+- `{Feature Name}` → `{APP} — {DESCRIPTION[:50]}`
+- `{YYYY-MM-DD}` → `{TIMESTAMP[:8]}` formatted as `YYYY-MM-DD`
+
+### Step 1b — Create Task Brief
 
 Read `project-office/task-briefs/TEMPLATE.md`.
 
@@ -230,7 +254,82 @@ Report: "Architect design recorded into task brief."
 
 **After TechWriter completes Step 3b:**
 
-Report `✓ Architect Agent — design complete and recorded` and proceed to Step 4.
+Report `✓ Architect Agent — design complete and recorded` and proceed to Step 3.5.
+
+---
+
+## Step 3.5 — Design Reviewer Agent
+
+Spawn a `general-purpose` agent with this prompt:
+
+```
+You are the Design Reviewer for the RITA project. Your mode is: Design Review.
+
+Read these files in order:
+1. {BRIEF_PATH} — read the ## Request section (the user's requirement) and the [Architect] Design section only.
+2. project-office/guardrails/roles/reviewer.md — read fully before reviewing.
+3. project-office/guardrails/project.md §1 — API tier routing rules.
+
+Do NOT read source code, spec files, or JS files.
+
+Your job: review the Architect's design against the stated requirements. Report findings only — do not propose alternative designs.
+
+Run the Design Review checklist from reviewer.md:
+1. Requirements coverage — does every stated requirement have a design element?
+2. API contract completeness — method, path, response fields (≥2), tier placement declared?
+3. Frontend contract completeness — JS module named, DOM IDs listed, all response fields the JS reads are in the response shape?
+4. Files-to-touch completeness — backend + frontend + spec files all listed (≥3 files)?
+5. Definition of Done populated — DoD checklist has real items, not template placeholders?
+
+For each failed check, state: finding, severity (BLOCKING or ADVISORY), and rule cited.
+
+Write the [Reviewer] Design Review section into {BRIEF_PATH}. Fill in all fields:
+- Findings table (write "No findings" if all checks pass)
+- Checklist with PASS/FAIL for each item
+- Decision: PASS or FAIL with reason
+
+Save the updated brief file.
+Report: "Design Review complete. Status: PASS/FAIL. Blocking findings: N."
+```
+
+**After the Design Reviewer completes:**
+
+Read `{BRIEF_PATH}` — find the `[Reviewer] Design Review` section. Check `Decision:` field.
+
+- If **PASS**: report `✓ Design Review — PASS. Proceeding to Engineer.` and proceed to Step 4.
+- If **FAIL** (first time): re-invoke the **Architect agent** with:
+  ```
+  The Design Reviewer found blocking issues with your design. Fix these before the Engineer can start:
+  {paste the blocking findings list from the Design Review section}
+  Produce the corrected design output. Do not write files.
+  ```
+  After Architect re-runs, re-run the TechWriter (Step 3b) to record the updated design, then re-run the Design Reviewer.
+- If **FAIL** (second time): escalate to user:
+  > "Design Review failed twice on the same issues. Please review the Architect design in {BRIEF_PATH} and resolve: {list blocking findings}. Re-run /enhance when ready."
+  Stop.
+
+**Record Design Reviewer result** (append to `AGENT_RESULTS`):
+```json
+{
+  "role": "design_reviewer",
+  "status": "<pass | fail>",
+  "steps_required": 5,
+  "steps_completed": "<count of checklist items that passed>",
+  "adherence_score": "<steps_completed / 5>",
+  "token_estimate": 8000,
+  "actual_tokens": null,
+  "grounding_checks": {
+    "requirements_coverage": "<true/false>",
+    "api_contract_complete": "<true/false>",
+    "frontend_contract_complete": "<true/false>",
+    "files_to_touch_complete": "<true/false>",
+    "dod_populated": "<true/false>"
+  },
+  "failure_modes": ["DR-001 if requirements_coverage failed", "DR-002 if api_contract incomplete", "DR-003 if frontend_contract incomplete", "DR-004 if files incomplete", "DR-005 if dod not populated — use [] if none"]
+}
+```
+
+---
 
 **Parse usage:** store `AGENT_USAGE['architect']` from the `<usage>` block in the Architect agent result (Plan agents may not emit a usage block — store null if absent).
 
@@ -396,9 +495,82 @@ Report the Engineer summary and wait for confirmation:
 ─────────────────────────────────────────────────────────
 ```
 
-**Wait for user reply before proceeding to Step 5.**
+**Wait for user reply before proceeding to Step 4.5.**
 - If user replies **"stop"**: write run log as partial (`overall_status = "partial"`) and halt.
-- If user replies **"ok"** (or any other reply): proceed to Step 5.
+- If user replies **"ok"** (or any other reply): proceed to Step 4.5.
+
+---
+
+## Step 4.5 — Code Reviewer Agent
+
+Spawn a `general-purpose` agent with this prompt:
+
+```
+You are the Code Reviewer for the RITA project. Your mode is: Code Review.
+
+Read these files in order:
+1. {BRIEF_PATH} — read the ## Request section, [Architect] Design section, and [Engineer] Implementation Log section.
+2. project-office/guardrails/roles/reviewer.md — read fully before reviewing.
+3. project-office/guardrails/roles/engineer.md — the guardrails you will enforce.
+4. project-office/guardrails/project.md — project-specific rules.
+5. Read ONLY the files listed in the Engineer's "Files changed" table — do not read other source files.
+
+Your job: verify that the implementation matches the architect's design and that engineer guardrails are followed. Report findings only — do not modify source files.
+
+Run the Code Review checklist from reviewer.md:
+1. Implementation matches design — endpoint path in code matches Architect's path? Response fields in handler return dict match Architect's response shape? DOM element IDs in JS match Architect's frontend target?
+2. JS frontend contract — every field the JS reads is in the handler return dict? No query param echoed as a row field? No undefined values (only null as sentinel)?
+3. Engineer guardrails — worktree branch used (not master)? Route in correct tier directory? No direct DB access in routes/services (ADR-002)? No print() statements? No hardcoded secrets or lot sizes? Ruff confirmed passed?
+4. Spec updated — if a new endpoint was added, does it appear in the spec file? (Grep the spec file for the endpoint path to verify — do not trust the brief alone.)
+
+For each failed check, state: file, line number or N/A, finding, severity (BLOCKING or ADVISORY), and rule cited.
+
+Write the [Reviewer] Code Review section into {BRIEF_PATH}. Fill in all fields:
+- Findings table (write "No findings" if all checks pass)
+- Checklist with PASS/FAIL for each item
+- Decision: PASS, CONDITIONAL (advisory only), or FAIL (blocking issues)
+
+Save the updated brief file.
+Report: "Code Review complete. Status: PASS/CONDITIONAL/FAIL. Blocking findings: N."
+```
+
+**After the Code Reviewer completes:**
+
+Read `{BRIEF_PATH}` — find the `[Reviewer] Code Review` section. Check `Decision:` field.
+
+- If **PASS** or **CONDITIONAL**: report `✓ Code Review — {status}. Proceeding to QA.` and proceed to Step 5.
+- If **FAIL** (first time): re-invoke the **Engineer agent** with:
+  ```
+  The Code Reviewer found blocking issues with your implementation. Fix these before QA can proceed:
+  {paste the blocking findings list from the Code Review section}
+  Make the targeted fixes, commit to the same branch, and update the [Engineer] Implementation Log section.
+  ```
+  After Engineer re-runs, re-run the Code Reviewer.
+- If **FAIL** (second time): escalate to user:
+  > "Code Review failed twice on the same issues. Please review the Engineer implementation in branch {RUN_BRANCH} and resolve: {list blocking findings}. Re-run /enhance when ready."
+  Stop.
+
+**Record Code Reviewer result** (append to `AGENT_RESULTS`):
+```json
+{
+  "role": "code_reviewer",
+  "status": "<pass | conditional | fail>",
+  "steps_required": 4,
+  "steps_completed": "<count of checklist items that passed>",
+  "adherence_score": "<steps_completed / 4>",
+  "token_estimate": 12000,
+  "actual_tokens": null,
+  "grounding_checks": {
+    "implementation_matches_design": "<true/false>",
+    "js_contract_verified": "<true/false/na>",
+    "engineer_guardrails_followed": "<true/false>",
+    "spec_updated": "<true/false/na>"
+  },
+  "failure_modes": ["CR-001 if implementation_matches_design failed", "CR-002 if js_contract failed", "CR-003 if guardrails failed", "CR-004 if spec not updated — use [] if none"]
+}
+```
+
+---
 
 **Parse usage:** store `AGENT_USAGE['engineer']` from the `<usage>` block in the Engineer agent result.
 
@@ -673,12 +845,14 @@ Report the completed run to the user:
   Run log:     {RUN_LOG_PATH}
 
   Agent results:
-  ✓ PM Agent          — approved
-  ✓ Architect Agent   — design complete
-  ✓ Engineer Agent    — {n}/8 DoD items passed
-  ✓ QA Agent          — {n}/{n} tests passed
-  ✓ TechWriter Agent  — docs updated
-  ✓ Merge             — {merged: {MERGE_COMMIT} | deferred: branch left open}
+  ✓ PM Agent            — approved
+  ✓ Architect Agent     — design complete
+  ✓ Design Review       — {PASS | FAIL with N retry}
+  ✓ Engineer Agent      — {n}/8 DoD items passed
+  ✓ Code Review         — {PASS | CONDITIONAL | FAIL with N retry}
+  ✓ QA Agent            — {n}/{n} tests passed
+  ✓ TechWriter Agent    — docs updated
+  ✓ Merge               — {merged: {MERGE_COMMIT} | deferred: branch left open}
 
   Overall status: {overall_status}
   Tokens (est):   ~{total_tokens_estimated}

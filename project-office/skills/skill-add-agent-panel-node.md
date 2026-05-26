@@ -1,5 +1,9 @@
 # Skill: Add Agent Panel Node
 
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26  
+**Spec source:** `Spec-Agent-Workflow.md` + `Spec_RITA_App.md`
+
 ## When to use this skill
 Use when adding a new agent node to the RITA Agent Panel LangGraph system — a new analytical role in the 6-agent ASML investment simulation (e.g. a Macro Analyst, Execution Analyst, or Risk Manager node).
 

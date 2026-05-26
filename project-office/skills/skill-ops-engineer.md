@@ -2,6 +2,9 @@
 
 **Use for:** Production deployments, EC2 ops, Docker diagnostics, GitHub Actions failures, AWS infra ops
 **Knowledge base:** `project-office/ops-deployments/DEPLOYMENT_KNOWLEDGE.md` — read before every deployment, write after every incident
+**Guardrail refs:** org · rita-project  
+**Last validated against spec:** 2026-05-26  
+**Spec source:** `SPEC_Prod_Deploy.md`
 
 ---
 

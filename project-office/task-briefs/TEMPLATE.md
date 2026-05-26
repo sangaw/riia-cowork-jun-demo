@@ -83,6 +83,32 @@
 
 ---
 
+## [Reviewer] Design Review
+
+**Mode:** Design Review  
+**Status:** {PASS | FAIL}  
+**Reviewed:** [Architect] Design section  
+**Against:** Requirements in ## Request
+
+**Findings:**
+
+| # | Finding | Severity | Rule cited | Resolution required |
+|---|---|---|---|---|
+| — | {description or "No findings"} | {BLOCKING / ADVISORY} | {ADR-001 / project.md §N} | {what must change} |
+
+**Checklist:**
+- [ ] Requirements coverage: {PASS / FAIL}
+- [ ] API contract completeness: {PASS / FAIL}
+- [ ] Frontend contract completeness: {PASS / FAIL}
+- [ ] Files-to-touch completeness: {PASS / FAIL}
+- [ ] Definition of Done populated: {PASS / FAIL}
+
+**Decision:** {PASS — proceed to Engineer. | FAIL — return to Architect. Must address: [list blocking findings].}
+
+> If FAIL: Orchestrator re-invokes Architect with the blocking findings list. Re-invoke ceiling: 1 automatic retry; escalate to user on second FAIL.
+
+---
+
 ## [Engineer] Implementation Log
 
 **Branch:** `feature/{name}-{app}` — never master
@@ -113,6 +139,31 @@
 - [ ] No hardcoded values
 
 > Engineer: all 8 DoD items must be checked before marking this section complete.
+
+---
+
+## [Reviewer] Code Review
+
+**Mode:** Code Review  
+**Status:** {PASS | CONDITIONAL | FAIL}  
+**Reviewed:** [Engineer] Implementation Log + changed files  
+**Against:** [Architect] Design + engineer-role guardrails
+
+**Findings:**
+
+| # | File | Line | Finding | Severity | Rule cited |
+|---|---|---|---|---|---|
+| — | {file or "No findings"} | {line / N/A} | {description} | {BLOCKING / ADVISORY} | {ADR / guardrails/roles/engineer.md §N} |
+
+**Checklist:**
+- [ ] Implementation matches design (paths, fields, DOM targets): {PASS / FAIL}
+- [ ] JS frontend contract verified: {PASS / FAIL / N/A}
+- [ ] Engineer guardrails followed (worktree, no print, no hardcoded secrets/lot sizes): {PASS / FAIL}
+- [ ] Spec updated: {PASS / FAIL / N/A}
+
+**Decision:** {PASS — proceed to QA. | CONDITIONAL — proceed to QA; engineer addresses advisory items in follow-up. | FAIL — return to Engineer. Must fix: [list blocking findings].}
+
+> If FAIL: Orchestrator re-invokes Engineer with the blocking findings list. Re-invoke ceiling: 1 automatic retry; escalate to user on second FAIL.
 
 ---
 

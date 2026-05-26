@@ -2,6 +2,8 @@
 **App:** Data Science dashboard (`ds.html` + `dashboard/js/ds/`)
 **Use for:** New UI sections, panels, module extraction, or data views in the DS data science dashboard
 **Compiled from:** `Spec_RITA_App.md` + `Spec_JS_Code.md`
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26
 
 ---
 

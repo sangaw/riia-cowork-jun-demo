@@ -2,6 +2,9 @@
 
 **Use for:** Diagnosing failed, stuck, or silent failures in the RITA Double-DQN training and backtest pipeline
 **Knowledge base:** `project-office/ops-deployments/DEPLOYMENT_KNOWLEDGE.md` — read the **Known Model Build Failure Patterns** section before every debug session, write after every new incident
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26  
+**Spec source:** `SPEC_Prod_Deploy.md`
 
 ---
 

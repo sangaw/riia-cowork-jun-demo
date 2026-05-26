@@ -1,5 +1,8 @@
 # Skill: End-of-Day Routine
 
+**Guardrail refs:** org · pm-role  
+**Last validated against spec:** 2026-05-26
+
 ## When to use this skill
 Use when completing a sprint day — marking tasks done, updating the roadmap, publishing to Confluence, and committing all artifacts. All 4 steps are mandatory. Do not mark a day done until all 4 are complete.
 
@@ -98,7 +101,45 @@ The script must have today's day added to the deliverables section with status `
 
 ---
 
-## Step 4 — Git Commit
+## Step 4 — Skill Drift Check
+
+Check whether any spec file changed recently without a matching skill file update.
+
+```bash
+# Run from workspace root
+git log --since="7 days ago" --name-only --pretty=format: -- project-office/specs/ | sort -u | grep -v '^$'
+```
+
+For each spec file listed in the output:
+1. Identify the matching skill file from this table:
+
+| Spec changed | Matching skill file |
+|---|---|
+| `Spec_RITA_App.md` | `skill-add-rita-feature.md`, `skill-add-fno-feature.md`, `skill-add-ops-feature.md` |
+| `Spec_JS_Code.md` | `skill-add-rita-feature.md`, `skill-add-fno-feature.md`, `skill-add-ops-feature.md`, `skill-fix-js-bug.md` |
+| `Spec_Python_Code.md` | `skill-add-api-endpoint.md` |
+| `Spec_DB.md` | `skill-add-db-model.md`, `skill-add-api-endpoint.md` |
+| `Spec_Chat_Feature.md` | `skill-add-chat-intent.md` |
+| `Spec-Agent-Workflow.md` | `skill-add-agent-panel-node.md` |
+| `SPEC_Prod_Deploy.md` | `skill-ops-engineer.md`, `skill-model-build-debug.md` |
+
+2. Read the `Last validated against spec:` date from the matching skill file header.
+3. Compare to the date of the spec file's most recent commit:
+   ```bash
+   git log -1 --format="%ai" -- project-office/specs/{SpecFile}.md
+   ```
+4. If the skill's validated date is **earlier** than the spec's last commit:
+   - Flag: `[DRIFT] {skill-file}.md not updated after {SpecFile}.md changed on {date}`
+   - Add to the git commit message: `note: skill drift detected — {skill-file} needs update`
+
+If no drift is found: report `✓ Skill drift check — all skill files current.`
+If drift is found: report the flags and note that the skill files should be updated in the next session.
+
+**Drift does not block the commit** — it is a warning, not a gate.
+
+---
+
+## Step 5 — Git Commit
 
 Stage all files changed today:
 ```bash
@@ -125,8 +166,8 @@ git log --oneline -3   # confirm commit appears
 
 ## Guardrails
 
-- **Never skip steps** — all 4 are mandatory every session
-- **Do not mark the day done in PLAN_STATUS.md before steps 2, 3, 4 are done**
+- **Never skip steps** — all 5 are mandatory every session
+- **Do not mark the day done in PLAN_STATUS.md before steps 2, 3, 4, 5 are done**
 - **Do not commit until the app starts end-to-end** — `python riia-jun-release/start.py` must run without errors before committing code changes
 - **Absolute dates only** — convert "today", "Thursday" etc. to `YYYY-MM-DD` in PLAN_STATUS.md notes
 - **Do not push** — only commit locally unless the user explicitly asks to push
@@ -135,8 +176,8 @@ git log --oneline -3   # confirm commit appears
 
 ## Definition of Done
 
-- [ ] PLAN_STATUS.md: notes entry added for today's work, Last updated date correct
-- [ ] Session run log: run log written to `riia-ai-org/agent-ops/runs/` (or confirmed existing from /enhance)
-- [ ] aggregate_metrics.py: run without errors, metrics.json refreshed
-- [ ] Confluence sprint board: script ran without HTTP errors (or skipped with blocker noted if no script exists)
-- [ ] Git: clean working tree, commit message matches format, no untracked files left
+- [ ] Step 1 — PLAN_STATUS.md: notes entry added for today's work, Last updated date correct
+- [ ] Step 2 — Session run log: run log written to `riia-ai-org/agent-ops/runs/` (or confirmed existing from /enhance); metrics.json refreshed
+- [ ] Step 3 — Confluence sprint board: script ran without HTTP errors (or skipped with blocker noted if no script exists)
+- [ ] Step 4 — Skill drift check: drift check run; any flags noted in commit message
+- [ ] Step 5 — Git: clean working tree, commit message matches format, no untracked files left

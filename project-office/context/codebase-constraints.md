@@ -1,7 +1,14 @@
 # Sprint 2.5+ Codebase Constraints
 
-> Load this file when writing any new service, router, or repository code.
-> Agents that miss these patterns produce broken code that fails at runtime.
+> **DEPRECATED — 2026-05-26 (Feature 18)**  
+> Rules in this file have been moved to the three-tier guardrail system:
+> - SQLAlchemy session rules → `project-office/guardrails/project.md §8`
+> - Repository and service patterns → `project-office/guardrails/roles/engineer.md §3–4`
+> - FastAPI dependency injection → `project-office/guardrails/roles/engineer.md §4`
+>
+> This file is kept for one sprint as a reference. **Do not load this file in new agent sessions** — load the guardrail files instead. This file will be deleted after 2026-06-26.
+
+---
 
 ## 1. Repositories require `db: Session` — no default constructor
 

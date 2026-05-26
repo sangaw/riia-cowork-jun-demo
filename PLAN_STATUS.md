@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-25 — Bug fixes: users.html nav (Chat Analytics + Daily Ops missing), Agent Builds run log gap. Both deployed to production (`0e0f032`).
+**Last updated:** 2026-05-26 — Feature 18 (Skill-Based Approach Revision) COMPLETE. Three-tier guardrail hierarchy, CLAUDE.md refactored, skills as single source of truth, Design+Code Review gates in /enhance, feature folder template, drift detection in /end-day. Ops drift widget API tier gap closed: `/api/v1/drift` → `/api/experience/ops/drift`.
 
 **Session work (2026-05-24):**
 - **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
@@ -41,9 +41,13 @@
 - **Strategy Comparison analysis (ASML 2025):** Standalone script `project-office/scripts/strategy_checks_asml.py` written and validated against ASML 2025 data (255 trading days). Results: B&H +34.8% (MDD 26.3%), Value Investing +18.5% (best risk-adjusted: Sharpe 1.25, MDD 7.3%), Swing Trading +29.2%, SR-52W +25.0%, Momentum +12.3% (worst — choppy Jan–Apr whipsawed SMA crossover). Value Investing only strategy within both risk targets (Sharpe > 1.0, MDD < 10%).
 - **Feature 16 (May) — Strategy Comparison COMPLETE.** Spec: `project-office/features/May/16 Strategy Comparison/REQUIREMENTS.md`. Delivered: experience endpoint `GET /api/v1/experience/rita/strategy-comparison`, commentary handler `("rita","strategy-comparison")`, `strategy-comparison.js` with 7 Chart.js panels (portfolio growth full-width, 3 horizontal + 3 vertical metric bars), instrument pills with active highlight, year toggle (2025/2026), summary metrics table, 39 unit tests (contract verified 14/14 fields). Deployed to production at `https://riia.ravionics.nl`.
 
+**Session work (2026-05-26):**
+- **Feature 18 (May) — Skill-Based Approach Revision COMPLETE.** Full implementation in single session: (1) Three-tier guardrail hierarchy — 8 files in `project-office/guardrails/` (org + project + 6 roles); (2) CLAUDE.md refactored to pure navigation map — "What NOT to Do" and API routing table removed, references guardrail files; (3) 12 skill files stamped with guardrail refs + last-validated date; 8 slash commands converted to thin wrappers (15 lines each, load guardrails → load skill); `codebase-constraints.md` deprecated; (4) Review agent upgraded — Design Review gate (post-Architect) + Code Review gate (post-Engineer) wired into `/enhance`; task brief template updated with both reviewer sections; (5) Feature folder template created (`TEMPLATE/REQUIREMENTS.md`, `PLAN_STATUS.md`, `eng-context.md`); skill drift detection added to `skill-end-of-day.md` (Step 4); `/enhance` Step 1 auto-creates feature folder. (6) Ops drift widget API tier gap closed — new `GET /api/experience/ops/drift` experience endpoint; `observability.js` updated from `/api/v1/drift`; spec + guardrails updated.
+
 **Pending:**
 - **Feature 17 (May) — Mobile Device UI:** IN PROGRESS — requirements written. Option C: gateway page at `/mobile`, UA detection in `main.py`, JS snippet on all 5 desktop dashboards. See `project-office/features/May/17 Mobile Device UI/REQUIREMENTS.md`.
 - ~~**Feature 16 (May) — Strategy Comparison:**~~ ✅ COMPLETE — merged to master, deployed to production 2026-05-25.
+- ~~**Feature 18 (May) — Skill-Based Approach Revision:**~~ ✅ COMPLETE — 2026-05-26.
 - ATHER instrument — onboard via Ops dashboard when yfinance indexes it
 - Feature 14 i18n Phase 2 — remaining section loaders (agent-panel, technical-analysis, learnings, FnO/Ops loaders)
 - Invest Game v2 — arcade layout in progress

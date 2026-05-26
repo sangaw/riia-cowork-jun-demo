@@ -112,6 +112,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/experience/ops/token-forecast` | Pre-run token budget estimate — query params: `feature_type`, `files_to_change`, `new_endpoint_or_model`, `frontend_scope`, `integration_type`. Returns `TokenForecastResponse` (complexity, per_role, total_forecast, confidence, basis_runs). Auth required. |
 | `GET` | `/api/experience/ops/api-metrics` | Per-endpoint call count, p50/p95 latency, error rate from api_call_log. Query params: `limit` (default 200), `method`, `path_prefix`. Returns `ApiMetricsResponse(items: list[ApiMetricsRow])`. No auth. |
 | `GET` | `/api/experience/ops/functional-kpis` | KPI time-series for training success rate, error rates, p95 latency (last 24h hourly buckets). Query param: `hours` (default 24, 1–168). Returns `FunctionalKPIsResponse`. No auth. |
+| `GET` | `/api/experience/ops/drift` | Model health and drift checks — Experience-tier wrapper for DriftDetector. Returns `{ summary: { overall }, checks: { sharpe_drift, return_degradation, data_freshness, pipeline_health, constraint_breach } }`. Replaces direct JS call to system-tier `/api/v1/drift`. No auth. |
 
 ### Users Experience Endpoints (`/api/v1/experience/users`)
 
@@ -192,7 +193,7 @@ selectInstrumentTab(id)
   2. GET  /api/v1/instrument/active      → topbar pill (name, flag)
   3. GET  /api/v1/performance-summary    → KPI metrics cards (checks _run_instrument_id vs _active_instrument_id)
   4. GET  /health                        → model status card
-  5. GET  /api/v1/drift                  → alert strip
+  5. GET  /api/experience/ops/drift      → alert strip
   6. GET  /progress                      → pipeline step bar
 ```
 

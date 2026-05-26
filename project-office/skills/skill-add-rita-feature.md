@@ -2,6 +2,8 @@
 **App:** RITA main dashboard (`rita.html` + `dashboard/js/rita/`)
 **Use for:** New UI sections, panels, widgets, or data views in the RITA trading dashboard
 **Compiled from:** `Spec_RITA_App.md` + `Spec_JS_Code.md`
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26
 
 ---
 

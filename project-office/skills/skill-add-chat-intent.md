@@ -1,5 +1,9 @@
 # Skill: Add Chat Intent
 
+**Guardrail refs:** org · engineer-role · rita-project  
+**Last validated against spec:** 2026-05-26  
+**Spec source:** `Spec_Chat_Feature.md`
+
 ## When to use this skill
 Use when adding a new conversational intent to the RITA chat assistant — a new query type the user can ask (e.g. "What is the current volatility?", "Show me the Greeks for my hedge position"). Covers adding seed phrases, a handler function, and wiring the dispatch mapping.
 
