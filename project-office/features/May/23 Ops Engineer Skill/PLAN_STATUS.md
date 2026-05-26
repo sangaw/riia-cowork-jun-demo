@@ -1,7 +1,7 @@
 # Feature 19 — Ops Engineer Skill: Plan Status
 
 **Date started:** 2026-05-23
-**Status:** IN PROGRESS — Phases 1–3 complete, Phase 4 (first real incident update) ongoing
+**Status:** COMPLETE — all 4 phases done; knowledge base has 10 deployment patterns, 12 model build patterns, 11 deploy log entries
 
 ---
 
@@ -10,9 +10,9 @@
 | Phase | Scope | Status |
 |---|---|---|
 | 1 — Skill + Knowledge Base | Write `skill-ops-engineer.md` + seed `DEPLOYMENT_KNOWLEDGE.md` with 8 known patterns | `[x]` |
-| 2 — Deploy Command | Write `.claude/commands/aws-production-deploy.md` with all 7 phases | `[ ]` |
+| 2 — Deploy Command | Write `.claude/commands/aws-production-deploy.md` with all 7 phases | `[x]` Done 2026-05-23 |
 | 3 — Smoke Test | User runs `/aws-production-deploy` against a real deploy; verify all phases execute correctly | `[x]` Done 2026-05-23 — pipeline green, health ok |
-| 4 — First Incident Update | After first real deployment, log outcome in `DEPLOYMENT_KNOWLEDGE.md` | `[ ]` |
+| 4 — First Incident Update | After first real deployment, log outcome in `DEPLOYMENT_KNOWLEDGE.md` | `[x]` Done 2026-05-24 — 10 patterns + 12 model build patterns logged; deploy log has 11 entries |
 
 ---
 
@@ -22,7 +22,7 @@
 |---|---|---|
 | `project-office/skills/skill-ops-engineer.md` | 1 | `[x]` Done 2026-05-23 |
 | `project-office/ops-deployments/DEPLOYMENT_KNOWLEDGE.md` | 1 | `[x]` Done 2026-05-23 — 8 patterns seeded |
-| `.claude/commands/aws-production-deploy.md` | 2 | `[ ]` |
+| `.claude/commands/aws-production-deploy.md` | 2 | `[x]` Done 2026-05-23 |
 
 ---
 
