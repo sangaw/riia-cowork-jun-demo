@@ -1,6 +1,6 @@
 # SPEC — Production Deployment
 
-**Last updated:** 2026-05-26 (EC2 disk cleanup step added to deploy.yaml; workflow_dispatch added; EC2 local build + frozen queue recovery procedures added)
+**Last updated:** 2026-05-26 (EC2 disk cleanup step; workflow_dispatch; EC2 local build + frozen queue recovery; test results flow + gh CLI diagnostics; uncommitted HTML vs test failure pattern)
 **Status:** Live on AWS EC2
 
 ---
@@ -231,6 +231,7 @@ sudo systemctl start docker
 | Geography panel empty; no instruments shown | `startup seed` block raises `sqlite3.OperationalError: near "?": syntax error` on `UPDATE instruments … WHERE instrument_id IN :ids` — SQLite does not support tuple binding via SQLAlchemy `text()` | Replace the single `IN :ids` statement with a per-id loop: `for id in ids: db.execute(text("… WHERE instrument_id = :id"), {"id": id})` |
 | `write …/libtorch_cpu.so: no space left on device` during `docker pull` | EC2 disk full — each deploy pushes a new ~2.89 GB image without removing old ones; after several deploys the volume fills | SSH in → `docker image prune -a -f` → confirm free space → re-trigger deploy. **Permanent fix:** `deploy.yaml` now stops the old container + prunes images BEFORE the pull on every deploy |
 | GitHub Actions run stuck `queued` for 30+ min; new pushes create zero runs; `workflow_dispatch` returns HTTP 500 | Manual "Re-run jobs" click on a queued/failed run puts a re-run in GitHub's pre-queue limbo — API and UI cannot cancel or delete it | Deploy via EC2 Local Build (see section above). Add `workflow_dispatch` to `deploy.yaml` to enable manual dispatch without a push. Never click "Re-run jobs" on an active run. |
+| Unit test fails immediately: `AssertionError: gateway.html is missing required element id="card-onboarding"` (or any `test_required_id_present` failure) | HTML file was edited locally but **not committed** to the prod repo. The test was updated to expect the new ID, but CI checks out the remote — which still has the old markup. Runs complete in ~2m30s (fail fast, no Docker build). | Commit the HTML file change to `riia-jun-release/` and push. Always stage + commit HTML alongside the test that validates it. |
 
 ---
 
@@ -317,6 +318,49 @@ curl http://localhost/health   # expect {"status":"ok"}
 | `#14 All checks passed!` | ruff lint clean |
 | `#25 exporting layers` | final image write (~5–10 min silent) |
 | `#25 DONE` | image ready — proceed to step 7 |
+
+---
+
+## Test Results in the Ops Dashboard
+
+The **Test Results** page in the Ops dashboard shows the results from the CI run that produced the currently-running Docker image — not tests run on the EC2 instance itself.
+
+**Flow:**
+
+1. `test` job runs `pytest tests/unit/`, `tests/integration/`, and e2e suites on the GitHub Actions runner, writing JUnit XML files to `test-results/{unit,integration,e2e/{rita,fno,ops}}/latest.xml`
+2. `test` job uploads those XMLs as a GitHub Actions artifact (`test-results`)
+3. `build-and-push` job downloads the artifact and includes it in the Docker build context
+4. `Dockerfile` line `COPY test-results/ /app/test-results/` bakes the XMLs into the image as static files
+5. On production, `GET /api/v1/test-results` reads those static files from `/app/test-results/` inside the running container
+
+**What this means in practice:**
+- Timestamps on the Test Results page are from the CI run, not from the running server
+- A new deploy always refreshes the test results — they reflect the pipeline that built the current image
+- If a test is advisory (`continue-on-error: true` in `deploy.yaml`), its failures appear in the XML but did not block the deploy
+
+**e2e tests are advisory** — the hard gate is unit + integration. All four e2e suites run with `continue-on-error: true` so failures there do not block build or deploy.
+
+---
+
+## Diagnosing CI Failures with `gh` CLI
+
+The `gh` CLI is installed at `/usr/local/bin/gh` (Mac). To inspect a failed CI run without opening a browser:
+
+```bash
+# List recent runs
+GH_TOKEN="<PAT>" gh run list --repo san-work-ravionics/riia-jun-release-prod --limit 10
+
+# View job breakdown of a specific run
+GH_TOKEN="<PAT>" gh run view <run-id> --repo san-work-ravionics/riia-jun-release-prod
+
+# Show only the failed step logs
+GH_TOKEN="<PAT>" gh run view <run-id> --repo san-work-ravionics/riia-jun-release-prod --log-failed
+
+# Watch a run live until it completes
+GH_TOKEN="<PAT>" gh run watch <run-id> --repo san-work-ravionics/riia-jun-release-prod --exit-status
+```
+
+A run that completes in ~2m30s and only the `test` job ran (build-and-push skipped) means a unit or integration test failed — the e2e steps never get to run. Check `--log-failed` to see which assertion failed.
 
 ---
 

@@ -13,7 +13,7 @@ COPY pyproject.toml .
 ARG PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu
 # Install project deps; pip sees torch already satisfied so does not re-resolve to CUDA.
-RUN mkdir -p src && pip install --no-cache-dir -e ".[dev]"
+RUN mkdir -p src && pip install --no-cache-dir -e ".[dev,interfaces]"
 
 # Pre-download sentence-transformer model so the runtime image has no HuggingFace dependency.
 # Placed after pip install but before COPY src/ so this layer is cached unless dependencies change.
@@ -30,10 +30,6 @@ COPY config/ config/
 
 # Lint gate — fail the build if ruff finds issues
 RUN ruff check src/
-
-# Test gate disabled — re-enable once test suite is stable
-# COPY tests/ tests/
-# RUN pytest tests/ --tb=short -q --cov=rita --cov-report=term-missing --cov-fail-under=80
 
 
 # ── Stage 2: runtime ────────────────────────────────────────────────────────
@@ -55,6 +51,7 @@ COPY alembic.ini /app/alembic.ini
 COPY dashboard/ /app/dashboard/
 COPY mobileapp/ /app/mobileapp/
 COPY ops/ /app/ops/
+COPY test-results/ /app/test-results/
 
 ENV PATH="/app/venv/bin:$PATH"
 ENV PYTHONPATH="/app/src"

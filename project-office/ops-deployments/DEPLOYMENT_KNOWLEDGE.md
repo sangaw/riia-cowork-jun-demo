@@ -172,6 +172,9 @@
 | 2026-05-25 | `d21cde4` | Strategy Comparison (Feature 16) — year toggle, scenario selector, chart, 39 unit tests; strategy-comparison.js + schema + tests deployed |
 | 2026-05-25 | `0e0f032` | users.html nav fix (Chat Analytics + Daily Ops missing items); Strategy Comparison run-20260525-1559 added to agent-ops/runs for Agent Builds page |
 | 2026-05-26 | `d043def` | Feature 17 Phase 1 — mobile UA detection in root() + IIFE snippet in 5 dashboards + /mobile gateway; EC2 disk fix in deploy.yaml. Deployed via EC2 local build (see PATTERN-011) due to GitHub Actions runner queue freeze. |
+| 2026-05-26 | `17ffef1` | MCP SSE transport — Claude Desktop connects to production via mcp-remote. Extracted mcp_tools.py (shared), added mcp_sse_app.py (SSE), mounted /mcp/sse + /mcp/messages in main.py. mcp promoted to base deps. nginx /mcp/ location added with proxy_buffering off. End-to-end verified: tool execution + DB logging confirmed. |
+| 2026-05-26 | `a50dd05` | DS app MCP calls table — timestamps formatted as EU datetime DD-MMM-YYYY HH:MM:SS AM/PM; fmtDT() + mkTbl fmt support added to ds/utils.js |
+| 2026-05-26 | `2b2be01` | Investor onboarding flow v2 — auto-select goal tile per investor type; SLIDER_STOPS.short labels 3m/6m/9m/12m; SLIDER_STOPS.long 5 stops at 3yr steps to 15yr |
 
 ---
 
