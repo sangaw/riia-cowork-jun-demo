@@ -41,13 +41,20 @@ jobs:
         working-directory: riia-jun-release
         run: alembic upgrade head
 
-      - name: Run tests
+      - name: Run unit tests
         run: >
           pytest riia-jun-release/tests/unit/
+          --junitxml=riia-jun-release/test-results/unit/latest.xml
           --tb=short -q
           --cov=rita
           --cov-report=term-missing
           --cov-fail-under=80
+
+      - name: Run integration tests
+        run: >
+          pytest riia-jun-release/tests/integration/
+          --junitxml=riia-jun-release/test-results/integration/latest.xml
+          --tb=short -q
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -77,25 +84,24 @@ jobs:
         working-directory: riia-jun-release
         run: alembic upgrade head
 
-      - name: Run e2e tests
-        run: pytest riia-jun-release/tests/e2e/ --tb=short -q
+      - name: Run e2e smoke tests
+        run: pytest riia-jun-release/tests/e2e/test_smoke.py --tb=short -q
 
-  docker-build:
-    needs: [test, e2e]
-    runs-on: ubuntu-latest
-    env:
-      DOCKER_BUILDKIT: "1"
-    steps:
-      - name: Free disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-                      /opt/hostedtoolcache/CodeQL /usr/local/share/boost \
-                      "$AGENT_TOOLSDIRECTORY"
-          sudo apt-get clean
-          docker system prune -af --volumes
-          df -h
+      - name: Run e2e RITA scenarios
+        run: >
+          pytest riia-jun-release/tests/e2e/test_rita_scenarios.py
+          --junitxml=riia-jun-release/test-results/e2e/rita/latest.xml
+          --tb=short -q
 
-      - uses: actions/checkout@v4
+      - name: Run e2e FnO scenarios
+        run: >
+          pytest riia-jun-release/tests/e2e/test_fno_scenarios.py
+          --junitxml=riia-jun-release/test-results/e2e/fno/latest.xml
+          --tb=short -q
 
-      - name: Build Docker image
-        run: docker build -f riia-jun-release/Dockerfile riia-jun-release/
+      - name: Run e2e Ops scenarios
+        run: >
+          pytest riia-jun-release/tests/e2e/test_ops_scenarios.py
+          --junitxml=riia-jun-release/test-results/e2e/ops/latest.xml
+          --tb=short -q
+
