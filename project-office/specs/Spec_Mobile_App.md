@@ -124,7 +124,56 @@ Display format: `"Momentum · Trend · 2 active"` — signal type labels only, n
 
 ---
 
-## 7. Screen Binding Functions
+## 7. Gateway Hub Page (`mobileapp/gateway.html`)
+
+**Added:** Feature 17 Phase 0 (2026-05-26)
+
+A standalone HTML-only entry page served at `GET /mobile`. Acts as a universal hub linking users to the correct RITA app for their device context. No JavaScript, no UA detection — pure static HTML + inline CSS.
+
+### Route
+
+| Attribute | Value |
+|---|---|
+| Method | GET |
+| Path | `/mobile` |
+| Handler | `def mobile()` in `src/rita/main.py` |
+| Response type | `FileResponse` |
+| File served | `mobileapp/gateway.html` |
+| Auth required | No |
+| `include_in_schema` | `False` |
+| Route placement | BEFORE `app.mount("/mobileapp", ...)` static mount |
+
+### App Cards
+
+| DOM ID | Destination | Type | Colour accent |
+|---|---|---|---|
+| `card-rita` | `/mobileapp` | Mobile Ready | Green |
+| `card-invest` | `/onboarding` | Mobile Ready | Green |
+| `card-fno` | `/dashboard/fno.html?desktop=1` | Desktop Only | Amber |
+| `card-ops` | `/dashboard/ops.html?desktop=1` | Desktop Only | Amber |
+| `card-ds` | `/dashboard/ds.html?desktop=1` | Desktop Only | Amber |
+| `footer-desktop-link` | `/dashboard` | Footer escape-hatch | — |
+
+### Design Rules
+
+- CSS tokens: same `:root` block as `mobileapp/index.html` (`--bg`, `--surface`, `--build`, `--warn`, `--fd`, `--fm`, `--fs`)
+- Layout: 2-column card grid ≥ 400 px; single column < 400 px (`@media (max-width: 399px)`)
+- Page shell: `max-width: 600px` centred
+- Mobile Ready cards: green accent bar + filled green CTA button "Open App →"
+- Desktop Only cards: amber accent bar + text link "Open anyway ↗" + muted `surface2` background
+- No `<script>` tags anywhere in `gateway.html`
+- All CSS inline — no external stylesheet references
+
+### Agent Directives
+
+1. Do not add `<script>` tags to `gateway.html` in any phase.
+2. Do not add UA detection or redirect logic to `main.py` in Phase 0.
+3. `?desktop=1` query param on desktop links is a convention — no server-side handler is required in Phase 0.
+4. The `/mobile` route must remain registered BEFORE the `/mobileapp` static mount in `main.py` to prevent route shadowing.
+
+---
+
+## 8. Screen Binding Functions
 
 | Function | Source data | DOM bindings |
 |---|---|---|
@@ -139,7 +188,7 @@ Display format: `"Momentum · Trend · 2 active"` — signal type labels only, n
 
 ---
 
-## 8. Factor Bar Mapping
+## 9. Factor Bar Mapping
 
 Market screen (s2) and Market Feed (s7) use 4 factor bars derived from the latest `market-signals` row:
 
@@ -152,7 +201,7 @@ Volatility bar = atr_14 / close_price  (normalized, capped at 1)
 
 ---
 
-## 9. Sparkline Generation
+## 10. Sparkline Generation
 
 Portfolio holdings (s8) use SVG polylines derived from `price-history` data:
 
@@ -167,7 +216,7 @@ function pricesToPolyline(prices, w=200, h=60) {
 
 ---
 
-## 10. Live Toggle
+## 11. Live Toggle
 
 DOM: `#liveToggle` (42×24px rounded div) + `#liveToggleKnob` + `#liveStatusDot`
 
@@ -189,7 +238,7 @@ function updateToggleUI() {
 
 ---
 
-## 11. Trade Decisions List (Strategy screen s4)
+## 12. Trade Decisions List (Strategy screen s4)
 
 Source: `GET /api/v1/trade-events` — last 4 entries displayed as:
 ```
@@ -199,7 +248,7 @@ Example: `"24 Apr · entry · NIFTY"`
 
 ---
 
-## 12. PWA Files
+## 13. PWA Files
 
 | File | Purpose |
 |---|---|
@@ -211,7 +260,7 @@ Example: `"24 Apr · entry · NIFTY"`
 
 ---
 
-## 13. Integration Status
+## 14. Integration Status
 
 All 10 integration steps are complete:
 
@@ -230,7 +279,7 @@ All 10 integration steps are complete:
 
 ---
 
-## 14. AI Agent Directives
+## 15. AI Agent Directives
 
 1. **Single file** — all changes go into `index.html`. No new `.js` or `.css` files.
 2. **Fallback required** — every API binding must check `if (!data) return` before accessing fields.
@@ -238,38 +287,5 @@ All 10 integration steps are complete:
 4. **`API_BASE` constant** — never hardcode the URL in individual functions; always prefix with `API_BASE`.
 5. **`LIVE_MODE` check** — never call API functions if `LIVE_MODE` is false; respect the toggle.
 6. **SVG sparklines** — use `pricesToPolyline()` helper, not Chart.js (too heavy for mobile).
-7. **Factor bars** — use the threshold mapping in Section 8 exactly; do not invent new signal logic.
-
----
-
-## 7. Gateway Hub (`/mobile`)
-
-**File:** `riia-jun-release/mobileapp/gateway.html`
-**Route:** `GET /mobile` — served via `FileResponse` in `src/rita/main.py`
-**Auth:** None — public page
-
-### Purpose
-Entry point for mobile users. Presents all RITA platform apps as cards, clearly labelled as Mobile Ready or Desktop Only.
-
-### App Cards
-
-| Card ID | App | Status | Link |
-|---|---|---|---|
-| `card-rita` | RITA Trading | Mobile Ready | `/mobileapp` |
-| `card-invest` | Invest Game | Mobile Ready | `/onboarding` |
-| `card-fno` | FnO Portfolio | Desktop Only | `/dashboard/fno.html?desktop=1` |
-| `card-ops` | Ops Dashboard | Desktop Only | `/dashboard/ops.html?desktop=1` |
-| `card-ds` | Data Science | Desktop Only | `/dashboard/ds.html?desktop=1` |
-
-### `?desktop=1` Escape Hatch Convention
-All Desktop Only links append `?desktop=1`. In Phase 1+, the client-side detection snippet on each dashboard HTML file reads this param and sets `sessionStorage.mobileBypass = '1'`, suppressing further redirects for the browser session.
-
-### Route Placement
-The `GET /mobile` route is defined BEFORE the `app.mount("/mobileapp", ...)` static mount in `main.py` to prevent the mount from shadowing the route.
-
-### Design
-- No `<script>` tags — pure static HTML/CSS
-- CSS tokens match `mobileapp/index.html` (:root variables)
-- 2-column card grid ≥400px; single column <400px
-- `max-width: 600px` page shell, centred
+7. **Factor bars** — use the threshold mapping in Section 9 exactly; do not invent new signal logic.
 8. **No timestamps on signals** — display signal type labels only (e.g. "Momentum · Trend").
