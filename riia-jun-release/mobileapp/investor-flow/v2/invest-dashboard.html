@@ -71,33 +71,6 @@ body{
   padding:32px 0;
 }
 
-/* ── Invest Game banner ── */
-.game-banner{
-  width:100%;max-width:680px;
-  background:var(--warn-bg);border:1.5px solid var(--warn-bd);border-radius:10px;
-  padding:18px 22px;margin-bottom:28px;
-  display:flex;align-items:center;gap:18px;
-}
-.game-banner-icon{
-  width:44px;height:44px;border-radius:8px;flex-shrink:0;
-  background:var(--warn);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;
-}
-.game-banner-body{flex:1;}
-.game-banner-title{font-family:var(--fs);font-size:17px;letter-spacing:-.01em;color:var(--warn);}
-.game-banner-desc{font-size:12px;color:var(--t2);margin-top:3px;line-height:1.5;}
-.game-banner-cta{
-  flex-shrink:0;display:inline-flex;align-items:center;gap:6px;
-  padding:9px 18px;border-radius:var(--r);
-  background:var(--warn);color:#fff;border:none;
-  font-family:var(--fd);font-size:13px;font-weight:600;
-  text-decoration:none;cursor:pointer;white-space:nowrap;
-  transition:opacity .12s;
-}
-.game-banner-cta:hover{opacity:.85;}
-@media(max-width:540px){
-  .game-banner{flex-direction:column;align-items:flex-start;gap:12px;}
-  .game-banner-cta{width:100%;justify-content:center;}
-}
 
 /* ────────────────────────────────────────────────────────────
    CARD STAGE — token-mapped from invest-flow styles.css
@@ -495,16 +468,6 @@ body{
 
 <!-- ── Page canvas ── -->
 <main class="page-body">
-
-  <!-- Invest Game banner -->
-  <div class="game-banner">
-    <div class="game-banner-icon">▶</div>
-    <div class="game-banner-body">
-      <div class="game-banner-title">Try the Invest Game</div>
-      <div class="game-banner-desc">Paper-trade ASML &amp; NVIDIA alongside the AI. Experience market volatility with zero risk.</div>
-    </div>
-    <a id="banner-game-link" class="game-banner-cta" href="#">Launch Game →</a>
-  </div>
 
   <div class="stage" id="stage">
 
@@ -1216,12 +1179,10 @@ body{
   // Wire invest-game links using server URL
   (function() {
     var gameUrl = window.location.origin + '/dashboard/investgame.html?desktop=1';
-    var topbarLink  = document.getElementById('topbar-game-link');
-    var bannerLink  = document.getElementById('banner-game-link');
-    var card7Link   = document.getElementById('card7-game-link');
-    if (topbarLink)  topbarLink.href  = gameUrl;
-    if (bannerLink)  bannerLink.href  = gameUrl;
-    if (card7Link)   card7Link.href   = gameUrl;
+    var topbarLink = document.getElementById('topbar-game-link');
+    var card7Link  = document.getElementById('card7-game-link');
+    if (topbarLink) topbarLink.href = gameUrl;
+    if (card7Link)  card7Link.href  = gameUrl;
   })();
 
   // Boot: activate card-0
