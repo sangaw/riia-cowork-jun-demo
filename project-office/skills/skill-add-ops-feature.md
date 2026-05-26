@@ -147,7 +147,45 @@ For any import with a `..` path (e.g., `import { foo } from '../shared/api-cache
 - From `dashboard/js/ops/`: `'../../shared/'` resolves to `dashboard/shared/` — this directory does not exist
 Report: "api-cache.js is at dashboard/js/shared/ → import `'../shared/api-cache.js'` ✓" — one line per cross-directory import.
 
-### Step 5 — Register Section Loader in main.js
+### Step 4b — HTML Design System Classes (ops.html)
+
+> **FC-HTML-CSS gate — read this before writing any HTML for ops.html. Using wrong class names generates a visually broken section that still passes tests.**
+
+The ops dashboard uses a fixed design system. Use ONLY these classes — do not invent new ones:
+
+**KPI tile strip:**
+```html
+<div class="kpi-strip">
+  <div class="kpi"><span class="kpi-ey">Label</span><span class="kpi-val" id="ops-my-val">—</span></div>
+</div>
+```
+| Class | Purpose |
+|---|---|
+| `kpi-strip` | Horizontal flex container for KPI tiles |
+| `kpi` | Individual KPI tile |
+| `kpi-ey` | KPI label (eyebrow text) |
+| `kpi-val` | KPI value (large number) |
+
+**Table wrapper:**
+```html
+<div class="tbl-wrap"><table>...</table></div>
+```
+| Class | Purpose |
+|---|---|
+| `tbl-wrap` | Scrollable table container |
+
+**Section shell** (no `style="display:none"` — nav controls visibility via `.sec.on`):
+```html
+<section id="sec-my-feature" class="sec">
+  <h2>My Feature</h2>
+  ...
+</section>
+```
+
+**Classes that do NOT exist — never use:**
+`kpi-row`, `kpi-card`, `data-table`, `kpi-container`, `metric-card`, `metric-row`
+
+### Step 5 — Register Section Loader in main.js + SECTIONS array
 In `dashboard/js/ops/main.js`:
 ```js
 import { loadMyOpsFeature } from './my-ops-feature.js';
@@ -155,6 +193,12 @@ import { loadMyOpsFeature } from './my-ops-feature.js';
 _sectionLoaders['my-ops-feature'] = loadMyOpsFeature;
 window.loadMyOpsFeature = loadMyOpsFeature;
 ```
+
+**SECTIONS array gate:** Ops nav drives section visibility from a `SECTIONS` array (in `nav.js` or `main.js`). After registering the loader, grep for `SECTIONS` in `dashboard/js/ops/`:
+```
+grep -rn "SECTIONS" dashboard/js/ops/
+```
+Find the array, then add your new section ID to it. A section not in SECTIONS is never shown on nav click — the user sees a blank page.
 
 **Note:** Ops dashboard also has a sidebar nav (`sidebar.js`). If the new section needs a sidebar entry, add it to `sidebar.js:showSection()` in addition to `_sectionLoaders`.
 
@@ -211,6 +255,9 @@ Record responses as `human_score{}` in the run JSON: `accuracy`, `relevance`, `p
 | Never duplicate existing ops endpoints | Check the Ops Experience API Reference table above first |
 | Always update spec when contract changes | Spec drift breaks future agents |
 | HTML changes are still required even though full reads are forbidden | "Never read ops.html" = no full-file Read (3,500 lines). For any HTML file in the Architect's files-to-touch list: use Grep to find a sibling element ID, read ±15 lines around it, then use targeted Edit to insert. Skipping an HTML change is a partial implementation (FC-PARTIAL-IMPL). |
+| **Never use non-existent CSS classes in ops.html** | Only use design-system classes from Step 4b: `kpi-strip`, `kpi`, `kpi-ey`, `kpi-val`, `tbl-wrap`. Classes like `kpi-row`, `kpi-card`, `data-table` do not exist and will silently break layout. |
+| **Never add `style="display:none"` to a `<section>` element** | The nav system controls section visibility via `.sec.on { display:block }`. Adding inline `style="display:none"` overrides this rule (higher specificity) and makes the section permanently invisible regardless of nav state. |
+| **Always add new section ID to the SECTIONS array** | After adding a `<section id="sec-NAME">` to ops.html, grep for SECTIONS in `dashboard/js/ops/` and add `'NAME'` to the array. A section not in SECTIONS is never activated by nav clicks. |
 | **Alembic migration must be applied, not just created** | After writing a migration file, run `python -m alembic upgrade head` from `riia-jun-release/` and confirm the `Running upgrade` line before committing. Committing the file alone does NOT apply the schema change — the app will crash with `OperationalError: no such column` at runtime. This is a hard DoD gate: migration applied = confirmed upgrade output seen. |
 
 ---
@@ -260,5 +307,8 @@ tokens. This is especially critical after merge conflict resolution sessions.
 - [ ] **Error handled** — `try/catch` in JS loader; shows `—` on failure
 - [ ] **Spec updated** — endpoint added to `Spec_RITA_App.md` Experience/Ops tier; JS module added to `Spec_JS_Code.md` Section 4. **"n/a" is ONLY valid if the Architect's files-to-touch table lists zero spec rows** — any other "n/a" is FC-001 and triggers orchestrator re-invocation.
 - [ ] **HTML changes complete** — every HTML file in the Architect's files-to-touch table is edited via Grep → read ±15 lines → targeted Edit. If Architect listed zero HTML files, write "n/a". Skipping = FC-PARTIAL-IMPL.
+- [ ] **Ops HTML design system classes used** — run `grep -n "kpi-row\|kpi-card\|data-table\|kpi-container\|metric-card" dashboard/ops.html`; output must be empty. Any match = FC-HTML-CSS; replace with correct classes from Step 4b before committing.
+- [ ] **No `style="display:none"` on sections** — run `grep -n 'style=.*display:none' dashboard/ops.html`; output must be empty for any `<section>` element.
+- [ ] **SECTIONS array updated** — run `grep -rn "SECTIONS" dashboard/js/ops/`; confirm your new section ID appears in the array.
 - [ ] **Ruff passes** — `ruff check src/` returns no errors
 - [ ] **No hardcoded values** — no localhost URLs
