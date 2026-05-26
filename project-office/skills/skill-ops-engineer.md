@@ -139,6 +139,99 @@ tail -20 /var/log/nginx/error.log
 
 ---
 
+## EC2 Local Build — Emergency Deploy Procedure
+
+Use when GitHub Actions is unavailable (runner queue frozen, webhook failures, Actions outage).
+**Pre-condition:** EC2 must have ≥ 10 GB free disk. Run the disk cleanup step first.
+
+```bash
+# 1. SSH in
+ssh -i riia-jun-release/terraform/generated-key.pem -o StrictHostKeyChecking=no ubuntu@<EC2_IP>
+
+# 2. Free disk — remove all stale images (running container image is protected)
+docker image prune -a -f
+df -h /          # confirm < 50% used; need ≥ 10 GB free for the build
+
+# 3. Clone latest prod repo (shallow — faster)
+rm -rf /tmp/rita-build
+git clone --depth 1 https://<PAT>@github.com/san-work-ravionics/riia-jun-release-prod.git /tmp/rita-build
+git -C /tmp/rita-build log --oneline -1   # confirm correct HEAD SHA
+
+# 4. Start build in background (takes ~20–30 min on t3.micro)
+nohup docker build -t rita:local /tmp/rita-build > /tmp/rita-build.log 2>&1 &
+echo $!   # note the PID
+
+# 5. Poll progress (run from a separate SSH session or polling loop)
+tail -20 /tmp/rita-build.log
+df -h /
+free -h
+ps aux | grep 'docker build' | grep -v grep   # process exits when done
+
+# Key milestones to watch for in the log:
+#   "#9 DONE" — torch installed (~37s)
+#   "#10 DONE 147.2s" — all app packages installed
+#   "#11 DONE 38.9s" — embedding model downloaded
+#   "#14 All checks passed!" — ruff lint passed
+#   "#25 exporting layers" — final image export (~5–10 min silent phase)
+#   "rita:local" appears in docker images — build complete
+
+# 6. Retrieve env vars from running container (before stopping it)
+docker inspect rita --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E 'RITA|GOOGLE'
+
+# 7. Swap container
+docker stop rita && docker rm rita
+docker run -d \
+  --name rita \
+  --restart unless-stopped \
+  -p 127.0.0.1:8000:8000 \
+  -e RITA_ENV=production \
+  -e RITA_JWT_SECRET='<from step 6>' \
+  -e RITA_GOOGLE_CLIENT_ID='<from step 6>' \
+  -e RITA_GOOGLE_CLIENT_SECRET='<from step 6>' \
+  -e RITA_BASE_URL='<from step 6>' \
+  -v /opt/rita_input:/app/data:ro \
+  -v /opt/rita_output:/app/rita_output \
+  --memory 900m \
+  --log-driver awslogs \
+  --log-opt awslogs-region=ap-south-1 \
+  --log-opt awslogs-group=/rita/app \
+  --log-opt awslogs-stream=rita-container \
+  rita:local
+
+# 8. Health check
+curl http://localhost/health
+```
+
+**Memory notes for t3.micro (1 GB RAM + 2 GB swap):**
+- torch install (~37 s) uses moderate memory — swap may reach 600–700 MB — this is fine
+- venv COPY to runtime stage and layer export are disk-bound, not RAM-bound
+- If OOM occurs during pip install: re-add swap (`sudo swapon /swapfile`) and retry
+
+---
+
+## GitHub Actions Frozen Queue — Recovery Procedure
+
+**Symptom:** Run stays `queued` 30+ min, new pushes create zero runs, dispatch returns HTTP 500, cancel fails with 409.
+
+**Root cause:** A "Re-run jobs" click on a queued/failed run creates a re-run object in GitHub's pre-queue limbo. GitHub's API and UI cannot touch it until an internal timeout clears it (potentially hours).
+
+**Recovery steps:**
+1. SSH into EC2 and run EC2 Local Build (above) to deploy immediately
+2. Add `workflow_dispatch` to `deploy.yaml` and push — once GitHub unsticks, try:
+   ```bash
+   curl -s -X POST \
+     -H "Authorization: Bearer <PAT>" \
+     -H "Accept: application/vnd.github+json" \
+     "https://api.github.com/repos/san-work-ravionics/riia-jun-release-prod/actions/workflows/279526444/dispatches" \
+     -d '{"ref": "master"}'
+   # HTTP 204 = success, HTTP 500 = limbo run still active, retry later
+   ```
+3. Once the stuck run clears on its own, new push-triggered runs will resume normally
+
+**Prevention:** Never click "Re-run jobs" on an active or queued run. If a run fails, let a new push create a fresh run. Keep `workflow_dispatch` permanently in `deploy.yaml`.
+
+---
+
 ## EC2 Ops Commands (run from `riia-jun-release/` root — never from `terraform/`)
 
 ```bash

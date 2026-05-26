@@ -1,6 +1,6 @@
 # SPEC — Production Deployment
 
-**Last updated:** 2026-05-23 (deploy fixes: SSH key, swap, split SSH, CPU torch, CloudWatch logs + alarms, instrument seeding)
+**Last updated:** 2026-05-26 (EC2 disk cleanup step added to deploy.yaml; workflow_dispatch added; EC2 local build + frozen queue recovery procedures added)
 **Status:** Live on AWS EC2
 
 ---
@@ -27,10 +27,11 @@
 4. `deploy` job: checks out repo → rsyncs `data/raw/` + `data/input/` to `/opt/rita_input/` on EC2 → pulls new image → restarts container
 5. Health check polls `http://<EC2_IP>/health` from the **GitHub Actions runner** (not SSH) for up to 3 minutes
 
-**Deploy pipeline structure (updated 2026-05-23):** The deploy job runs three short SSH calls instead of one long heredoc. This prevents the session being killed by the OOM spike during container swap on the 1 GB t3.micro:
-1. **Pull image** — `docker login` + `docker pull` (network I/O only)
-2. **Swap container** — `docker stop` + `docker rm` + `docker run -d` (returns immediately, detached)
-3. **Health check** — `curl http://<EC2_IP>/health` polled from the runner, no SSH
+**Deploy pipeline structure (updated 2026-05-26):** The deploy job runs four short SSH calls:
+1. **Free EC2 disk** — `docker stop rita` + `docker rm rita` + `docker image prune -af` + `df -h`. Running BEFORE the pull so the old image becomes unused and can be freed. Prevents "no space left on device" on `libtorch_cpu.so` extraction.
+2. **Pull image** — `docker login ghcr.io` + `docker pull` (network I/O only, now against clean disk)
+3. **Swap container** — `docker run -d` (stop/rm already done in step 1)
+4. **Health check** — polled from the runner via HTTP, no SSH
 
 **Instrument CSV auto-sync (added 2026-05-20):** The `deploy` job now checks out the repo and rsyncs instrument CSVs to EC2 before container restart. To add a new instrument's data to EC2: commit the CSV files to `data/raw/{TICKER}/` and `data/input/{TICKER}/` in the prod repo — the next push deploys them automatically. No manual SCP needed.
 
@@ -228,6 +229,94 @@ sudo systemctl start docker
 | `failed to extract layer … libcufft.so.12: no space left on device` | `sentence-transformers` → PyTorch → full NVIDIA CUDA stack installed in image (~7 GB); disk fills after 1–2 failed pull attempts leave blobs in `/var/lib/containerd/` | Pre-install CPU-only torch in Dockerfile with `--extra-index-url https://download.pytorch.org/whl/cpu`; image drops from ~9 GB to ~2 GB. Clean dead blobs: stop Docker, remove `ingest/` contents, recreate dir, restart Docker |
 | `mkdir /var/lib/containerd/…/ingest/…: no such file or directory` on next pull after cleanup | Deleting the `ingest/` directory itself (rather than its contents) leaves containerd unable to create sub-entries | Always recreate the directory after cleanup: `sudo mkdir -p …/ingest/` then `sudo systemctl restart docker` |
 | Geography panel empty; no instruments shown | `startup seed` block raises `sqlite3.OperationalError: near "?": syntax error` on `UPDATE instruments … WHERE instrument_id IN :ids` — SQLite does not support tuple binding via SQLAlchemy `text()` | Replace the single `IN :ids` statement with a per-id loop: `for id in ids: db.execute(text("… WHERE instrument_id = :id"), {"id": id})` |
+| `write …/libtorch_cpu.so: no space left on device` during `docker pull` | EC2 disk full — each deploy pushes a new ~2.89 GB image without removing old ones; after several deploys the volume fills | SSH in → `docker image prune -a -f` → confirm free space → re-trigger deploy. **Permanent fix:** `deploy.yaml` now stops the old container + prunes images BEFORE the pull on every deploy |
+| GitHub Actions run stuck `queued` for 30+ min; new pushes create zero runs; `workflow_dispatch` returns HTTP 500 | Manual "Re-run jobs" click on a queued/failed run puts a re-run in GitHub's pre-queue limbo — API and UI cannot cancel or delete it | Deploy via EC2 Local Build (see section above). Add `workflow_dispatch` to `deploy.yaml` to enable manual dispatch without a push. Never click "Re-run jobs" on an active run. |
+
+---
+
+## GitHub Actions Frozen Queue — Recovery
+
+**Symptom:** Workflow run stays `queued` for 30+ minutes; new pushes create zero runs; API cancel returns 409 "Cannot cancel a workflow re-run that has not yet queued"; `workflow_dispatch` API returns HTTP 500.
+
+**Root cause:** Manually clicking "Re-run jobs" on a queued/failed run puts a re-run object into GitHub's internal pre-queue limbo. GitHub cannot cancel or delete it via API or UI. It blocks all new runs until it self-clears (hours).
+
+**Immediate action:** Deploy via EC2 Local Build (below) — this bypasses GitHub Actions entirely.
+
+**When Actions unsticks:** trigger via `workflow_dispatch` (now in `deploy.yaml` permanently):
+```bash
+curl -s -X POST \
+  -H "Authorization: Bearer <PAT>" \
+  -H "Accept: application/vnd.github+json" \
+  "https://api.github.com/repos/san-work-ravionics/riia-jun-release-prod/actions/workflows/279526444/dispatches" \
+  -d '{"ref": "master"}'
+# HTTP 204 = dispatched. HTTP 500 = limbo still active, retry in a few minutes.
+```
+
+---
+
+## EC2 Local Build — Emergency Deploy (when GitHub Actions unavailable)
+
+Bypasses the pipeline entirely. Builds the Docker image on the EC2 instance itself.
+**Pre-condition:** ≥ 10 GB free disk. Run disk cleanup first (step 2).
+
+```bash
+# 1. SSH in
+ssh -i terraform/generated-key.pem -o StrictHostKeyChecking=no ubuntu@<EC2_IP>
+
+# 2. Clean disk — old images must go first (running container image is protected by Docker)
+docker image prune -a -f
+df -h /    # target < 50% used
+
+# 3. Note current container env vars (needed to restart with new image)
+docker inspect rita --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E 'RITA|GOOGLE'
+
+# 4. Clone latest prod repo
+rm -rf /tmp/rita-build
+git clone --depth 1 https://<PAT>@github.com/san-work-ravionics/riia-jun-release-prod.git /tmp/rita-build
+git -C /tmp/rita-build log --oneline -1   # confirm HEAD SHA
+
+# 5. Build in background (~20–30 min on t3.micro)
+nohup docker build -t rita:local /tmp/rita-build > /tmp/rita-build.log 2>&1 &
+
+# 6. Poll progress
+tail -f /tmp/rita-build.log   # watch for "#25 DONE" = image ready
+
+# 7. Swap container
+docker stop rita && docker rm rita
+docker run -d --name rita --restart unless-stopped \
+  -p 127.0.0.1:8000:8000 \
+  -e RITA_ENV=production \
+  -e RITA_JWT_SECRET='<from step 3>' \
+  -e RITA_GOOGLE_CLIENT_ID='<from step 3>' \
+  -e RITA_GOOGLE_CLIENT_SECRET='<from step 3>' \
+  -e RITA_BASE_URL='<from step 3>' \
+  -v /opt/rita_input:/app/data:ro \
+  -v /opt/rita_output:/app/rita_output \
+  --memory 900m \
+  --log-driver awslogs \
+  --log-opt awslogs-region=ap-south-1 \
+  --log-opt awslogs-group=/rita/app \
+  --log-opt awslogs-stream=rita-container \
+  rita:local
+
+# 8. Health check
+curl http://localhost/health   # expect {"status":"ok"}
+```
+
+**Memory behaviour on t3.micro (1 GB RAM + 2 GB swap):**
+- torch CPU wheel install: swap peaks at ~700 MB — normal, it recedes after install
+- venv COPY + layer export: disk-bound, not RAM-bound, takes ~10 min silently
+- If OOM kills the build: `sudo swapon /swapfile` then retry from step 5
+
+**Log milestones:**
+| Log line | What it means |
+|---|---|
+| `#9 DONE` | torch installed (~37 s) |
+| `#10 DONE 147s` | all app packages installed |
+| `#11 DONE` | embedding model downloaded |
+| `#14 All checks passed!` | ruff lint clean |
+| `#25 exporting layers` | final image write (~5–10 min silent) |
+| `#25 DONE` | image ready — proceed to step 7 |
 
 ---
 

@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-05-25 (Strategy Comparison Feature 16 deployed — d21cde4; health ok)
+**Last updated:** 2026-05-26 (Feature 17 Phase 1 deployed via EC2 local build — d043def; health ok)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -171,6 +171,7 @@
 | 2026-05-25 | `fc7e9f4` | Ops monitoring overhaul — single-row stats, GitHub Deploys table, CloudWatch active alerts, endpoint availability as drift-style grid, pipeline status removed from sidebar |
 | 2026-05-25 | `d21cde4` | Strategy Comparison (Feature 16) — year toggle, scenario selector, chart, 39 unit tests; strategy-comparison.js + schema + tests deployed |
 | 2026-05-25 | `0e0f032` | users.html nav fix (Chat Analytics + Daily Ops missing items); Strategy Comparison run-20260525-1559 added to agent-ops/runs for Agent Builds page |
+| 2026-05-26 | `d043def` | Feature 17 Phase 1 — mobile UA detection in root() + IIFE snippet in 5 dashboards + /mobile gateway; EC2 disk fix in deploy.yaml. Deployed via EC2 local build (see PATTERN-011) due to GitHub Actions runner queue freeze. |
 
 ---
 
@@ -358,6 +359,24 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 - **Date first seen:** 2026-05-24
 - **Recurrences:** 0
 - **Commit fix:** `8c5f684` (trading_env.py — progress_fn for multi-seed path)
+
+---
+
+### PATTERN-011 — GitHub Actions runner queue frozen — stuck re-run blocks all new triggers
+
+- **Symptom:** A workflow run stays `queued` for 30+ minutes with no runner assigned; new pushes create zero runs (verified via API `head_sha` filter); `workflow_dispatch` API returns HTTP 500; UI cancel button fails; API cancel returns 409 "Cannot cancel a workflow re-run that has not yet queued"
+- **Root cause:** A manual "Re-run jobs" click on an older run created a re-run object in GitHub's internal queue before runners were available. The re-run enters a pre-queue limbo state that GitHub's API and UI cannot cancel or delete. All subsequent push webhooks are processed but no runs are created until the limbo run clears
+- **Fix (immediate):** SSH into EC2 and build the Docker image directly:
+  1. Clean EC2 disk first: `docker image prune -a -f`
+  2. Clone prod repo: `git clone --depth 1 https://<PAT>@github.com/san-work-ravionics/riia-jun-release-prod.git /tmp/rita-build`
+  3. Build: `nohup docker build -t rita:local /tmp/rita-build > /tmp/rita-build.log 2>&1 &`
+  4. Poll: `tail -f /tmp/rita-build.log` — takes ~20–30 min on t3.micro (torch + venv copy + layer export)
+  5. Swap: `docker stop rita && docker rm rita && docker run -d --name rita ... rita:local`
+  6. Health: `curl http://localhost/health`
+- **Fix (unblock Actions):** Add `workflow_dispatch` to `deploy.yaml`, push, then call `POST /repos/{owner}/{repo}/actions/workflows/{id}/dispatches` with `{"ref":"master"}`. This may still return 500 if the limbo run is active — retry after it clears
+- **Prevention:** Never click "Re-run jobs" on a queued or in-progress run. If a run fails, let a new push trigger a fresh run. Add `workflow_dispatch` to `deploy.yaml` permanently so manual triggers are always available without needing a push
+- **Date first seen:** 2026-05-26
+- **Recurrences:** 0
 
 ---
 
