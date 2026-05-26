@@ -146,3 +146,4 @@ window.myFunction = myFunction;
 - [ ] Every field read from API response is confirmed present in the handler's `return` dict
 - [ ] Any new `window.*` binding added to `main.js` if a new onclick handler was introduced
 - [ ] `specs/Spec_JS_Code.md` "Known Gotchas" section updated if this was a new class of bug
+- [ ] **After committing static JS/HTML changes**: tell the user to hard-refresh (`Cmd+Shift+R` on Mac, `Ctrl+Shift+R` on Windows) to clear the browser cache — the fix is on disk but browsers may serve the old cached file for minutes to hours
