@@ -124,7 +124,132 @@ Display format: `"Momentum · Trend · 2 active"` — signal type labels only, n
 
 ---
 
-## 7. Screen Binding Functions
+## 7. Gateway Hub Page (`mobileapp/gateway.html`)
+
+**Added:** Feature 17 Phase 0 (2026-05-26)
+
+A standalone HTML-only entry page served at `GET /mobile`. Acts as a universal hub linking users to the correct RITA app for their device context. No JavaScript, no UA detection — pure static HTML + inline CSS.
+
+### Route
+
+| Attribute | Value |
+|---|---|
+| Method | GET |
+| Path | `/mobile` |
+| Handler | `def mobile()` in `src/rita/main.py` |
+| Response type | `FileResponse` |
+| File served | `mobileapp/gateway.html` |
+| Auth required | No |
+| `include_in_schema` | `False` |
+| Route placement | BEFORE `app.mount("/mobileapp", ...)` static mount |
+
+### App Cards
+
+| DOM ID | Destination | Type | Colour accent |
+|---|---|---|---|
+| `card-rita` | `/mobileapp` | Mobile Ready | Green |
+| `card-invest` | `/onboarding` | Mobile Ready | Green |
+| `card-fno` | `/dashboard/fno.html?desktop=1` | Desktop Only | Amber |
+| `card-ops` | `/dashboard/ops.html?desktop=1` | Desktop Only | Amber |
+| `card-ds` | `/dashboard/ds.html?desktop=1` | Desktop Only | Amber |
+| `footer-desktop-link` | `/dashboard` | Footer escape-hatch | — |
+
+### Design Rules
+
+- CSS tokens: same `:root` block as `mobileapp/index.html` (`--bg`, `--surface`, `--build`, `--warn`, `--fd`, `--fm`, `--fs`)
+- Layout: 2-column card grid ≥ 400 px; single column < 400 px (`@media (max-width: 399px)`)
+- Page shell: `max-width: 600px` centred
+- Mobile Ready cards: green accent bar + filled green CTA button "Open App →"
+- Desktop Only cards: amber accent bar + text link "Open anyway ↗" + muted `surface2` background
+- No `<script>` tags anywhere in `gateway.html`
+- All CSS inline — no external stylesheet references
+
+### Agent Directives (Phase 0)
+
+1. Do not add `<script>` tags to `gateway.html` in any phase.
+2. ~~Do not add UA detection or redirect logic to `main.py` in Phase 0.~~ **Lifted in Phase 1** — see Section 8 below.
+3. `?desktop=1` query param on desktop links is a convention — no server-side handler is required in Phase 0.
+4. The `/mobile` route must remain registered BEFORE the `/mobileapp` static mount in `main.py` to prevent route shadowing.
+
+---
+
+## 8. Mobile Detection — Phase 1 (`root()` UA Check + Dashboard JS Snippet)
+
+**Added:** Feature 17 Phase 1 (2026-05-26)
+
+Phase 1 adds automatic mobile redirection in two layers:
+1. **Server-side UA check** in the `root()` handler (`GET /`) — mobile UAs are redirected to `/mobile` instead of `/dashboard`.
+2. **Client-side inline IIFE snippet** inserted as the first `<script>` inside `<head>` on all 5 desktop dashboard HTML files — catches users who arrive directly at a dashboard URL via bookmark or link.
+
+### Server-Side UA Detection (`main.py`)
+
+```python
+import re
+from fastapi import Request
+
+_MOBILE_UA_RE = re.compile(r"Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini", re.IGNORECASE)
+
+@app.get("/", include_in_schema=False)
+def root(request: Request):
+    ua = request.headers.get("user-agent", "")
+    if _MOBILE_UA_RE.search(ua):
+        return RedirectResponse(url="/mobile", status_code=302)
+    return RedirectResponse(url="/dashboard", status_code=302)
+```
+
+- Regex uses `re.IGNORECASE` and `.search()` (not `.match()`) — matches anywhere in the UA string.
+- Desktop UA → `302 /dashboard` (no regression from Phase 0).
+- Mobile UA → `302 /mobile` (gateway hub).
+
+### Client-Side JS Snippet (Dashboard HTML Files)
+
+Inserted as the first `<script>` immediately after `<meta name="viewport">` in `<head>`.
+
+**Template (replace `APPNAME` with file-specific token):**
+
+```html
+<script>
+(function(){
+  var p = new URLSearchParams(location.search);
+  if (p.get('desktop') === '1') { sessionStorage.setItem('mobileBypass','1'); return; }
+  if (sessionStorage.getItem('mobileBypass') === '1') return;
+  var mobile = /Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  var narrow = window.innerWidth < 768 && window.matchMedia('(pointer:coarse)').matches;
+  if (mobile || narrow) location.replace('/mobile?from=APPNAME');
+})();
+</script>
+```
+
+**APPNAME token table:**
+
+| File | APPNAME token |
+|---|---|
+| `riia-jun-release/dashboard/rita.html` | `rita` |
+| `riia-jun-release/dashboard/fno.html` | `fno` |
+| `riia-jun-release/dashboard/ops.html` | `ops` |
+| `riia-jun-release/dashboard/ds.html` | `ds` |
+| `riia-jun-release/dashboard/investgame.html` | `investgame` |
+
+Note: `investgame_v2.html` and `users.html` are explicitly excluded from Phase 1.
+
+### `?desktop=1` / `sessionStorage.mobileBypass` Escape-Hatch Convention
+
+- Appending `?desktop=1` to any dashboard URL sets `sessionStorage.mobileBypass = '1'` and skips the redirect for the session.
+- The `sessionStorage` key persists across tab navigation within the same browser session but resets when the tab/session closes (not `localStorage`).
+- No server-side handler is required for `?desktop=1` — it is consumed entirely by the client-side snippet.
+- The `?from=APPNAME` query param on `/mobile` redirects is informational — the `GET /mobile` handler silently ignores it (Phase 0 behaviour unchanged).
+
+### Agent Directives (Phase 1)
+
+1. The `_MOBILE_UA_RE` constant must be defined at module level in `main.py`, not inside `root()`.
+2. Always use `.search()` not `.match()` — `.match()` only checks the start of the string and will miss UA strings with a prefix.
+3. The JS snippet must be the first `<script>` in `<head>` — place it immediately after the `<meta name="viewport">` line.
+4. The snippet is a synchronous IIFE — it is NOT registered in `main.js` and NOT a JS module.
+5. `investgame_v2.html` and `users.html` are excluded — do not add the snippet to those files.
+
+---
+
+## 10. Screen Binding Functions
 
 | Function | Source data | DOM bindings |
 |---|---|---|
@@ -139,7 +264,7 @@ Display format: `"Momentum · Trend · 2 active"` — signal type labels only, n
 
 ---
 
-## 8. Factor Bar Mapping
+## 11. Factor Bar Mapping
 
 Market screen (s2) and Market Feed (s7) use 4 factor bars derived from the latest `market-signals` row:
 
@@ -152,7 +277,7 @@ Volatility bar = atr_14 / close_price  (normalized, capped at 1)
 
 ---
 
-## 9. Sparkline Generation
+## 12. Sparkline Generation
 
 Portfolio holdings (s8) use SVG polylines derived from `price-history` data:
 
@@ -167,7 +292,7 @@ function pricesToPolyline(prices, w=200, h=60) {
 
 ---
 
-## 10. Live Toggle
+## 13. Live Toggle
 
 DOM: `#liveToggle` (42×24px rounded div) + `#liveToggleKnob` + `#liveStatusDot`
 
@@ -189,7 +314,7 @@ function updateToggleUI() {
 
 ---
 
-## 11. Trade Decisions List (Strategy screen s4)
+## 14. Trade Decisions List (Strategy screen s4)
 
 Source: `GET /api/v1/trade-events` — last 4 entries displayed as:
 ```
@@ -199,7 +324,7 @@ Example: `"24 Apr · entry · NIFTY"`
 
 ---
 
-## 12. PWA Files
+## 15. PWA Files
 
 | File | Purpose |
 |---|---|
@@ -211,7 +336,7 @@ Example: `"24 Apr · entry · NIFTY"`
 
 ---
 
-## 13. Integration Status
+## 16. Integration Status
 
 All 10 integration steps are complete:
 
@@ -230,7 +355,7 @@ All 10 integration steps are complete:
 
 ---
 
-## 14. AI Agent Directives
+## 17. AI Agent Directives
 
 1. **Single file** — all changes go into `index.html`. No new `.js` or `.css` files.
 2. **Fallback required** — every API binding must check `if (!data) return` before accessing fields.

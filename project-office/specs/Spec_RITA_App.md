@@ -34,10 +34,12 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 - `api/v1/workflow/chat.py` — Local intent classifier chat
 
 **Application entrypoints in `main.py`:**
+- `GET /` — UA-based conditional redirect: mobile UA (Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini) → `302 /mobile`; desktop → `302 /dashboard` (Feature 17 Phase 1; Phase 0 was desktop-only `302 /dashboard`)
 - `/health` — liveness probe (model file check + data freshness + Sharpe trend)
 - `/progress` — pipeline step statuses for dashboard progress bar
 - `/reset` — stateless acknowledgement
 - `/readyz` — readiness probe (SELECT 1 on DB)
+- `/mobile` — serves `mobileapp/gateway.html` (Feature 17 Phase 0; registered before `/mobileapp` static mount)
 - `/dashboard` — static file mount (catch-all)
 - `/mobileapp` — static file mount for `riia-jun-release/mobileapp/` (added Feature 12B)
 
