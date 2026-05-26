@@ -239,4 +239,37 @@ All 10 integration steps are complete:
 5. **`LIVE_MODE` check** — never call API functions if `LIVE_MODE` is false; respect the toggle.
 6. **SVG sparklines** — use `pricesToPolyline()` helper, not Chart.js (too heavy for mobile).
 7. **Factor bars** — use the threshold mapping in Section 8 exactly; do not invent new signal logic.
+
+---
+
+## 7. Gateway Hub (`/mobile`)
+
+**File:** `riia-jun-release/mobileapp/gateway.html`
+**Route:** `GET /mobile` — served via `FileResponse` in `src/rita/main.py`
+**Auth:** None — public page
+
+### Purpose
+Entry point for mobile users. Presents all RITA platform apps as cards, clearly labelled as Mobile Ready or Desktop Only.
+
+### App Cards
+
+| Card ID | App | Status | Link |
+|---|---|---|---|
+| `card-rita` | RITA Trading | Mobile Ready | `/mobileapp` |
+| `card-invest` | Invest Game | Mobile Ready | `/onboarding` |
+| `card-fno` | FnO Portfolio | Desktop Only | `/dashboard/fno.html?desktop=1` |
+| `card-ops` | Ops Dashboard | Desktop Only | `/dashboard/ops.html?desktop=1` |
+| `card-ds` | Data Science | Desktop Only | `/dashboard/ds.html?desktop=1` |
+
+### `?desktop=1` Escape Hatch Convention
+All Desktop Only links append `?desktop=1`. In Phase 1+, the client-side detection snippet on each dashboard HTML file reads this param and sets `sessionStorage.mobileBypass = '1'`, suppressing further redirects for the browser session.
+
+### Route Placement
+The `GET /mobile` route is defined BEFORE the `app.mount("/mobileapp", ...)` static mount in `main.py` to prevent the mount from shadowing the route.
+
+### Design
+- No `<script>` tags — pure static HTML/CSS
+- CSS tokens match `mobileapp/index.html` (:root variables)
+- 2-column card grid ≥400px; single column <400px
+- `max-width: 600px` page shell, centred
 8. **No timestamps on signals** — display signal type labels only (e.g. "Momentum · Trend").
