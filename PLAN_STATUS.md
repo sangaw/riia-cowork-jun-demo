@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-27 — Feature 14 i18n Phase 2 Run A complete. t() wired into 12 RITA+FnO section loaders; 180 locale keys added across en/nl/fr (411 total). 93 QA tests pass. Confluence Engineering v32→v33. 6 advisory call-site fixes deferred to follow-up commit.
+**Last updated:** 2026-05-27 — Feature 14 i18n Phase 2 Run A complete + Feature 25 ASML Equity Hedge Scenarios continuation complete. 14 unit tests committed to master (test_equity_hedge.py), PLAN_STATUS.md updated, Confluence Engineering v34→v35. Merged at 405d7cf.
 
 **Session work (2026-05-24):**
 - **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
@@ -53,6 +53,7 @@
 - **Commits pushed to prod:** `d043def` (Feature 17 + disk fix), `c749f75` (webhook nudge), `1a0f65b` (workflow_dispatch).
 
 **Session work (2026-05-27):**
+- **Feature 25 ASML Equity Hedge Scenarios — continuation COMPLETE.** QA + documentation completion pass: 14 unit tests written and confirmed passing (`tests/unit/test_equity_hedge.py` — happy path + edge cases for < 5 trading days + zero-vol fallback). API-frontend contract verified (26 response fields, 0 mismatches). Feature 25 PLAN_STATUS.md updated to `[x] Complete`. Confluence Engineering page v34→v35. Merged at `405d7cf`. 2 aggregate_metrics alerts flagged (FC-HTML-CSS from prior ops run; CSAT 2.67/5 recent — run `/agent-performance-improvements`).
 - **Feature 14 i18n Phase 2 Run A COMPLETE.** t() wired into all 12 remaining RITA+FnO section loaders: agent-panel.js, ai-compliance.js, technical-analysis.js, learnings.js (RITA) and positions.js, margin.js, greeks.js, hedge.js, manoeuvre.js, payoff.js, rr.js, stress.js (FnO). ~180 new locale keys added across en/nl/fr (411 total keys per file, parity confirmed). Locale key parity verified by 93 QA tests (test_i18n_locale_parity.py). Code Review: CONDITIONAL — 6 advisory call-site fixes (status/kpi keys already in locale files; deferred to follow-up commit). Confluence Engineering page v32→v33. Merged at 6460d9d (feat commit ba69cc3).
 
 **Session work (2026-05-26) — continued:**

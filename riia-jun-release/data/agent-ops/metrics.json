@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-27T10:11:13",
+  "generated_at": "2026-05-27T15:44:22",
   "total_runs": 64,
   "per_role": {
     "pm": {
@@ -817,17 +817,17 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 3769,
-    "unique_endpoints": 135,
-    "overall_error_rate_pct": 8.65,
-    "error_rate_5xx_pct": 0.19,
+    "total_calls": 3880,
+    "unique_endpoints": 137,
+    "overall_error_rate_pct": 8.4,
+    "error_rate_5xx_pct": 0.18,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 531,
-        "p50_ms": 5.4,
-        "p95_ms": 104.9,
+        "count": 537,
+        "p50_ms": 5.5,
+        "p95_ms": 109.3,
         "error_count": 0
       },
       {
@@ -841,28 +841,28 @@
       {
         "path": "/api/v1/commentary",
         "method": "POST",
-        "count": 269,
-        "p50_ms": 101.5,
-        "p95_ms": 730.2,
+        "count": 277,
+        "p50_ms": 103.5,
+        "p95_ms": 819.1,
         "error_count": 42
       },
       {
         "path": "/api/v1/experience/rita/geography-overview",
         "method": "GET",
-        "count": 259,
-        "p50_ms": 8.5,
-        "p95_ms": 687.2,
+        "count": 267,
+        "p50_ms": 8.7,
+        "p95_ms": 694.3,
         "error_count": 0
       },
       {
         "path": "/api/experience/ops/functional-kpis",
         "method": "GET",
-        "count": 236,
+        "count": 238,
         "p50_ms": 8.2,
-        "p95_ms": 293.9,
+        "p95_ms": 315.8,
         "error_count": 20
       }
     ],
-    "generated_at": "2026-05-27T08:11:13.783736+00:00"
+    "generated_at": "2026-05-27T13:44:22.225032+00:00"
   }
 }
