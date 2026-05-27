@@ -69,6 +69,7 @@ export async function syncPriceHistory() {
 export function getProgressDir(und, mode) {
   const history = loadHistory();
   if (history.length < 2) return 'neutral';
+  if (!state.scenarioLevels?.[und]?.[mode]) return 'neutral';
   const key = und === 'NIFTY' ? 'nifty' : 'banknifty';
   const todayC = history[history.length - 1][key];
   const yestC  = history[history.length - 2][key];
@@ -93,6 +94,7 @@ export function computeScen(sl, target, current, delta) {
 }
 
 export function renderScenCard(und, mode) {
+  if (!_hasScenLevels(und)) return '';
   const current = state.marketData[und].close;
   const isBull  = mode === 'bull';
   const { sl, target } = state.scenarioLevels[und][mode];
@@ -160,6 +162,7 @@ export function renderView(und, mode) {
 }
 
 export function renderBullBearKpis(und) {
+  if (!_hasScenLevels(und)) return '';
   const exp = p => state.currentExpiry === 'ALL' || p.exp === state.currentExpiry;
   const bullPnl = state.positions.filter(p => p.und === und && exp(p) && getBullBear(p) === 'bull').reduce((s, p) => s + p.pnl, 0);
   const bearPnl = state.positions.filter(p => p.und === und && exp(p) && getBullBear(p) === 'bear').reduce((s, p) => s + p.pnl, 0);
@@ -210,8 +213,9 @@ export function renderBullBearTable(und, mode) {
 export function renderRRHistory() {
   const history = loadHistory();
   if (!history.length) return `<div class="info-note" style="margin-top:18px;">${t('rr.no_history_hint')}</div>`;
+  if (!_hasScenLevels('NIFTY') || !_hasScenLevels('BANKNIFTY')) return '';
   const rows = [...history].reverse().map((h, i) => {
-    const isToday = h.date === state.marketData.NIFTY.date;
+    const isToday = h.date === state.marketData.NIFTY?.date;
     const nBull = computeScen(state.scenarioLevels.NIFTY.bull.sl,     state.scenarioLevels.NIFTY.bull.target,     h.nifty,     state.portDelta.NIFTY).pct;
     const nBear = computeScen(state.scenarioLevels.NIFTY.bear.sl,     state.scenarioLevels.NIFTY.bear.target,     h.nifty,     state.portDelta.NIFTY).pct;
     const bBull = computeScen(state.scenarioLevels.BANKNIFTY.bull.sl, state.scenarioLevels.BANKNIFTY.bull.target, h.banknifty, state.portDelta.BANKNIFTY).pct;
@@ -263,26 +267,41 @@ export function renderRRHistory() {
   </div>`;
 }
 
+function _hasScenLevels(und) {
+  return state.scenarioLevels?.[und]?.bull && state.scenarioLevels?.[und]?.bear
+      && state.marketData?.[und];
+}
+
 export function renderScenarios() {
   document.getElementById('nifty-scen-section').style.display     = state.currentUnd === 'BANKNIFTY' ? 'none' : '';
   document.getElementById('banknifty-scen-section').style.display = state.currentUnd === 'NIFTY'     ? 'none' : '';
 
   if (state.currentUnd !== 'BANKNIFTY') {
-    document.getElementById('nifty-rr-kpis').innerHTML  = renderBullBearKpis('NIFTY');
-    document.getElementById('nifty-rr-views').innerHTML = renderView('NIFTY', 'bull') + renderView('NIFTY', 'bear');
+    if (_hasScenLevels('NIFTY')) {
+      document.getElementById('nifty-rr-kpis').innerHTML  = renderBullBearKpis('NIFTY');
+      document.getElementById('nifty-rr-views').innerHTML = renderView('NIFTY', 'bull') + renderView('NIFTY', 'bear');
+    } else {
+      document.getElementById('nifty-rr-views').innerHTML = '<div style="padding:20px;font-family:var(--fm);font-size:12px;color:var(--t3);">No scenario levels available for NIFTY.</div>';
+    }
   }
   if (state.currentUnd !== 'NIFTY') {
-    document.getElementById('banknifty-rr-kpis').innerHTML  = renderBullBearKpis('BANKNIFTY');
-    document.getElementById('banknifty-rr-views').innerHTML = renderView('BANKNIFTY', 'bull') + renderView('BANKNIFTY', 'bear');
+    if (_hasScenLevels('BANKNIFTY')) {
+      document.getElementById('banknifty-rr-kpis').innerHTML  = renderBullBearKpis('BANKNIFTY');
+      document.getElementById('banknifty-rr-views').innerHTML = renderView('BANKNIFTY', 'bull') + renderView('BANKNIFTY', 'bear');
+    } else {
+      document.getElementById('banknifty-rr-views').innerHTML = '<div style="padding:20px;font-family:var(--fm);font-size:12px;color:var(--t3);">No scenario levels available for BANKNIFTY.</div>';
+    }
   }
 
-  const summaryDefs = ['NIFTY', 'BANKNIFTY'].flatMap(und => ['bull', 'bear'].map(mode => ({
-    und, mode: mode.charAt(0).toUpperCase() + mode.slice(1),
-    sl:     state.scenarioLevels[und][mode].sl,
-    target: state.scenarioLevels[und][mode].target,
-    cur:    state.marketData[und].close,
-    delta:  state.portDelta[und]
-  }))).filter(r => state.currentUnd === 'ALL' || r.und === state.currentUnd);
+  const summaryDefs = ['NIFTY', 'BANKNIFTY']
+    .filter(und => _hasScenLevels(und))
+    .flatMap(und => ['bull', 'bear'].map(mode => ({
+      und, mode: mode.charAt(0).toUpperCase() + mode.slice(1),
+      sl:     state.scenarioLevels[und][mode].sl,
+      target: state.scenarioLevels[und][mode].target,
+      cur:    state.marketData[und].close,
+      delta:  state.portDelta[und]
+    }))).filter(r => state.currentUnd === 'ALL' || r.und === state.currentUnd);
 
   const summaryRows = summaryDefs.map(r => {
     const sc      = computeScen(r.sl, r.target, r.cur, r.delta);
@@ -311,7 +330,7 @@ export function renderScenarios() {
   document.getElementById('scen-summary-card').innerHTML = `
     <div class="card-hdr">
       <span class="card-title">${t('rr.rr_summary')}</span>
-      <span class="card-sub">Net Δ: NIFTY ${state.portDelta.NIFTY} · BANKNIFTY ${state.portDelta.BANKNIFTY} · ↑ = moving toward target</span>
+      <span class="card-sub">Net Δ: NIFTY ${state.portDelta.NIFTY ?? '—'} · BANKNIFTY ${state.portDelta.BANKNIFTY ?? '—'} · ↑ = moving toward target</span>
     </div>
     <div class="card-body" style="padding:0">
       <div class="tbl-wrap">

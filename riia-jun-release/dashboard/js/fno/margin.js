@@ -56,9 +56,15 @@ export function renderMarginKpis() {
 export function updateMarginSections() {
   document.getElementById('nifty-margin-section').style.display     = state.currentUnd === 'BANKNIFTY' ? 'none' : '';
   document.getElementById('banknifty-margin-section').style.display = state.currentUnd === 'NIFTY'     ? 'none' : '';
-  // Rebuild margin chart from API data
+  const asmlSection = document.getElementById('asml-margin-section');
+  if (asmlSection) {
+    const hasAsml = state.equityHedgeData != null;
+    asmlSection.style.display = (hasAsml && state.currentUnd !== 'NIFTY' && state.currentUnd !== 'BANKNIFTY') ? '' : 'none';
+  }
+  // Rebuild margin chart from API data (exclude EUR equity positions to keep INR scale clean)
   const byPos = (state.marginData.by_position || [])
     .filter(p => (state.currentUnd === 'ALL' || p.und === state.currentUnd) && (state.currentExpiry === 'ALL' || p.exp === state.currentExpiry))
+    .filter(p => !p._from_eq_hedge)
     .filter(p => p.span > 0 || p.type === 'FUT');
   const cats  = byPos.map(p => p.full.length > 16 ? p.full.slice(0, 15) + '…' : p.full);
   const spanD = byPos.map(p => p.span);
@@ -132,4 +138,33 @@ export function renderMarginTables() {
 
   fillTable('NIFTY',     'nifty-margin-tbody', 'nifty-margin-footer');
   fillTable('BANKNIFTY', 'bnkn-margin-tbody',  'bnkn-margin-footer');
+
+  // ASML equity hedge positions (EUR-denominated, separate from INR tables)
+  if (state.equityHedgeData) {
+    const fmtE = v => '€' + Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const instrument = (document.getElementById('eh-instrument')?.value || 'ASML').trim().toUpperCase();
+    const asmlRows = (state.marginData.by_position || [])
+      .filter(p => p._from_eq_hedge && (state.currentExpiry === 'ALL' || p.exp === state.currentExpiry));
+    const asmlTbody = document.getElementById('asml-margin-tbody');
+    const asmlFooter = document.getElementById('asml-margin-footer');
+    if (asmlTbody) {
+      asmlTbody.innerHTML = asmlRows.map(p => `<tr>
+        <td>${p.full}</td>
+        <td><span class="exp-badge">${p.exp}</span></td>
+        <td><span class="inst-badge ${p.type.toLowerCase()}">${p.type}</span></td>
+        <td><span class="side-badge ${p.side.toLowerCase()}">${p.side}</span></td>
+        <td class="val">${p.qty}</td>
+        <td class="val">${p.span > 0 ? fmtE(p.span) : '—'}</td>
+        <td class="val">${p.exposure > 0 ? fmtE(p.exposure) : 'Premium paid'}</td>
+        <td class="val" style="font-weight:600">${fmtE(p.total)}</td>
+      </tr>`).join('');
+    }
+    if (asmlFooter) {
+      const s = (state.marginData.summary || {})[instrument] || {};
+      asmlFooter.innerHTML = `
+        <span class="lbl">${instrument} SPAN:</span><span class="val">${fmtE(s.span || 0)}</span>
+        <span class="lbl">Exposure:</span><span class="val">${fmtE(s.exposure || 0)}</span>
+        <span class="lbl">Total (Est.):</span><span class="val" style="font-weight:700">${fmtE(s.total || 0)}</span>`;
+    }
+  }
 }

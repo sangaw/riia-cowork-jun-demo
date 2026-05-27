@@ -7,8 +7,89 @@ const RITA_API_KEY = '';
 let _portfolioChart = null;
 let _payoffChart = null;
 
+const _MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
 function _fmtEur(v) {
   return '€' + Number(v).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function _parseStrike(label) {
+  const m = label.match(/[\d.]+/g);
+  return m ? parseFloat(m[m.length - 1]) : 0;
+}
+
+// ── Inject ASML equity hedge positions/market/margin data into shared state ──
+export function injectAsmlToState() {
+  const data = state.equityHedgeData;
+  if (!data) return;
+
+  const p  = data.portfolio;
+  const hs = data.hedge_scenarios;
+  const mb = hs.mild_bearish;
+  const sb = hs.strong_bearish;
+
+  const instrument = (document.getElementById('eh-instrument')?.value || 'ASML').trim().toUpperCase();
+  const nShares    = parseInt(document.getElementById('eh-n-shares')?.value || '10', 10);
+  const endDate    = document.getElementById('eh-end-date')?.value || '2025-01-31';
+  const expLabel   = _MONTHS[new Date(endDate + 'T00:00:00').getMonth()] || 'EXP';
+
+  // Remove stale entries from a prior inject
+  state.positions = (state.positions || []).filter(pos => !pos._from_eq_hedge);
+  state.marginData.by_position = (state.marginData.by_position || []).filter(m => !m._from_eq_hedge);
+
+  const ccPremiumPerShare = mb.total_premium_eur / nShares;
+  const ppPremiumPerShare = Math.abs(sb.total_premium_eur) / nShares;
+
+  // Covered Call (Short CE) + Protective Put (Long PE) as positions
+  state.positions = [
+    ...state.positions,
+    {
+      und: instrument, full: mb.strike_label, exp: expLabel, type: 'CE', side: 'Short',
+      strike: _parseStrike(mb.strike_label), qty: nShares,
+      avg: ccPremiumPerShare, ltp: ccPremiumPerShare, chg: 0,
+      pnl: mb.total_premium_eur, currency: 'EUR', _from_eq_hedge: true,
+    },
+    {
+      und: instrument, full: sb.strike_label, exp: expLabel, type: 'PE', side: 'Long',
+      strike: _parseStrike(sb.strike_label), qty: nShares,
+      avg: ppPremiumPerShare, ltp: ppPremiumPerShare, chg: 0,
+      pnl: -Math.abs(sb.total_premium_eur), currency: 'EUR', _from_eq_hedge: true,
+    },
+  ];
+
+  // ASML market data derived from equity hedge portfolio
+  const dailyPrices = (p.daily || []).map(d => d.value / nShares);
+  const lastDay = p.daily?.[p.daily.length - 1];
+  state.marketData[instrument] = {
+    close: p.end_price, open: p.start_price,
+    high:  dailyPrices.length ? Math.max(...dailyPrices) : p.end_price,
+    low:   dailyPrices.length ? Math.min(...dailyPrices) : p.start_price,
+    date:  lastDay?.date || endDate,
+    chgFromOpen: p.return_pct, chgFromPrev: null, prevClose: p.start_price,
+    shares: `${nShares} shares`, turnover: null,
+    vol_30d: p.vol_30d_pct, currency: 'EUR', _from_eq_hedge: true,
+  };
+
+  // Covered call requires margin; long put is just premium paid
+  const ccMarginSpan = mb.max_value_eur * 0.12;
+  const ccMarginExp  = mb.max_value_eur * 0.08;
+  state.marginData.by_position = [
+    ...state.marginData.by_position,
+    { und: instrument, full: mb.strike_label, exp: expLabel, type: 'CE', side: 'Short', qty: nShares,
+      span: ccMarginSpan, exposure: ccMarginExp, total: ccMarginSpan + ccMarginExp, _from_eq_hedge: true },
+    { und: instrument, full: sb.strike_label, exp: expLabel, type: 'PE', side: 'Long',  qty: nShares,
+      span: 0, exposure: 0, total: ppPremiumPerShare * nShares, _from_eq_hedge: true },
+  ];
+
+  const asmlByPos = state.marginData.by_position.filter(m => m.und === instrument);
+  state.marginData.summary = state.marginData.summary || {};
+  state.marginData.summary[instrument] = {
+    span:     asmlByPos.reduce((s, m) => s + m.span, 0),
+    exposure: asmlByPos.reduce((s, m) => s + m.exposure, 0),
+    total:    asmlByPos.reduce((s, m) => s + m.total, 0),
+  };
+
+  document.dispatchEvent(new CustomEvent('rita:asml-state-updated'));
 }
 
 export async function loadEquityHedge(forceRefresh = false) {
@@ -42,6 +123,7 @@ export async function loadEquityHedge(forceRefresh = false) {
     if (loadEl) loadEl.style.display = 'none';
     if (resEl)  resEl.style.display = 'block';
     renderEquityHedge(data);
+    injectAsmlToState();
   } catch (e) {
     if (loadEl) { loadEl.textContent = 'Error: ' + e.message; loadEl.style.display = 'flex'; }
     if (resEl)  resEl.style.display = 'none';
@@ -95,7 +177,7 @@ export function renderEquityHedge(data) {
         data: {
           labels: p.daily.map(d => d.date),
           datasets: [{
-            label: `ASML × ${(document.getElementById('eh-n-shares')?.value || '10')} shares`,
+            label: `${(document.getElementById('eh-instrument')?.value || 'ASML')} × ${(document.getElementById('eh-n-shares')?.value || '10')} shares`,
             data: p.daily.map(d => d.value),
             borderColor: 'var(--p04)', backgroundColor: 'rgba(107,47,160,0.08)',
             borderWidth: 2, pointRadius: 2, tension: 0.3, fill: true,
@@ -118,6 +200,7 @@ export function renderEquityHedge(data) {
   const payCtx = document.getElementById('eh-payoff-chart');
   if (payCtx) {
     requestAnimationFrame(() => {
+      const instrument = (document.getElementById('eh-instrument')?.value || 'ASML').trim().toUpperCase();
       const xLabels = pc.price_range.map(v => _fmtEur(v));
       _payoffChart = new Chart(payCtx, {
         type: 'line',
@@ -137,7 +220,7 @@ export function renderEquityHedge(data) {
             tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${_fmtEur(ctx.raw)}` } },
           },
           scales: {
-            x: { grid: { display: false }, title: { display: true, text: 'ASML price at expiry', font: { family: 'IBM Plex Mono', size: 10 } }, ticks: { font: { family: 'IBM Plex Mono', size: 9 }, maxTicksLimit: 10 } },
+            x: { grid: { display: false }, title: { display: true, text: `${instrument} price at expiry`, font: { family: 'IBM Plex Mono', size: 10 } }, ticks: { font: { family: 'IBM Plex Mono', size: 9 }, maxTicksLimit: 10 } },
             y: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { family: 'IBM Plex Mono', size: 10 }, callback: v => _fmtEur(v) } },
           },
         },

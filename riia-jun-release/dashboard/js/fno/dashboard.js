@@ -22,7 +22,9 @@ export function renderDashKpis() {
     : (state.portDelta[state.currentUnd] || 0);
   const nCnt = state.positions.filter(p => p.und === 'NIFTY' && (state.currentExpiry === 'ALL' || p.exp === state.currentExpiry)).length;
   const bCnt = state.positions.filter(p => p.und === 'BANKNIFTY' && (state.currentExpiry === 'ALL' || p.exp === state.currentExpiry)).length;
-  const subLine = state.currentUnd === 'ALL' ? `${nCnt} NIFTY · ${bCnt} BANKNIFTY`
+  const aCnt = state.positions.filter(p => p._from_eq_hedge && (state.currentExpiry === 'ALL' || p.exp === state.currentExpiry)).length;
+  const asmlPart = aCnt > 0 ? ` · ${aCnt} ASML` : '';
+  const subLine = state.currentUnd === 'ALL' ? `${nCnt} NIFTY · ${bCnt} BANKNIFTY${asmlPart}`
                 : `${filtered.length} ${state.currentUnd} positions`;
   const closedCnt = state.closedPositions.filter(p => state.currentUnd === 'ALL' || p.underlying === state.currentUnd).length;
 
@@ -35,16 +37,60 @@ export function renderDashKpis() {
   `;
 }
 
+function _fmtEur(v) {
+  return '€' + Number(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function _renderEquityCard(u, d) {
+  const retChg   = parseFloat(d.chgFromOpen);
+  const retClass = retChg >= 0 ? 'pos' : 'neg';
+  const range    = d.high - d.low;
+  const rangePct = range > 0 ? Math.round(((d.close - d.low) / range) * 100) : 50;
+  return `<div class="mkt-card" style="border-left:4px solid var(--p03)">
+    <div class="mkt-hdr">
+      <span class="mkt-name">${u} <span style="font-family:var(--fm);font-size:11px;color:var(--t3);">Equity</span></span>
+      <span class="mkt-date">${d.date}</span>
+    </div>
+    <div class="mkt-close">${_fmtEur(d.close)}</div>
+    <div class="mkt-chg ${retClass}" style="margin-top:2px;">
+      ${retChg >= 0 ? '▲ +' : '▼ '}${Math.abs(retChg).toFixed(2)}% period return
+      &nbsp;<span style="font-weight:400;opacity:.75">(from ${_fmtEur(d.prevClose)})</span>
+    </div>
+    <div class="mkt-range-bar" style="margin-top:8px;">
+      <div class="mkt-range-fill" style="background:var(--p03);left:0;width:${rangePct}%;"></div>
+    </div>
+    <div class="mkt-ohlc">
+      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">Start</div><div class="mkt-ohlc-val">${_fmtEur(d.open)}</div></div>
+      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">High</div><div class="mkt-ohlc-val" style="color:var(--pos)">${_fmtEur(d.high)}</div></div>
+      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">Low</div><div class="mkt-ohlc-val" style="color:var(--neg)">${_fmtEur(d.low)}</div></div>
+      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">End</div><div class="mkt-ohlc-val">${_fmtEur(d.close)}</div></div>
+    </div>
+    <div class="mkt-stats">
+      <span>Vol 30d: ${d.vol_30d != null ? d.vol_30d.toFixed(1) + '%' : '—'}</span>
+      <span>${d.shares}</span>
+    </div>
+  </div>`;
+}
+
 export function renderMarketSnapshot() {
   const grid = document.getElementById('mkt-grid');
-  const underlyings = state.currentUnd === 'ALL'
-    ? ['NIFTY', 'BANKNIFTY']
-    : state.marketData[state.currentUnd] ? [state.currentUnd] : [];
+  let underlyings;
+  if (state.currentUnd === 'ALL') {
+    underlyings = ['NIFTY', 'BANKNIFTY'];
+    if (state.marketData['ASML']?._from_eq_hedge) underlyings.push('ASML');
+  } else {
+    underlyings = state.marketData[state.currentUnd] ? [state.currentUnd] : [];
+  }
   if (!underlyings.length) { grid.innerHTML = ''; return; }
-  grid.className = `mkt-grid ${underlyings.length === 1 ? 'c1' : 'c2'}`;
+  const cols = underlyings.length >= 3 ? 'c3' : underlyings.length === 2 ? 'c2' : 'c1';
+  grid.className = `mkt-grid ${cols}`;
 
   grid.innerHTML = underlyings.map(u => {
-    const d        = state.marketData[u];
+    const d = state.marketData[u];
+    if (!d) return '';
+
+    if (d._from_eq_hedge) return _renderEquityCard(u, d);
+
     const dayChg   = parseFloat(d.chgFromOpen);
     const prevChg  = d.chgFromPrev != null ? parseFloat(d.chgFromPrev) : null;
     const range    = d.high - d.low;

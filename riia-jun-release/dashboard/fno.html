@@ -230,6 +230,8 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 .und-section-tag{font-family:var(--fm);font-size:11px;font-weight:600;padding:3px 10px;border-radius:var(--r);}
 .und-section-tag.nifty{background:var(--p02-bg);color:var(--p02);border:1px solid var(--p02-bd);}
 .und-section-tag.banknifty{background:var(--p04-bg);color:var(--p04);border:1px solid var(--p04-bd);}
+.und-section-tag.asml{background:var(--p03-bg);color:var(--p03);border:1px solid var(--p03-bd);}
+.mkt-grid.c3{grid-template-columns:repeat(3,1fr);}
 
 /* ── Scenario cards ──────────────────────────────────────── */
 .scenario-pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
@@ -398,29 +400,6 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 
 <!-- ── Sidebar ─────────────────────────────────────────────── -->
 <div class="sidebar">
-  <div class="nav-section mkt-price-block">
-    <div class="nav-label">Instrument Filter</div>
-    <div class="mkt-price-item active" data-und="ALL" onclick="setUnderlying('ALL')">
-      <span class="mkt-price-sym">ALL</span>
-      <span class="mkt-price-val" style="font-size:10px;color:var(--t3);">instruments</span>
-    </div>
-    <div class="mkt-price-item" data-und="NIFTY" onclick="setUnderlying('NIFTY')">
-      <span class="mkt-price-sym">NIFTY</span>
-      <span class="mkt-price-val" id="sideprice-nifty">—</span>
-    </div>
-    <div class="mkt-price-item" data-und="BANKNIFTY" onclick="setUnderlying('BANKNIFTY')">
-      <span class="mkt-price-sym">BNKN</span>
-      <span class="mkt-price-val" id="sideprice-banknifty">—</span>
-    </div>
-    <div class="mkt-price-item" data-und="ASML" onclick="setUnderlying('ASML')">
-      <span class="mkt-price-sym">ASML</span>
-      <span class="mkt-price-val" id="sideprice-asml">—</span>
-    </div>
-    <div class="mkt-price-item" data-und="NVIDIA" onclick="setUnderlying('NVIDIA')">
-      <span class="mkt-price-sym">NVDA</span>
-      <span class="mkt-price-val" id="sideprice-nvidia">—</span>
-    </div>
-  </div>
   <div class="nav-section">
     <div class="nav-label">Pages</div>
     <div class="nav-item p01 active" data-page="overview">
@@ -428,6 +407,9 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
     </div>
     <div class="nav-item p02" data-page="positions">
       <span class="nav-icon">≡</span> <span data-i18n="nav.positions">Positions</span>
+    </div>
+    <div class="nav-item p04" data-page="equity-hedge">
+      <span class="nav-icon">⬗</span> <span data-i18n="nav.equity_hedge">Equity Hedge</span>
     </div>
     <div class="nav-item p03" data-page="margin">
       <span class="nav-icon">◎</span> <span data-i18n="nav.margin">Margin Tracker</span>
@@ -447,9 +429,6 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
     </div>
     <div class="nav-item p03" data-page="manoeuvre">
       <span class="nav-icon">⟳</span> Manoeuvre
-    </div>
-    <div class="nav-item p04" data-page="equity-hedge">
-      <span class="nav-icon">⬗</span> <span data-i18n="nav.equity_hedge">Equity Hedge</span>
     </div>
   </div>
 
@@ -649,6 +628,29 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
             </table>
           </div>
           <div class="tbl-footer" id="bnkn-margin-footer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASML Equity Hedge Margin (shown when equity hedge is loaded) -->
+    <div id="asml-margin-section" style="display:none;">
+      <div class="und-section-hdr">
+        <span class="und-section-tag asml">ASML Equity Hedge</span>
+        <div class="line"></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">ASML — Equity Hedge Options</span>
+          <span class="card-sub">Covered Call margin (est.) · Protective Put premium</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>Instrument</th><th>Exp</th><th>Type</th><th>Side</th><th>Shares</th><th>SPAN (Est.)</th><th>Exposure (Est.)</th><th>Total (Est.)</th></tr></thead>
+              <tbody id="asml-margin-tbody"></tbody>
+            </table>
+          </div>
+          <div class="tbl-footer" id="asml-margin-footer"></div>
         </div>
       </div>
     </div>
