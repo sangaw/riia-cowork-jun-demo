@@ -1,4 +1,5 @@
 // ── Margin Tracker section ────────────────────────────────────────────────────
+import { t } from '../shared/i18n.js';
 import { state } from './state.js';
 import { fmt, fmtPnl, pnlClass } from './utils.js';
 
@@ -27,27 +28,27 @@ export function renderMarginKpis() {
   let utilClass = util < 60 ? 'low' : util < 80 ? 'med' : 'high';
 
   document.getElementById('margin-kpis').innerHTML = `
-    <div class="kpi"><div class="kpi-label">Assumed Ledger</div><div class="kpi-value">₹${(ledger / 100000).toFixed(0)}L</div><div class="kpi-sub">Total capital estimate</div></div>
-    <div class="kpi"><div class="kpi-label">SPAN Margin (Est.)</div><div class="kpi-value">₹${(span / 100000).toFixed(2)}L</div><div class="kpi-sub">Futures + short options</div></div>
-    <div class="kpi"><div class="kpi-label">Exposure Margin (Est.)</div><div class="kpi-value">₹${(exp / 100000).toFixed(2)}L</div><div class="kpi-sub">~20% of SPAN</div></div>
-    <div class="kpi"><div class="kpi-label">Available (Est.)</div><div class="kpi-value ${util > 75 ? 'warn' : 'pos'}">₹${(available / 100000).toFixed(2)}L</div><div class="kpi-sub ${util > 75 ? '' : 'pos'}">${(100 - util).toFixed(1)}% free${util > 75 ? ' — Caution' : ''}</div></div>`;
+    <div class="kpi"><div class="kpi-label">${t('margin.assumed_ledger')}</div><div class="kpi-value">₹${(ledger / 100000).toFixed(0)}L</div><div class="kpi-sub">${t('margin.total_capital_est')}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('margin.span_margin')}</div><div class="kpi-value">₹${(span / 100000).toFixed(2)}L</div><div class="kpi-sub">${t('margin.span_sub')}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('margin.exposure_margin')}</div><div class="kpi-value">₹${(exp / 100000).toFixed(2)}L</div><div class="kpi-sub">${t('margin.exposure_sub')}</div></div>
+    <div class="kpi"><div class="kpi-label">${t('margin.available')}</div><div class="kpi-value ${util > 75 ? 'warn' : 'pos'}">₹${(available / 100000).toFixed(2)}L</div><div class="kpi-sub ${util > 75 ? '' : 'pos'}">${(100 - util).toFixed(1)}${t('margin.pct_free')}${util > 75 ? t('margin.caution') : ''}</div></div>`;
 
   document.getElementById('margin-util-card').innerHTML = `
     <div class="card-hdr">
-      <span class="card-title">Margin Utilization${state.currentUnd !== 'ALL' ? ' — ' + state.currentUnd : ''}</span>
+      <span class="card-title">${t('margin.utilization')}${state.currentUnd !== 'ALL' ? ' — ' + state.currentUnd : ''}</span>
       <span class="card-sub">₹${(total / 100000).toFixed(2)}L of ₹${(ledger / 100000).toFixed(0)}L estimated used · ${util}%</span>
     </div>
     <div class="card-body">
       <div style="display:flex;justify-content:space-between;font-family:var(--fm);font-size:11px;color:var(--t3);margin-bottom:4px;">
         <span>0%</span>
-        <span style="color:var(--${utilClass === 'med' ? 'p03' : 'p01'});font-weight:600;">${util}% used${util > 80 ? ' — Caution' : ' — Healthy'}</span>
+        <span style="color:var(--${utilClass === 'med' ? 'p03' : 'p01'});font-weight:600;">${util}${t('margin.pct_used')}${util > 80 ? t('margin.caution') : t('margin.healthy')}</span>
         <span>100%</span>
       </div>
       <div class="util-bar-outer"><div class="util-bar ${utilClass}" style="width:${util}%"></div></div>
       <div class="util-legend">
-        <span><span class="util-swatch" style="background:var(--p01)"></span> &lt;60% — Healthy</span>
-        <span><span class="util-swatch" style="background:var(--p03)"></span> 60–80% — Caution</span>
-        <span><span class="util-swatch" style="background:var(--neg)"></span> &gt;80% — Critical</span>
+        <span><span class="util-swatch" style="background:var(--p01)"></span> ${t('margin.util_low')}</span>
+        <span><span class="util-swatch" style="background:var(--p03)"></span> ${t('margin.util_med')}</span>
+        <span><span class="util-swatch" style="background:var(--neg)"></span> ${t('margin.util_high')}</span>
       </div>
     </div>`;
 }
@@ -67,8 +68,8 @@ export function updateMarginSections() {
   state.marginChart = new Chart(document.getElementById('margin-chart'), {
     type: 'bar',
     data: { labels: cats, datasets: [
-      { label: 'SPAN', data: spanD, backgroundColor: 'rgba(0,86,184,0.72)', borderRadius: 3 },
-      { label: 'Exposure', data: expD, backgroundColor: 'rgba(146,72,10,0.72)', borderRadius: 3 }
+      { label: t('margin.label_span').replace(':', ''), data: spanD, backgroundColor: 'rgba(0,86,184,0.72)', borderRadius: 3 },
+      { label: t('margin.label_exposure').replace(':', ''), data: expD, backgroundColor: 'rgba(146,72,10,0.72)', borderRadius: 3 }
     ] },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -124,9 +125,9 @@ export function renderMarginTables() {
     </tr>`).join('');
     const s = (state.marginData.summary || {})[und] || {};
     document.getElementById(footerId).innerHTML = `
-      <span class="lbl">${und} SPAN:</span><span class="val">${fmtL(s.span || 0)}</span>
-      <span class="lbl">Exposure:</span><span class="val">${fmtL(s.exposure || 0)}</span>
-      <span class="lbl">Total:</span><span class="val" style="font-weight:700">${fmtL(s.total || 0)}</span>`;
+      <span class="lbl">${und} ${t('margin.label_span')}</span><span class="val">${fmtL(s.span || 0)}</span>
+      <span class="lbl">${t('margin.label_exposure')}</span><span class="val">${fmtL(s.exposure || 0)}</span>
+      <span class="lbl">${t('margin.label_total')}</span><span class="val" style="font-weight:700">${fmtL(s.total || 0)}</span>`;
   }
 
   fillTable('NIFTY',     'nifty-margin-tbody', 'nifty-margin-footer');
