@@ -21,6 +21,7 @@ export default {
   'nav.stress': 'Stress Test',
   'nav.hedge': 'Hedge Radar',
   'nav.manoeuvre': 'Manoeuvre',
+  'nav.equity_hedge': 'Equity Hedge',
   'nav.daily_ops': 'Daily Ops',
   'nav.agent_builds': 'Agent Builds',
   'nav.deploy': 'Deploy',

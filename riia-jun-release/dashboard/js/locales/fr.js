@@ -20,6 +20,7 @@ export default {
   'nav.stress': 'Test de Stress',
   'nav.hedge': 'Radar de Couverture',
   'nav.manoeuvre': 'Manœuvre',
+  'nav.equity_hedge': 'Couverture Actions',
   'nav.daily_ops': 'Ops Quotidiennes',
   'nav.agent_builds': 'Builds Agents',
   'nav.deploy': 'Déployer',

@@ -20,6 +20,7 @@ export default {
   'nav.stress': 'Stresstest',
   'nav.hedge': 'Hedge Radar',
   'nav.manoeuvre': 'Manoeuvre',
+  'nav.equity_hedge': 'Aandelen Hedge',
   'nav.daily_ops': 'Dagelijkse Ops',
   'nav.agent_builds': 'Agent Builds',
   'nav.deploy': 'Implementeren',

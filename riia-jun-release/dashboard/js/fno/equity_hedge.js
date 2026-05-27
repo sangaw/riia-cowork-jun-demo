@@ -56,12 +56,19 @@ export function renderEquityHedge(data) {
   const pc  = hs.payoff_curves;
 
   // KPIs
-  const retClass = p.return_pct >= 0 ? 'pos' : 'neg';
+  const startValue   = p.start_price * p.n_shares;
+  const hedgeRetPct  = startValue > 0 ? (mb.total_premium_eur / startValue) * 100 : 0;
+  const netRetPct    = p.return_pct + hedgeRetPct;
+  const retClass     = p.return_pct >= 0 ? 'pos' : 'neg';
+  const hedgeClass   = hedgeRetPct >= 0 ? 'pos' : 'neg';
+  const netClass     = netRetPct   >= 0 ? 'pos' : 'neg';
   const setKpi = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-  setKpi('eh-kpi-start-price', `<div class="kpi-value">${_fmtEur(p.start_price)}</div>`);
-  setKpi('eh-kpi-end-price',   `<div class="kpi-value">${_fmtEur(p.end_price)}</div>`);
-  setKpi('eh-kpi-return',      `<div class="kpi-value ${retClass}">${p.return_pct >= 0 ? '+' : ''}${p.return_pct.toFixed(2)}%</div>`);
-  setKpi('eh-kpi-vol',         `<div class="kpi-value">${p.vol_30d_pct.toFixed(1)}%</div>`);
+  setKpi('eh-kpi-start-price',  `<div class="kpi-value">${_fmtEur(p.start_price)}</div>`);
+  setKpi('eh-kpi-end-price',    `<div class="kpi-value">${_fmtEur(p.end_price)}</div>`);
+  setKpi('eh-kpi-vol',          `<div class="kpi-value">${p.vol_30d_pct.toFixed(1)}%</div>`);
+  setKpi('eh-kpi-return',       `<div class="kpi-value ${retClass}">${p.return_pct >= 0 ? '+' : ''}${p.return_pct.toFixed(2)}%</div>`);
+  setKpi('eh-kpi-hedge-return', `<div class="kpi-value ${hedgeClass}">+${hedgeRetPct.toFixed(2)}%</div><div class="kpi-sub">${_fmtEur(mb.total_premium_eur)} premium</div>`);
+  setKpi('eh-kpi-net-return',   `<div class="kpi-value ${netClass}">${netRetPct >= 0 ? '+' : ''}${netRetPct.toFixed(2)}%</div>`);
 
   // Covered Call card
   const setEl = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
