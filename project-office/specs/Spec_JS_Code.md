@@ -46,6 +46,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | **`ai-compliance.js`** | **AI Compliance panel (reads agent history)** | `loadAiCompliance()`, `switchAcTab(tabId, viewId)` |
 | `technical-analysis.js` | Technical Analysis section — commentary + PV/ATR/RSI charts | `loadTechnicalAnalysis()` |
 | `learnings.js` | Learnings section — accordion cards + live market-trend charts | `loadLearnings()`, `toggleLearnCard(id)` |
+| `strategy-comparison.js` | Strategy Comparison card (Card 5 in Learnings) — 5-strategy OHLCV dashboard; 7 Chart.js panels; instrument pills; year toggle; commentary | `loadStrategyComparison()`, `scSelectInstrument(id)`, `scSelectYear(year)` |
 
 ---
 
@@ -67,6 +68,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `rr.js` | Risk-Reward chart | `loadRR()` |
 | `hedge.js` | Hedge Radar section | `loadHedge()` |
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
+| `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---
@@ -81,16 +83,18 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `nav.js` | Section navigation | `show(section)`, `_sectionLoaders` |
 | `main.js` | Entry point | Registers loaders, binds `window.*` |
 | `overview.js` | Ops overview dashboard | `loadOverview()` |
-| `cicd.js` | CI/CD pipeline view | `loadCicd()` |
-| `monitoring.js` | Prometheus metrics view | `loadMonitoring()` |
-| `observability.js` | Structured metrics summary | `loadObservability()` |
+| `monitoring.js` | API metrics, alerts, functional KPIs, step log — embeds `loadApiMetrics()` at end of load | `loadMonitoring()` |
+| `observability.js` | Drift detection, data freshness, Sharpe trend, source availability, MCP call log | `loadObservability()` |
 | `test-results.js` | Test results grid | `loadTestResults()` |
 | `daily-ops.js` | Daily operations panel | `loadDailyOps()`, `loadInstruments()`, `toggleInstrument()`, `saveInstruments()`, `triggerSnapshot()`, `searchInstrument()`, `onboardInstrument()` |
 | `deploy.js` | Deployment management | `loadDeploy()` |
 | `chat.js` | Ops chat | `sendOpsChat()` |
 | **`users.js`** | **User management table** | `loadUsers()`, `createUser()`, `deleteUser()` |
 | `agent-builds.js` | Agent Builds pipeline runs + performance metrics panels — API calls to `/api/experience/ops/agent-builds` and `/api/experience/ops/token-forecast` | `loadAgentBuilds()`, `renderTokenEstimateWidget()`, `submitTokenEstimate()`, `toggleEstimateWidget()`. Updated signatures: `mountTrendChart(m, runs)` and `renderTrendPanel(m, runs)` take runs array to derive TSR/CSAT/adherence; `renderKpiCards(metrics, runs)` takes runs for cache hit rate KPI. Run History table shows "Est / Actual" tokens column (colour-coded) replacing "Forecast Δ". Token chart shows dashed actual lines alongside solid estimate lines. |
-| `api-metrics.js` | API call log metrics panel — reads from `/api/experience/ops/api-metrics` | `loadApiMetrics()`, `filterApiMetrics()` |
+| `api-metrics.js` | API call log metrics panel — reads from `/api/experience/ops/api-metrics`; DOM target now inside `sec-monitoring` | `loadApiMetrics()`, `filterApiMetrics()` |
+| `alerts.js` | Active alerts panel — reads from `/ops/alerts/active-alerts.json`; DOM target now inside `sec-monitoring` | `loadAlerts()` |
+| `source-availability.js` | Source availability chart — reads from `/ops/metrics/source-availability.json`; DOM target now inside `sec-observability` | `loadSourceAvailability()` |
+| `functional-kpis.js` | KPI strip — reads from `/api/experience/ops/functional-kpis`; DOM target now inside `sec-monitoring` | `loadFunctionalKPIs()` |
 
 **Feature 16 Run A note:** No new JS module added. The data refresh endpoint (`POST /api/v1/instrument/refresh-all`) is invoked via the `/refresh-all-instruments-data` slash command and the standalone script `project-office/scripts/run_data_refresh.py`. A UI trigger panel may be added to `daily-ops.js` in a future run.
 
@@ -486,6 +490,8 @@ mkChart('chart-my-id', { type: 'line', data: {...}, options: {...} });
 7. **`val_sharpe` backfill (2026-04-21)** — Historical `training_runs` records had `val_sharpe=NULL`. Fixed by SQL backfill. New runs write all fields correctly.
 
 8. **Trade Journal layout** — `#trades-kpi-strip` uses `grid-template-columns: 1fr 1fr 2fr`. Both APIs called with `?instrument=` from `localStorage.getItem('ritaInstrument')`.
+
+9. **Strategy Comparison (`strategy-comparison.js`)** — reads `GET /api/v1/experience/rita/strategy-comparison?instrument=X&year=Y`. Response fields: `instrument`, `year`, `dates` (ISO strings), `strategies` (list of `{name, equity, color}`), `summary` (list of `{name, total_return_pct, sharpe, max_drawdown_pct, n_trades, win_rate_pct, final_value}`), `error` (nullable). Commentary via `POST /api/v1/commentary` with `{app:"rita", page:"strategy-comparison", instrument}`. Instrument pills from hardcoded `_INSTRUMENTS` list. `apiFetch` imported from `'../shared/api.js'` (not `./api.js` which only re-exports `api`).
 
 ---
 

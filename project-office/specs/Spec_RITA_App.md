@@ -13,7 +13,7 @@ RITA (Risk Informed Trading Approach) is a Nifty 50 Double DQN reinforcement lea
 | **Backend API** | FastAPI + SQLite via SQLAlchemy 2.x. Stateless REST API. |
 | **RITA Dashboard** | Vanilla JS ES modules — `rita.html`. Main trading & model view. |
 | **FnO Dashboard** | `fno.html` — Options portfolio, Greeks, manoeuvres. |
-| **Ops Dashboard** | `ops.html` — CI/CD, monitoring, test results, users, agent panel. |
+| **Ops Dashboard** | `ops.html` — monitoring, test results, users, agent panel. **Feature 15 (2026-05-24):** Consolidated nav from 15 to 10 items. `sec-cicd`, `sec-alerts`, `sec-source-availability`, `sec-functional-kpis`, `sec-api-metrics` removed as standalone sections; KPI strip, alerts table, and API metrics absorbed into `sec-monitoring`; source availability absorbed into `sec-observability`. |
 | **DS Dashboard** | `ds.html` (separate page) — Data science, training, portfolio backtest. |
 | **Mobile PWA** | `riia-jun-release/mobileapp/index.html` — 10-screen single-file PWA. Served at `/mobileapp` via StaticFiles mount in `main.py`. |
 
@@ -34,10 +34,12 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 - `api/v1/workflow/chat.py` — Local intent classifier chat
 
 **Application entrypoints in `main.py`:**
+- `GET /` — UA-based conditional redirect: mobile UA (Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini) → `302 /mobile`; desktop → `302 /dashboard` (Feature 17 Phase 1; Phase 0 was desktop-only `302 /dashboard`)
 - `/health` — liveness probe (model file check + data freshness + Sharpe trend)
 - `/progress` — pipeline step statuses for dashboard progress bar
 - `/reset` — stateless acknowledgement
 - `/readyz` — readiness probe (SELECT 1 on DB)
+- `/mobile` — serves `mobileapp/gateway.html` (Feature 17 Phase 0; registered before `/mobileapp` static mount)
 - `/dashboard` — static file mount (catch-all)
 - `/mobileapp` — static file mount for `riia-jun-release/mobileapp/` (added Feature 12B)
 
@@ -98,6 +100,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/v1/experience/rita/backtest-daily` | Daily backtest results for charting — date, portfolio_value, benchmark_value, allocation, close_price | No |
 | `GET` | `/api/v1/experience/rita/risk-timeline` | Risk timeline from latest backtest — drawdowns, VaR, vol, regime. Query: phase, instrument | No |
 | `GET` | `/api/v1/experience/rita/training-history` | Training run history — all KPIs newest-first. Query: instrument | No |
+| `GET` | `/api/v1/experience/rita/strategy-comparison` | 5-strategy OHLCV performance comparison (Buy&Hold, Value, Momentum, Swing, S/R). Query: `instrument` (default: active), `year` (2024/2025, default 2025). Returns `StrategyComparisonResponse` with equity curves, summary metrics, dates. LRU-cached per (instrument, year). | No |
 
 ### Ops Experience Endpoints (`/api/experience/ops`)
 
@@ -110,6 +113,8 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/experience/ops/agent-builds` | Returns agent build run history + aggregated metrics from DB. `AgentBuildRunOut` includes `human_score_csat: Optional[float]` (from run JSON `human_score.csat`). `AgentOut` includes `actual_tokens: Optional[dict]` (input/output/cache/total from Claude API). `SkillVersion.recent_commits` is `list[dict]` with `{hash, message}` objects. |
 | `GET` | `/api/experience/ops/token-forecast` | Pre-run token budget estimate — query params: `feature_type`, `files_to_change`, `new_endpoint_or_model`, `frontend_scope`, `integration_type`. Returns `TokenForecastResponse` (complexity, per_role, total_forecast, confidence, basis_runs). Auth required. |
 | `GET` | `/api/experience/ops/api-metrics` | Per-endpoint call count, p50/p95 latency, error rate from api_call_log. Query params: `limit` (default 200), `method`, `path_prefix`. Returns `ApiMetricsResponse(items: list[ApiMetricsRow])`. No auth. |
+| `GET` | `/api/experience/ops/functional-kpis` | KPI time-series for training success rate, error rates, p95 latency (last 24h hourly buckets). Query param: `hours` (default 24, 1–168). Returns `FunctionalKPIsResponse`. No auth. |
+| `GET` | `/api/experience/ops/drift` | Model health and drift checks — Experience-tier wrapper for DriftDetector. Returns `{ summary: { overall }, checks: { sharpe_drift, return_degradation, data_freshness, pipeline_health, constraint_breach } }`. Replaces direct JS call to system-tier `/api/v1/drift`. No auth. |
 
 ### Users Experience Endpoints (`/api/v1/experience/users`)
 
@@ -174,6 +179,7 @@ Two UIs exist for the same backend. Both use `MOCK_MODE` flag to bypass the real
 | `/api/v1/portfolio/man-pnl-history` | GET | Daily P&L history for Manoeuvre chart |
 | `/api/v1/portfolio/man-daily-status` | GET | Today's manoeuvre count and last manoeuvre record |
 | `/api/v1/portfolio/man-daily-snapshot` | POST | Record daily portfolio snapshot |
+| `POST /api/v1/portfolio/equity-hedge-scenarios` | No | Portfolio tier | ASML equity portfolio performance + Black-Scholes covered call and protective put hedge scenarios with payoff curves. Body: instrument, n_shares, start_date, end_date. |
 
 ---
 
@@ -190,7 +196,7 @@ selectInstrumentTab(id)
   2. GET  /api/v1/instrument/active      → topbar pill (name, flag)
   3. GET  /api/v1/performance-summary    → KPI metrics cards (checks _run_instrument_id vs _active_instrument_id)
   4. GET  /health                        → model status card
-  5. GET  /api/v1/drift                  → alert strip
+  5. GET  /api/experience/ops/drift      → alert strip
   6. GET  /progress                      → pipeline step bar
 ```
 
