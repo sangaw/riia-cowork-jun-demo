@@ -174,6 +174,7 @@ Two UIs exist for the same backend. Both use `MOCK_MODE` flag to bypass the real
 | `/api/v1/portfolio/man-pnl-history` | GET | Daily P&L history for Manoeuvre chart |
 | `/api/v1/portfolio/man-daily-status` | GET | Today's manoeuvre count and last manoeuvre record |
 | `/api/v1/portfolio/man-daily-snapshot` | POST | Record daily portfolio snapshot |
+| `POST /api/v1/portfolio/equity-hedge-scenarios` | No | Portfolio tier | ASML equity portfolio performance + Black-Scholes covered call and protective put hedge scenarios with payoff curves. Body: instrument, n_shares, start_date, end_date. |
 
 ---
 

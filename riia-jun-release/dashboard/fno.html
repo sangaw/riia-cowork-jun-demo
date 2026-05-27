@@ -438,6 +438,9 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
     <div class="nav-item p03" data-page="manoeuvre">
       <span class="nav-icon">⟳</span> Manoeuvre
     </div>
+    <div class="nav-item p04" data-page="equity-hedge">
+      <span class="nav-icon">⬗</span> <span data-i18n="nav.equity_hedge">Equity Hedge</span>
+    </div>
   </div>
 
   <div class="sidebar-footer">
@@ -958,6 +961,147 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
     <div id="man-pool-container">
       <div style="text-align:center;padding:32px;font-family:var(--fm);font-size:12px;color:var(--t3);">Loading…</div>
     </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       EQUITY HEDGE SCENARIOS
+  ════════════════════════════════════════════════ -->
+  <div class="section" id="page-equity-hedge">
+    <div class="page-hdr">
+      <div>
+        <div class="page-title">Equity Hedge Scenarios</div>
+        <div class="page-sub">ASML equity portfolio · Covered Call · Protective Put · Payoff comparison</div>
+      </div>
+      <span class="phase-tag p04">Equity Hedge</span>
+    </div>
+
+    <!-- Panel 1: Portfolio Builder -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-hdr">
+        <span class="card-title">Portfolio Builder</span>
+        <span class="card-sub">Select instrument, shares and date range, then build</span>
+      </div>
+      <div class="card-body" style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+        <label style="font-family:var(--fm);font-size:11px;color:var(--t2);">Instrument
+          <input id="eh-instrument" type="text" value="ASML" style="display:block;margin-top:4px;font-family:var(--fm);font-size:12px;padding:4px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);width:80px;">
+        </label>
+        <label style="font-family:var(--fm);font-size:11px;color:var(--t2);">Shares
+          <input id="eh-n-shares" type="number" value="10" min="1" style="display:block;margin-top:4px;font-family:var(--fm);font-size:12px;padding:4px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);width:80px;">
+        </label>
+        <label style="font-family:var(--fm);font-size:11px;color:var(--t2);">From
+          <input id="eh-start-date" type="date" value="2025-01-01" style="display:block;margin-top:4px;font-family:var(--fm);font-size:12px;padding:4px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);">
+        </label>
+        <label style="font-family:var(--fm);font-size:11px;color:var(--t2);">To
+          <input id="eh-end-date" type="date" value="2025-01-31" style="display:block;margin-top:4px;font-family:var(--fm);font-size:12px;padding:4px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);color:var(--text);">
+        </label>
+        <button onclick="loadEquityHedge(true)" style="font-family:var(--fm);font-size:12px;font-weight:600;padding:6px 16px;border-radius:var(--r);border:none;background:var(--p04);color:#fff;cursor:pointer;align-self:flex-end;">Build &amp; Analyse</button>
+      </div>
+    </div>
+
+    <!-- Loading / Error state -->
+    <div id="eh-loading" style="display:none;align-items:center;justify-content:center;height:80px;font-family:var(--fm);font-size:12px;color:var(--t3);"></div>
+
+    <!-- Results wrapper -->
+    <div id="eh-results" style="display:none;">
+
+      <!-- KPI row -->
+      <div class="kpi-row c4" style="margin-bottom:16px;">
+        <div class="kpi">
+          <div class="kpi-label">Start Price</div>
+          <div id="eh-kpi-start-price"><div class="kpi-value">—</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">End Price</div>
+          <div id="eh-kpi-end-price"><div class="kpi-value">—</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Period Return</div>
+          <div id="eh-kpi-return"><div class="kpi-value">—</div></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">30d Volatility</div>
+          <div id="eh-kpi-vol"><div class="kpi-value">—</div></div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Portfolio chart + Hedge Overview -->
+      <div class="two-col" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Portfolio Value (€)</span>
+            <span class="card-sub">Daily close × shares</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-wrap"><canvas id="eh-portfolio-chart"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Hedge Overview</span>
+            <span class="card-sub">At period end</span>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom:12px;">
+              <div style="font-family:var(--fm);font-size:10px;font-weight:600;color:var(--p01);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Mild Bearish — Covered Call</div>
+              <div id="eh-cc-desc" style="font-family:var(--fm);font-size:12px;color:var(--t2);">—</div>
+            </div>
+            <div>
+              <div style="font-family:var(--fm);font-size:10px;font-weight:600;color:var(--neg);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Strong Bearish — Protective Put</div>
+              <div id="eh-pp-desc" style="font-family:var(--fm);font-size:12px;color:var(--t2);">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Scenario detail cards -->
+      <div class="two-col" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Covered Call</span>
+            <span class="phase-tag p01">Mild Bearish</span>
+          </div>
+          <div class="card-body">
+            <div class="kpi-row c4">
+              <div class="kpi"><div class="kpi-label">Strike</div><div class="kpi-value" id="eh-cc-strike">—</div></div>
+              <div class="kpi"><div class="kpi-label">Premium Rcvd</div><div class="kpi-value pos" id="eh-cc-premium">—</div></div>
+              <div class="kpi"><div class="kpi-label">Max Value</div><div class="kpi-value" id="eh-cc-max-value">—</div></div>
+              <div class="kpi"><div class="kpi-label">Breakeven</div><div class="kpi-value" id="eh-cc-breakeven">—</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Protective Put</span>
+            <span class="phase-tag p03">Strong Bearish</span>
+          </div>
+          <div class="card-body">
+            <div class="kpi-row c4">
+              <div class="kpi"><div class="kpi-label">Strike</div><div class="kpi-value" id="eh-pp-strike">—</div></div>
+              <div class="kpi"><div class="kpi-label">Premium Paid</div><div class="kpi-value neg" id="eh-pp-premium">—</div></div>
+              <div class="kpi"><div class="kpi-label">Floor Value</div><div class="kpi-value" id="eh-pp-floor">—</div></div>
+              <div class="kpi"><div class="kpi-label">Breakeven</div><div class="kpi-value" id="eh-pp-breakeven">—</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 4: Payoff chart -->
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-title">Payoff Comparison at Expiry</span>
+          <span class="card-sub">P&amp;L vs end-date position across ASML price range</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap tall"><canvas id="eh-payoff-chart"></canvas></div>
+          <div style="display:flex;gap:20px;margin-top:10px;font-family:var(--fm);font-size:10px;flex-wrap:wrap;">
+            <span><span style="display:inline-block;width:16px;height:2px;background:var(--p02);margin-right:4px;vertical-align:middle;"></span>Unhedged</span>
+            <span><span style="display:inline-block;width:16px;height:2px;background:var(--p01);margin-right:4px;vertical-align:middle;"></span>Covered Call</span>
+            <span><span style="display:inline-block;width:16px;height:2px;background:var(--neg);margin-right:4px;vertical-align:middle;"></span>Protective Put</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /eh-results -->
   </div>
 
 </div><!-- /main -->
