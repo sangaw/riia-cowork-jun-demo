@@ -75,6 +75,7 @@ function _renderEquityCard(u, d) {
 
 export function renderMarketSnapshot() {
   const grid = document.getElementById('mkt-grid');
+  if (!grid || grid.style.display === 'none') return;
   let underlyings;
   if (state.currentUnd === 'ALL') {
     underlyings = state.marketData['ASML']?._from_eq_hedge ? ['ASML'] : [];
