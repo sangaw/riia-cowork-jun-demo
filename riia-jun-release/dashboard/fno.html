@@ -456,8 +456,12 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
     <!-- Instrument capsule (geo-kpi style) -->
     <div id="fno-inst-capsule" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
 
-    <!-- Market Snapshot — updated by setUnderlying() -->
-    <div class="mkt-grid" id="mkt-grid"></div>
+    <!-- Unified 8-widget row: ASML card (×2) + 3 position KPIs + 4 margin KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(9,1fr);gap:10px;margin-bottom:20px;align-items:stretch">
+      <div id="mkt-grid" style="display:contents"></div>
+      <div id="pos-kpis" style="display:contents"></div>
+      <div id="margin-kpis" style="display:contents"></div>
+    </div>
 
     <div class="two-col">
       <div class="card">
@@ -509,8 +513,6 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
         </label>
       </div>
     </div>
-
-    <div class="kpi-row c4" id="pos-kpis"></div>
 
     <div class="filter-row" id="pos-filter-row">
       <button class="filter-btn active" onclick="filterPos('ALL',this)">All</button>
@@ -564,8 +566,6 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 
     <!-- ── MARGIN ─────────────────────────────────────────────── -->
     <div class="section-divider">Margin Tracker</div>
-
-    <div class="kpi-row c4" id="margin-kpis"></div>
 
     <div class="card" id="margin-util-card"></div>
 

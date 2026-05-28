@@ -64,7 +64,7 @@ function _renderEquityCard(u, d) {
   const retClass = retChg >= 0 ? 'pos' : 'neg';
   const range    = d.high - d.low;
   const rangePct = range > 0 ? Math.round(((d.close - d.low) / range) * 100) : 50;
-  return `<div class="mkt-card" style="border-left:4px solid var(--p03)">
+  return `<div class="mkt-card" style="border-left:4px solid var(--p03);grid-column:span 2">
     <div class="mkt-hdr">
       <span class="mkt-name">${u} <span style="font-family:var(--fm);font-size:11px;color:var(--t3);">Equity</span></span>
       <span class="mkt-date">${d.date}</span>
