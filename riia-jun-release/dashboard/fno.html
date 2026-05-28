@@ -409,14 +409,8 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
     <div class="nav-item p01 active" data-page="overview">
       <span class="nav-icon">◈</span> <span data-i18n="nav.overview">Dashboard</span>
     </div>
-    <div class="nav-item p02" data-page="positions">
-      <span class="nav-icon">≡</span> <span data-i18n="nav.positions">Positions</span>
-    </div>
     <div class="nav-item p04" data-page="equity-hedge">
       <span class="nav-icon">⬗</span> <span data-i18n="nav.equity_hedge">Equity Hedge</span>
-    </div>
-    <div class="nav-item p03" data-page="margin">
-      <span class="nav-icon">◎</span> <span data-i18n="nav.margin">Margin Tracker</span>
     </div>
     <div class="nav-item p04" data-page="risk">
       <span class="nav-icon">⬡</span> <span data-i18n="nav.risk">Risk &amp; Greeks</span>
@@ -501,24 +495,18 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
         <div class="chart-wrap tall" id="daily-progress-wrap"><canvas id="daily-progress-chart"></canvas></div>
       </div>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════════════════════════
-       POSITIONS
-  ════════════════════════════════════════════════ -->
-  <div class="section" id="page-positions">
-    <div class="page-hdr">
-      <div>
-        <div class="page-title">Positions</div>
-        <div class="page-sub" id="pos-page-sub">Loading...</div>
-      </div>
+    <!-- ── POSITIONS ─────────────────────────────────────────── -->
+    <div class="section-divider">Positions</div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="page-sub" id="pos-page-sub">Loading...</div>
       <div style="display:flex;align-items:center;gap:14px;">
         <label class="paper-toggle" title="Toggle between paper (dummy) and live broker positions">
           <input type="checkbox" id="paper-mode-chk" checked onchange="togglePaperMode(this.checked)">
           <span class="paper-toggle-track"><span class="paper-toggle-thumb"></span></span>
           <span id="paper-mode-label" class="paper-mode-label">Paper</span>
         </label>
-        <span class="phase-tag p02">Track</span>
       </div>
     </div>
 
@@ -573,74 +561,16 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ═══════════════════════════════════════════════
-       MARGIN TRACKER
-  ════════════════════════════════════════════════ -->
-  <div class="section" id="page-margin">
-    <div class="page-hdr">
-      <div>
-        <div class="page-title">Margin Tracker</div>
-        <div class="page-sub">SPAN + Exposure margin · Estimated utilization</div>
-      </div>
-      <span class="phase-tag p03">Margins</span>
-    </div>
-
-    <div class="warn-note">Margin figures are estimated based on standard NSFO SPAN rates. Actual margin may vary with cross-margining benefits from your broker.</div>
+    <!-- ── MARGIN ─────────────────────────────────────────────── -->
+    <div class="section-divider">Margin Tracker</div>
 
     <div class="kpi-row c4" id="margin-kpis"></div>
 
     <div class="card" id="margin-util-card"></div>
 
-    <!-- NIFTY Margin Table -->
-    <div id="nifty-margin-section">
-      <div class="und-section-hdr">
-        <span class="und-section-tag nifty">NIFTY</span>
-        <div class="line"></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">NIFTY — Futures &amp; Short Options Margin</span>
-          <span class="card-sub">Long options: premium paid, no additional margin</span>
-        </div>
-        <div class="card-body" style="padding:0">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Instrument</th><th>Exp</th><th>Type</th><th>Side</th><th>Qty</th><th>SPAN (Est.)</th><th>Exposure (Est.)</th><th>Total (Est.)</th></tr></thead>
-              <tbody id="nifty-margin-tbody"></tbody>
-            </table>
-          </div>
-          <div class="tbl-footer" id="nifty-margin-footer"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- BANKNIFTY Margin Table -->
-    <div id="banknifty-margin-section">
-      <div class="und-section-hdr">
-        <span class="und-section-tag banknifty">BANKNIFTY</span>
-        <div class="line"></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">BANKNIFTY — Futures &amp; Short Options Margin</span>
-          <span class="card-sub">Long options: premium paid, no additional margin</span>
-        </div>
-        <div class="card-body" style="padding:0">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Instrument</th><th>Exp</th><th>Type</th><th>Side</th><th>Qty</th><th>SPAN (Est.)</th><th>Exposure (Est.)</th><th>Total (Est.)</th></tr></thead>
-              <tbody id="bnkn-margin-tbody"></tbody>
-            </table>
-          </div>
-          <div class="tbl-footer" id="bnkn-margin-footer"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ASML Equity Hedge Margin (shown when equity hedge is loaded) -->
-    <div id="asml-margin-section" style="display:none;">
+    <!-- ASML Equity Hedge Margin -->
+    <div id="asml-margin-section">
       <div class="und-section-hdr">
         <span class="und-section-tag asml">ASML Equity Hedge</span>
         <div class="line"></div>

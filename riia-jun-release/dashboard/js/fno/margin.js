@@ -54,12 +54,9 @@ export function renderMarginKpis() {
 }
 
 export function updateMarginSections() {
-  document.getElementById('nifty-margin-section').style.display     = state.currentUnd === 'BANKNIFTY' ? 'none' : '';
-  document.getElementById('banknifty-margin-section').style.display = state.currentUnd === 'NIFTY'     ? 'none' : '';
   const asmlSection = document.getElementById('asml-margin-section');
   if (asmlSection) {
-    const hasAsml = state.equityHedgeData != null;
-    asmlSection.style.display = (hasAsml && state.currentUnd !== 'NIFTY' && state.currentUnd !== 'BANKNIFTY') ? '' : 'none';
+    asmlSection.style.display = state.equityHedgeData != null ? '' : 'none';
   }
   // Rebuild margin chart from API data (exclude EUR equity positions to keep INR scale clean)
   const byPos = (state.marginData.by_position || [])
@@ -135,9 +132,6 @@ export function renderMarginTables() {
       <span class="lbl">${t('margin.label_exposure')}</span><span class="val">${fmtL(s.exposure || 0)}</span>
       <span class="lbl">${t('margin.label_total')}</span><span class="val" style="font-weight:700">${fmtL(s.total || 0)}</span>`;
   }
-
-  fillTable('NIFTY',     'nifty-margin-tbody', 'nifty-margin-footer');
-  fillTable('BANKNIFTY', 'bnkn-margin-tbody',  'bnkn-margin-footer');
 
   // ASML equity hedge positions (EUR-denominated, separate from INR tables)
   if (state.equityHedgeData) {
