@@ -62,30 +62,13 @@ function _fmtEur(v) {
 function _renderEquityCard(u, d) {
   const retChg   = parseFloat(d.chgFromOpen);
   const retClass = retChg >= 0 ? 'pos' : 'neg';
-  const range    = d.high - d.low;
-  const rangePct = range > 0 ? Math.round(((d.close - d.low) / range) * 100) : 50;
-  return `<div class="mkt-card" style="border-left:4px solid var(--p03);grid-column:span 2">
-    <div class="mkt-hdr">
-      <span class="mkt-name">${u} <span style="font-family:var(--fm);font-size:11px;color:var(--t3);">Equity</span></span>
-      <span class="mkt-date">${d.date}</span>
-    </div>
-    <div class="mkt-close">${_fmtEur(d.close)}</div>
-    <div class="mkt-chg ${retClass}" style="margin-top:2px;">
-      ${retChg >= 0 ? '▲ +' : '▼ '}${Math.abs(retChg).toFixed(2)}% period return
-      &nbsp;<span style="font-weight:400;opacity:.75">(from ${_fmtEur(d.prevClose)})</span>
-    </div>
-    <div class="mkt-range-bar" style="margin-top:8px;">
-      <div class="mkt-range-fill" style="background:var(--p03);left:0;width:${rangePct}%;"></div>
-    </div>
-    <div class="mkt-ohlc">
-      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">Start</div><div class="mkt-ohlc-val">${_fmtEur(d.open)}</div></div>
-      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">High</div><div class="mkt-ohlc-val" style="color:var(--pos)">${_fmtEur(d.high)}</div></div>
-      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">Low</div><div class="mkt-ohlc-val" style="color:var(--neg)">${_fmtEur(d.low)}</div></div>
-      <div class="mkt-ohlc-item"><div class="mkt-ohlc-lbl">End</div><div class="mkt-ohlc-val">${_fmtEur(d.close)}</div></div>
-    </div>
-    <div class="mkt-stats">
-      <span>Vol 30d: ${d.vol_30d != null ? d.vol_30d.toFixed(1) + '%' : '—'}</span>
-      <span>${d.shares}</span>
+  return `<div class="kpi" style="border-left:3px solid var(--p03)">
+    <div class="kpi-label">${u} · Equity · ${d.date}</div>
+    <div class="kpi-value ${retClass}" style="font-size:18px">${_fmtEur(d.close)}</div>
+    <div class="kpi-delta ${retClass}">${retChg >= 0 ? '▲ +' : '▼ '}${Math.abs(retChg).toFixed(2)}% · from ${_fmtEur(d.prevClose)}</div>
+    <div class="kpi-sub" style="margin-top:5px;line-height:1.6">
+      H ${_fmtEur(d.high)} · L ${_fmtEur(d.low)}<br>
+      Vol 30d: ${d.vol_30d != null ? d.vol_30d.toFixed(1) + '%' : '—'} · ${d.shares}
     </div>
   </div>`;
 }
