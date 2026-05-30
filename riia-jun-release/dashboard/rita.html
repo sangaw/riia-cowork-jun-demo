@@ -804,65 +804,65 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
-  <!-- Narrator card -->
-  <div id="ap-narrator-card" class="card" style="margin-bottom:14px">
-    <div class="card-hdr">
-      <span class="card-title" id="ap-narrator-title">ABOUT THIS DEMO</span>
+  <!-- Narrator (50% width) + 5 agent-state widgets — single row -->
+  <div style="display:grid;grid-template-columns:15fr 2fr 2fr 2fr 2fr 2fr;gap:10px;margin-bottom:14px;align-items:stretch">
+    <div id="ap-narrator-card" class="card">
+      <div class="card-hdr">
+        <span class="card-title" id="ap-narrator-title">ABOUT THIS DEMO</span>
+      </div>
+      <div id="ap-narrator-text" class="card-body" style="font-size:12px;line-height:1.5;color:var(--t2);min-height:32px"></div>
     </div>
-    <div id="ap-narrator-text" class="card-body" style="font-size:13px;line-height:1.6;color:var(--t2);min-height:48px"></div>
+    <div class="card" style="padding:8px">
+      <div class="card-title" style="font-size:0.7rem;margin-bottom:3px">Compliance Gate</div>
+      <div id="ap-compliance" style="font-weight:700;font-size:0.85rem">PENDING</div>
+    </div>
+    <div class="card" style="padding:8px">
+      <div class="card-title" style="font-size:0.7rem;margin-bottom:3px">Context</div>
+      <div id="ap-regime" style="font-size:11px;color:var(--t2)">—</div>
+    </div>
+    <div class="card" style="padding:8px">
+      <div class="card-title" style="font-size:0.7rem;margin-bottom:3px">Strategy</div>
+      <div id="ap-policy" style="font-size:10px;color:var(--t2)">—</div>
+    </div>
+    <div class="card" style="padding:8px">
+      <div class="card-title" style="font-size:0.7rem;margin-bottom:3px">Probability</div>
+      <div id="ap-probability" style="font-size:13px;font-weight:700">—</div>
+    </div>
+    <div class="card" style="padding:8px">
+      <div class="card-title" style="font-size:0.7rem;margin-bottom:3px">Agent Decision</div>
+      <div id="ap-proposal" style="font-size:12px;font-weight:700">—</div>
+    </div>
   </div>
 
-  <!-- Chart + Widgets row -->
-  <div style="display:grid;grid-template-columns:1fr 320px;gap:14px;margin-bottom:14px">
+  <!-- Chart + Right panel row -->
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:14px;margin-bottom:14px">
     <div class="card">
       <div class="chart-box h220"><canvas id="ap-chart"></canvas></div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <!-- Compliance -->
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">Compliance Gate</span></div>
-        <div id="ap-compliance" style="font-weight:700;font-size:0.9rem;padding:6px 0">PENDING</div>
+      <!-- Run Date + controls in one card -->
+      <div class="card" style="padding:10px">
+        <div class="card-title" style="font-size:0.7rem;margin-bottom:4px">Run Date</div>
+        <div id="ap-run-date" style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:10px">—</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-build btn-sm" id="ap-run-btn" onclick="agentPanelStep()">▶ Run Day</button>
+          <button class="btn btn-ghost btn-sm" onclick="resetAgentPanel()">↺ Reset</button>
+        </div>
       </div>
-      <!-- Agent state widgets -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <div class="card" style="padding:8px">
-          <div class="card-title" style="font-size:0.7rem;margin-bottom:4px">Context</div>
-          <div id="ap-regime" style="font-size:12px;color:var(--t2)">—</div>
-        </div>
-        <div class="card" style="padding:8px">
-          <div class="card-title" style="font-size:0.7rem;margin-bottom:4px">Strategy</div>
-          <div id="ap-policy" style="font-size:11px;color:var(--t2)">—</div>
-        </div>
-        <div class="card" style="padding:8px">
-          <div class="card-title" style="font-size:0.7rem;margin-bottom:4px">Probability</div>
-          <div id="ap-probability" style="font-size:14px;font-weight:700">—</div>
-        </div>
-        <div class="card" style="padding:8px">
-          <div class="card-title" style="font-size:0.7rem;margin-bottom:4px">PM Decision</div>
-          <div id="ap-proposal" style="font-size:13px;font-weight:700">—</div>
+      <!-- HITL — shown only when PM proposes a BUY -->
+      <div id="ap-hitl-panel" style="display:none">
+        <div class="card" style="border-color:var(--warn-bd);background:var(--warn-bg)">
+          <div class="card-hdr">
+            <span class="card-title" style="color:var(--warn);font-size:0.75rem">◈ Human-in-the-Loop</span>
+          </div>
+          <div id="ap-hitl-summary" style="font-size:12px;color:var(--t2);margin-bottom:10px;line-height:1.5"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-build btn-sm" onclick="approveAgentProposal()">✓ Approve</button>
+            <button class="btn btn-ghost btn-sm" style="border-color:var(--danger-bd);color:var(--danger)" onclick="rejectAgentProposal()">✕ Reject</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- HITL — shown only when PM proposes a BUY -->
-  <div id="ap-hitl-panel" style="display:none;margin-bottom:14px">
-    <div class="card" style="border-color:var(--warn-bd);background:var(--warn-bg)">
-      <div class="card-hdr">
-        <span class="card-title" style="color:var(--warn)">◈ Human-in-the-Loop — Awaiting Decision</span>
-      </div>
-      <div id="ap-hitl-summary" style="font-size:13px;color:var(--t2);margin-bottom:12px;line-height:1.6"></div>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-build" onclick="approveAgentProposal()">✓ Approve</button>
-        <button class="btn btn-ghost" style="border-color:var(--danger-bd);color:var(--danger)" onclick="rejectAgentProposal()">✕ Reject</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Controls -->
-  <div style="display:flex;gap:10px;margin-bottom:14px">
-    <button class="btn btn-build" id="ap-run-btn" onclick="agentPanelStep()">▶ Run Day</button>
-    <button class="btn btn-ghost" onclick="resetAgentPanel()">↺ Reset</button>
   </div>
 
   <!-- Audit table -->
