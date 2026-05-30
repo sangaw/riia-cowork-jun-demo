@@ -70,6 +70,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `hedge.js` | Hedge Radar section | `loadHedge()` |
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
 | `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
+| `my-portfolio.js` | My Portfolio read display — renders allocation holdings from /api/v1/experience/user-portfolio, handles 404 empty state, 401 re-auth | `loadFnoMyPortfolio()` |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---
