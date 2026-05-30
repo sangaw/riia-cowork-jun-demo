@@ -178,6 +178,8 @@
 | 2026-05-28 | `88a5773` | Feature 25+26 — ASML equity hedge scenarios (covered call + protective put + BS pricing); FnO dashboard consolidated (positions+margin into Overview, ASML-only KPI row, 7 widgets); i18n locale keys; unit tests. Actions run cancelled but code included in next deploy. |
 | 2026-05-29 | `e32595e` | Infra fixes — writable /app/data mount (instrument onboarding writes); model backup/restore around container swap; ApiCallLogMiddleware catches unhandled exceptions → 500s now visible in monitoring. GitHub Actions green; health ok. |
 | 2026-05-30 | `b48d25e` | data_refresh fixes — NIFTY/BANKNIFTY yf.csv now incremental (append-only, no full overwrite); SKIP_INSTRUMENTS constant added + ATHER skip guard in refresh_all(); test suite unblocked. GitHub Actions green; health ok. |
+| 2026-05-30 | `801e811` | RITA UI — nav restructure (Study menu after Overview; Agent Panel in Study); Set Goal field-name fixes; market auto-load on section visit; Performance charts side-by-side; GoalRequest.instrument field added; yearly_returns structured as {year,return_pct}. GitHub Actions green; health ok. |
+| 2026-05-30 | `ebf01f7` | Feature 26 Phase 4 — FnO auth gate + My Portfolio section. Multiple hotfixes: auth overlay removed (replaced with redirect); shared/api.js auth_token→rita_token key fix (root cause of all 401s); zero-alloc filter before POST; ValidationError serialization crash fix. Portfolio save + display working on prod. |
 
 ---
 

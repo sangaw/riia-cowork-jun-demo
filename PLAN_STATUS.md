@@ -1,22 +1,28 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-30 (EOD) — Feature 26 Phase 3 My Portfolio CSS fix + auth redirect fix deployed (c95eb81). GitHub Actions triggered — verify green at next session start.
+**Last updated:** 2026-05-30 (EOD session 2) — Feature 26 Phase 4 complete + all auth bugs fixed. Deployed `ebf01f7`. Portfolio save + display working on prod.
 
-**Session work (2026-05-30) — Feature 26 User Portfolio Store:**
-- **Phase 1 — Backend data layer COMPLETE.** `UserPortfolioKeyModel`, `UserPortfolioModel`, `UserPortfolioKeyRepo`, `UserPortfolioRepo`, `UserPortfolioService` (save/get, soft-replace), Alembic migration `20260530_add_user_portfolio_tables`, schemas (`HoldingItem`, `UserPortfolioCreate`, `UserPortfolioOut`). Merged dev `bc0074f` (merge `f963914`).
-- **Phase 2 — API endpoints + auth state param COMPLETE.** `POST /api/v1/user-portfolio` (201, JWT), `GET /api/v1/user-portfolio`, `GET /api/v1/experience/user-portfolio` (read-only). Auth: `state` param on Google login/callback — `state=fno` → `fno.html`, else → `index.html`. 22 QA tests pass. Merged dev `4bd0dc9` (merge `0fbae57`).
-- **Phase 3 — RITA frontend My Portfolio builder COMPLETE.** `dashboard/js/rita/my-portfolio.js` (allocation builder, 100% enforcer, save/pre-populate). Token ingestion `?token=` → `sessionStorage` + `history.replaceState()` in `main.js`. `localStorage` → `sessionStorage` migration: `shared/api.js`, `index.html`, `users/main.js`, `ds.html`. "My Portfolio" nav + `sec-my-portfolio` in `rita.html`. Disclaimer updated. Code Review CONDITIONAL (advisory: `portfolio_id` unused in JS). Merged dev `3dd19a5` (merge `1bfb333`).
-- **Prod deploy pushed:** `9700171` → `san-work-ravionics/riia-jun-release-prod`. **⚠ Actions status: pending.** At next session start: (1) confirm GitHub Actions green, (2) run `docker exec rita python -m alembic upgrade head` on EC2 if migration not auto-applied, (3) verify `https://riia.ravionics.nl/health`, (4) test My Portfolio section on RITA dashboard.
-- **My Portfolio bug fixes deployed:** `c95eb81` — CSS (mp-* block) + auth redirect fix (raw fetch on load, gate on Save only). GitHub Actions pending — verify green at next session start.
-- **Phase 4 pending:** FnO auth gate (entire app behind Google Sign-in) + FnO "My Portfolio" nav item. Start next session with `/enhance fno "Feature 26 Phase 4"`.
+**Session work (2026-05-30 session 2) — Feature 26 Phase 4 + Auth Fixes:**
+- **Phase 4 — FnO auth gate + My Portfolio COMPLETE.** `dashboard/js/fno/my-portfolio.js` (new), `fno.html` (auth redirect + nav item + section), `fno/main.js` (token ingestion + loader), `fno/nav.js` (_sectionLoaders hook). Deployed `bcab558`. GitHub Actions green.
+- **Auth bug chain fixed (root cause: `auth_token` vs `rita_token` key mismatch):**
+  - `shared/api.js` — `auth_token` → `rita_token` on read and remove (root cause of all 401s on save/JWT calls)
+  - `dashboard/js/rita/my-portfolio.js` — `auth_token` → `rita_token` (2 occurrences); trailing slash on `POST /api/v1/user-portfolio/`
+  - `dashboard/js/fno/my-portfolio.js` — 401 handler: show overlay → `window.location.href = '/'` → `/auth/google/login?state=fno`
+  - `dashboard/fno.html` — removed full-page overlay (wrong pattern); inline script now redirects to `/auth/google/login?state=fno` when no token
+  - `src/rita/exception_handlers.py` — `ValidationError` ctx.error `ValueError` now serialized as str → 500 → 422
+  - `savePortfolio()` — zero-allocation instruments filtered before POST
+- **Verified on production:** Portfolio save returns 201, data in DB, `_renderSavedDisplay` renders holdings table post-save. FnO auth redirects correctly.
+- **Next:** UI improvements to My Portfolio section (RITA + FnO) — next session.
 
 **Next session checklist:**
-1. Verify GitHub Actions green — https://github.com/san-work-ravionics/riia-jun-release-prod/actions (commit `c95eb81`)
-2. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-3. Test My Portfolio on RITA dashboard — confirm CSS renders + no Google auth redirect on load
-4. Log deploy `c95eb81` in `project-office/ops-deployments/DEPLOYMENT_KNOWLEDGE.md` (Phase 7)
-5. Run `docker exec rita python -m alembic upgrade head` on EC2 if not already applied (for Feature 26 Phase 1 migration)
-6. Start Phase 4: `/enhance fno "Feature 26 Phase 4"`
-- **data_refresh fixes (earlier today):** NIFTY/BANKNIFTY incremental CSV append + SKIP_INSTRUMENTS constant + ATHER skip guard. Deployed `b48d25e`. All 11 instruments refreshed.
+1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
+2. `/start-day` to review full task board
+3. UI improvements to My Portfolio (RITA + FnO) — better layout, allocation %, live total indicator
+
+**Session work (2026-05-30 session 1) — Feature 26 User Portfolio Store:**
+- **Phase 1 — Backend data layer COMPLETE.** `UserPortfolioKeyModel`, `UserPortfolioModel`, `UserPortfolioKeyRepo`, `UserPortfolioRepo`, `UserPortfolioService` (save/get, soft-replace), Alembic migration `20260530_add_user_portfolio_tables`, schemas (`HoldingItem`, `UserPortfolioCreate`, `UserPortfolioOut`). Merged dev `bc0074f` (merge `f963914`).
+- **Phase 2 — API endpoints + auth state param COMPLETE.** `POST /api/v1/user-portfolio` (201, JWT), `GET /api/v1/user-portfolio`, `GET /api/v1/experience/user-portfolio` (read-only). Auth: `state` param on Google login/callback — `state=fno` → `fno.html`, else → `index.html`. 22 QA tests pass. Merged dev `4bd0dc9` (merge `0fbae57`).
+- **Phase 3 — RITA frontend My Portfolio builder COMPLETE.** `dashboard/js/rita/my-portfolio.js` (allocation builder, 100% enforcer, save/pre-populate). Token ingestion `?token=` → `sessionStorage` + `history.replaceState()` in `main.js`. `localStorage` → `sessionStorage` migration: `shared/api.js`, `index.html`, `users/main.js`, `ds.html`. "My Portfolio" nav + `sec-my-portfolio` in `rita.html`. Disclaimer updated. Merged dev `3dd19a5` (merge `1bfb333`).
+- **data_refresh fixes:** NIFTY/BANKNIFTY incremental CSV append + SKIP_INSTRUMENTS constant + ATHER skip guard. Deployed `b48d25e`.
 
 **Session work (2026-05-24):**
 - **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
