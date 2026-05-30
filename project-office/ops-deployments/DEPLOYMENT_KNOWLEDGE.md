@@ -183,6 +183,7 @@
 | 2026-05-30 | `485c89d` | RITA Portfolio UI — renamed to "Portfolio", Phase 05 nav (pink), kpi-sm allocation tiles, new GET /api/v1/experience/rita/portfolio-performance endpoint, 2025 line chart post-save. Actions green; health ok. |
 | 2026-05-30 | `b28602f` | RITA nav — removed Utilities section so Phase 05 Portfolio sits directly after Phase 04. Actions green; health ok. |
 | 2026-05-30 | `584e807` | FnO Portfolio UI parity — kpi-sm read-only tiles, 2025 performance chart (same endpoint + pink Chart.js line as RITA), "Portfolio" heading, styled empty state with RITA link. Actions green; health ok. |
+| 2026-05-30 | `ffd502c` | Feature 27 Portfolio Hedge — new FnO nav section + GET /api/experience/fno/portfolio-hedge endpoint (JWT-auth, per-instrument hedge recommendations); Invest Game v2 nav link in RITA Study section. Actions pending at EOD. |
 
 ---
 

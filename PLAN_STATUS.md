@@ -1,22 +1,20 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-30 (EOD session 3) — Feature 26 fully closed. Portfolio UI redesign (kpi tiles + 2025 chart) on RITA + FnO. Spec files updated. Deployed `485c89d`, `b28602f`, `584e807`.
+**Last updated:** 2026-05-30 (EOD session 4) — Feature 27 Portfolio Hedge deployed + Invest Game v2 nav link. Commit `ffd502c` pushed; Actions pending at EOD.
 
-**Session work (2026-05-30 session 3) — Feature 26 UI + Closeout:**
-- **Portfolio renamed** "My Portfolio" → "Portfolio" across RITA + FnO nav, section headings, JS defaults.
-- **Phase 05 — Portfolio nav** added to RITA sidebar (pink `--chat` accent); duplicate LEARN items + Utilities section removed.
-- **kpi-sm allocation tiles** replace old mp-card grid — RITA: editable % input styled as kpi-value; FnO: read-only display with same tile style.
-- **New endpoint:** `GET /api/v1/experience/rita/portfolio-performance?holdings=NIFTY:40,...&year=2025` — loads instrument CSVs, normalises to base 100, returns daily weighted portfolio index. Smoke-tested locally (260 dates, base=100).
-- **2025 performance chart** rendered post-save on both RITA + FnO — pink Chart.js line, 160px, base 100.
-- **Spec updates:** Spec_RITA_App.md (portfolio-performance endpoint + Phase 3/4 UI notes), Spec_JS_Code.md (both my-portfolio.js descriptions). DEPLOYMENT_KNOWLEDGE.md (3 deploy rows).
-- **Feature 26 closed:** PLAN_STATUS marked complete; May/ phase folders (4 blank templates) removed; canonical folder `features/26 User Portfolio Store/` retained.
-- **Deployed:** `485c89d` (RITA tiles + chart), `b28602f` (nav cleanup), `584e807` (FnO parity). GitHub Actions green; health ok.
+**Session work (2026-05-30 session 4) — Feature 27 + Invest Game v2:**
+- **Invest Game v2 nav link** added to RITA sidebar Study section (`rita.html`) — links to `investgame_v2.html`. `MOCK_MODE` was already `false`.
+- **Feature 27 — Portfolio Hedge** (new FnO nav section):
+  - `GET /api/experience/fno/portfolio-hedge` — JWT-auth endpoint; loads user's saved portfolio; returns per-instrument hedge recommendations sorted by allocation. Logic: NIFTY/BANKNIFTY eligible (ATM put @ ≥30%, put spread 15–29%, optional <15%); equity instruments get "No NSE F&O" note with diversification guidance.
+  - `dashboard/js/fno/portfolio-hedge.js` — new module; risk badges (HIGH/MEDIUM/LOW), hedge type + cost estimate, empty/error/auth states.
+  - `fno.html` — "🛡 Portfolio Hedge" nav item + full section with disclaimer.
+  - `main.js` — section loader wired via `_sectionLoaders['portfolio-hedge']`.
+- **Deployed:** `ffd502c` pushed to prod; GitHub Actions triggered at EOD (health check deferred to next session).
 
 **Next session checklist:**
-1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. `/start-day` to review task board
-3. Invest Game v2 — flip `MOCK_MODE=false`, add nav link from main dashboard, decide v1 vs v2 coexistence
-4. Feature 27 — Hedge Analysis over saved portfolio (placeholder already in FnO)
-5. `/agent-performance-improvements` if alerts fire
+1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}` (verify `ffd502c` Actions completed)
+2. Verify Portfolio Hedge section works end-to-end on prod with saved portfolio
+3. Invest Game v2 — confirm `MOCK_MODE=false` is working on prod
+4. `/agent-performance-improvements` if alerts fire
 
 **Session work (2026-05-30 session 2) — Feature 26 Phase 4 + Auth Fixes:**
 - **Phase 4 — FnO auth gate + My Portfolio COMPLETE.** `dashboard/js/fno/my-portfolio.js` (new), `fno.html` (auth redirect + nav item + section), `fno/main.js` (token ingestion + loader), `fno/nav.js` (_sectionLoaders hook). Deployed `bcab558`. GitHub Actions green.
