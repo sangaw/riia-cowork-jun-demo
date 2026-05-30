@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-05-26 (Feature 17 Phase 1 deployed via EC2 local build — d043def; health ok)
+**Last updated:** 2026-05-30 (b48d25e deployed — data_refresh incremental + SKIP_INSTRUMENTS fix; health ok)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -175,6 +175,9 @@
 | 2026-05-26 | `17ffef1` | MCP SSE transport — Claude Desktop connects to production via mcp-remote. Extracted mcp_tools.py (shared), added mcp_sse_app.py (SSE), mounted /mcp/sse + /mcp/messages in main.py. mcp promoted to base deps. nginx /mcp/ location added with proxy_buffering off. End-to-end verified: tool execution + DB logging confirmed. |
 | 2026-05-26 | `a50dd05` | DS app MCP calls table — timestamps formatted as EU datetime DD-MMM-YYYY HH:MM:SS AM/PM; fmtDT() + mkTbl fmt support added to ds/utils.js |
 | 2026-05-26 | `2b2be01` | Investor onboarding flow v2 — auto-select goal tile per investor type; SLIDER_STOPS.short labels 3m/6m/9m/12m; SLIDER_STOPS.long 5 stops at 3yr steps to 15yr |
+| 2026-05-28 | `88a5773` | Feature 25+26 — ASML equity hedge scenarios (covered call + protective put + BS pricing); FnO dashboard consolidated (positions+margin into Overview, ASML-only KPI row, 7 widgets); i18n locale keys; unit tests. Actions run cancelled but code included in next deploy. |
+| 2026-05-29 | `e32595e` | Infra fixes — writable /app/data mount (instrument onboarding writes); model backup/restore around container swap; ApiCallLogMiddleware catches unhandled exceptions → 500s now visible in monitoring. GitHub Actions green; health ok. |
+| 2026-05-30 | `b48d25e` | data_refresh fixes — NIFTY/BANKNIFTY yf.csv now incremental (append-only, no full overwrite); SKIP_INSTRUMENTS constant added + ATHER skip guard in refresh_all(); test suite unblocked. GitHub Actions green; health ok. |
 
 ---
 

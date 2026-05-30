@@ -1,5 +1,11 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-27 — Feature 14 i18n Phase 2 Run A complete + Feature 25 ASML Equity Hedge Scenarios continuation complete. 14 unit tests committed to master (test_equity_hedge.py), PLAN_STATUS.md updated, Confluence Engineering v34→v35. Merged at 405d7cf.
+**Last updated:** 2026-05-30 — data_refresh fixes: NIFTY/BANKNIFTY incremental CSV append + SKIP_INSTRUMENTS constant + ATHER skip guard. SKIP_INSTRUMENTS test failure fixed (was never committed). Deployed to prod (b48d25e); all 11 instruments refreshed (max gap 58 days cleared).
+
+**Session work (2026-05-30):**
+- **data_refresh incremental refresh:** `fetch_and_write_raw()` refactored — NIFTY/BANKNIFTY now use same incremental append strategy as all other instruments (delta from last DB date, no full overwrite from 2009). Filename stays `_yf.csv`; `load_instrument_data()` merge unaffected. Commit `6ca80c1` (dev), `b48d25e` (prod).
+- **SKIP_INSTRUMENTS fix:** Constant `SKIP_INSTRUMENTS = {"ATHER"}` was never committed to master (existed only in a worktree). Added to `data_refresh.py` with skip guard in `refresh_all()`. Unblocked `test_data_refresh.py::TestRefreshAllYfinanceErrorContinues` — all 8 tests now passing.
+- **Production deploy:** `b48d25e` pushed via `/aws-production-deploy`; GitHub Actions green; health ok.
+- **Data refresh run:** `/refresh-all-instruments-data` — 11 instruments refreshed, max gap 58 days (NVIDIA). All `status: ok`.
 
 **Session work (2026-05-24):**
 - **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
@@ -67,7 +73,9 @@
 - ~~**Feature 16 (May) — Strategy Comparison:**~~ ✅ COMPLETE — merged to master, deployed to production 2026-05-25.
 - ~~**Feature 18 (May) — Skill-Based Approach Revision:**~~ ✅ COMPLETE — 2026-05-26.
 - ATHER instrument — onboard via Ops dashboard when yfinance indexes it
-- ~~**Feature 14 i18n Phase 2 Run A:**~~ ✅ COMPLETE — 12 JS loaders wired, 411 keys × 3 locales, merged 6460d9d (2026-05-27). Follow-up: 6 advisory call-site fixes + Ops loaders (Run B).
+- ~~**Feature 14 i18n Phase 2 Run A:**~~ ✅ COMPLETE — 12 JS loaders wired, 411 keys × 3 locales, merged 6460d9d (2026-05-27).
+- ~~**Feature 14 i18n Phase 2 Run B:**~~ ✅ COMPLETE — 35 ops.* keys added (446 total, parity confirmed); t() wired into overview.js, monitoring.js, chat.js, alerts.js, daily-ops.js; 6 advisory call-site fixes applied; `const t` → `tr` rename in overview.js. Deployed 2026-05-30 (907958d).
+- ~~**ATHER instrument:**~~ ✅ REMOVED — no yfinance data; disabled in existing DBs via startup UPDATE; removed from seed, market data loop, market-signals.js filter, data_refresh.py SKIP_INSTRUMENTS. Deployed 2026-05-30 (907958d).
 - Invest Game v2 — arcade layout in progress
 - Feature 17 follow-up: ~~update GitHub secret `RITA_BASE_URL`~~ ✅ ~~update Google OAuth redirect URI~~ ✅ ~~update `production.yaml` cors_origins~~ ✅ — all done
 - Feature 18 (User Traffic Dashboard): COMPLETE — all phases merged and verified in prod

@@ -12,8 +12,8 @@ Rules:
 - Use get_settings() — not bare settings
 - upsert_cache_delta: db.add_all() with explicit existence check — no db.merge(), no DELETE
 - fetch_and_write_raw: flatten yfinance MultiIndex before CSV write
-- NIFTY/BANKNIFTY: overwrite companion _yf.csv (full download from 2009-09-01)
-- All others: append new rows to existing _daily.csv (start = last_date + 1 day)
+- All instruments use incremental fetch (last_date + 1 day → today); full seed on first run
+- NIFTY/BANKNIFTY write to companion _yf.csv; all others write to _daily.csv
 - Per-instrument errors caught in refresh_all() — never abort on a single failure
 """
 from __future__ import annotations
@@ -49,6 +49,9 @@ YF_TICKER_MAP: dict[str, str] = {
 
 # NIFTY and BANKNIFTY write to a companion _yf.csv; all others use _daily.csv
 COMPANION_FILE_INSTRUMENTS: set[str] = {"NIFTY", "BANKNIFTY"}
+
+# Instruments excluded from refresh (newly listed, data gaps expected)
+SKIP_INSTRUMENTS: set[str] = {"ATHER"}
 
 # ── check_gap ─────────────────────────────────────────────────────────────────
 
@@ -313,6 +316,10 @@ def refresh_all(db: Session) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
 
     for instrument_id in sorted(YF_TICKER_MAP.keys()):
+        if instrument_id in SKIP_INSTRUMENTS:
+            log.info("data_refresh.skip", instrument=instrument_id, reason="excluded")
+            continue
+
         log.info("data_refresh.start", instrument=instrument_id)
         try:
             gap_info = check_gap(instrument_id, db)
