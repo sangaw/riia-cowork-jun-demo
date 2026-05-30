@@ -1,11 +1,13 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-30 — data_refresh fixes: NIFTY/BANKNIFTY incremental CSV append + SKIP_INSTRUMENTS constant + ATHER skip guard. SKIP_INSTRUMENTS test failure fixed (was never committed). Deployed to prod (b48d25e); all 11 instruments refreshed (max gap 58 days cleared).
+**Last updated:** 2026-05-30 (EOD) — Feature 26 User Portfolio Store Phases 1+2+3 complete. Pushed to prod (9700171). GitHub Actions in progress — verify green + run alembic upgrade head on EC2 at start of next session.
 
-**Session work (2026-05-30):**
-- **data_refresh incremental refresh:** `fetch_and_write_raw()` refactored — NIFTY/BANKNIFTY now use same incremental append strategy as all other instruments (delta from last DB date, no full overwrite from 2009). Filename stays `_yf.csv`; `load_instrument_data()` merge unaffected. Commit `6ca80c1` (dev), `b48d25e` (prod).
-- **SKIP_INSTRUMENTS fix:** Constant `SKIP_INSTRUMENTS = {"ATHER"}` was never committed to master (existed only in a worktree). Added to `data_refresh.py` with skip guard in `refresh_all()`. Unblocked `test_data_refresh.py::TestRefreshAllYfinanceErrorContinues` — all 8 tests now passing.
-- **Production deploy:** `b48d25e` pushed via `/aws-production-deploy`; GitHub Actions green; health ok.
-- **Data refresh run:** `/refresh-all-instruments-data` — 11 instruments refreshed, max gap 58 days (NVIDIA). All `status: ok`.
+**Session work (2026-05-30) — Feature 26 User Portfolio Store:**
+- **Phase 1 — Backend data layer COMPLETE.** `UserPortfolioKeyModel`, `UserPortfolioModel`, `UserPortfolioKeyRepo`, `UserPortfolioRepo`, `UserPortfolioService` (save/get, soft-replace), Alembic migration `20260530_add_user_portfolio_tables`, schemas (`HoldingItem`, `UserPortfolioCreate`, `UserPortfolioOut`). Merged dev `bc0074f` (merge `f963914`).
+- **Phase 2 — API endpoints + auth state param COMPLETE.** `POST /api/v1/user-portfolio` (201, JWT), `GET /api/v1/user-portfolio`, `GET /api/v1/experience/user-portfolio` (read-only). Auth: `state` param on Google login/callback — `state=fno` → `fno.html`, else → `index.html`. 22 QA tests pass. Merged dev `4bd0dc9` (merge `0fbae57`).
+- **Phase 3 — RITA frontend My Portfolio builder COMPLETE.** `dashboard/js/rita/my-portfolio.js` (allocation builder, 100% enforcer, save/pre-populate). Token ingestion `?token=` → `sessionStorage` + `history.replaceState()` in `main.js`. `localStorage` → `sessionStorage` migration: `shared/api.js`, `index.html`, `users/main.js`, `ds.html`. "My Portfolio" nav + `sec-my-portfolio` in `rita.html`. Disclaimer updated. Code Review CONDITIONAL (advisory: `portfolio_id` unused in JS). Merged dev `3dd19a5` (merge `1bfb333`).
+- **Prod deploy pushed:** `9700171` → `san-work-ravionics/riia-jun-release-prod`. **⚠ Actions status: pending.** At next session start: (1) confirm GitHub Actions green, (2) run `docker exec rita python -m alembic upgrade head` on EC2 if migration not auto-applied, (3) verify `https://riia.ravionics.nl/health`, (4) test My Portfolio section on RITA dashboard.
+- **Phase 4 pending:** FnO auth gate (entire app behind Google Sign-in) + FnO "My Portfolio" nav item. Start next session with `/enhance fno "Feature 26 Phase 4"`.
+- **data_refresh fixes (earlier today):** NIFTY/BANKNIFTY incremental CSV append + SKIP_INSTRUMENTS constant + ATHER skip guard. Deployed `b48d25e`. All 11 instruments refreshed.
 
 **Session work (2026-05-24):**
 - **Functional KPIs panel fixed:** `functional-kpis.js` was fetching from a stale static JSON file (`/ops/metrics/functional-kpis.json`, last generated 2026-05-08). Replaced with live `GET /api/experience/ops/functional-kpis` endpoint that computes training success rate, error rates, and p95 latency from `api_call_log` and `training_runs` tables per hourly bucket. New `FunctionalKPIsResponse`/`FunctionalKPIsSeries` Pydantic schemas added (`src/rita/schemas/functional_kpis.py`).
@@ -72,10 +74,13 @@
 - ~~**Feature 17 (May) — Mobile Device UI:**~~ ✅ FULLY DEPLOYED 2026-05-26 — EC2 local build (commit `d043def`); mobile UA redirect verified live; ops docs updated.
 - ~~**Feature 16 (May) — Strategy Comparison:**~~ ✅ COMPLETE — merged to master, deployed to production 2026-05-25.
 - ~~**Feature 18 (May) — Skill-Based Approach Revision:**~~ ✅ COMPLETE — 2026-05-26.
-- ATHER instrument — onboard via Ops dashboard when yfinance indexes it
 - ~~**Feature 14 i18n Phase 2 Run A:**~~ ✅ COMPLETE — 12 JS loaders wired, 411 keys × 3 locales, merged 6460d9d (2026-05-27).
-- ~~**Feature 14 i18n Phase 2 Run B:**~~ ✅ COMPLETE — 35 ops.* keys added (446 total, parity confirmed); t() wired into overview.js, monitoring.js, chat.js, alerts.js, daily-ops.js; 6 advisory call-site fixes applied; `const t` → `tr` rename in overview.js. Deployed 2026-05-30 (907958d).
-- ~~**ATHER instrument:**~~ ✅ REMOVED — no yfinance data; disabled in existing DBs via startup UPDATE; removed from seed, market data loop, market-signals.js filter, data_refresh.py SKIP_INSTRUMENTS. Deployed 2026-05-30 (907958d).
+- ~~**Feature 14 i18n Phase 2 Run B:**~~ ✅ COMPLETE — 35 ops.* keys added (446 total, parity confirmed). Deployed 2026-05-30 (907958d).
+- ~~**ATHER instrument:**~~ ✅ REMOVED — no yfinance data. Deployed 2026-05-30 (907958d).
+- ~~**Feature 26 Phase 1 (backend data layer):**~~ ✅ COMPLETE — merged `bc0074f` (2026-05-30).
+- ~~**Feature 26 Phase 2 (API endpoints + auth state param):**~~ ✅ COMPLETE — merged `4bd0dc9` (2026-05-30).
+- ~~**Feature 26 Phase 3 (RITA frontend My Portfolio):**~~ ✅ COMPLETE — merged `3dd19a5` (2026-05-30). **Prod push `9700171` in progress — verify GitHub Actions + alembic at next session start.**
+- **Feature 26 Phase 4 (FnO auth gate + My Portfolio):** 🔜 NEXT — start with `/enhance fno "Feature 26 Phase 4"`. Blocked on Phase 3 (COMPLETE).
 - Invest Game v2 — arcade layout in progress
 - Feature 17 follow-up: ~~update GitHub secret `RITA_BASE_URL`~~ ✅ ~~update Google OAuth redirect URI~~ ✅ ~~update `production.yaml` cors_origins~~ ✅ — all done
 - Feature 18 (User Traffic Dashboard): COMPLETE — all phases merged and verified in prod
