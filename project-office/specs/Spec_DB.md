@@ -96,6 +96,15 @@ cp rita_output/rita.db rita_output/rita.db.bak-$(date +%Y%m%d-%H%M)
 | `users` | `models/user.py` | User accounts: `user_id, username, email, hashed_password, is_active, is_admin, created_at` |
 | `model_registry` | `models/model_registry.py` | Model version tracking |
 
+### User Portfolio Store (user-owned, not recoverable)
+
+| Table | Model file | PK | Contains |
+|---|---|---|---|
+| `user_portfolio_keys` | `models/user_portfolio_key.py` | `key_id` (UUID String) | One row per user — stable indirection key; FK→`users.id` |
+| `user_portfolios` | `models/user_portfolio.py` | `portfolio_id` (UUID String) | Versioned portfolio snapshots — `key_id` FK, `name`, `holdings` (JSON array of `{instrument_id, allocation_pct}`), `created_at`, `updated_at`, `is_active` (soft-replace pattern) |
+
+Key design: `user_portfolio_keys` decouples user identity from portfolio history. Each `save()` call deactivates prior rows (`is_active=False`) and inserts a new active row, keeping a full audit trail without deletes.
+
 ---
 
 ## 4. Startup Seeding Behaviour

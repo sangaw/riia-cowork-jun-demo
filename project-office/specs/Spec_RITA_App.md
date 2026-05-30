@@ -315,6 +315,7 @@ GET /api/v1/portfolio/summary
 | `BacktestService` | `__init__(db: Session)` | `start_backtest(params)`, `list_runs()` |
 | `ManoeuvreService` | `__init__(db: Session)` | `record(manoeuvre)`, `list_all()`, `list_recent(n)`, `list_by_date(date)` |
 | `PortfolioService` | `__init__(db: Session)` | `record(portfolio)`, `list_all()`, `get_by_date(date)`, `get_latest()` |
+| `UserPortfolioService` | `__init__(db: Session)` | `save(user_id, holdings, name) -> UserPortfolioOut`, `get(user_id) -> UserPortfolioOut \| None` |
 
 ---
 
