@@ -1,12 +1,21 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-30 (EOD) — Feature 26 User Portfolio Store Phases 1+2+3 complete. Pushed to prod (9700171). GitHub Actions in progress — verify green + run alembic upgrade head on EC2 at start of next session.
+**Last updated:** 2026-05-30 (EOD) — Feature 26 Phase 3 My Portfolio CSS fix + auth redirect fix deployed (c95eb81). GitHub Actions triggered — verify green at next session start.
 
 **Session work (2026-05-30) — Feature 26 User Portfolio Store:**
 - **Phase 1 — Backend data layer COMPLETE.** `UserPortfolioKeyModel`, `UserPortfolioModel`, `UserPortfolioKeyRepo`, `UserPortfolioRepo`, `UserPortfolioService` (save/get, soft-replace), Alembic migration `20260530_add_user_portfolio_tables`, schemas (`HoldingItem`, `UserPortfolioCreate`, `UserPortfolioOut`). Merged dev `bc0074f` (merge `f963914`).
 - **Phase 2 — API endpoints + auth state param COMPLETE.** `POST /api/v1/user-portfolio` (201, JWT), `GET /api/v1/user-portfolio`, `GET /api/v1/experience/user-portfolio` (read-only). Auth: `state` param on Google login/callback — `state=fno` → `fno.html`, else → `index.html`. 22 QA tests pass. Merged dev `4bd0dc9` (merge `0fbae57`).
 - **Phase 3 — RITA frontend My Portfolio builder COMPLETE.** `dashboard/js/rita/my-portfolio.js` (allocation builder, 100% enforcer, save/pre-populate). Token ingestion `?token=` → `sessionStorage` + `history.replaceState()` in `main.js`. `localStorage` → `sessionStorage` migration: `shared/api.js`, `index.html`, `users/main.js`, `ds.html`. "My Portfolio" nav + `sec-my-portfolio` in `rita.html`. Disclaimer updated. Code Review CONDITIONAL (advisory: `portfolio_id` unused in JS). Merged dev `3dd19a5` (merge `1bfb333`).
 - **Prod deploy pushed:** `9700171` → `san-work-ravionics/riia-jun-release-prod`. **⚠ Actions status: pending.** At next session start: (1) confirm GitHub Actions green, (2) run `docker exec rita python -m alembic upgrade head` on EC2 if migration not auto-applied, (3) verify `https://riia.ravionics.nl/health`, (4) test My Portfolio section on RITA dashboard.
+- **My Portfolio bug fixes deployed:** `c95eb81` — CSS (mp-* block) + auth redirect fix (raw fetch on load, gate on Save only). GitHub Actions pending — verify green at next session start.
 - **Phase 4 pending:** FnO auth gate (entire app behind Google Sign-in) + FnO "My Portfolio" nav item. Start next session with `/enhance fno "Feature 26 Phase 4"`.
+
+**Next session checklist:**
+1. Verify GitHub Actions green — https://github.com/san-work-ravionics/riia-jun-release-prod/actions (commit `c95eb81`)
+2. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
+3. Test My Portfolio on RITA dashboard — confirm CSS renders + no Google auth redirect on load
+4. Log deploy `c95eb81` in `project-office/ops-deployments/DEPLOYMENT_KNOWLEDGE.md` (Phase 7)
+5. Run `docker exec rita python -m alembic upgrade head` on EC2 if not already applied (for Feature 26 Phase 1 migration)
+6. Start Phase 4: `/enhance fno "Feature 26 Phase 4"`
 - **data_refresh fixes (earlier today):** NIFTY/BANKNIFTY incremental CSV append + SKIP_INSTRUMENTS constant + ATHER skip guard. Deployed `b48d25e`. All 11 instruments refreshed.
 
 **Session work (2026-05-24):**
