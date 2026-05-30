@@ -1,4 +1,7 @@
 {
+  "env": {
+    "CLAUDE_CODE_TMPDIR": "/Users/sgawde/tmp/claude-tmpdir"
+  },
   "hooks": {
     "PreToolUse": [
       {

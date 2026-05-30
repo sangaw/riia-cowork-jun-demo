@@ -346,9 +346,10 @@ ema_5, ema_13, ema_26
 target_return_pct, time_horizon_days, risk_tolerance,
 annualised_target, required_monthly,
 feasibility ("conservative"|"realistic"|"ambitious"|"unrealistic"),
-nifty_yearly_returns: [float, ...],
+yearly_returns: [{year: string, return_pct: float}, ...],
 last_12m_return
 ```
+**JS reads:** `r.annualised_target`, `r.required_monthly`, `r.last_12m_return`, `r.yearly_returns[].year/.return_pct`. `Suggested Target` is avg of `yearly_returns[].return_pct`.
 
 ### `GET /api/v1/risk-timeline?phase=all&instrument=NIFTY`
 **Consumer:** `trades.js` → `loadTrades()`

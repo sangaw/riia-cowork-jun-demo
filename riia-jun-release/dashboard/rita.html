@@ -325,6 +325,19 @@ tr:hover td{background:var(--surface2);}
   </div>
 
   <div class="nav-section">
+    <div class="nav-label" style="color:var(--t3)">Study</div>
+    <div class="nav-item p00" data-s="learnings" onclick="show('learnings',this)">
+      <span class="nav-icon">◎</span> Learnings
+    </div>
+    <div class="nav-item p00" data-s="strategy-compare" onclick="show('strategy-compare',this)">
+      <span class="nav-icon">⊞</span> Strategy Compare
+    </div>
+    <div class="nav-item p00" data-s="agent-panel" onclick="show('agent-panel',this)">
+      <span class="nav-icon">◈</span> Agent Panel
+    </div>
+  </div>
+
+  <div class="nav-section">
     <div class="nav-label" style="color:var(--build)">Phase 01 — Plan</div>
 <div class="nav-item p01" data-s="goal" onclick="show('goal',this)">
       <span class="nav-icon">◎</span> <span data-i18n="heading.financial_goal">Financial Goal</span>
@@ -344,9 +357,6 @@ tr:hover td{background:var(--surface2);}
     <div class="nav-label" style="color:var(--warn)">Phase 02 — Backtest</div>
     <div class="nav-item p02" data-s="scenarios" onclick="show('scenarios',this)">
       <span class="nav-icon">◎</span> Scenarios
-    </div>
-    <div class="nav-item p02" data-s="agent-panel" onclick="show('agent-panel',this)">
-      <span class="nav-icon">◈</span> Agent Panel
     </div>
   </div>
 
@@ -380,15 +390,6 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
-  <div class="nav-section">
-    <div class="nav-label" style="color:var(--t3)">Learn</div>
-    <div class="nav-item p00" data-s="learnings" onclick="show('learnings',this)">
-      <span class="nav-icon">◎</span> Learnings
-    </div>
-    <div class="nav-item p00" data-s="strategy-compare" onclick="show('strategy-compare',this)">
-      <span class="nav-icon">⊞</span> Strategy Compare
-    </div>
-  </div>
 
   <div class="sidebar-footer">
     <div class="lbl" id="sb-data-info">Nifty 50 · 1999–2025</div>
@@ -606,8 +607,7 @@ tr:hover td{background:var(--surface2);}
         <div class="page-sub">Step 2 — Technical indicators · Converse with RITA Agent</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span id="market-status-badge" class="badge neu">Not Run</span>
-        <button class="btn btn-build btn-sm" onclick="runMarket()" id="btn-market">Analyse Market</button>
+        <span id="market-status-badge" class="badge neu">Loading</span>
       </div>
     </div>
     <!-- Row 2: all 10 signals in one row -->
@@ -902,14 +902,15 @@ tr:hover td{background:var(--surface2);}
     <div class="hmc"><div class="hmc-val" id="p-constraints">—</div><div class="hmc-label">Constraints</div></div>
   </div>
 
-  <div class="chart-wrap">
-    <div class="chart-title">Cumulative Returns — RITA vs Buy &amp; Hold</div>
-    <div class="chart-box"><canvas id="chart-returns"></canvas></div>
-  </div>
-
-  <div class="chart-wrap">
-    <div class="chart-title">Portfolio Drawdown</div>
-    <div class="chart-box"><canvas id="chart-drawdown"></canvas></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">Cumulative Returns — RITA vs Buy &amp; Hold</div>
+      <div class="chart-box"><canvas id="chart-returns"></canvas></div>
+    </div>
+    <div class="chart-wrap" style="margin:0">
+      <div class="chart-title">Portfolio Drawdown</div>
+      <div class="chart-box"><canvas id="chart-drawdown"></canvas></div>
+    </div>
   </div>
 
 </section>
