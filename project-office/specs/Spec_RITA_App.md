@@ -28,7 +28,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 ```
 
 **Special routers (outside the 3 tiers):**
-- `api/v1/auth.py` — JWT token issue (`POST /auth/token`)
+- `api/v1/auth.py` — JWT token issue (`POST /auth/token`); Google OAuth login/callback. `GET /auth/google/login` accepts optional `state` query param (e.g. `state=fno`) which is appended to the Google OAuth URL. `GET /auth/google/callback` accepts optional `state`; maps `state=="fno"` → `/dashboard/fno.html?token=…`, otherwise → `/dashboard/index.html?token=…` (backward-compatible).
 - `api/v1/users.py` — User management (`GET/POST /api/v1/users`)
 - `api/v1/portfolio.py` — Cross-instrument portfolio + FnO endpoints
 - `api/v1/workflow/chat.py` — Local intent classifier chat
@@ -77,6 +77,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `workflow/instrument_onboard.py` | `GET /api/v1/instrument/search?q=<str>` (no auth), `POST /api/v1/instrument/onboard` (no auth) |
 | `workflow/chat.py` | `POST /api/v1/chat`, `POST /api/v1/chat/warmup` |
 | `workflow/commentary.py` | `POST /api/v1/commentary` |
+| `workflow/user_portfolio.py` | `POST /api/v1/user-portfolio` (201, JWT), `GET /api/v1/user-portfolio` (JWT) |
 
 ### Experience Tier — Read-only, no auth
 
@@ -91,6 +92,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `experience/agent_panel.py` | `/api/v1/agent-panel` | LangGraph 6-agent simulation for ASML |
 | `experience/invest_game.py` | `/api/experience/invest-game` | User-vs-AI investing game — session management, agent chain per day, run log writer |
 | `experience/users.py` | `/api/v1/experience/users` | User traffic KPIs and 30-day daily login breakdown — no PII |
+| `experience/user_portfolio.py` | `/api/v1/experience` | Active user portfolio — read-only, JWT required per-route. `GET /api/v1/experience/user-portfolio` |
 
 ### RITA Experience Endpoints (`/api/v1/experience/rita`)
 
