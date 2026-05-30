@@ -124,6 +124,16 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 |---|---|---|---|
 | `GET` | `/api/v1/experience/users/traffic` | Returns aggregated login KPIs and 30-day daily breakdown — no PII. `UserTrafficResponse` with `summary` (total_users, active_today, active_this_week, active_this_month, total_logins_all_time) and `daily` list (date, unique_users, total_logins, new_registrations) | JWT |
 
+### User Portfolio Endpoints (Feature 26)
+
+| Method | Path | Description | Auth | Router file |
+|---|---|---|---|---|
+| `GET` | `/api/v1/experience/user-portfolio` | Read active portfolio for authenticated user — returns `UserPortfolioOut` with `portfolio_id`, `name`, `updated_at`, `holdings` (list of `{instrument_id, allocation_pct}`). 404 if none saved. | JWT | `experience/user_portfolio.py` |
+| `GET` | `/api/v1/user-portfolio` | Read active portfolio (workflow tier alias). | JWT | `workflow/user_portfolio.py` |
+| `POST` | `/api/v1/user-portfolio` | Save portfolio — body: `{name: str, holdings: [{instrument_id, allocation_pct}]}`. Deactivates previous, inserts new. Returns `UserPortfolioOut` (201). | JWT | `workflow/user_portfolio.py` |
+
+**Frontend (Phase 3 — completed 2026-05-30):** `dashboard/js/rita/my-portfolio.js` — `loadMyPortfolio()` + `savePortfolio()`. Section `sec-my-portfolio` in `rita.html`. Auth token migrated from localStorage → sessionStorage across all RITA JS files.
+
 ### Instrument Workflow Endpoints (`/api/v1/instrument` via `workflow/instrument_onboard.py`)
 
 | Method | Path | Query params | Request body | Response | Description |
