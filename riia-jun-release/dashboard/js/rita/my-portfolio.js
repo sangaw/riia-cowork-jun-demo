@@ -87,8 +87,8 @@ export async function loadMyPortfolio() {
     }
     _renderSavedDisplay(portfolio);
   } catch (err) {
-    if (err.message && err.message.includes('404')) {
-      // no portfolio yet — leave inputs at 0, keep saved display hidden
+    if (err.message === 'No active portfolio found' || err.message.includes('No active portfolio')) {
+      // 404 — first time user, leave inputs at 0, keep saved display hidden
     } else if (err.message) {
       setEl('mp-status-msg', `<span class="mp-err">${err.message}</span>`);
     }
