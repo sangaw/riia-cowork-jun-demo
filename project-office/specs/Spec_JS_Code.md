@@ -47,6 +47,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `technical-analysis.js` | Technical Analysis section — commentary + PV/ATR/RSI charts | `loadTechnicalAnalysis()` |
 | `learnings.js` | Learnings section — accordion cards + live market-trend charts | `loadLearnings()`, `toggleLearnCard(id)` |
 | `strategy-comparison.js` | Strategy Comparison card (Card 5 in Learnings) — 5-strategy OHLCV dashboard; 7 Chart.js panels; instrument pills; year toggle; commentary | `loadStrategyComparison()`, `scSelectInstrument(id)`, `scSelectYear(year)` |
+| `my-portfolio.js` | My Portfolio allocation builder — instrument cards, 100% allocation enforcer, save to backend, pre-fill from saved portfolio | `loadMyPortfolio()`, `savePortfolio()` |
 
 ---
 
