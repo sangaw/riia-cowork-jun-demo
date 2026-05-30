@@ -181,6 +181,18 @@ Two UIs exist for the same backend. Both use `MOCK_MODE` flag to bypass the real
 | `/api/v1/portfolio/man-daily-snapshot` | POST | Record daily portfolio snapshot |
 | `POST /api/v1/portfolio/equity-hedge-scenarios` | No | Portfolio tier | ASML equity portfolio performance + Black-Scholes covered call and protective put hedge scenarios with payoff curves. Body: instrument, n_shares, start_date, end_date. |
 
+### User Portfolio Endpoints (Feature 26)
+
+| Method | Path | Description | Auth | Router file |
+|---|---|---|---|---|
+| `POST` | `/api/v1/user-portfolio` | Save (create new version of) the authenticated user's allocation portfolio. Body: `{name, holdings: [{instrument_id, allocation_pct}]}`. Returns `UserPortfolioOut`. | JWT | `workflow/user_portfolio.py` |
+| `GET` | `/api/v1/user-portfolio` | Return most recent active portfolio for authenticated user. 404 if none saved. | JWT | `workflow/user_portfolio.py` |
+| `GET` | `/api/v1/experience/user-portfolio` | Read active portfolio for authenticated user — returns `UserPortfolioOut` with `portfolio_id`, `name`, `updated_at`, `holdings` (list of `{instrument_id, allocation_pct}`). 404 if none saved. | JWT | `experience/user_portfolio.py` |
+
+**Frontend (Phase 3 — completed 2026-05-30):** `dashboard/js/rita/my-portfolio.js` — `loadMyPortfolio()` + `savePortfolio()`. Section `sec-my-portfolio` in `rita.html`. Auth token migrated from localStorage → sessionStorage across all RITA JS files.
+
+**Frontend (Phase 4 — 2026-05-30):** `dashboard/js/fno/my-portfolio.js` — `loadFnoMyPortfolio()`. Section `page-my-portfolio` in `fno.html`. Full-page auth gate (client-side JWT check, `rita_token`) added to `fno.html`. Token ingestion (`?token=` → sessionStorage) in `fno/main.js`.
+
 ---
 
 ## 4. Key Request Flows
