@@ -132,7 +132,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `GET` | `/api/v1/user-portfolio` | Read active portfolio (workflow tier alias). | JWT | `workflow/user_portfolio.py` |
 | `POST` | `/api/v1/user-portfolio` | Save portfolio — body: `{name: str, holdings: [{instrument_id, allocation_pct}]}`. Deactivates previous, inserts new. Returns `UserPortfolioOut` (201). | JWT | `workflow/user_portfolio.py` |
 
-**Frontend (Phase 3 — completed 2026-05-30):** `dashboard/js/rita/my-portfolio.js` — `loadMyPortfolio()` + `savePortfolio()`. Section `sec-my-portfolio` in `rita.html`. Auth token migrated from localStorage → sessionStorage across all RITA JS files.
+**Frontend RITA (Phase 3 + UI update — 2026-05-30):** `dashboard/js/rita/my-portfolio.js` — `loadMyPortfolio()` + `savePortfolio()`. Section `sec-my-portfolio` in `rita.html` under Phase 05 — Portfolio nav (pink). Allocation builder uses `kpi kpi-sm` tiles. After save: chips + 2025 performance chart. See Phase 05 frontend note in full endpoint table below.
 
 ### Instrument Workflow Endpoints (`/api/v1/instrument` via `workflow/instrument_onboard.py`)
 
@@ -147,6 +147,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | Method | Path | Description | Router file |
 |---|---|---|---|
 | `GET` | `/api/experience/rita/technical-commentary` | Technical commentary + signal summary for active instrument | `rita.py` |
+| `GET` | `/api/v1/experience/rita/portfolio-performance` | Custom portfolio 2025 daily performance index. Query params: `holdings` (e.g. `NIFTY:40,NVIDIA:30,ASML:30`) and `year` (default 2025). Loads each instrument's OHLCV CSV via `load_instrument_data`, normalises to base 100 on first trading day, computes daily weighted portfolio value across union of all trading dates (forward-filled). Returns `{dates, values, instruments}`. No auth required. | `rita.py` |
 
 ### Invest Game Endpoints (`/api/experience/invest-game`)
 
@@ -201,9 +202,9 @@ Two UIs exist for the same backend. Both use `MOCK_MODE` flag to bypass the real
 | `GET` | `/api/v1/user-portfolio` | Return most recent active portfolio for authenticated user. 404 if none saved. | JWT | `workflow/user_portfolio.py` |
 | `GET` | `/api/v1/experience/user-portfolio` | Read active portfolio for authenticated user — returns `UserPortfolioOut` with `portfolio_id`, `name`, `updated_at`, `holdings` (list of `{instrument_id, allocation_pct}`). 404 if none saved. | JWT | `experience/user_portfolio.py` |
 
-**Frontend (Phase 3 — completed 2026-05-30):** `dashboard/js/rita/my-portfolio.js` — `loadMyPortfolio()` + `savePortfolio()`. Section `sec-my-portfolio` in `rita.html`. Auth token migrated from localStorage → sessionStorage across all RITA JS files.
+**Frontend RITA (Phase 3 + UI update — 2026-05-30):** `dashboard/js/rita/my-portfolio.js` — `loadMyPortfolio()` + `savePortfolio()`. Section `sec-my-portfolio` in `rita.html` under **Phase 05 — Portfolio** nav (pink `--chat` accent, replaces Utilities section). Allocation builder uses `kpi kpi-sm` tiles — one per instrument, editable % input styled as kpi-value, "of portfolio" delta. After save: allocation chips + 160px Chart.js line chart (2025 performance, base 100) via `portfolio-performance` endpoint. Auth token in sessionStorage (`rita_token`).
 
-**Frontend (Phase 4 — 2026-05-30):** `dashboard/js/fno/my-portfolio.js` — `loadFnoMyPortfolio()`. Section `page-my-portfolio` in `fno.html`. Full-page auth gate (client-side JWT check, `rita_token`) added to `fno.html`. Token ingestion (`?token=` → sessionStorage) in `fno/main.js`.
+**Frontend FnO (Phase 4 + UI update — 2026-05-30):** `dashboard/js/fno/my-portfolio.js` — `loadFnoMyPortfolio()`. Section `page-my-portfolio` in `fno.html` (heading: "Portfolio"). Read-only `kpi kpi-sm` tiles per instrument showing allocation %, 2025 performance chart (same endpoint + pink Chart.js line as RITA). Empty state links to RITA builder. Full-page auth gate (client-side `rita_token` check) in `fno.html`. Token ingestion (`?token=` → sessionStorage) in `fno/main.js`.
 
 ---
 

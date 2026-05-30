@@ -180,6 +180,9 @@
 | 2026-05-30 | `b48d25e` | data_refresh fixes — NIFTY/BANKNIFTY yf.csv now incremental (append-only, no full overwrite); SKIP_INSTRUMENTS constant added + ATHER skip guard in refresh_all(); test suite unblocked. GitHub Actions green; health ok. |
 | 2026-05-30 | `801e811` | RITA UI — nav restructure (Study menu after Overview; Agent Panel in Study); Set Goal field-name fixes; market auto-load on section visit; Performance charts side-by-side; GoalRequest.instrument field added; yearly_returns structured as {year,return_pct}. GitHub Actions green; health ok. |
 | 2026-05-30 | `ebf01f7` | Feature 26 Phase 4 — FnO auth gate + My Portfolio section. Multiple hotfixes: auth overlay removed (replaced with redirect); shared/api.js auth_token→rita_token key fix (root cause of all 401s); zero-alloc filter before POST; ValidationError serialization crash fix. Portfolio save + display working on prod. |
+| 2026-05-30 | `485c89d` | RITA Portfolio UI — renamed to "Portfolio", Phase 05 nav (pink), kpi-sm allocation tiles, new GET /api/v1/experience/rita/portfolio-performance endpoint, 2025 line chart post-save. Actions green; health ok. |
+| 2026-05-30 | `b28602f` | RITA nav — removed Utilities section so Phase 05 Portfolio sits directly after Phase 04. Actions green; health ok. |
+| 2026-05-30 | `584e807` | FnO Portfolio UI parity — kpi-sm read-only tiles, 2025 performance chart (same endpoint + pink Chart.js line as RITA), "Portfolio" heading, styled empty state with RITA link. Actions green; health ok. |
 
 ---
 

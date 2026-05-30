@@ -47,7 +47,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `technical-analysis.js` | Technical Analysis section — commentary + PV/ATR/RSI charts | `loadTechnicalAnalysis()` |
 | `learnings.js` | Learnings section — accordion cards + live market-trend charts | `loadLearnings()`, `toggleLearnCard(id)` |
 | `strategy-comparison.js` | Strategy Comparison card (Card 5 in Learnings) — 5-strategy OHLCV dashboard; 7 Chart.js panels; instrument pills; year toggle; commentary | `loadStrategyComparison()`, `scSelectInstrument(id)`, `scSelectYear(year)` |
-| `my-portfolio.js` | My Portfolio allocation builder — instrument cards, 100% allocation enforcer, save to backend, pre-fill from saved portfolio | `loadMyPortfolio()`, `savePortfolio()` |
+| `my-portfolio.js` | Portfolio allocation builder (Phase 05 nav) — `kpi kpi-sm` tiles (one per instrument, editable % input), 100% enforcer + progress bar, save to `POST /api/v1/user-portfolio/`, pre-fill from saved portfolio. Post-save: allocation chips + Chart.js 2025 line chart via `portfolio-performance` endpoint (base 100). | `loadMyPortfolio()`, `savePortfolio()` |
 
 ---
 
@@ -70,7 +70,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `hedge.js` | Hedge Radar section | `loadHedge()` |
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
 | `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
-| `my-portfolio.js` | My Portfolio read display — renders allocation holdings from /api/v1/experience/user-portfolio, handles 404 empty state, 401 re-auth | `loadFnoMyPortfolio()` |
+| `my-portfolio.js` | Portfolio read-only display — `kpi kpi-sm` tiles per holding (instrument_id + allocation_pct, pink), 2025 Chart.js performance chart via `portfolio-performance` endpoint. 404 → empty state with link to RITA builder. 401 → clears token, redirects to `/`. | `loadFnoMyPortfolio()` |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---

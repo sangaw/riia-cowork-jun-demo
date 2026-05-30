@@ -95,7 +95,8 @@
 - ~~**Feature 26 Phase 1 (backend data layer):**~~ ✅ COMPLETE — merged `bc0074f` (2026-05-30).
 - ~~**Feature 26 Phase 2 (API endpoints + auth state param):**~~ ✅ COMPLETE — merged `4bd0dc9` (2026-05-30).
 - ~~**Feature 26 Phase 3 (RITA frontend My Portfolio):**~~ ✅ COMPLETE — merged `3dd19a5` (2026-05-30). **Prod push `9700171` in progress — verify GitHub Actions + alembic at next session start.**
-- **Feature 26 Phase 4 (FnO auth gate + My Portfolio):** 🔜 NEXT — start with `/enhance fno "Feature 26 Phase 4"`. Blocked on Phase 3 (COMPLETE).
+- ~~**Feature 26 Phase 4 (FnO auth gate + My Portfolio):**~~ ✅ COMPLETE — deployed `ebf01f7` (2026-05-30).
+- ~~**Feature 26 UI Update (RITA + FnO Portfolio):**~~ ✅ COMPLETE — kpi-sm allocation tiles, portfolio-performance endpoint, 2025 Chart.js line chart, Phase 05 nav, Utilities removed. Deployed `485c89d`, `b28602f`, `584e807` (2026-05-30).
 - Invest Game v2 — arcade layout in progress
 - Feature 17 follow-up: ~~update GitHub secret `RITA_BASE_URL`~~ ✅ ~~update Google OAuth redirect URI~~ ✅ ~~update `production.yaml` cors_origins~~ ✅ — all done
 - Feature 18 (User Traffic Dashboard): COMPLETE — all phases merged and verified in prod
