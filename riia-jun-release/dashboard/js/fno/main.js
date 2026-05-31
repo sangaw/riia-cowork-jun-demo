@@ -1,5 +1,14 @@
 // ── FnO Dashboard — Entry Point ───────────────────────────────────────────────
 
+// migrate legacy rita_token → auth_token (one-time, silent)
+(function() {
+  const legacy = sessionStorage.getItem('rita_token');
+  if (legacy && !sessionStorage.getItem('auth_token')) {
+    sessionStorage.setItem('auth_token', legacy);
+    sessionStorage.removeItem('rita_token');
+  }
+})();
+
 // ingest ?token= from OAuth callback
 (function() {
   const p = new URLSearchParams(window.location.search);
