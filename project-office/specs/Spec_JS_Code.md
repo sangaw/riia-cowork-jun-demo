@@ -71,6 +71,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
 | `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
 | `my-portfolio.js` | Portfolio read-only display — `kpi kpi-sm` tiles per holding (instrument_id + allocation_pct, pink), 2025 Chart.js performance chart via `portfolio-performance` endpoint. 404 → empty state with link to RITA builder. 401 → clears token, redirects to `/`. | `loadFnoMyPortfolio()` |
+| `portfolio-builder.js` | Portfolio Builder page — region buckets, scatter map, sortable table, guided basket, basket state | `loadPortfolioBuilder()`, `pbToggleInstrument(id)`, `pbSelectAllRegion(key)`, `pbClearAllRegion(key)`, `pbSortTable(col)`, `pbApplyGoalPreset(key)`, `pbAddFromDraft()`, `pbClearBasket()`, `pbBuildPortfolio()`, `pbSwitchTab(tab)` |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---
