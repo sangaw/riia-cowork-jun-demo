@@ -25,6 +25,7 @@ export function initNav() {
       document.getElementById('page-' + item.dataset.page).classList.add('active');
       if (item.dataset.page === 'history') loadHedgeHistory();
       if (item.dataset.page === 'equity-hedge') loadEquityHedge();
+      if (item.dataset.page === 'portfolio-builder') window.loadPortfolioBuilder && window.loadPortfolioBuilder();
     });
   });
 }

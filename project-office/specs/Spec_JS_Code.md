@@ -69,6 +69,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `hedge.js` | Hedge Radar section | `loadHedge()` |
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
 | `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
+| `portfolio-builder.js` | Portfolio Builder page — region buckets, scatter map, sortable table, guided basket, basket state | `loadPortfolioBuilder()`, `pbToggleInstrument(id)`, `pbSelectAllRegion(key)`, `pbClearAllRegion(key)`, `pbSortTable(col)`, `pbApplyGoalPreset(key)`, `pbAddFromDraft()`, `pbClearBasket()`, `pbBuildPortfolio()`, `pbSwitchTab(tab)` |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---
