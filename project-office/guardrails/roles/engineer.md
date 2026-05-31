@@ -69,7 +69,15 @@ When a defect is reported from manual testing:
 
 **Do not start `uvicorn` or `curl` endpoints to reproduce bugs.** Diagnose from code.
 
-## 9. Scope Discipline
+## 9. Auth Token Key — FC-AUTH-KEY (Mandatory)
+
+- The canonical sessionStorage key for the JWT across ALL dashboards is **`auth_token`**.
+- Never introduce a new key name (`rita_token`, `fno_token`, etc.) — `shared/api.js` reads `auth_token` exclusively. A mismatched key causes the JWT to never attach to API calls, producing silent 401 failures after Google login.
+- Auth gate checks in HTML (`sessionStorage.getItem(...)`) and OAuth token ingest (`sessionStorage.setItem(...)`) in `main.js` must both use `auth_token`.
+- On 401, clear `auth_token` (not any other key) before redirecting.
+- Prior incident: Feature 26 Phase 4 introduced `rita_token` for the FnO auth overlay; this broke all authenticated API calls in FnO silently. Fixed in commit a999e70.
+
+## 10. Scope Discipline
 
 - Fix only what the task specifies. Do not refactor surrounding code while fixing a bug.
 - Do not add error handling for scenarios that cannot happen.

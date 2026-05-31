@@ -105,7 +105,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 | File | Responsibility | Key exports |
 |---|---|---|
-| `shared/api.js` | Canonical HTTP client (shared by all apps) | `apiBase()`, `api(path, method?, body?)`, `apiFetch(url, options?)` |
+| `shared/api.js` | Canonical HTTP client (shared by all apps). Reads JWT from `sessionStorage.getItem('auth_token')`. On 401 clears `auth_token` and redirects to `/auth/google/login`. **All dashboards must use `auth_token` as the sessionStorage key — never `rita_token` or any other key.** | `apiBase()`, `api(path, method?, body?)`, `apiFetch(url, options?)` |
 | `shared/utils.js` | Canonical DOM helpers + formatters (shared by all apps) | `setEl(id, html)`, `badge(status)`, `fmt(v, d?)`, `fmtPct(v)`, `fmtMs(v)`, `appendResult(containerId, html)`, `randomUUID()` (safe fallback — `crypto.randomUUID` requires HTTPS; uses `Math.random` hex fallback on HTTP) |
 | `shared/charts.js` | Chart.js registry (moved from rita/; shared by all apps) | `mkChart(id, config)`, `destroyChart(id)`, `chartOpts(label, tickCb, labels)`, `C` (color palette) |
 | `shared/nav-base.js` | Lazy-loader registry factory | `createNavRegistry()` → `{ register, load, reset, loaders }` |
