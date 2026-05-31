@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-30T23:35:16",
+  "generated_at": "2026-05-31T21:58:21",
   "total_runs": 65,
   "per_role": {
     "pm": {
@@ -817,52 +817,52 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 4441,
-    "unique_endpoints": 144,
-    "overall_error_rate_pct": 7.84,
-    "error_rate_5xx_pct": 0.25,
+    "total_calls": 5388,
+    "unique_endpoints": 150,
+    "overall_error_rate_pct": 6.55,
+    "error_rate_5xx_pct": 0.2,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 570,
-        "p50_ms": 6.1,
+        "count": 751,
+        "p50_ms": 5.5,
         "p95_ms": 345.3,
         "error_count": 0
       },
       {
         "path": "/api/v1/commentary",
         "method": "POST",
-        "count": 332,
-        "p50_ms": 127.9,
-        "p95_ms": 1820.2,
+        "count": 370,
+        "p50_ms": 134.5,
+        "p95_ms": 2494.1,
         "error_count": 42
       },
       {
         "path": "/api/v1/experience/rita/geography-overview",
         "method": "GET",
-        "count": 320,
-        "p50_ms": 9.9,
-        "p95_ms": 754.8,
-        "error_count": 0
-      },
-      {
-        "path": "/api/v1/experience/rita/strategy-comparison",
-        "method": "GET",
-        "count": 297,
-        "p50_ms": 6.3,
-        "p95_ms": 46.4,
+        "count": 367,
+        "p50_ms": 15.1,
+        "p95_ms": 769.4,
         "error_count": 0
       },
       {
         "path": "/api/v1/market-signals",
         "method": "GET",
-        "count": 268,
-        "p50_ms": 152.1,
-        "p95_ms": 842.2,
+        "count": 310,
+        "p50_ms": 231.8,
+        "p95_ms": 914.7,
+        "error_count": 0
+      },
+      {
+        "path": "/api/v1/experience/rita/strategy-comparison",
+        "method": "GET",
+        "count": 299,
+        "p50_ms": 6.3,
+        "p95_ms": 49.5,
         "error_count": 0
       }
     ],
-    "generated_at": "2026-05-30T21:35:16.082818+00:00"
+    "generated_at": "2026-05-31T19:58:21.458452+00:00"
   }
 }
