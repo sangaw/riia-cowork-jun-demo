@@ -3,12 +3,12 @@ import { apiBase } from './api.js';
 
 export async function loadFnoMyPortfolio() {
   try {
-    const token = sessionStorage.getItem('rita_token');
+    const token = sessionStorage.getItem('auth_token');
     const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
     const resp = await fetch(apiBase() + '/api/v1/experience/user-portfolio', { headers });
 
     if (resp.status === 401) {
-      sessionStorage.removeItem('rita_token');
+      sessionStorage.removeItem('auth_token');
       const overlay = document.getElementById('fno-auth-overlay');
       if (overlay) overlay.style.display = 'flex';
       const shell = document.querySelector('.shell');

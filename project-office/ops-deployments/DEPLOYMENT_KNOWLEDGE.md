@@ -184,6 +184,11 @@
 | 2026-05-30 | `b28602f` | RITA nav — removed Utilities section so Phase 05 Portfolio sits directly after Phase 04. Actions green; health ok. |
 | 2026-05-30 | `584e807` | FnO Portfolio UI parity — kpi-sm read-only tiles, 2025 performance chart (same endpoint + pink Chart.js line as RITA), "Portfolio" heading, styled empty state with RITA link. Actions green; health ok. |
 | 2026-05-30 | `ffd502c` | Feature 27 Portfolio Hedge — new FnO nav section + GET /api/experience/fno/portfolio-hedge endpoint (JWT-auth, per-instrument hedge recommendations); Invest Game v2 nav link in RITA Study section. Actions pending at EOD. |
+| 2026-05-31 | `7f4136d` | Auth SSO fix — switched `rita_token` to `localStorage` (was `sessionStorage`) so a single Google sign-in works across all apps and separate tabs; Logout link added to hub topbar; disclaimer updated; `RITA_GITHUB_PAT` wired into deploy.yaml docker run + secret set via API → GitHub Deploys widget now populated. Actions green; health ok; CF-Cache BYPASS verified.
+| 2026-05-31 | `b50633d` | Auth session fix — unified JWT storage key to `rita_token` across all dashboards (index/ds/rita-main/users were stuck on `auth_token`, causing re-login on every cross-app click); fixed index.html post-login routing (`return_url`→`post_login_redirect`); new `shared/dev-auth.js` seeds a `rita-dev` token on localhost so local testing skips Google OAuth (no-op in prod). Actions green; health ok; CF-Cache BYPASS verified on api.js + dev-auth.js. |
+| 2026-05-31 | `0ef27ad` | RITA References page — renamed Learnings→References; 2×2 collapsible grid (Investment Philosophies, Why Retail Investors Lose Money, Technical Indicators, Sharpe Ratio); flowing paragraph copy + numbered TA list; Market Trends chart switched NIFTY→ASML. Actions green; health ok. |
+| 2026-05-31 | `8d83c9e` | Dashboard UX — Invest Game embedded in RITA shell (inline section, sidebar+topbar stay visible, --game/--ok CSS vars added); DS nav: Ops+Monitor merged into "Ops & Monitor"; MCP Calls + Model MCP merged into single page (KPIs + 3 charts + detailed table). Actions green. |
+| 2026-05-31 | `7340475` | DS MCP Calls — three bar charts in single row (card-row-3); User Traffic — Daily Login Activity and Daily Breakdown side by side, table scrolls after 6 rows. Actions pending at EOD. |
 
 ---
 

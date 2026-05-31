@@ -318,7 +318,7 @@ export async function loadPortfolioBuilder() {
 
     // Pre-fill basket from user portfolio (JWT, silent on 404/401)
     try {
-      const token = localStorage.getItem('rita_token') || localStorage.getItem('auth_token');
+      const token = sessionStorage.getItem('auth_token');
       if (token) {
         const up = await apiFetch('/api/v1/experience/user-portfolio', {
           headers: { 'Authorization': `Bearer ${token}` },
@@ -443,7 +443,7 @@ export async function pbBuildPortfolio() {
     return;
   }
 
-  const token = localStorage.getItem('rita_token') || localStorage.getItem('auth_token');
+  const token = sessionStorage.getItem('auth_token');
   if (!token) {
     _setText('pb-status-msg', 'Login required to build a portfolio. Please sign in.');
     _show('pb-status-msg');

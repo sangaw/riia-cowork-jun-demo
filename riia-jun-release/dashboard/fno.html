@@ -368,7 +368,7 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
   <a id="fno-auth-login-btn" href="/auth/google/login?state=fno" style="padding:0.5rem 1.5rem;background:#238636;color:#fff;border-radius:6px;text-decoration:none;">Sign in with Google</a>
 </div>
 <script>
-  if (!sessionStorage.getItem('rita_token')) {
+  if (!sessionStorage.getItem('auth_token')) {
     document.getElementById('fno-auth-overlay').style.display = 'flex';
   }
 </script>
