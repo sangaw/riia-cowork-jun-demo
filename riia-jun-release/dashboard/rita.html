@@ -1402,105 +1402,84 @@ tr:hover td{background:var(--surface2);}
 <section class="section" id="sec-portfolio-builder">
   <h2 class="section-title">Portfolio Builder</h2>
 
-  <div id="pb-loading" style="padding:16px;color:#64748b;font-size:13px">Loading instruments…</div>
-  <div id="pb-error" style="display:none;padding:12px 16px;background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);border-radius:6px;margin-bottom:14px">
-    <span style="font-weight:600;color:#dc2626">Error: </span><span id="pb-error-msg" style="color:#dc2626"></span>
-  </div>
-  <div id="pb-empty" style="display:none;padding:16px;color:#94a3b8;font-size:13px">No instrument data available.</div>
-  <div id="pb-status-msg" style="display:none;padding:10px 14px;border-radius:6px;border:1px solid rgba(0,0,0,.1);margin-bottom:14px;font-size:13px"></div>
+  <div id="pb-loading" class="lbl" style="padding:8px 0">Loading instruments…</div>
+  <div id="pb-error" style="display:none" class="badge neg">Error: <span id="pb-error-msg"></span></div>
+  <div id="pb-empty" style="display:none" class="lbl">No instrument data available.</div>
+  <div id="pb-status-msg" style="display:none;margin-bottom:14px" class="lbl"></div>
 
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <label style="font-size:12px;color:#64748b;font-weight:600;white-space:nowrap">Portfolio Name:</label>
-    <input id="pb-portfolio-name" type="text" placeholder="My Portfolio" style="flex:1;max-width:320px;padding:7px 10px;border:1px solid rgba(0,0,0,.15);border-radius:5px;font-size:13px;font-family:inherit">
+    <label class="lbl" style="white-space:nowrap">Portfolio Name:</label>
+    <input id="pb-portfolio-name" type="text" placeholder="My Portfolio" style="flex:1;max-width:320px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:inherit;background:var(--surface);color:var(--text)">
   </div>
 
   <div style="display:flex;gap:6px;margin-bottom:14px">
-    <button id="pb-tab-buckets" onclick="pbSwitchTab('buckets')" style="padding:6px 14px;border-radius:5px;border:1px solid #BE185D;background:#BE185D;color:#fff;font-size:12px;font-weight:600;cursor:pointer">By Region</button>
-    <button id="pb-tab-map"     onclick="pbSwitchTab('map')"     style="padding:6px 14px;border-radius:5px;border:1px solid rgba(0,0,0,.12);background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer">Scatter Map</button>
-    <button id="pb-tab-table"   onclick="pbSwitchTab('table')"   style="padding:6px 14px;border-radius:5px;border:1px solid rgba(0,0,0,.12);background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer">Table</button>
+    <button id="pb-tab-buckets" onclick="pbSwitchTab('buckets')" class="badge pos" style="cursor:pointer;border:none;padding:6px 14px">By Region</button>
+    <button id="pb-tab-map"     onclick="pbSwitchTab('map')"     class="badge neu" style="cursor:pointer;border:none;padding:6px 14px">Scatter Map</button>
+    <button id="pb-tab-table"   onclick="pbSwitchTab('table')"   class="badge neu" style="cursor:pointer;border:none;padding:6px 14px">Table</button>
   </div>
 
+  <!-- Buckets view -->
   <div id="pb-view-buckets">
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px">
-      <div class="kpi-strip" style="padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-family:Georgia,serif;font-size:14px">🇮🇳 India</div>
-          <div style="display:flex;gap:6px">
-            <button id="pb-select-all-india" onclick="pbSelectAllRegion('india')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(190,24,93,.3);background:transparent;color:#BE185D;cursor:pointer">All</button>
-            <button id="pb-clear-all-india"  onclick="pbClearAllRegion('india')"  style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(0,0,0,.1);background:transparent;color:#64748b;cursor:pointer">Clear</button>
-          </div>
-        </div>
+    <div class="card-row-2">
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">🇮🇳 India</span><span style="display:flex;gap:6px"><button id="pb-select-all-india" onclick="pbSelectAllRegion('india')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-india" onclick="pbClearAllRegion('india')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
         <div id="pb-instruments-india"></div>
       </div>
-      <div class="kpi-strip" style="padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-family:Georgia,serif;font-size:14px">🇺🇸 US</div>
-          <div style="display:flex;gap:6px">
-            <button id="pb-select-all-us" onclick="pbSelectAllRegion('us')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(190,24,93,.3);background:transparent;color:#BE185D;cursor:pointer">All</button>
-            <button id="pb-clear-all-us"  onclick="pbClearAllRegion('us')"  style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(0,0,0,.1);background:transparent;color:#64748b;cursor:pointer">Clear</button>
-          </div>
-        </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">🇺🇸 US</span><span style="display:flex;gap:6px"><button id="pb-select-all-us" onclick="pbSelectAllRegion('us')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-us" onclick="pbClearAllRegion('us')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
         <div id="pb-instruments-us"></div>
       </div>
-      <div class="kpi-strip" style="padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-family:Georgia,serif;font-size:14px">🇪🇺 Europe</div>
-          <div style="display:flex;gap:6px">
-            <button id="pb-select-all-europe" onclick="pbSelectAllRegion('europe')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(190,24,93,.3);background:transparent;color:#BE185D;cursor:pointer">All</button>
-            <button id="pb-clear-all-europe"  onclick="pbClearAllRegion('europe')"  style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(0,0,0,.1);background:transparent;color:#64748b;cursor:pointer">Clear</button>
-          </div>
-        </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">🇪🇺 Europe</span><span style="display:flex;gap:6px"><button id="pb-select-all-europe" onclick="pbSelectAllRegion('europe')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-europe" onclick="pbClearAllRegion('europe')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
         <div id="pb-instruments-europe"></div>
       </div>
-      <div class="kpi-strip" style="padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-weight:700;font-family:Georgia,serif;font-size:14px">🌐 Other</div>
-          <div style="display:flex;gap:6px">
-            <button id="pb-select-all-other" onclick="pbSelectAllRegion('other')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(190,24,93,.3);background:transparent;color:#BE185D;cursor:pointer">All</button>
-            <button id="pb-clear-all-other"  onclick="pbClearAllRegion('other')"  style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(0,0,0,.1);background:transparent;color:#64748b;cursor:pointer">Clear</button>
-          </div>
-        </div>
+      <div class="card">
+        <div class="card-hdr"><span class="card-title">🌐 Other</span><span style="display:flex;gap:6px"><button id="pb-select-all-other" onclick="pbSelectAllRegion('other')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-other" onclick="pbClearAllRegion('other')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
         <div id="pb-instruments-other"></div>
       </div>
     </div>
   </div>
 
+  <!-- Scatter map view -->
   <div id="pb-view-map" style="display:none">
-    <div class="kpi-strip" style="padding:14px;margin-bottom:14px">
-      <div id="pb-map-note" style="font-size:11px;color:#94a3b8;margin-bottom:8px">Risk (est.) vs Daily Return (est.) — instruments with price data only. Pink = in basket.</div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title">Return vs Risk</span><span id="pb-map-note" class="card-sub">Est. daily return vs est. risk — pink = in basket</span></div>
       <div style="height:320px;position:relative"><canvas id="pb-map-canvas"></canvas></div>
-      <div id="pb-map-empty" style="display:none;padding:20px;text-align:center;color:#94a3b8;font-size:12px">No instruments with price data available.</div>
+      <div id="pb-map-empty" style="display:none" class="lbl">No instruments with price data available.</div>
     </div>
   </div>
 
+  <!-- Table view -->
   <div id="pb-view-table" style="display:none">
-    <div id="pb-table-wrap" class="kpi-strip" style="padding:0;overflow:auto;margin-bottom:14px">
+    <div class="tbl-wrap" id="pb-table-wrap">
       <table id="pb-table" style="width:100%;border-collapse:collapse;font-size:13px"></table>
     </div>
-    <div id="pb-table-empty" style="display:none;padding:16px;color:#94a3b8;font-size:12px">No instruments available.</div>
+    <div id="pb-table-empty" style="display:none" class="lbl">No instruments available.</div>
   </div>
 
-  <div id="pb-guided-wrap" class="kpi-strip" style="padding:14px;margin-bottom:14px">
-    <div style="font-weight:700;font-family:Georgia,serif;font-size:14px;margin-bottom:10px;color:#BE185D">Guided Goal Presets</div>
+  <!-- Guided goal presets -->
+  <div id="pb-guided-wrap" class="card">
+    <div class="card-hdr"><span class="card-title">Guided Goal Presets</span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px" id="pb-goal-presets">
-      <button id="pb-preset-growth"    onclick="pbApplyGoalPreset('growth')"    style="padding:6px 14px;border-radius:100px;border:1px solid #BE185D;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">Growth</button>
-      <button id="pb-preset-income"    onclick="pbApplyGoalPreset('income')"    style="padding:6px 14px;border-radius:100px;border:1px solid #BE185D;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">Income</button>
-      <button id="pb-preset-balanced"  onclick="pbApplyGoalPreset('balanced')"  style="padding:6px 14px;border-radius:100px;border:1px solid #BE185D;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">Balanced</button>
-      <button id="pb-preset-defensive" onclick="pbApplyGoalPreset('defensive')" style="padding:6px 14px;border-radius:100px;border:1px solid #BE185D;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">Defensive</button>
+      <button id="pb-preset-growth"    onclick="pbApplyGoalPreset('growth')"    class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Growth</button>
+      <button id="pb-preset-income"    onclick="pbApplyGoalPreset('income')"    class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Income</button>
+      <button id="pb-preset-balanced"  onclick="pbApplyGoalPreset('balanced')"  class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Balanced</button>
+      <button id="pb-preset-defensive" onclick="pbApplyGoalPreset('defensive')" class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Defensive</button>
     </div>
-    <div id="pb-guided-note" style="font-size:11px;color:#94a3b8;margin-bottom:10px">Select a goal to see matching instruments.</div>
+    <div id="pb-guided-note" class="card-sub" style="margin-bottom:10px">Select a goal to see matching instruments.</div>
     <div id="pb-guided-draft" style="margin-bottom:10px"></div>
-    <button onclick="pbAddFromDraft()" style="padding:6px 16px;border-radius:5px;border:1px solid #BE185D;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">Add Checked to Basket</button>
+    <button onclick="pbAddFromDraft()" class="badge pos" style="cursor:pointer;border:none;padding:6px 16px">Add Checked to Basket</button>
   </div>
 
-  <div id="pb-basket-wrap" style="position:sticky;bottom:0;background:var(--surface,#fff);border-top:2px solid rgba(190,24,93,.2);padding:12px 16px;margin:0 -2px;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:10">
+  <!-- Sticky basket -->
+  <div id="pb-basket-wrap" style="position:sticky;bottom:0;background:var(--surface);border-top:2px solid var(--border);padding:12px 0;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:10;margin-top:8px">
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <div style="font-weight:700;font-size:13px;color:#BE185D;font-family:Georgia,serif;white-space:nowrap" id="pb-basket-count">Basket empty</div>
+      <span class="card-title" id="pb-basket-count">Basket empty</span>
       <div id="pb-basket-list" style="display:flex;flex-wrap:wrap;gap:5px;flex:1"></div>
-      <div id="pb-basket-empty-msg" style="font-size:12px;color:#94a3b8">Add instruments from the region panels or goal presets above.</div>
+      <span id="pb-basket-empty-msg" class="lbl">Add instruments from the panels above.</span>
       <div style="display:flex;gap:8px;margin-left:auto">
-        <button id="pb-basket-clear-btn" onclick="pbClearBasket()" style="padding:7px 16px;border-radius:5px;border:1px solid rgba(0,0,0,.15);background:transparent;color:#64748b;font-size:12px;font-weight:600;cursor:pointer">Clear</button>
-        <button id="pb-basket-build-btn" onclick="pbBuildPortfolio()" disabled style="padding:7px 18px;border-radius:5px;border:none;background:#BE185D;color:#fff;font-size:12px;font-weight:700;cursor:pointer">Build Portfolio</button>
+        <button id="pb-basket-clear-btn" onclick="pbClearBasket()" class="badge neu" style="cursor:pointer;border:none;padding:6px 14px">Clear</button>
+        <button id="pb-basket-build-btn" onclick="pbBuildPortfolio()" disabled class="badge pos" style="cursor:pointer;border:none;padding:6px 18px">Build Portfolio</button>
       </div>
     </div>
   </div>
