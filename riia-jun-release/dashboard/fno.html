@@ -362,22 +362,13 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
-<!-- auth overlay — shown until JWT is present in sessionStorage -->
-<div id="fno-auth-overlay" style="display:none;position:fixed;inset:0;background:#0d1117;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;">
-  <p style="color:#c9d1d9;font-size:1rem;">Sign in to access the FnO dashboard</p>
-  <a id="fno-auth-login-btn" href="/auth/google/login?state=fno" style="padding:0.5rem 1.5rem;background:#238636;color:#fff;border-radius:6px;text-decoration:none;">Sign in with Google</a>
-</div>
 <script>
   (function() {
-    var legacy = sessionStorage.getItem('rita_token');
-    if (legacy && !sessionStorage.getItem('auth_token')) {
-      sessionStorage.setItem('auth_token', legacy);
-      sessionStorage.removeItem('rita_token');
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(location.hostname)) return;
+    if (!sessionStorage.getItem('auth_token') && !new URLSearchParams(location.search).get('token')) {
+      window.location.href = '/auth/google/login?state=fno';
     }
   })();
-  if (!sessionStorage.getItem('auth_token')) {
-    document.getElementById('fno-auth-overlay').style.display = 'flex';
-  }
 </script>
 <div class="shell">
 

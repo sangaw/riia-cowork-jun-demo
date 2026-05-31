@@ -21,6 +21,7 @@
 
 import { initApp, checkStatus, fetchPositions } from './app-init.js';
 import { randomUUID } from '../shared/utils.js';
+import { ensureDevToken } from '../shared/dev-auth.js';
 
 const SESSION_TRACE_ID = randomUUID();
 
@@ -117,7 +118,8 @@ window.pbSwitchTab           = pbSwitchTab;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 initI18n(); applyTranslations();
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
+  await ensureDevToken();
   initNav();
   initApp();
   checkStatus();
