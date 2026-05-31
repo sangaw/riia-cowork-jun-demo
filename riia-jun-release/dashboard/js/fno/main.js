@@ -83,18 +83,6 @@ window.manSaveSnapshot  = manSaveSnapshot;
 
 import { loadEquityHedge } from './equity_hedge.js';
 import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
-import {
-  loadPortfolioBuilder,
-  pbToggleInstrument,
-  pbSelectAllRegion,
-  pbClearAllRegion,
-  pbSortTable,
-  pbApplyGoalPreset,
-  pbAddFromDraft,
-  pbClearBasket,
-  pbBuildPortfolio,
-  pbSwitchTab,
-} from './portfolio-builder.js';
 
 window.setLanguage = setLanguage;
 window.loadEquityHedge = loadEquityHedge;
@@ -102,19 +90,6 @@ window.loadEquityHedge = loadEquityHedge;
 // My Portfolio section loader
 _sectionLoaders['my-portfolio'] = loadFnoMyPortfolio;
 window.loadFnoMyPortfolio = loadFnoMyPortfolio;
-
-// Portfolio Builder section loader + window bindings
-_sectionLoaders['portfolio-builder'] = loadPortfolioBuilder;
-window.loadPortfolioBuilder  = loadPortfolioBuilder;
-window.pbToggleInstrument    = pbToggleInstrument;
-window.pbSelectAllRegion     = pbSelectAllRegion;
-window.pbClearAllRegion      = pbClearAllRegion;
-window.pbSortTable           = pbSortTable;
-window.pbApplyGoalPreset     = pbApplyGoalPreset;
-window.pbAddFromDraft        = pbAddFromDraft;
-window.pbClearBasket         = pbClearBasket;
-window.pbBuildPortfolio      = pbBuildPortfolio;
-window.pbSwitchTab           = pbSwitchTab;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 initI18n(); applyTranslations();
