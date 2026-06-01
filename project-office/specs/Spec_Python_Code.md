@@ -198,6 +198,7 @@ All schemas are Pydantic 2.x models. Each ORM model has a corresponding schema.
 | `audit.py` | `AuditLog` |
 | `alerts.py` | `Alert` |
 | `model_registry.py` | `ModelRegistry` |
+| `geography.py` | `GeoInstrument` (close, daily_return_pct, signal, return_1y_pct, return_5y_pct, return_15y_pct, risk_score, sector, horizons[]), `GeoRegion`, `GeographyOverviewResponse` |
 
 ---
 
@@ -290,6 +291,20 @@ SESSION_DATA: dict[str, dict] = {}  # thread_id → {cash, holdings, portfolio_v
 ---
 
 ## 10. Core Engine — `src/rita/core/`
+
+### `investment_horizons.py`
+
+Configuration module for investment horizon screening thresholds. Edit this file to recalibrate rules without touching application code.
+
+```python
+INVESTMENT_HORIZONS: dict[str, dict]
+# Keys: "short_term" | "medium_term" | "long_term"
+# Each entry: label, description, return_field, min_return_pct, lookback_td, years
+```
+
+Keys are sent verbatim in `GeoInstrument.horizons[]` — keep them stable identifiers. Consumed by `geography_overview()` in `experience/rita.py` to compute `return_5y_pct`, `return_15y_pct` (CAGR) and classify each instrument into matching horizon buckets.
+
+---
 
 ### `data_loader.py`
 

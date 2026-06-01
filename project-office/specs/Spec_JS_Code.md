@@ -48,6 +48,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `learnings.js` | Learnings section — accordion cards + live market-trend charts | `loadLearnings()`, `toggleLearnCard(id)` |
 | `strategy-comparison.js` | Strategy Comparison card (Card 5 in Learnings) — 5-strategy OHLCV dashboard; 7 Chart.js panels; instrument pills; year toggle; commentary | `loadStrategyComparison()`, `scSelectInstrument(id)`, `scSelectYear(year)` |
 | `my-portfolio.js` | Portfolio allocation builder (Phase 05 nav) — `kpi kpi-sm` tiles (one per instrument, editable % input), 100% enforcer + progress bar, save to `POST /api/v1/user-portfolio/`, pre-fill from saved portfolio. Post-save: allocation chips + Chart.js 2025 line chart via `portfolio-performance` endpoint (base 100). | `loadMyPortfolio()`, `savePortfolio()` |
+| `portfolio-builder.js` | Portfolio Builder page (Feature 28) — three region buckets ranked by 1Y return with select-all and sticky Selected basket (chip grid, 4-row scroll, 15% default on add, 100% Allocate gate); Chart.js scatter map (return vs risk); sortable instrument table; guided basket (Short Term auto-selected on load, goal presets, ranked draft, toggle on/off). Data from `geography-overview` (return_1y_pct, risk_score, sector, horizons[]). Module cache-busted via `?v=` in main.js import. | `loadPortfolioBuilder()`, `pbToggleInstrument(id)`, `pbSelectAllRegion(key)`, `pbClearAllRegion(key)`, `pbSortTable(col)`, `pbApplyGoalPreset(key)`, `pbToggleDraftItem(id)`, `pbBuildFromDraft()`, `pbClearBasket()`, `pbBuildPortfolio()`, `pbSetAlloc(id, pct)` |
 
 ---
 
@@ -71,7 +72,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
 | `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
 | `my-portfolio.js` | Portfolio read-only display — `kpi kpi-sm` tiles per holding (instrument_id + allocation_pct, pink), 2025 Chart.js performance chart via `portfolio-performance` endpoint. 404 → empty state with link to RITA builder. 401 → clears token, redirects to `/`. | `loadFnoMyPortfolio()` |
-| `portfolio-builder.js` | Portfolio Builder page — region buckets, scatter map, sortable table, guided basket, basket state | `loadPortfolioBuilder()`, `pbToggleInstrument(id)`, `pbSelectAllRegion(key)`, `pbClearAllRegion(key)`, `pbSortTable(col)`, `pbApplyGoalPreset(key)`, `pbAddFromDraft()`, `pbClearBasket()`, `pbBuildPortfolio()`, `pbSwitchTab(tab)` |
+| `portfolio-builder.js` | _(see RITA section — file lives in `dashboard/js/rita/`, not fno)_ | — |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---

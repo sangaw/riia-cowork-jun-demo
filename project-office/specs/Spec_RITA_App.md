@@ -98,7 +98,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
-| `GET` | `/api/v1/experience/rita/geography-overview` | Geography panels for Overview section — US/EU/India instruments with close, daily return, signal badge. Also reused by `portfolio-builder.js` (Feature 28 Phase 1) for region buckets, scatter map, and sortable instrument table. | No |
+| `GET` | `/api/v1/experience/rita/geography-overview` | Geography panels for Overview section and Portfolio Builder. Returns instruments grouped by region (India / US / EU / Other). Each `GeoInstrument` carries: `close`, `daily_return_pct`, `signal`, `return_1y_pct` (1Y simple return), `return_5y_pct` / `return_15y_pct` (CAGR via `investment_horizons.py`), `risk_score` (1–5 vol bucket), `sector` (static map), `horizons[]` (list of qualifying horizon keys from `investment_horizons.py`). Used by Market Signals geo panel tiles and `portfolio-builder.js` (Feature 28). | No |
 | `GET` | `/api/v1/experience/rita/backtest-daily` | Daily backtest results for charting — date, portfolio_value, benchmark_value, allocation, close_price | No |
 | `GET` | `/api/v1/experience/rita/risk-timeline` | Risk timeline from latest backtest — drawdowns, VaR, vol, regime. Query: phase, instrument | No |
 | `GET` | `/api/v1/experience/rita/training-history` | Training run history — all KPIs newest-first. Query: instrument | No |
