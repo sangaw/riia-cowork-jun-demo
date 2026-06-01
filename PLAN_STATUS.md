@@ -1,15 +1,20 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-05-31 (EOD) — Feature 28 Phase 1 Portfolio Builder shipped + post-merge auth/CSS fixes. Commit `7855bad`.
+**Last updated:** 2026-06-01 — Feature 28 Phase 3 hedge wizard design finalised.
 
-**Session work (2026-05-31) — Feature 28 Phase 1 + auth fixes:**
-- **Feature 28 Phase 1 — Portfolio Builder COMPLETE.** New `dashboard/js/fno/portfolio-builder.js` (region buckets + select-all, return-vs-risk scatter map via Chart.js, sortable instrument table, guided basket with goal presets, sticky basket + Build Portfolio CTA). `fno/main.js` + `nav.js` wired. `fno.html` nav item + full section. Specs updated. 7 QA tests pass. Merged `a55af15`. Note: final location moved to RITA (after My Portfolio in nav) during post-merge review.
-- **Post-merge auth/CSS fixes:** `auth_token`/`rita_token` key alignment (`a999e70`, `29f1190`, `0ca2f92`); dev-auth bypass restored for localhost (`a6797a6`); Portfolio Builder moved to RITA dashboard after My Portfolio (`e30c375`); RITA CSS conventions applied (`81a50ca`); `apiBase`/`apiFetch` exported from `rita/api.js` for portfolio-builder (`7855bad`); FC-AUTH-KEY guardrail added (`eeae44c`).
+**Session work (2026-06-01) — Feature 28 Phase 3 design:**
+- Gap analysis of current Portfolio Hedge page vs desired 4-tab wizard flow.
+- Design decisions locked: saved portfolio as instrument source (no extra Guided Basket needed); duration 1M/3M/1Y (1Y default); Put Buy vs Sell Call per instrument with auto-recommend; σ-anchored scenario matrix (−2σ/−1σ/Flat/+1σ); Hedge tab is summary-only; explicit Next→/←Back navigation.
+- `project-office/features/Jun/28 Portfolio Build and Hedge Flow/REQUIREMENTS.md` Phase 3 fully rewritten with 6 sub-phases (3A backend through 3F final tab + 3G spec updates).
+- `project-office/features/Jun/28 Portfolio Build and Hedge Flow/PLAN_STATUS.md` updated — Phase 3 status set to Ready.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. Verify Portfolio Builder works end-to-end on prod (RITA nav, region buckets, scatter map, Build Portfolio CTA)
-3. Feature 28 Phase 2 — backend extension (real return/risk data, new experience endpoint)
-4. `/agent-performance-improvements` if alerts fire
+2. **Feature 28 Phase 3 — Hedging Wizard implementation** (start with `/add-fno-feature` or `/engineer-task`):
+   - 3A: Backend — `portfolio_hedge.py` extend with `duration` param + `ann_vol_pct` + `call_sell_cost_pct`
+   - 3B: HTML + JS tab state machine (4 panels, forward-only, Next→/←Back)
+   - 3C–3F: Discover / Selection / Allocation / Hedge tab content
+   - 3G: Spec updates
+3. `/agent-performance-improvements` if alerts fire
 
 **Session work (2026-05-30 session 4) — Feature 27 + Invest Game v2:**
 - **Invest Game v2 nav link** added to RITA sidebar Study section (`rita.html`) — links to `investgame_v2.html`. `MOCK_MODE` was already `false`.

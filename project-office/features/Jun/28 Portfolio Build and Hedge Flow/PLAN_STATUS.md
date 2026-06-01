@@ -1,7 +1,7 @@
 # Feature 28 — Portfolio Build & Hedge Flow: Plan Status
 
-**Last updated:** 2026-06-01
-**Overall status:** `[~] In progress — Phase 3 parked pending hedge design decision`
+**Last updated:** 2026-06-01 (hedge design finalised)
+**Overall status:** `[~] In progress — Phase 3 ready to implement`
 **Requirements:** `project-office/features/Jun/28 Portfolio Build and Hedge Flow/REQUIREMENTS.md`
 **Design source:** Claude Design bundle `portfolio-build-and-hedge` → `Portfolio Final Flow.html`
 
@@ -14,7 +14,7 @@
 | Phase 0 | Design review & backend gap sign-off | `[x] Done` | — |
 | Phase 1 | Page 1 — Portfolio Builder (frontend, reused data) | `[x] Done` | — |
 | Phase 2 | Backend data extension | `[x] Done` | — |
-| Phase 3 | Page 2 — Hedging (table + coverage dial + payoff) | `[~] Parked` | Hedge design decision pending |
+| Phase 3 | Page 2 — Hedging Wizard (4-tab flow) | `[ ] Ready` | — (design finalised 2026-06-01) |
 
 ---
 
@@ -71,23 +71,27 @@ Each 🔴 backend item has an agreed v1 disposition and a drafted contract befor
 
 ---
 
-## Phase 3 — Page 2 — Hedging
+## Phase 3 — Page 2 — Hedging Wizard (4-tab flow)
 
-**Status:** `[~] Parked` — hedge design decision pending (user to revisit)
-**Agent:** Engineer (frontend)
-**Effort estimate:** 6 hours
+**Status:** `[ ] Ready to implement` — design finalised 2026-06-01
+**Agent:** Engineer (backend 3A first, then frontend 3B–3F)
+**Effort estimate:** 8 hours
+**Design decisions:** existing saved portfolio is the instrument source; duration 1M/3M/1Y (1Y default); Put Buy vs Sell Call per instrument; σ-anchored scenarios; Hedge tab is summary-only; explicit Next→/←Back buttons.
 
 ### Tasks
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 3.1 | Evolve `portfolio-hedge.js` card list → sortable table | `[ ]` | Extra columns: strike, %protected, return |
-| 3.2 | Coverage dial band (slider + readouts + CTA) | `[ ]` | Drives table + aggregates via `?coverage=` |
-| 3.3 | Payoff simulator (SVG curve + scenario P&L table) | `[ ]` | Derived from coverage + weights for v1 |
-| 3.4 | Restructure Hedging section in `fno.html` (stacked) | `[ ]` | Table top → coverage band → payoff |
+| 3A | Backend: add `duration` param, `ann_vol_pct`, `call_sell_cost_pct` to `portfolio_hedge.py` | `[ ]` | `duration=1m/3m/1y`; `_bs_call_pct()` helper; update `HedgeHolding` Pydantic schema |
+| 3B | Tab state machine + HTML restructure | `[ ]` | 4 `div[id="ph-panel-*"]` in `fno.html`; JS `_state` object; tab-bar buttons wired; forward-only progression |
+| 3C | Discover tab | `[ ]` | Duration picker (3 pills, 1Y default) + holdings summary list + Next→ fetches API |
+| 3D | Selection tab | `[ ]` | Per-row Put Buy vs Sell Call columns with BS prices + auto-recommend radio + store to `_state.selections` |
+| 3E | Allocation tab | `[ ]` | σ-anchored scenario matrix (−2σ/−1σ/Flat/+1σ) per instrument + aggregate row + coverage slider + summary strip |
+| 3F | Hedge tab (final) | `[ ]` | Confirmed strategy summary table + payoff chart (strategy-aware) + aggregate strip + Place hedge orders CTA |
+| 3G | Spec updates | `[ ]` | `Spec_HTML_Code.md`, `Spec_JS_Code.md`, `Spec_RITA_App.md`, `Spec_Python_Code.md` |
 
 ### Acceptance Gate
-Coverage dial updates the table and readouts; payoff simulator renders; no-F&O proxy rows flagged.
+End-to-end wizard flow works: Discover → Selection → Allocation → Hedge. API returns `ann_vol_pct` and `call_sell_cost_pct`. Scenario table uses real σ values. Final tab shows only confirmed selections. Back navigation preserves state.
 
 ---
 
@@ -98,18 +102,24 @@ Coverage dial updates the table and readouts; payoff simulator renders; no-F&O p
 | 2026-05-31 | Initial | Fetched & read Claude Design bundle; reviewed existing FnO/RITA code; wrote REQUIREMENTS.md and PLAN_STATUS.md |
 | 2026-05-31 | Phase 1+2 | Portfolio Builder shipped in RITA (region buckets, scatter map, sortable table, guided basket). Backend: 1Y return, risk score, sector. Commit `3a99af2`. |
 | 2026-06-01 | Phase 1 polish | Short Term auto-selected on load; Total alloc moved to Selected widget; 4-row scroll cap; new instruments default 15%; Continue button removed; Allocate gated at 100%; investment_horizons.py config + 5Y/15Y CAGR + horizons[] field. Commit `7e90c34`. Spec updates this session. Phase 3 parked. |
+| 2026-06-01 | Phase 3 design | Gap analysis of current hedge page vs desired 4-tab wizard. Design decisions locked: saved portfolio as instrument source; 1M/3M/1Y duration; Put Buy vs Sell Call per instrument with auto-recommend; σ-anchored scenario matrix; Hedge tab summary-only; Next→/←Back navigation. REQUIREMENTS.md Phase 3 fully rewritten; PLAN_STATUS.md updated. |
 
 ---
 
-## Open Questions
+## Open Questions / Decisions
 
 | # | Question | Owner | Status |
 |---|---|---|---|
 | Q1 | Does the instruments table already store `sector`? | Engineer | Open |
 | Q2 | v1 risk score — derived from price volatility, or a fixed mapping? | Architect | Resolved: annualized-vol bucketed (absolute thresholds) — see eng-context C1 |
 | Q3 | Payoff curve — client-side derived from coverage/weights, or backend? | Architect | Resolved: **backend** (real calc) — see eng-context C3 |
-| Q4 | Coverage levels — continuous slider or discrete steps? | PM / user | Resolved: **continuous slider with increments shown** |
+| Q4 | Coverage levels — continuous slider or discrete steps? | PM / user | Resolved: **continuous slider with increments shown** (moved to Allocation tab) |
 | Q5 | Keep both RITA + FnO builders, or consolidate later? | PM / user | Resolved: **keep both for now**, consolidate later |
 | D1 | Premium model — (a) heuristic vs (b) Black-Scholes on realized vol | Architect / user | Resolved: **(b) Black-Scholes on realized vol** |
 | D2 | Payoff beta — per-holding β vs β=1 for v1 | Architect / user | Resolved: **β = 1 for v1** |
+| D3 | Phase 3 — Guided Basket needed for instrument selection? | PM / user | Resolved: **No** — saved portfolio is the source; no second instrument pick needed |
+| D4 | Phase 3 — Hedge tab structure: single screen or wizard? | PM / user | Resolved: **4-tab wizard** (Discover/Selection/Allocation/Hedge) with Next→/←Back |
+| D5 | Phase 3 — Scenario anchoring: fixed % moves or σ-based? | PM / user | Resolved: **σ-anchored** (−2σ/−1σ/Flat/+1σ) scaled to chosen duration |
+| D6 | Phase 3 — Strategy options per instrument? | PM / user | Resolved: **Put Buy vs Sell Call** with auto-recommend badge (risk score ≥3 → Put Buy; ≤2 → Sell Call) |
+| D7 | Phase 3 — Duration granularity? | PM / user | Resolved: **1 Month / 3 Month / 1 Year** pill buttons; 1 Year default |
 </content>

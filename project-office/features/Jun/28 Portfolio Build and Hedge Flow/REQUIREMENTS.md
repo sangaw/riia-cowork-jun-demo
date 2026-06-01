@@ -135,18 +135,154 @@ Legend: ✅ exists & reusable · 🟡 exists but needs extension · 🔴 new bui
 
 ---
 
-### Phase 3 — Page 2: Hedging (table + coverage dial + payoff)
-**Goal:** Ship the Hedging page with the coverage dial driving the table and the payoff simulator.
+### Phase 3 — Page 2: Hedging Wizard (4-tab functional flow)
 
-| Deliverable | Description |
+**Goal:** Rebuild the Portfolio Hedge page as a guided 4-tab wizard — Discover → Selection → Allocation → Hedge — where each tab is an active, navigable step with real content, a state machine carrying choices forward, and explicit Next → / ← Back buttons between steps.
+
+**Design decisions confirmed (2026-06-01 session):**
+- Instrument source is always the user's **saved portfolio** — no second selection step needed.
+- Duration options: **1 Month / 3 Month / 1 Year** (1 Year default) — maps directly to `t_months` in Black-Scholes.
+- Strategy comparison: **Put Buy** (insurance, known max cost) vs **Sell Call** (premium income, upside cap) — one radio per instrument row.
+- Scenarios: σ-anchored at **−2σ / −1σ / Flat / +1σ** per instrument, scaled to chosen duration.
+- Final tab is a clean **confirmation summary only** — no configuration controls.
+- Tab navigation: explicit **Next → / ← Back** buttons (no reliance on users clicking the tab bar directly).
+
+---
+
+#### Phase 3A — Backend extension
+
+**Files:** `src/rita/api/experience/portfolio_hedge.py`
+
+New / changed behaviour:
+
+| Change | Detail |
 |---|---|
-| `dashboard/js/fno/portfolio-hedge.js` (evolve) | Card list → sortable table + coverage band + payoff simulator |
-| `dashboard/fno.html` | Hedging section restructured (table on top, coverage band below, payoff below) |
+| Add `duration` query param | `duration: str = Query("1y", regex="^(1m|3m|1y)$")` — maps to `t_months` 1 / 3 / 12 in Black-Scholes |
+| Expose `ann_vol_pct` per holding | Add field to `HedgeHolding` Pydantic schema so the frontend can anchor σ scenarios |
+| Add `call_sell_cost_pct` per holding | Black-Scholes call price at the same strike — enables the Put Buy vs Sell Call comparison in the Selection tab |
+| Pydantic schema update | `HedgeHolding` gains `ann_vol_pct: float`, `call_sell_cost_pct: float`, `duration: str` |
+
+`_bs_call_pct(vol, strike, r, t_months)` helper (call-put parity or direct BS call formula).  
+All existing fields (`strike_pct`, `cost_pct`, `protected_pct`) recalculated at the requested duration.
 
 **Acceptance Criteria:**
-- [ ] Full-width hedge table with sortable columns; no-F&O rows visibly flagged as index-proxy.
-- [ ] Coverage dial updates strikes/costs and the aggregate readouts (max-drawdown-protected, monthly cost).
-- [ ] Payoff simulator shows hedged-vs-unhedged curve + scenario P&L table.
+- [ ] `GET /api/v1/experience/fno/portfolio-hedge?coverage=50&duration=1y` returns `ann_vol_pct` and `call_sell_cost_pct` per holding.
+- [ ] `duration=1m` / `3m` / `1y` produce different BS prices (T scales correctly).
+- [ ] Backward-compatible: `duration` defaults to `1y`; no existing client breaks.
+
+---
+
+#### Phase 3B — Tab state machine + HTML restructure
+
+**Files:** `dashboard/fno.html`, `dashboard/js/fno/portfolio-hedge.js`
+
+Replace the current single-screen layout with a 4-panel tab system:
+
+```
+[ Discover ] → [ Selection ] → [ Allocation ] → [ Hedge ]
+```
+
+Tab bar items become real buttons with `data-ph-tab` attributes. Only the active panel is visible (`display` toggled). State object tracks:
+
+```js
+_state = {
+  tab: 'discover',       // 'discover' | 'selection' | 'allocation' | 'hedge'
+  duration: '1y',        // '1m' | '3m' | '1y'
+  holdings: [],          // from saved portfolio API
+  apiHedge: null,        // PortfolioHedgeResponse (fetched after duration set)
+  selections: {},        // instrument_id → 'put_buy' | 'call_sell'
+}
+```
+
+Each tab panel lives in a `div[id="ph-panel-{name}"]` inside `ph-content`. Navigation buttons (`Next →` / `← Back`) at the bottom of each panel advance or retreat the active tab and update the tab-bar highlight.
+
+**Acceptance Criteria:**
+- [ ] Clicking Next → on Discover activates Selection (fetches API if not yet loaded); clicking ← Back returns.
+- [ ] Tab bar visually shows active step; inactive steps are not clickable to skip.
+- [ ] Direct tab-bar click is disabled until the user reaches that step (forward-only progression).
+
+---
+
+#### Phase 3C — Discover tab
+
+**Content:** portfolio holdings list + duration picker + Next → button.
+
+| Element | Detail |
+|---|---|
+| Duration picker | 3 pill buttons: **1 Month / 3 Month / 1 Year** (1 Year pre-selected). Selecting one stores to `_state.duration` and re-fetches API on Next → click. |
+| Holdings summary | Compact list of saved portfolio instruments with weight %, 1Y return, risk dots — read from `_state.holdings` (already fetched by `loadPortfolioHedge`). |
+| Next → button | Fetches `portfolio-hedge?coverage=50&duration={_state.duration}`, stores result to `_state.apiHedge`, advances to Selection. Shows a brief loading indicator during the fetch. |
+
+**Acceptance Criteria:**
+- [ ] Duration defaults to 1 Year on first load.
+- [ ] Holdings list renders from the saved portfolio (same data already in `_state.holdings`).
+- [ ] Next → is disabled until holdings are loaded; enabled once loaded.
+
+---
+
+#### Phase 3D — Selection tab
+
+**Content:** per-instrument Put Buy vs Sell Call comparison, one radio per row, Next → / ← Back.
+
+| Column | Detail |
+|---|---|
+| Instrument | Ticker + weight % |
+| 1σ move | `ann_vol_pct` from API response, labeled as "±Xσ (1Y)" or "±Xσ (3M)" per chosen duration |
+| Put Buy | BS put premium (= existing `cost_pct`) at chosen duration; badge: "Max cost known" |
+| Sell Call | `call_sell_cost_pct` from API response; badge: "Upside capped" |
+| Pick | Radio: `put_buy` / `call_sell` — default auto-recommended (Put Buy for risk score ≥ 3; Sell Call for risk score ≤ 2) |
+| Auto-recommend badge | Small chip next to the recommended option ("Recommended") — user can override |
+
+Selections stored in `_state.selections[instrument_id]`.
+
+**Acceptance Criteria:**
+- [ ] Each row shows real BS prices for both strategies (from `_state.apiHedge`).
+- [ ] Default radio set by auto-recommend rule before user touches anything.
+- [ ] Next → advances to Allocation; ← Back returns to Discover without losing selections.
+
+---
+
+#### Phase 3E — Allocation tab
+
+**Content:** σ-anchored scenario matrix per instrument + aggregate row + coverage slider + Next → / ← Back.
+
+Scenario columns: **−2σ / −1σ / Flat / +1σ** — market move for each instrument computed as `±n × ann_vol_pct × sqrt(t_months/12)`.
+
+For each instrument row, show:
+- Unhedged P&L % at each scenario
+- Hedged P&L % (Put Buy: `max(move, strike_pct) − cost_pct`; Sell Call: `min(move, call_strike) + call_premium − cost_pct`)
+- Color-code green (positive) / red (negative)
+
+Bottom aggregate row: portfolio-weighted P&L at each scenario (unhedged vs hedged).
+
+Coverage slider (moved here from the old Hedge tab) — adjusting coverage re-computes the numbers in this tab without an API call (same client-side math as before).
+
+Summary strip below table: **total monthly premium cost %, max drawdown protected %.
+
+**Acceptance Criteria:**
+- [ ] Scenario columns use actual `ann_vol_pct` values, not fixed ±10/±20% moves.
+- [ ] Aggregate row reflects portfolio weights.
+- [ ] Coverage slider updates scenario numbers and summary strip in real time.
+- [ ] Next → (labeled "Confirm hedge →") advances to Hedge tab.
+
+---
+
+#### Phase 3F — Hedge tab (final)
+
+**Content:** read-only confirmation summary + payoff chart + Place hedge orders CTA. No configuration controls here.
+
+| Element | Detail |
+|---|---|
+| Confirmed strategy table | Ticker / weight / strategy chosen (Put Buy or Sell Call) / strike / duration / monthly premium |
+| Aggregate summary strip | Total monthly cost % / Max drawdown protected % / Portfolio coverage |
+| Payoff chart | Hedged vs unhedged P&L curve (existing `ph-payoff-chart` logic, seeded from confirmed selections) |
+| CTA | "Place hedge orders" button (non-functional placeholder for now, as per scope) |
+| ← Back link | Returns to Allocation if user wants to adjust coverage |
+
+**Acceptance Criteria:**
+- [ ] Only shows data from confirmed selections — no sliders, no strategy toggles.
+- [ ] Payoff chart renders using the chosen strategies (put buy or call sell payoff profile per row).
+- [ ] ← Back returns to Allocation without losing confirmed selections.
 
 ---
 
@@ -156,7 +292,9 @@ Legend: ✅ exists & reusable · 🟡 exists but needs extension · 🔴 new bui
 |---|---|
 | Phase 1 | Phase 0 sign-off |
 | Phase 2 | Phase 0 contracts |
-| Phase 3 | Phase 2 (coverage + strike data) |
+| Phase 3A | Phase 2 (existing portfolio-hedge.py to extend) |
+| Phase 3B–3F | Phase 3A (needs `ann_vol_pct` and `call_sell_cost_pct` from API) |
+| Phase 3C–3F | Phase 3B (needs tab state machine) |
 
 ---
 
@@ -164,7 +302,8 @@ Legend: ✅ exists & reusable · 🟡 exists but needs extension · 🔴 new bui
 
 - [ ] All phases complete with acceptance criteria checked.
 - [ ] Both pages reachable from the FnO sidebar and styled to the live dashboard.
-- [ ] `Spec_HTML_Code.md`, `Spec_JS_Code.md`, `Spec_RITA_App.md` (and `Spec_Python_Code.md` if endpoints changed) updated.
+- [ ] 4-tab wizard flows Discover → Selection → Allocation → Hedge end-to-end with real data.
+- [ ] `Spec_HTML_Code.md`, `Spec_JS_Code.md`, `Spec_RITA_App.md`, `Spec_Python_Code.md` updated.
 - [ ] `add-fno-feature` skill `Last validated against spec` date refreshed if its structure changed.
 - [ ] Session committed to git.
 </content>

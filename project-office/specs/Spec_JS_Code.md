@@ -73,6 +73,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
 | `my-portfolio.js` | Portfolio read-only display — `kpi kpi-sm` tiles per holding (instrument_id + allocation_pct, pink), 2025 Chart.js performance chart via `portfolio-performance` endpoint. 404 → empty state with link to RITA builder. 401 → clears token, redirects to `/`. | `loadFnoMyPortfolio()` |
 | `portfolio-builder.js` | _(see RITA section — file lives in `dashboard/js/rita/`, not fno)_ | — |
+| `portfolio-hedge.js` | 4-tab hedge wizard (Feature 28 Phase 3) — Discover (duration 1M/3M/1Y, holdings summary) → Selection (Put Buy vs Sell Call per instrument, BS-priced, auto-recommend) → Allocation (σ-anchored scenario matrix −2σ/−1σ/Flat/+1σ, coverage slider) → Hedge (read-only confirmed strategy summary + payoff chart). State: `_state.{tab, duration, coverage, holdings, instruments, apiHedge, selections, reached}`. API: `GET /api/v1/experience/fno/portfolio-hedge?coverage=N&duration=D` (JWT). | `loadPortfolioHedge()`, `phSetDuration(d)`, `phGoNext()`, `phGoBack()`, `phGoToTab(tab)`, `phPickStrategy(id, strategy)`, `phSetCoverage(val)` |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---
