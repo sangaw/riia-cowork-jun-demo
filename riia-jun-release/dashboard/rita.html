@@ -1400,89 +1400,250 @@ tr:hover td{background:var(--surface2);}
 
 <!-- ── Portfolio Builder ─────────────────────────────────── -->
 <section class="section" id="sec-portfolio-builder">
-  <h2 class="section-title">Portfolio Builder</h2>
+
+  <!-- Step navigator -->
+  <div style="margin-bottom:2px">
+    <span style="font-size:10px;font-weight:700;color:#BE185D;text-transform:uppercase;letter-spacing:.1em;font-family:'IBM Plex Mono',monospace">PAGE 1 · SELECTION</span>
+  </div>
+  <h2 class="section-title" style="margin-bottom:8px">Portfolio Builder</h2>
+  <div style="display:flex;gap:0;margin-bottom:28px;border-bottom:1px solid var(--border)">
+    <span style="padding:8px 18px;font-size:12px;color:var(--t3);font-family:'IBM Plex Mono',monospace">Discover</span>
+    <span style="padding:8px 18px;font-size:12px;font-weight:700;color:#BE185D;border-bottom:2px solid #BE185D;font-family:'IBM Plex Mono',monospace">Selection</span>
+    <span style="padding:8px 18px;font-size:12px;color:var(--t3);font-family:'IBM Plex Mono',monospace">Allocation</span>
+    <span style="padding:8px 18px;font-size:12px;color:var(--t3);font-family:'IBM Plex Mono',monospace">Hedge</span>
+  </div>
 
   <div id="pb-loading" class="lbl" style="padding:8px 0">Loading instruments…</div>
   <div id="pb-error" style="display:none" class="badge neg">Error: <span id="pb-error-msg"></span></div>
   <div id="pb-empty" style="display:none" class="lbl">No instrument data available.</div>
-  <div id="pb-status-msg" style="display:none;margin-bottom:14px" class="lbl"></div>
 
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-    <label class="lbl" style="white-space:nowrap">Portfolio Name:</label>
-    <input id="pb-portfolio-name" type="text" placeholder="My Portfolio" style="flex:1;max-width:320px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:inherit;background:var(--surface);color:var(--text)">
+  <!-- ── Section 1: Build by region ── -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+    <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:#BE185D;color:#fff;font-weight:700;font-size:14px;flex-shrink:0">1</span>
+    <h3 style="font-size:17px;font-weight:700;color:var(--text);margin:0">Build by region, ranked by performance</h3>
+  </div>
+  <div style="font-size:13px;color:var(--t2);margin-bottom:18px;padding:10px 14px;border:1px dashed rgba(190,24,93,.3);border-radius:6px;background:rgba(190,24,93,.03)">
+    Three geography buckets — pick a whole region with one checkbox, or cherry-pick the top performers that float to the top.
   </div>
 
-  <div style="display:flex;gap:6px;margin-bottom:14px">
-    <button id="pb-tab-buckets" onclick="pbSwitchTab('buckets')" class="badge pos" style="cursor:pointer;border:none;padding:6px 14px">By Region</button>
-    <button id="pb-tab-map"     onclick="pbSwitchTab('map')"     class="badge neu" style="cursor:pointer;border:none;padding:6px 14px">Scatter Map</button>
-    <button id="pb-tab-table"   onclick="pbSwitchTab('table')"   class="badge neu" style="cursor:pointer;border:none;padding:6px 14px">Table</button>
-  </div>
+  <!-- Buckets + basket row -->
+  <div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px">
 
-  <!-- Buckets view -->
-  <div id="pb-view-buckets">
-    <div class="card-row-2">
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">🇮🇳 India</span><span style="display:flex;gap:6px"><button id="pb-select-all-india" onclick="pbSelectAllRegion('india')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-india" onclick="pbClearAllRegion('india')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
-        <div id="pb-instruments-india"></div>
+    <!-- Three region columns -->
+    <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+
+      <!-- India -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:700;font-size:14px">India</div>
+            <div id="pb-region-meta-india" style="font-size:11px;color:var(--t2);margin-top:2px">… instruments</div>
+          </div>
+          <span id="pb-region-avg-india" style="font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace"></span>
+        </div>
+        <div id="pb-instruments-india" style="padding:8px 6px"></div>
+        <div style="padding:8px 10px;border-top:1px solid var(--border)">
+          <button onclick="pbSelectAllRegion('india')" style="width:100%;padding:7px;border:1px dashed rgba(190,24,93,.4);border-radius:6px;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">+ Add all</button>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">🇺🇸 US</span><span style="display:flex;gap:6px"><button id="pb-select-all-us" onclick="pbSelectAllRegion('us')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-us" onclick="pbClearAllRegion('us')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
-        <div id="pb-instruments-us"></div>
+
+      <!-- United States -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:700;font-size:14px">United States</div>
+            <div id="pb-region-meta-us" style="font-size:11px;color:var(--t2);margin-top:2px">… instruments</div>
+          </div>
+          <span id="pb-region-avg-us" style="font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace"></span>
+        </div>
+        <div id="pb-instruments-us" style="padding:8px 6px"></div>
+        <div style="padding:8px 10px;border-top:1px solid var(--border)">
+          <button onclick="pbSelectAllRegion('us')" style="width:100%;padding:7px;border:1px dashed rgba(190,24,93,.4);border-radius:6px;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">+ Add all</button>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">🇪🇺 Europe</span><span style="display:flex;gap:6px"><button id="pb-select-all-europe" onclick="pbSelectAllRegion('europe')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-europe" onclick="pbClearAllRegion('europe')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
-        <div id="pb-instruments-europe"></div>
+
+      <!-- Europe -->
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-weight:700;font-size:14px">Europe</div>
+            <div id="pb-region-meta-europe" style="font-size:11px;color:var(--t2);margin-top:2px">… instruments</div>
+          </div>
+          <span id="pb-region-avg-europe" style="font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace"></span>
+        </div>
+        <div id="pb-instruments-europe" style="padding:8px 6px"></div>
+        <div style="padding:8px 10px;border-top:1px solid var(--border)">
+          <button onclick="pbSelectAllRegion('europe')" style="width:100%;padding:7px;border:1px dashed rgba(190,24,93,.4);border-radius:6px;background:transparent;color:#BE185D;font-size:12px;font-weight:600;cursor:pointer">+ Add all</button>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-hdr"><span class="card-title">🌐 Other</span><span style="display:flex;gap:6px"><button id="pb-select-all-other" onclick="pbSelectAllRegion('other')" class="badge pos" style="cursor:pointer;border:none">All</button><button id="pb-clear-all-other" onclick="pbClearAllRegion('other')" class="badge neu" style="cursor:pointer;border:none">Clear</button></span></div>
-        <div id="pb-instruments-other"></div>
+
+    </div><!-- /columns -->
+
+    <!-- Final basket sidebar -->
+    <div style="width:210px;flex-shrink:0;position:sticky;top:60px">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <span style="font-weight:700;font-size:14px">Final basket</span>
+          <span id="pb-basket-badge" style="display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 4px;border-radius:11px;background:#BE185D;color:#fff;font-size:12px;font-weight:700">0</span>
+        </div>
+        <div id="pb-basket-list" style="min-height:50px;padding:0 10px"></div>
+        <div id="pb-basket-empty-msg" style="padding:10px 14px;font-size:12px;color:var(--t3)">Add instruments from the regions.</div>
+        <div style="padding:10px 14px;border-top:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="color:var(--t2)">Regions</span>
+            <span id="pb-basket-regions" style="font-weight:600">—</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:14px">
+            <span style="color:var(--t2)">Avg return</span>
+            <span id="pb-basket-avg-return" style="font-weight:700;font-family:'IBM Plex Mono',monospace">—</span>
+          </div>
+          <button id="pb-basket-build-btn" onclick="pbBuildPortfolio()" disabled
+                  style="width:100%;padding:9px;border:none;border-radius:6px;background:#BE185D;color:#fff;font-size:13px;font-weight:700;cursor:pointer;opacity:1">
+            Continue → Allocate
+          </button>
+          <button onclick="pbClearBasket()"
+                  style="width:100%;padding:5px;border:none;border-radius:6px;background:transparent;color:var(--t2);font-size:12px;cursor:pointer;margin-top:4px">
+            Clear
+          </button>
+        </div>
       </div>
     </div>
+
+  </div><!-- /buckets+basket row -->
+
+  <!-- Status message for build action -->
+  <div id="pb-status-msg" style="display:none;margin-top:10px;font-size:13px;padding:8px 12px;border-radius:6px;background:rgba(0,0,0,.04)" class="lbl"></div>
+
+  <!-- Divider -->
+  <div style="display:flex;align-items:center;gap:16px;margin:32px 0 24px">
+    <span style="flex:1;height:1px;background:var(--border)"></span>
+    <span style="font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--t3);font-family:'IBM Plex Mono',monospace;white-space:nowrap">OR EXPLORE THE SAME UNIVERSE VISUALLY</span>
+    <span style="flex:1;height:1px;background:var(--border)"></span>
   </div>
 
-  <!-- Scatter map view -->
-  <div id="pb-view-map" style="display:none">
+  <!-- ── Section 2: Map + Table ── -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+    <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:#BE185D;color:#fff;font-weight:700;font-size:14px;flex-shrink:0">2</span>
+    <h3 style="font-size:17px;font-weight:700;color:var(--text);margin:0">Map &amp; table — two faster lenses</h3>
+  </div>
+  <div style="font-size:13px;color:var(--t2);margin-bottom:18px;padding:10px 14px;border:1px dashed rgba(190,24,93,.3);border-radius:6px;background:rgba(190,24,93,.03)">
+    Same instruments, side by side: click a point on the map to add, or sort the table and add. Selections stay in sync with the basket above.
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px">
+
+    <!-- Return-vs-risk map -->
     <div class="card">
-      <div class="card-hdr"><span class="card-title">Return vs Risk</span><span id="pb-map-note" class="card-sub">Est. daily return vs est. risk — pink = in basket</span></div>
-      <div style="height:320px;position:relative"><canvas id="pb-map-canvas"></canvas></div>
-      <div id="pb-map-empty" style="display:none" class="lbl">No instruments with price data available.</div>
+      <div class="card-hdr">
+        <span class="card-title">Return-vs-risk map</span>
+        <span class="card-sub">click a point to add/remove</span>
+      </div>
+      <div style="height:320px;position:relative">
+        <canvas id="pb-map-canvas"></canvas>
+      </div>
+      <div id="pb-map-empty" style="display:none" class="lbl">No price data available.</div>
     </div>
+
+    <!-- Sortable table -->
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title">Sortable table</span>
+        <span class="card-sub">sort · add</span>
+      </div>
+      <div class="tbl-wrap" id="pb-table-wrap">
+        <table id="pb-table" style="width:100%;border-collapse:collapse;font-size:13px"></table>
+      </div>
+      <div id="pb-table-empty" style="display:none" class="lbl">No instruments available.</div>
+    </div>
+
   </div>
 
-  <!-- Table view -->
-  <div id="pb-view-table" style="display:none">
-    <div class="tbl-wrap" id="pb-table-wrap">
-      <table id="pb-table" style="width:100%;border-collapse:collapse;font-size:13px"></table>
-    </div>
-    <div id="pb-table-empty" style="display:none" class="lbl">No instruments available.</div>
+  <!-- Divider -->
+  <div style="display:flex;align-items:center;gap:16px;margin:32px 0 24px">
+    <span style="flex:1;height:1px;background:var(--border)"></span>
+    <span style="font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--t3);font-family:'IBM Plex Mono',monospace;white-space:nowrap">OR LET US DRAFT IT FOR YOU</span>
+    <span style="flex:1;height:1px;background:var(--border)"></span>
   </div>
 
-  <!-- Guided goal presets -->
-  <div id="pb-guided-wrap" class="card">
-    <div class="card-hdr"><span class="card-title">Guided Goal Presets</span></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px" id="pb-goal-presets">
-      <button id="pb-preset-growth"    onclick="pbApplyGoalPreset('growth')"    class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Growth</button>
-      <button id="pb-preset-income"    onclick="pbApplyGoalPreset('income')"    class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Income</button>
-      <button id="pb-preset-balanced"  onclick="pbApplyGoalPreset('balanced')"  class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Balanced</button>
-      <button id="pb-preset-defensive" onclick="pbApplyGoalPreset('defensive')" class="badge pos" style="cursor:pointer;border:none;padding:5px 14px;border-radius:100px">Defensive</button>
-    </div>
-    <div id="pb-guided-note" class="card-sub" style="margin-bottom:10px">Select a goal to see matching instruments.</div>
-    <div id="pb-guided-draft" style="margin-bottom:10px"></div>
-    <button onclick="pbAddFromDraft()" class="badge pos" style="cursor:pointer;border:none;padding:6px 16px">Add Checked to Basket</button>
+  <!-- ── Section 3: Guided basket ── -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+    <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;background:#BE185D;color:#fff;font-weight:700;font-size:14px;flex-shrink:0">3</span>
+    <h3 style="font-size:17px;font-weight:700;color:var(--text);margin:0">Guided basket</h3>
+  </div>
+  <div style="font-size:13px;color:var(--t2);margin-bottom:18px;padding:10px 14px;border:1px dashed rgba(190,24,93,.3);border-radius:6px;background:rgba(190,24,93,.03)">
+    Not sure where to start? Pick a goal and edit a ranked draft — selection becomes light tweaking, not a blank slate.
   </div>
 
-  <!-- Sticky basket -->
-  <div id="pb-basket-wrap" style="position:sticky;bottom:0;background:var(--surface);border-top:2px solid var(--border);padding:12px 0;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:10;margin-top:8px">
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <span class="card-title" id="pb-basket-count">Basket empty</span>
-      <div id="pb-basket-list" style="display:flex;flex-wrap:wrap;gap:5px;flex:1"></div>
-      <span id="pb-basket-empty-msg" class="lbl">Add instruments from the panels above.</span>
-      <div style="display:flex;gap:8px;margin-left:auto">
-        <button id="pb-basket-clear-btn" onclick="pbClearBasket()" class="badge neu" style="cursor:pointer;border:none;padding:6px 14px">Clear</button>
-        <button id="pb-basket-build-btn" onclick="pbBuildPortfolio()" disabled class="badge pos" style="cursor:pointer;border:none;padding:6px 18px">Build Portfolio</button>
+  <div style="display:grid;grid-template-columns:210px 1fr 210px;gap:16px;margin-bottom:24px">
+
+    <!-- Goal preset cards -->
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div id="pb-preset-aggressive" onclick="pbApplyGoalPreset('aggressive')" class="card"
+           style="padding:12px 14px;cursor:pointer;border:2px solid var(--border)">
+        <div style="font-weight:700;font-size:13px">Aggressive growth</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:3px">Max return, higher swings</div>
+      </div>
+      <div id="pb-preset-balanced" onclick="pbApplyGoalPreset('balanced')" class="card"
+           style="padding:12px 14px;cursor:pointer;border:2px solid var(--border)">
+        <div style="font-weight:700;font-size:13px">Balanced</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:3px">Growth with ballast</div>
+      </div>
+      <div id="pb-preset-income" onclick="pbApplyGoalPreset('income')" class="card"
+           style="padding:12px 14px;cursor:pointer;border:2px solid var(--border)">
+        <div style="font-weight:700;font-size:13px">Income &amp; stability</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:3px">Lower risk, dividends</div>
+      </div>
+      <div id="pb-preset-custom" onclick="pbApplyGoalPreset('custom')" class="card"
+           style="padding:12px 14px;cursor:pointer;border:2px solid var(--border)">
+        <div style="font-weight:700;font-size:13px">Custom</div>
+        <div style="font-size:11px;color:var(--t2);margin-top:3px">Start from scratch</div>
       </div>
     </div>
-  </div>
+
+    <!-- Ranked draft list -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span id="pb-draft-title" style="font-weight:700;font-size:14px">Recommended</span>
+        <span style="font-size:11px;color:var(--t2)">ranked by return</span>
+      </div>
+      <div id="pb-guided-draft" style="min-height:80px"></div>
+      <div style="padding:10px 14px;border-top:1px solid var(--border)">
+        <button style="padding:6px 14px;border:1px dashed rgba(190,24,93,.4);border-radius:6px;background:transparent;color:#BE185D;font-size:12px;cursor:pointer">
+          + Add another
+        </button>
+      </div>
+    </div>
+
+    <!-- Draft basket preview -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:12px 14px;border-bottom:1px solid var(--border)">
+        <span style="font-weight:700;font-size:14px">Draft basket</span>
+      </div>
+      <div style="padding:14px;display:flex;justify-content:center">
+        <canvas id="pb-draft-donut" width="120" height="120"></canvas>
+      </div>
+      <div style="padding:0 14px 14px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="color:var(--t2)">Holdings</span>
+          <span id="pb-draft-holdings" style="font-weight:600">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+          <span style="color:var(--t2)">Proj. return</span>
+          <span id="pb-draft-proj-return" style="font-weight:700;font-family:'IBM Plex Mono',monospace">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:16px">
+          <span style="color:var(--t2)">Risk level</span>
+          <span id="pb-draft-risk">—</span>
+        </div>
+        <button id="pb-draft-build-btn" onclick="pbBuildFromDraft()"
+                style="width:100%;padding:9px;border:none;border-radius:6px;background:#BE185D;color:#fff;font-size:13px;font-weight:700;cursor:pointer">
+          Build portfolio →
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /guided basket grid -->
+
 </section>
 
 <!-- ── Invest Game ──────────────────────────────────────── -->

@@ -27,7 +27,7 @@ import { useChip, sendChatMsg, clearChat, updateChips, showAlerts, refreshChatCh
 import { openChartModal, closeChartModal } from './chart-modal.js';
 import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
 import { loadMyPortfolio, savePortfolio } from './my-portfolio.js';
-import { loadPortfolioBuilder, pbToggleInstrument, pbSelectAllRegion, pbClearAllRegion, pbSortTable, pbApplyGoalPreset, pbAddFromDraft, pbClearBasket, pbBuildPortfolio, pbSwitchTab } from './portfolio-builder.js';
+import { loadPortfolioBuilder, pbToggleInstrument, pbSelectAllRegion, pbClearAllRegion, pbSortTable, pbApplyGoalPreset, pbToggleDraftItem, pbBuildFromDraft, pbClearBasket, pbBuildPortfolio } from './portfolio-builder.js';
 
 // ── Populate section loaders map ───────────────────────────
 _sectionLoaders.market            = async () => { refreshChatChips(); clearChat(); runMarket(); const data = await warmupChat(); if (data) { updateChips(data.chips); showAlerts(data.alerts); } };
@@ -93,10 +93,10 @@ window.pbSelectAllRegion    = pbSelectAllRegion;
 window.pbClearAllRegion     = pbClearAllRegion;
 window.pbSortTable          = pbSortTable;
 window.pbApplyGoalPreset    = pbApplyGoalPreset;
-window.pbAddFromDraft       = pbAddFromDraft;
+window.pbToggleDraftItem    = pbToggleDraftItem;
+window.pbBuildFromDraft     = pbBuildFromDraft;
 window.pbClearBasket        = pbClearBasket;
 window.pbBuildPortfolio     = pbBuildPortfolio;
-window.pbSwitchTab          = pbSwitchTab;
 
 // ── Refresh all home KPIs & active section ─────────────────
 async function refresh() {
