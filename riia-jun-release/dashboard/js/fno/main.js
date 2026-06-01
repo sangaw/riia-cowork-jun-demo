@@ -83,13 +83,20 @@ window.manSaveSnapshot  = manSaveSnapshot;
 
 import { loadEquityHedge } from './equity_hedge.js';
 import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
+import { loadPortfolioHedge, phSetCoverage, phSetScenarioTab } from './portfolio-hedge.js';
 
 window.setLanguage = setLanguage;
 window.loadEquityHedge = loadEquityHedge;
 
 // My Portfolio section loader
-_sectionLoaders['my-portfolio'] = loadFnoMyPortfolio;
+_sectionLoaders['my-portfolio']      = loadFnoMyPortfolio;
 window.loadFnoMyPortfolio = loadFnoMyPortfolio;
+
+// Portfolio Hedge section loader
+_sectionLoaders['portfolio-hedge']   = loadPortfolioHedge;
+window.loadPortfolioHedge = loadPortfolioHedge;
+window.phSetCoverage      = phSetCoverage;
+window.phSetScenarioTab   = phSetScenarioTab;
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 initI18n(); applyTranslations();
