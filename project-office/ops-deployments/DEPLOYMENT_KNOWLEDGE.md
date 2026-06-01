@@ -189,6 +189,7 @@
 | 2026-05-31 | `0ef27ad` | RITA References page — renamed Learnings→References; 2×2 collapsible grid (Investment Philosophies, Why Retail Investors Lose Money, Technical Indicators, Sharpe Ratio); flowing paragraph copy + numbered TA list; Market Trends chart switched NIFTY→ASML. Actions green; health ok. |
 | 2026-05-31 | `8d83c9e` | Dashboard UX — Invest Game embedded in RITA shell (inline section, sidebar+topbar stay visible, --game/--ok CSS vars added); DS nav: Ops+Monitor merged into "Ops & Monitor"; MCP Calls + Model MCP merged into single page (KPIs + 3 charts + detailed table). Actions green. |
 | 2026-05-31 | `7340475` | DS MCP Calls — three bar charts in single row (card-row-3); User Traffic — Daily Login Activity and Daily Breakdown side by side, table scrolls after 6 rows. Actions pending at EOD. |
+| 2026-06-01 | `949f7d4` | Feature 28 Portfolio Builder (RITA) + Portfolio Hedge (FnO) + auth/UX batch. `6530810` failed ruff lint (PATTERN-012); `bbf1391` fixed lint; `949f7d4` fixed Allocate→Google auth redirect. Health ok. |
 
 ---
 
@@ -393,6 +394,21 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 - **Fix (unblock Actions):** Add `workflow_dispatch` to `deploy.yaml`, push, then call `POST /repos/{owner}/{repo}/actions/workflows/{id}/dispatches` with `{"ref":"master"}`. This may still return 500 if the limbo run is active — retry after it clears
 - **Prevention:** Never click "Re-run jobs" on a queued or in-progress run. If a run fails, let a new push trigger a fresh run. Add `workflow_dispatch` to `deploy.yaml` permanently so manual triggers are always available without needing a push
 - **Date first seen:** 2026-05-26
+- **Recurrences:** 0
+
+---
+
+### PATTERN-012 — ruff lint gate blocks Docker build (E701 / F841)
+
+- **Symptom:** `build-and-push` job fails at `RUN ruff check src/` with `Found N errors. No fixes available`; deploy job skipped; test job may have passed
+- **Root cause:** Dockerfile has a ruff lint gate that runs before the image is pushed. Common violations: `E701` (single-line `if ...: return N` — ruff requires two-line form), `F841` (variable assigned but never used)
+- **Fix:**
+  1. Run `ruff check src/` locally to get the full error list: `/Users/sgawde/work/py-shared-env/dev/bin/python3 -m ruff check src/`
+  2. Expand inline `if ...: return N` to two lines; remove unused assignments
+  3. Re-run ruff locally to confirm `All checks passed!`
+  4. Commit fixes to prod repo and push — new Actions run triggered automatically
+- **Prevention:** Run `ruff check src/` locally before every `git push` to the prod repo. Add it as a pre-push habit, especially when writing new Python helper functions with compact single-line guards
+- **Date first seen:** 2026-06-01
 - **Recurrences:** 0
 
 ---
