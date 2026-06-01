@@ -93,23 +93,52 @@ function _rowParams(type, risk, coverage) {
 }
 
 // ── Build enriched row list ───────────────────────────────────────────────────
+// Phase 2: if _apiHedge is available, prefer its per-row data (real BS pricing).
+// Phase 1 fallback: derive everything client-side.
 function _buildRows() {
+  // Build API lookup by instrument_id if available
+  const apiMap = {};
+  if (_apiHedge && Array.isArray(_apiHedge.holdings)) {
+    for (const h of _apiHedge.holdings) apiMap[h.instrument_id] = h;
+  }
+
   return _holdings.map(h => {
     const inst   = _instruments[h.instrument_id] || {};
     const region = inst.region || 'Other';
-    const risk   = _estRisk(inst.daily_return_pct);
-    const ret    = inst.daily_return_pct;
+    const api    = apiMap[h.instrument_id];
+
+    if (api) {
+      // Phase 2: use real API values
+      return {
+        id:            h.instrument_id,
+        weight:        h.allocation_pct,
+        ret:           api.return_1y_pct ?? inst.daily_return_pct,
+        risk:          api.risk_score ?? _estRisk(inst.daily_return_pct),
+        region,
+        type:          api.hedge_type,
+        label:         _hedgeLabel(api.hedge_type),
+        proxy:         _isProxy(api.hedge_type),
+        strikePct:     api.strike_pct,
+        strikeLabel:   api.strike_label,
+        costPct:       api.cost_pct,
+        protectedPct:  api.protected_pct,
+      };
+    }
+
+    // Phase 1 fallback: client-side derived
+    const risk   = inst.risk_score ?? _estRisk(inst.daily_return_pct);
+    const ret    = inst.return_1y_pct ?? inst.daily_return_pct;
     const type   = _hedgeType(h.instrument_id, region, h.allocation_pct);
     const params = _rowParams(type, risk, _coverage);
     return {
-      id:          h.instrument_id,
-      weight:      h.allocation_pct,
+      id:     h.instrument_id,
+      weight: h.allocation_pct,
       ret,
       risk,
       region,
       type,
-      label:       _hedgeLabel(type),
-      proxy:       _isProxy(type),
+      label:  _hedgeLabel(type),
+      proxy:  _isProxy(type),
       ...params,
     };
   });
@@ -117,10 +146,21 @@ function _buildRows() {
 
 // ── Aggregate readouts ────────────────────────────────────────────────────────
 function _aggregates(rows) {
+  // Phase 2: use real API aggregates when available
+  if (_apiHedge && _apiHedge.aggregate) {
+    const agg = _apiHedge.aggregate;
+    const totalCost = agg.monthly_cost_pct;
+    const maxDdHedged   = agg.max_dd_protected_pct;
+    const maxDdUnhedged = agg.max_dd_unhedged_pct;
+    // avgStrike needed for payoff chart — approximate from rows
+    const avgStrike = rows.reduce((s, r) => s + r.strikePct * (r.weight / 100), 0);
+    return { totalCost, avgStrike, maxDdHedged, maxDdUnhedged };
+  }
+  // Phase 1 fallback: client-side
   const totalCost = rows.reduce((s, r) => s + r.costPct * (r.weight / 100), 0);
   const avgStrike = rows.reduce((s, r) => s + r.strikePct * (r.weight / 100), 0);
-  const maxDdHedged   = Math.max(avgStrike - totalCost, -25);  // floor at -25%
-  const maxDdUnhedged = -22;  // typical market drawdown reference
+  const maxDdHedged   = Math.max(avgStrike - totalCost, -25);
+  const maxDdUnhedged = -22;
   return { totalCost, avgStrike, maxDdHedged, maxDdUnhedged };
 }
 
@@ -366,6 +406,21 @@ function _refresh() {
   _highlightScenarioTab();
 }
 
+// ── Phase 2: real hedge data from API, merged into _apiHedge ─────────────────
+let _apiHedge = null;  // PortfolioHedgeResponse or null when unavailable
+
+async function _fetchApiHedge(token, coverage) {
+  try {
+    const data = await apiFetch(
+      `/api/v1/experience/fno/portfolio-hedge?coverage=${coverage}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return data || null;
+  } catch (_) {
+    return null;  // graceful degradation to client-side
+  }
+}
+
 // ── Section loader ────────────────────────────────────────────────────────────
 export async function loadPortfolioHedge() {
   _show('ph-loading');
@@ -382,8 +437,9 @@ export async function loadPortfolioHedge() {
   }
 
   try {
-    // Load portfolio holdings and geo data in parallel
-    const [portfolio, geo] = await Promise.all([
+    // Phase 2: load API hedge data + geo overview in parallel
+    const [apiHedge, portfolio, geo] = await Promise.all([
+      _fetchApiHedge(token, _coverage),
       apiFetch('/api/v1/experience/user-portfolio', {
         headers: { Authorization: `Bearer ${token}` },
       }),
@@ -399,8 +455,9 @@ export async function loadPortfolioHedge() {
     }
 
     _holdings = portfolio.holdings;
+    _apiHedge = apiHedge;  // null = fallback to client-side math
 
-    // Build instrument lookup: id → {daily_return_pct, signal, region}
+    // Build instrument lookup for client-side fallback: id → {daily_return_pct, risk_score, region}
     _instruments = {};
     if (geo && geo.regions) {
       for (const r of geo.regions) {
@@ -410,13 +467,11 @@ export async function loadPortfolioHedge() {
       }
     }
 
-    // Show portfolio name
     const nameEl = document.getElementById('ph-portfolio-name');
     if (nameEl && portfolio.name) nameEl.textContent = portfolio.name;
 
-    // Set coverage slider to default
     const slider = document.getElementById('ph-coverage-slider');
-    if (slider) { slider.value = _coverage; }
+    if (slider) slider.value = _coverage;
 
     _show('ph-content');
     _refresh();
@@ -432,13 +487,21 @@ export async function loadPortfolioHedge() {
 // ── Exported window actions ───────────────────────────────────────────────────
 export function phSetCoverage(val) {
   _coverage = parseInt(val, 10);
-  // Update slider fill (visual)
-  const slider = document.getElementById('ph-coverage-slider');
-  if (slider) {
-    const pct = (_coverage / 100) * 100;
-    slider.style.background = `linear-gradient(to right, #BE185D ${pct}%, rgba(0,0,0,.1) ${pct}%)`;
+  _refresh();  // immediate client-side update for responsive feel
+
+  // Phase 2: async re-fetch from API with new coverage (debounced via closure)
+  const token = sessionStorage.getItem('auth_token');
+  if (token) {
+    const captureCov = _coverage;
+    setTimeout(async () => {
+      if (captureCov !== _coverage) return;  // superseded by a newer drag
+      const fresh = await _fetchApiHedge(token, captureCov);
+      if (fresh && captureCov === _coverage) {
+        _apiHedge = fresh;
+        _refresh();
+      }
+    }, 300);
   }
-  _refresh();
 }
 
 export function phSetScenarioTab(tab) {

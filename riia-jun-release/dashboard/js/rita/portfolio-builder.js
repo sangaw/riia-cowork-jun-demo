@@ -16,15 +16,12 @@ let _geoCache  = null;
 let _draftItems = [];   // [{id, ret, on}]
 let _activePreset = null;
 
-// ── Sector lookup (Phase 1 derived; Phase 2 replaces with API field) ──────────
-const _SECTOR_MAP = {
-  RELIANCE:'Energy',   TATAMOTOR:'Auto',      SBIN:'Financials',
-  TCS:'Tech',          HDFCBANK:'Financials',  INFY:'Tech',
-  WIPRO:'Tech',        BAJFINANCE:'Financials', TATASTEEL:'Materials',
-  NVIDIA:'Tech',       MSFT:'Tech',            AAPL:'Tech',
-  TSLA:'Auto',         GOOGL:'Tech',           AMZN:'Consumer',
-  ASML:'Tech',         SAP:'Tech',             NESTLE:'Consumer',
-  LVMH:'Consumer',
+// Phase 2: sector, risk_score, return_1y_pct now come from the API.
+// This fallback map is used only when the API field is null (instruments with
+// insufficient price history for vol computation).
+const _SECTOR_FALLBACK = {
+  RELIANCE:'Energy', TATAMOTOR:'Auto', NVIDIA:'Tech', MSFT:'Tech',
+  AAPL:'Tech', TSLA:'Auto', ASML:'Tech', SAP:'Tech',
 };
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
@@ -96,12 +93,20 @@ function _renderBuckets(geo) {
       avgEl.style.color = avg >= 0 ? '#16a34a' : '#dc2626';
     }
 
-    const sorted = [...insts].sort((a, b) => (b.daily_return_pct || 0) - (a.daily_return_pct || 0));
+    // Sort by 1Y return (Phase 2) or daily return fallback (Phase 1)
+    const sorted = [...insts].sort((a, b) =>
+      ((b.return_1y_pct ?? b.daily_return_pct) || 0) - ((a.return_1y_pct ?? a.daily_return_pct) || 0)
+    );
 
     container.innerHTML = sorted.map(inst => {
       const inBasket = _basket.has(inst.id);
-      const sector = _SECTOR_MAP[inst.id] || '—';
-      const retColor = (inst.daily_return_pct || 0) >= 0 ? '#16a34a' : '#dc2626';
+      // Phase 2: use API-provided sector/risk_score/return_1y_pct; fallback to derived values
+      const sector   = inst.sector   || _SECTOR_FALLBACK[inst.id] || '—';
+      const dispRet  = inst.return_1y_pct ?? inst.daily_return_pct;
+      const retLabel = inst.return_1y_pct != null
+        ? _fmtRet(inst.return_1y_pct)          // real 1Y — no "(est.)"
+        : _fmtRet(inst.daily_return_pct, true); // daily fallback with "(est.)"
+      const retColor = (dispRet || 0) >= 0 ? '#16a34a' : '#dc2626';
       return `<div onclick="pbToggleInstrument('${inst.id}')"
                    style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;cursor:pointer;
                           border:1px solid ${inBasket ? 'rgba(190,24,93,.3)' : 'transparent'};
@@ -111,8 +116,8 @@ function _renderBuckets(geo) {
           <div style="font-weight:700;font-size:13px;color:${inBasket ? '#BE185D' : 'var(--text)'}">${inst.id}</div>
           <span style="display:inline-block;font-size:10px;padding:1px 6px;border-radius:100px;background:rgba(0,0,0,.06);color:var(--t2);font-weight:500">${sector}</span>
         </div>
-        ${_miniBar(inst.daily_return_pct)}
-        <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${retColor};white-space:nowrap">${_fmtRet(inst.daily_return_pct, true)}</span>
+        ${_miniBar(dispRet)}
+        <span style="font-size:12px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:${retColor};white-space:nowrap">${retLabel}</span>
       </div>`;
     }).join('') || '<div style="color:#94a3b8;font-size:12px;padding:8px">No instruments</div>';
   }
@@ -192,8 +197,8 @@ function _renderMap(geo) {
   if (!canvas) return;
 
   const points = instruments.map(i => ({
-    x: i.daily_return_pct,
-    y: _estRisk(i.daily_return_pct),
+    x: i.return_1y_pct ?? i.daily_return_pct,
+    y: i.risk_score ?? _estRisk(i.daily_return_pct),
     label: i.id,
   }));
 
@@ -221,7 +226,7 @@ function _renderMap(geo) {
             callbacks: {
               label: ctx => {
                 const p = points[ctx.dataIndex];
-                return `${p.label}  ret: ${ctx.parsed.x.toFixed(2)}%  risk: ${ctx.parsed.y}/5`;
+                return `${p.label}  return: ${ctx.parsed.x != null ? ctx.parsed.x.toFixed(1) + '%' : '—'}  risk: ${ctx.parsed.y}/5`;
               },
             },
           },
@@ -251,8 +256,8 @@ function _renderTable(geo) {
     let av, bv;
     if (_sortCol === 'name')   { av = a.id; bv = b.id; }
     if (_sortCol === 'region') { av = regionLookup[a.id] || ''; bv = regionLookup[b.id] || ''; }
-    if (_sortCol === 'return') { av = a.daily_return_pct ?? -999; bv = b.daily_return_pct ?? -999; }
-    if (_sortCol === 'risk')   { av = _estRisk(a.daily_return_pct); bv = _estRisk(b.daily_return_pct); }
+    if (_sortCol === 'return') { av = (a.return_1y_pct ?? a.daily_return_pct) ?? -999; bv = (b.return_1y_pct ?? b.daily_return_pct) ?? -999; }
+    if (_sortCol === 'risk')   { av = a.risk_score ?? _estRisk(a.daily_return_pct); bv = b.risk_score ?? _estRisk(b.daily_return_pct); }
     if (av === bv) return 0;
     const cmp = av < bv ? -1 : 1;
     return _sortAsc ? cmp : -cmp;
@@ -291,8 +296,9 @@ function _renderTable(geo) {
     <tbody>
       ${instruments.map(i => {
         const inBasket = _basket.has(i.id);
-        const retColor = (i.daily_return_pct || 0) > 0 ? '#16a34a' : (i.daily_return_pct || 0) < 0 ? '#dc2626' : '#64748b';
-        const risk = _estRisk(i.daily_return_pct);
+        const dispRet  = i.return_1y_pct ?? i.daily_return_pct;
+        const retColor = (dispRet || 0) > 0 ? '#16a34a' : (dispRet || 0) < 0 ? '#dc2626' : '#64748b';
+        const risk = i.risk_score ?? _estRisk(i.daily_return_pct);
         const region = regionLookup[i.id] || '—';
         return `<tr onclick="pbToggleInstrument('${i.id}')"
                     style="cursor:pointer;border-bottom:1px solid rgba(0,0,0,.05);background:${inBasket ? 'rgba(190,24,93,.04)' : 'transparent'}">
@@ -306,7 +312,7 @@ function _renderTable(geo) {
             <span style="font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(0,0,0,.06);color:var(--t2);font-weight:500">${region}</span>
           </td>
           <td style="padding:7px 8px;text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:12px;color:${retColor}">
-            ${_fmtRet(i.daily_return_pct)}
+            ${i.return_1y_pct != null ? _fmtRet(i.return_1y_pct) : _fmtRet(i.daily_return_pct, true)}
           </td>
           <td style="padding:7px 8px">${_riskDots(risk)}</td>
           <td style="padding:7px 8px;text-align:center">
@@ -452,9 +458,11 @@ function _applyPreset(presetKey, geo) {
       return true;
     });
   }
-  // Rank by return desc, top 7; top 5 toggled on by default
-  const ranked = all.slice().sort((a, b) => (b.daily_return_pct || 0) - (a.daily_return_pct || 0)).slice(0, 7);
-  _draftItems = ranked.map((i, idx) => ({ id: i.id, ret: i.daily_return_pct, on: idx < 5 }));
+  // Rank by 1Y return (Phase 2) or daily return fallback; top 7, first 5 toggled on
+  const ranked = all.slice().sort((a, b) =>
+    ((b.return_1y_pct ?? b.daily_return_pct) || 0) - ((a.return_1y_pct ?? a.daily_return_pct) || 0)
+  ).slice(0, 7);
+  _draftItems = ranked.map((i, idx) => ({ id: i.id, ret: i.return_1y_pct ?? i.daily_return_pct, on: idx < 5 }));
 
   _renderDraftList();
   _updateDraftStats();
