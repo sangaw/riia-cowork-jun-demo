@@ -27,7 +27,7 @@ import { useChip, sendChatMsg, clearChat, updateChips, showAlerts, refreshChatCh
 import { openChartModal, closeChartModal } from './chart-modal.js';
 import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
 import { loadMyPortfolio, savePortfolio } from './my-portfolio.js';
-import { loadPortfolioBuilder, pbToggleInstrument, pbSelectAllRegion, pbClearAllRegion, pbSortTable, pbApplyGoalPreset, pbToggleDraftItem, pbBuildFromDraft, pbClearBasket, pbBuildPortfolio } from './portfolio-builder.js';
+import { loadPortfolioBuilder, pbToggleInstrument, pbSelectAllRegion, pbClearAllRegion, pbSortTable, pbApplyGoalPreset, pbToggleDraftItem, pbBuildFromDraft, pbClearBasket, pbBuildPortfolio, pbSetAlloc } from './portfolio-builder.js?v=3';
 
 // ── Populate section loaders map ───────────────────────────
 _sectionLoaders.market            = async () => { refreshChatChips(); clearChat(); runMarket(); const data = await warmupChat(); if (data) { updateChips(data.chips); showAlerts(data.alerts); } };
@@ -97,6 +97,7 @@ window.pbToggleDraftItem    = pbToggleDraftItem;
 window.pbBuildFromDraft     = pbBuildFromDraft;
 window.pbClearBasket        = pbClearBasket;
 window.pbBuildPortfolio     = pbBuildPortfolio;
+window.pbSetAlloc           = pbSetAlloc;
 
 // ── Refresh all home KPIs & active section ─────────────────
 async function refresh() {

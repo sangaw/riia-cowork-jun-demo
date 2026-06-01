@@ -8,6 +8,7 @@ import { api, apiFetch } from './api.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const _basket = new Set();
+const _allocationPct = new Map(); // instrument id → allocation %
 let _mapChart  = null;
 let _draftChart = null;
 let _sortCol   = 'return';
@@ -70,6 +71,86 @@ function _buildRegionLookup(geo) {
     for (const i of (r.instruments || [])) map[i.id] = d;
   }
   return map;
+}
+
+// ── Auto-select top 5 instruments (cross-geography) by return at 20% each ────
+function _autoSelectTop5(geo) {
+  if (_basket.size > 0) return; // only run when basket is empty (no saved portfolio loaded)
+  const all = _allInstruments(geo).slice().sort((a, b) =>
+    ((b.return_1y_pct ?? b.daily_return_pct) || 0) - ((a.return_1y_pct ?? a.daily_return_pct) || 0)
+  );
+  for (const inst of all.slice(0, 5)) {
+    _basket.add(inst.id);
+    _allocationPct.set(inst.id, 20);
+  }
+}
+
+// ── Render: region summary panel ──────────────────────────────────────────────
+function _renderRegionSummary() {
+  const el = document.getElementById('pb-region-summary');
+  if (!el) return;
+
+  const total = _basket.size;
+  const allocSum = [..._basket].reduce((s, id) => s + (_allocationPct.get(id) ?? 0), 0);
+
+  if (total === 0) {
+    el.innerHTML = '<div style="color:#94a3b8;font-size:12px;padding:2px 0">No instruments selected.</div>';
+    _updateSummaryStats(0, null);
+    return;
+  }
+
+  const geo = _geoCache;
+  const LABELS = { India: '🇮🇳 India', US: '🇺🇸 US', EU: '🇪🇺 Europe', Other: '🌐 Other' };
+  const rows = [];
+  let totalRet = 0, retCount = 0;
+
+  if (geo) {
+    for (const r of (geo.regions || [])) {
+      const sel = (r.instruments || []).filter(i => _basket.has(i.id));
+      if (!sel.length) continue;
+      const alloc = sel.reduce((s, i) => s + (_allocationPct.get(i.id) ?? 0), 0);
+      const label = LABELS[r.region] || r.region;
+      const n = sel.length;
+      rows.push(`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <div>
+          <div style="font-weight:600;color:var(--text)">${label}</div>
+          <div style="font-size:11px;color:var(--t2)">${n} instrument${n === 1 ? '' : 's'}</div>
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:13px;color:#BE185D">${alloc}%</span>
+      </div>`);
+      for (const i of sel) {
+        if (i.daily_return_pct != null) { totalRet += i.daily_return_pct; retCount++; }
+      }
+    }
+  }
+
+  // Fallback: if no geo data, show basket IDs only
+  if (!rows.length) {
+    rows.push(`<div style="font-size:12px;color:var(--t2);padding:4px 0">${total} instrument${total === 1 ? '' : 's'} selected</div>`);
+  }
+
+  el.innerHTML = rows.join('');
+  _updateSummaryStats(allocSum, retCount > 0 ? totalRet / retCount : null);
+}
+
+function _updateSummaryStats(allocSum, avgRet) {
+  const allocEl = document.getElementById('pb-basket-alloc-sum');
+  if (allocEl) {
+    allocEl.textContent = `${allocSum}%`;
+    allocEl.style.color = Math.abs(allocSum - 100) < 0.5 ? '#16a34a' : allocSum > 100 ? '#dc2626' : '#64748b';
+  }
+  const retEl = document.getElementById('pb-basket-avg-return');
+  if (retEl) {
+    retEl.textContent = avgRet != null ? _fmtRet(avgRet) : '—';
+    if (avgRet != null) retEl.style.color = avgRet >= 0 ? '#16a34a' : '#dc2626';
+  }
+  const is100 = Math.abs(allocSum - 100) < 0.5;
+  const buildBtn = document.getElementById('pb-basket-build-btn');
+  if (buildBtn) {
+    buildBtn.disabled = !is100;
+    buildBtn.style.opacity = is100 ? '1' : '.45';
+    buildBtn.style.cursor  = is100 ? 'pointer' : 'not-allowed';
+  }
 }
 
 // ── Render: region buckets ────────────────────────────────────────────────────
@@ -139,44 +220,26 @@ function _renderBasket() {
       if (emptyMsg) emptyMsg.style.display = '';
     } else {
       if (emptyMsg) emptyMsg.style.display = 'none';
-      const regionLookup = geo ? _buildRegionLookup(geo) : {};
-      listEl.innerHTML = [..._basket].map(id => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
-          <div>
-            <div style="font-weight:700;font-size:13px;font-family:'IBM Plex Mono',monospace">${id}</div>
-            ${regionLookup[id] ? `<div style="font-size:11px;color:var(--t2)">${regionLookup[id]}</div>` : ''}
+      // 2-column chip grid — each chip is 2 rows: ticker+remove / % input
+      listEl.innerHTML = [..._basket].map(id => {
+        const pct = _allocationPct.get(id) ?? 0;
+        return `<div style="border-radius:8px;background:rgba(190,24,93,.06);border:1px solid rgba(190,24,93,.2);padding:6px 8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span style="font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#BE185D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px">${id}</span>
+            <button onclick="pbToggleInstrument('${id}')" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;line-height:1;padding:0;flex-shrink:0">×</button>
           </div>
-          <button onclick="pbToggleInstrument('${id}')" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:18px;line-height:1;padding:0 4px">×</button>
-        </div>`).join('');
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" min="0" max="100" step="1" value="${pct}"
+                   oninput="pbSetAlloc('${id}',+this.value)"
+                   style="flex:1;min-width:0;padding:3px 6px;border:1px solid rgba(190,24,93,.35);border-radius:5px;font-size:12px;font-family:'IBM Plex Mono',monospace;text-align:right;color:#1e293b;background:#fff">
+            <span style="font-size:11px;color:#64748b;font-weight:600;flex-shrink:0">%</span>
+          </div>
+        </div>`;
+      }).join('');
     }
   }
 
-  // Stats
-  const regions = new Set();
-  let totalRet = 0, retCount = 0;
-  if (geo) {
-    for (const r of (geo.regions || [])) {
-      for (const i of (r.instruments || [])) {
-        if (_basket.has(i.id)) {
-          regions.add(r.region);
-          if (i.daily_return_pct != null) { totalRet += i.daily_return_pct; retCount++; }
-        }
-      }
-    }
-  }
-  const avgRet = retCount > 0 ? totalRet / retCount : null;
-
-  const regEl = document.getElementById('pb-basket-regions');
-  if (regEl) regEl.textContent = regions.size || '—';
-
-  const avgEl = document.getElementById('pb-basket-avg-return');
-  if (avgEl) {
-    avgEl.textContent = avgRet != null ? _fmtRet(avgRet) : '—';
-    if (avgRet != null) avgEl.style.color = avgRet >= 0 ? '#16a34a' : '#dc2626';
-  }
-
-  const buildBtn = document.getElementById('pb-basket-build-btn');
-  if (buildBtn) buildBtn.disabled = count === 0;
+  _renderRegionSummary();
 }
 
 // ── Render: scatter map ───────────────────────────────────────────────────────
@@ -329,12 +392,26 @@ function _renderTable(geo) {
     </tbody>`;
 }
 
-// ── Guided basket — draft state & rendering ───────────────────────────────────
-const _GOAL_PRESETS = {
-  aggressive: { label: 'Aggressive growth', signalFilter: ['bullish'],              riskMin: 3 },
-  balanced:   { label: 'Balanced',           signalFilter: ['bullish', 'neutral'],   riskMin: 2, riskMax: 4 },
-  income:     { label: 'Income & stability', signalFilter: ['neutral', 'bullish'],   riskMax: 3 },
-  custom:     { label: 'Custom',             custom: true },
+// ── Guided basket — investment horizon presets ────────────────────────────────
+// Labels and client-side fallback thresholds mirror investment_horizons.py.
+// When the API populates inst.horizons[], that takes precedence over fallbacks.
+const _HORIZON_PRESETS = {
+  short_term: {
+    label:       'Short Term',
+    returnField: 'return_1y_pct',
+    // Fallback filter (used when inst.horizons is empty — e.g., insufficient history)
+    fallback:    inst => (inst.return_1y_pct ?? inst.daily_return_pct ?? 0) >= 15,
+  },
+  medium_term: {
+    label:       'Medium Term',
+    returnField: 'return_5y_pct',
+    fallback:    inst => (inst.return_5y_pct ?? inst.return_1y_pct ?? inst.daily_return_pct ?? 0) >= 12,
+  },
+  long_term: {
+    label:       'Long Term',
+    returnField: 'return_15y_pct',
+    fallback:    inst => (inst.return_15y_pct ?? inst.return_1y_pct ?? inst.daily_return_pct ?? 0) >= 8,
+  },
 };
 
 function _draftAlloc() {
@@ -432,13 +509,20 @@ function _renderDraftList() {
   }).join('');
 }
 
+function _horizonReturn(inst, key) {
+  if (key === 'short_term')  return inst.return_1y_pct  ?? inst.daily_return_pct;
+  if (key === 'medium_term') return inst.return_5y_pct  ?? inst.return_1y_pct ?? inst.daily_return_pct;
+  if (key === 'long_term')   return inst.return_15y_pct ?? inst.return_1y_pct ?? inst.daily_return_pct;
+  return inst.return_1y_pct ?? inst.daily_return_pct;
+}
+
 function _applyPreset(presetKey, geo) {
   _activePreset = presetKey;
-  const preset = _GOAL_PRESETS[presetKey];
+  const preset = _HORIZON_PRESETS[presetKey];
   if (!preset) return;
 
-  // Highlight selected goal card
-  ['aggressive', 'balanced', 'income', 'custom'].forEach(k => {
+  // Highlight selected horizon card
+  ['short_term', 'medium_term', 'long_term'].forEach(k => {
     const el = document.getElementById(`pb-preset-${k}`);
     if (!el) return;
     el.style.border     = k === presetKey ? '2px solid #BE185D' : '2px solid var(--border)';
@@ -446,23 +530,26 @@ function _applyPreset(presetKey, geo) {
   });
 
   const titleEl = document.getElementById('pb-draft-title');
-  if (titleEl) titleEl.textContent = `Recommended for ${preset.label}`;
+  if (titleEl) titleEl.textContent = preset.label;
 
-  let all = _allInstruments(geo);
-  if (!preset.custom) {
-    all = all.filter(i => {
-      const r = _estRisk(i.daily_return_pct);
-      if (preset.signalFilter && !preset.signalFilter.includes(i.signal)) return false;
-      if (preset.riskMin != null && r < preset.riskMin) return false;
-      if (preset.riskMax != null && r > preset.riskMax) return false;
-      return true;
-    });
-  }
-  // Rank by 1Y return (Phase 2) or daily return fallback; top 7, first 5 toggled on
+  // Filter: use API-computed horizons[] when present, else client-side fallback
+  const all = _allInstruments(geo).filter(inst => {
+    if (Array.isArray(inst.horizons) && inst.horizons.length > 0) {
+      return inst.horizons.includes(presetKey);
+    }
+    return preset.fallback(inst);
+  });
+
+  // Rank by the horizon-relevant return metric, show top 7, first 5 toggled on
   const ranked = all.slice().sort((a, b) =>
-    ((b.return_1y_pct ?? b.daily_return_pct) || 0) - ((a.return_1y_pct ?? a.daily_return_pct) || 0)
+    (_horizonReturn(b, presetKey) || 0) - (_horizonReturn(a, presetKey) || 0)
   ).slice(0, 7);
-  _draftItems = ranked.map((i, idx) => ({ id: i.id, ret: i.return_1y_pct ?? i.daily_return_pct, on: idx < 5 }));
+
+  _draftItems = ranked.map((i, idx) => ({
+    id: i.id,
+    ret: _horizonReturn(i, presetKey),
+    on: idx < 5,
+  }));
 
   _renderDraftList();
   _updateDraftStats();
@@ -501,10 +588,12 @@ export async function loadPortfolioBuilder() {
       }
     } catch (_) {}
 
+    _autoSelectTop5(geo);
     _renderBuckets(geo);
     _renderTable(geo);
     _renderBasket();
     _renderMap(geo);
+    _applyPreset('short_term', geo);
 
   } catch (e) {
     _hide('pb-loading');
@@ -516,8 +605,13 @@ export async function loadPortfolioBuilder() {
 
 // ── Exported actions ──────────────────────────────────────────────────────────
 export function pbToggleInstrument(id) {
-  if (_basket.has(id)) _basket.delete(id);
-  else _basket.add(id);
+  if (_basket.has(id)) {
+    _basket.delete(id);
+    _allocationPct.delete(id);
+  } else {
+    _basket.add(id);
+    _allocationPct.set(id, 15);
+  }
   _renderBasket();
   if (_geoCache) {
     _renderBuckets(_geoCache);
@@ -531,7 +625,7 @@ export function pbSelectAllRegion(regionKey) {
   const apiKey = { india: 'India', us: 'US', europe: 'EU', other: 'Other' }[regionKey] || regionKey;
   const region = (_geoCache.regions || []).find(r => r.region === apiKey);
   if (!region) return;
-  for (const i of region.instruments) _basket.add(i.id);
+  for (const i of region.instruments) { _basket.add(i.id); if (!_allocationPct.has(i.id)) _allocationPct.set(i.id, 15); }
   _renderBasket();
   _renderBuckets(_geoCache);
   _renderTable(_geoCache);
@@ -543,7 +637,7 @@ export function pbClearAllRegion(regionKey) {
   const apiKey = { india: 'India', us: 'US', europe: 'EU', other: 'Other' }[regionKey] || regionKey;
   const region = (_geoCache.regions || []).find(r => r.region === apiKey);
   if (!region) return;
-  for (const i of region.instruments) _basket.delete(i.id);
+  for (const i of region.instruments) { _basket.delete(i.id); _allocationPct.delete(i.id); }
   _renderBasket();
   _renderBuckets(_geoCache);
   _renderTable(_geoCache);
@@ -557,6 +651,7 @@ export function pbSortTable(col) {
 }
 
 export function pbApplyGoalPreset(presetKey) {
+  if (!_HORIZON_PRESETS[presetKey]) return;
   if (_geoCache) _applyPreset(presetKey, _geoCache);
 }
 
@@ -579,8 +674,14 @@ export function pbBuildFromDraft() {
 
 export function pbClearBasket() {
   _basket.clear();
+  _allocationPct.clear();
   _renderBasket();
   if (_geoCache) { _renderBuckets(_geoCache); _renderTable(_geoCache); _renderMap(_geoCache); }
+}
+
+export function pbSetAlloc(id, pct) {
+  _allocationPct.set(id, Math.max(0, Math.min(100, Math.round(pct) || 0)));
+  _renderRegionSummary(); // summary panel reflects new totals without re-rendering chips
 }
 
 export async function pbBuildPortfolio() {
@@ -596,10 +697,17 @@ export async function pbBuildPortfolio() {
     return;
   }
   const name = `My Portfolio ${new Date().toLocaleDateString('en-IN')}`;
-  const allocationPct = Math.floor(100 / _basket.size);
-  const holdings = [..._basket].map(id => ({ instrument_id: id, allocation_pct: allocationPct }));
-  const rem = 100 - allocationPct * _basket.size;
-  if (rem > 0 && holdings.length) holdings[0].allocation_pct += rem;
+  // Use custom allocations if they sum to ~100, else fall back to equal split
+  const allocSum = [..._basket].reduce((s, id) => s + (_allocationPct.get(id) ?? 0), 0);
+  let holdings;
+  if (Math.abs(allocSum - 100) < 1) {
+    holdings = [..._basket].map(id => ({ instrument_id: id, allocation_pct: _allocationPct.get(id) ?? 0 }));
+  } else {
+    const eq = Math.floor(100 / _basket.size);
+    holdings = [..._basket].map(id => ({ instrument_id: id, allocation_pct: eq }));
+    const rem = 100 - eq * _basket.size;
+    if (rem > 0) holdings[0].allocation_pct += rem;
+  }
 
   const buildBtn      = document.getElementById('pb-basket-build-btn');
   const draftBuildBtn = document.getElementById('pb-draft-build-btn');
@@ -614,7 +722,8 @@ export async function pbBuildPortfolio() {
     const msg = document.getElementById('pb-status-msg');
     if (msg) { msg.textContent = `Save failed: ${e.message || 'Unknown error'}`; msg.style.color = '#dc2626'; msg.style.display = ''; }
   } finally {
-    if (buildBtn)      { buildBtn.disabled = _basket.size === 0; buildBtn.textContent = 'Continue → Allocate'; }
+    if (buildBtn)      buildBtn.textContent = 'Allocate';
     if (draftBuildBtn) { draftBuildBtn.disabled = false; draftBuildBtn.textContent = 'Build portfolio →'; }
+    _renderRegionSummary(); // restores correct enabled/disabled state on both buttons
   }
 }

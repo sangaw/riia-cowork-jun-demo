@@ -30,6 +30,7 @@ from rita.core.performance import (
     simulate_stress_scenarios,
 )
 from rita.schemas.geography import GeographyOverviewResponse, GeoInstrument, GeoRegion
+from rita.core.investment_horizons import INVESTMENT_HORIZONS as _INVESTMENT_HORIZONS
 from rita.schemas.strategy_comparison import (
     StrategyComparisonResponse,
     StrategyResult,
@@ -1217,6 +1218,23 @@ def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewRespon
                 if close_1y and close_1y != 0:
                     return_1y_pct = round((close / close_1y - 1) * 100, 2)
 
+            # 5Y CAGR and 15Y CAGR — driven by investment_horizons.py config
+            return_5y_pct: Optional[float] = None
+            return_15y_pct: Optional[float] = None
+            for h_key, h_cfg in _INVESTMENT_HORIZONS.items():
+                if h_cfg["return_field"] == "return_5y_pct" and close is not None:
+                    td = h_cfg["lookback_td"]
+                    if len(recs_sorted) >= td:
+                        base = float(recs_sorted[max(0, len(recs_sorted) - td)].close or 0)
+                        if base > 0:
+                            return_5y_pct = round(((close / base) ** (1 / h_cfg["years"]) - 1) * 100, 2)
+                elif h_cfg["return_field"] == "return_15y_pct" and close is not None:
+                    td = h_cfg["lookback_td"]
+                    if len(recs_sorted) >= td:
+                        base = float(recs_sorted[max(0, len(recs_sorted) - td)].close or 0)
+                        if base > 0:
+                            return_15y_pct = round(((close / base) ** (1 / h_cfg["years"]) - 1) * 100, 2)
+
             # Risk score: annualized vol bucketed 1–5 (C1)
             risk_score: Optional[int] = None
             history = [float(r.close) for r in recs_sorted[-253:] if r.close]
@@ -1226,7 +1244,19 @@ def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewRespon
                     ann_vol_pct = _stats.stdev(daily_rets) * (252 ** 0.5) * 100
                     risk_score = _risk_score_from_vol(ann_vol_pct)
 
-            price_map[inst_id] = (close, daily_return_pct, return_1y_pct, risk_score)
+            # Classify investment horizons using config thresholds
+            metric_map = {
+                "return_1y_pct":  return_1y_pct,
+                "return_5y_pct":  return_5y_pct,
+                "return_15y_pct": return_15y_pct,
+            }
+            horizons: list[str] = [
+                key for key, cfg in _INVESTMENT_HORIZONS.items()
+                if (v := metric_map.get(cfg["return_field"])) is not None
+                and v >= cfg["min_return_pct"]
+            ]
+
+            price_map[inst_id] = (close, daily_return_pct, return_1y_pct, return_5y_pct, return_15y_pct, risk_score, horizons)
 
     except Exception as exc:
         sources["market_data_cache"] = {
@@ -1280,8 +1310,8 @@ def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewRespon
         geo_instruments: list[GeoInstrument] = []
         for inst in bucket:
             inst_id = inst.instrument_id.upper()
-            close, daily_return_pct, return_1y_pct, risk_score = price_map.get(
-                inst_id, (None, None, None, None)
+            close, daily_return_pct, return_1y_pct, return_5y_pct, return_15y_pct, risk_score, horizons = price_map.get(
+                inst_id, (None, None, None, None, None, None, [])
             )
             geo_instruments.append(
                 GeoInstrument(
@@ -1292,8 +1322,11 @@ def geography_overview(db: Session = Depends(get_db)) -> GeographyOverviewRespon
                     daily_return_pct=daily_return_pct,
                     signal=_signal(daily_return_pct),
                     return_1y_pct=return_1y_pct,
+                    return_5y_pct=return_5y_pct,
+                    return_15y_pct=return_15y_pct,
                     risk_score=risk_score,
                     sector=_SECTOR_MAP.get(inst_id),
+                    horizons=horizons,
                 )
             )
         regions.append(
