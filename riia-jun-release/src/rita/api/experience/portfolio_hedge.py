@@ -49,6 +49,13 @@ class HedgeHolding(BaseModel):
     ann_vol_pct: float        # annualised realised volatility %
     call_sell_cost_pct: float # BS call premium at symmetric OTM level
     duration: str             # '1m' | '3m' | '1y'
+    # EUR-denominated fields (None when portfolio has no total_value_eur stored)
+    position_eur: float | None = None        # allocation_pct/100 * total_value_eur
+    put_cost_eur: float | None = None        # monthly put premium in EUR
+    call_income_eur: float | None = None     # monthly call income in EUR
+    annual_put_cost_eur: float | None = None
+    annual_call_income_eur: float | None = None
+    sigma_eur: float | None = None           # 1σ downside EUR over chosen duration
 
 
 class HedgeAggregate(BaseModel):
@@ -199,6 +206,8 @@ def get_portfolio_hedge(
     if not holdings_raw:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Portfolio has no holdings")
 
+    total_eur: float | None = portfolio.total_value_eur
+
     all_records = MarketDataCacheRepository(db).read_all()
     from collections import defaultdict
     by_inst: dict[str, list] = defaultdict(list)
@@ -243,6 +252,20 @@ def get_portfolio_hedge(
             coverage, vol, hedge_type, alloc, t_months
         )
 
+        pos_eur: float | None = None
+        put_cost_eur: float | None = None
+        call_income_eur: float | None = None
+        annual_put_cost_eur: float | None = None
+        annual_call_income_eur: float | None = None
+        sigma_eur: float | None = None
+        if total_eur is not None:
+            pos_eur = round(total_eur * alloc / 100.0, 2)
+            put_cost_eur = round(pos_eur * cost_pct / 100.0, 2)
+            call_income_eur = round(pos_eur * call_sell_cost_pct / 100.0, 2)
+            annual_put_cost_eur = round(put_cost_eur * 12.0, 2)
+            annual_call_income_eur = round(call_income_eur * 12.0, 2)
+            sigma_eur = round(pos_eur * vol / 100.0 * (t_months / 12.0) ** 0.5, 2)
+
         result_holdings.append(HedgeHolding(
             instrument_id=inst_id,
             weight=alloc,
@@ -257,6 +280,12 @@ def get_portfolio_hedge(
             ann_vol_pct=round(vol, 2),
             call_sell_cost_pct=call_sell_cost_pct,
             duration=duration,
+            position_eur=pos_eur,
+            put_cost_eur=put_cost_eur,
+            call_income_eur=call_income_eur,
+            annual_put_cost_eur=annual_put_cost_eur,
+            annual_call_income_eur=annual_call_income_eur,
+            sigma_eur=sigma_eur,
         ))
 
     total_weight = sum(h.weight for h in result_holdings) or 1.0

@@ -117,60 +117,76 @@ function _renderDiscover() {
 }
 
 // ── Selection tab ─────────────────────────────────────────────────────────────
+function _fmtEur(v) {
+  if (v == null) return '—';
+  return '€' + v.toLocaleString('en-EU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
 function _renderSelection() {
   const tbody = document.getElementById('ph-selection-body');
   if (!tbody) return;
 
   if (!_state.apiHedge || !_state.apiHedge.holdings.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">No hedge data available.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">No hedge data available.</td></tr>';
     return;
   }
 
-  const tMonths  = _DURATION_MONTHS[_state.duration];
-  const durLabel = _DURATION_LABEL[_state.duration];
+  const tMonths = _DURATION_MONTHS[_state.duration];
+  const hasEur  = _state.apiHedge.holdings.some(h => h.position_eur != null);
 
   tbody.innerHTML = _state.apiHedge.holdings.map(h => {
     const sel       = _state.selections[h.instrument_id] || 'put_buy';
     const recommend = (h.risk_score ?? 2) >= 3 ? 'put_buy' : 'call_sell';
     const sigMove   = (h.ann_vol_pct * Math.sqrt(tMonths / 12)).toFixed(1);
 
-    const putStyle  = sel === 'put_buy'
-      ? 'background:#BE185D;color:#fff;border:1px solid #BE185D;'
-      : 'background:transparent;color:#64748b;border:1px solid rgba(0,0,0,.15);';
-    const sellStyle = sel === 'call_sell'
-      ? 'background:#BE185D;color:#fff;border:1px solid #BE185D;'
-      : 'background:transparent;color:#64748b;border:1px solid rgba(0,0,0,.15);';
+    // EUR amounts for the selected strategy
+    const costEur  = sel === 'put_buy'   ? h.put_cost_eur      : (h.call_income_eur != null ? -h.call_income_eur : null);
+    const annualEur = sel === 'put_buy'  ? h.annual_put_cost_eur : (h.annual_call_income_eur != null ? -h.annual_call_income_eur : null);
+    const costPct  = sel === 'put_buy'   ? h.cost_pct           : h.call_sell_cost_pct;
 
-    const putRec  = recommend === 'put_buy'
+    const recBadge = recommend === sel
       ? '<span style="font-size:9px;background:rgba(190,24,93,.15);color:#BE185D;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700">Rec</span>'
       : '';
-    const sellRec = recommend === 'call_sell'
-      ? '<span style="font-size:9px;background:rgba(190,24,93,.15);color:#BE185D;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700">Rec</span>'
+
+    const putActive  = sel === 'put_buy';
+    const sellActive = sel === 'call_sell';
+    const putBtnStyle  = putActive  ? 'background:#BE185D;color:#fff;border:1px solid #BE185D;' : 'background:transparent;color:#64748b;border:1px solid rgba(0,0,0,.15);';
+    const sellBtnStyle = sellActive ? 'background:#BE185D;color:#fff;border:1px solid #BE185D;' : 'background:transparent;color:#64748b;border:1px solid rgba(0,0,0,.15);';
+
+    const sigEurStr = h.sigma_eur != null ? `<span style="color:#94a3b8;font-size:10px">&nbsp;(${_fmtEur(h.sigma_eur)})</span>` : '';
+    const posEurStr = hasEur ? `<br><span style="font-size:11px;color:#94a3b8;font-family:var(--fm)">${_fmtEur(h.position_eur)}</span>` : '';
+
+    const monthlyCostStr = hasEur && costEur != null
+      ? `${costPct.toFixed(2)}%&nbsp;<span style="color:#94a3b8">${_fmtEur(Math.abs(costEur))}/mo</span>`
+      : `${costPct.toFixed(2)}%/mo`;
+    const annualCostStr = hasEur && annualEur != null
+      ? `<span style="font-size:10px;color:#94a3b8">${_fmtEur(Math.abs(annualEur))}/yr</span>`
       : '';
 
     return `<tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-      <td style="padding:10px 10px;font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:13px">${h.instrument_id}</td>
-      <td style="padding:10px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--t2)">${h.weight}%</td>
-      <td style="padding:10px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#64748b">
-        ±${sigMove}%<br><span style="font-size:10px;color:var(--t3)">${durLabel}</span>
+      <td style="padding:10px 10px">
+        <span style="font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:13px">${h.instrument_id}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t2);margin-left:6px">${h.weight}%</span>
+        ${posEurStr}
       </td>
-      <td style="padding:10px 14px">
-        <div style="display:flex;flex-direction:column;gap:3px">
+      <td style="padding:10px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#64748b;white-space:nowrap">
+        ±${sigMove}%${sigEurStr}
+      </td>
+      <td style="padding:10px 10px">
+        <div style="display:flex;gap:4px;align-items:center">
           <button onclick="phPickStrategy('${h.instrument_id}','put_buy')"
-                  style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);text-align:left;${putStyle}">
-            Put Buy${putRec} &nbsp;${h.cost_pct.toFixed(2)}%/mo
+                  style="padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);${putBtnStyle}">
+            Put Buy${recommend === 'put_buy' ? recBadge : ''}
           </button>
-          <span style="font-size:10px;color:#64748b;font-family:var(--fm)">Max cost known</span>
+          <button onclick="phPickStrategy('${h.instrument_id}','call_sell')"
+                  style="padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);${sellBtnStyle}">
+            Sell Call${recommend === 'call_sell' ? recBadge : ''}
+          </button>
         </div>
       </td>
-      <td style="padding:10px 14px">
-        <div style="display:flex;flex-direction:column;gap:3px">
-          <button onclick="phPickStrategy('${h.instrument_id}','call_sell')"
-                  style="padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);text-align:left;${sellStyle}">
-            Sell Call${sellRec} +${h.call_sell_cost_pct.toFixed(2)}%/mo
-          </button>
-          <span style="font-size:10px;color:#64748b;font-family:var(--fm)">Upside capped</span>
-        </div>
+      <td style="padding:10px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <div>${monthlyCostStr}</div>
+        <div>${annualCostStr}</div>
       </td>
     </tr>`;
   }).join('');
