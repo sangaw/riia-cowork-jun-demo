@@ -6,7 +6,7 @@
 import { apiFetch } from './api.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const _TAB_ORDER = ['discover', 'selection', 'allocation', 'hedge'];
+const _TAB_ORDER = ['discover', 'allocation', 'hedge'];
 
 const _DURATION_MONTHS = { '1m': 1, '3m': 3, '1y': 12 };
 const _DURATION_LABEL  = { '1m': 'Immediate (1M)', '3m': 'Near Term (3M)', '1y': 'Short Term (1Y)' };
@@ -27,6 +27,8 @@ const _state = {
   instruments:  {},    // id → {return_1y_pct, risk_score, daily_return_pct, region}
   apiHedge:     null,  // PortfolioHedgeResponse | null
   selections:   {},    // id → 'put_buy' | 'call_sell'
+  hedgeChecked: new Set(),
+  totalValueEur: null,  // float | null — from saved portfolio or user input
   reached:      new Set(['discover']),
   _portfolioName: '',
 };
@@ -60,7 +62,6 @@ function _goToTab(tab) {
     if (panel) panel.style.display = t === tab ? '' : 'none';
   });
   if (tab === 'discover')   _renderDiscover();
-  if (tab === 'selection')  _renderSelection();
   if (tab === 'allocation') _renderAllocation();
   if (tab === 'hedge')      _renderHedge();
 }
@@ -79,9 +80,13 @@ function _renderTabBar() {
   });
 }
 
-// ── Discover tab ─────────────────────────────────────────────────────────────
+// ── Discover tab (merged: holdings + hedge selection) ─────────────────────────
+function _fmtEur(v) {
+  if (v == null) return '—';
+  return '€' + v.toLocaleString('en-EU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
 function _renderDiscover() {
-  // Duration pills
   ['1m', '3m', '1y'].forEach(d => {
     const btn = document.getElementById(`ph-dur-${d}`);
     if (!btn) return;
@@ -92,13 +97,21 @@ function _renderDiscover() {
   });
 
   _setText('ph-discover-portfolio-name', _state._portfolioName || '—');
+  const eurInput = document.getElementById('ph-total-eur');
+  if (eurInput && _state.totalValueEur != null) eurInput.value = _state.totalValueEur;
 
   const tbody = document.getElementById('ph-discover-holdings');
   if (!tbody) return;
 
   if (!_state.holdings.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">No portfolio holdings found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">No portfolio holdings found.</td></tr>';
     return;
+  }
+
+  const tMonths  = _DURATION_MONTHS[_state.duration];
+  const hedgeMap = {};
+  if (_state.apiHedge?.holdings) {
+    for (const hh of _state.apiHedge.holdings) hedgeMap[hh.instrument_id] = hh;
   }
 
   tbody.innerHTML = _state.holdings.map(h => {
@@ -107,89 +120,50 @@ function _renderDiscover() {
     const risk     = inst.risk_score ?? 2;
     const retStr   = ret != null ? ((ret >= 0 ? '+' : '') + ret.toFixed(1) + '%') : '—';
     const retColor = (ret || 0) > 0 ? '#16a34a' : (ret || 0) < 0 ? '#dc2626' : '#64748b';
-    return `<tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-      <td style="padding:9px 12px;font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:13px">${h.instrument_id}</td>
-      <td style="padding:9px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px">${h.allocation_pct}%</td>
-      <td style="padding:9px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:${retColor}">${retStr}</td>
-      <td style="padding:9px 12px">${_riskDots(risk)}</td>
-    </tr>`;
-  }).join('');
-}
 
-// ── Selection tab ─────────────────────────────────────────────────────────────
-function _fmtEur(v) {
-  if (v == null) return '—';
-  return '€' + v.toLocaleString('en-EU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-function _renderSelection() {
-  const tbody = document.getElementById('ph-selection-body');
-  if (!tbody) return;
-
-  if (!_state.apiHedge || !_state.apiHedge.holdings.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">No hedge data available.</td></tr>';
-    return;
-  }
-
-  const tMonths = _DURATION_MONTHS[_state.duration];
-  const hasEur  = _state.apiHedge.holdings.some(h => h.position_eur != null);
-
-  tbody.innerHTML = _state.apiHedge.holdings.map(h => {
-    const sel       = _state.selections[h.instrument_id] || 'put_buy';
-    const recommend = (h.risk_score ?? 2) >= 3 ? 'put_buy' : 'call_sell';
-    const sigMove   = (h.ann_vol_pct * Math.sqrt(tMonths / 12)).toFixed(1);
-
-    // EUR amounts for the selected strategy
-    const costEur  = sel === 'put_buy'   ? h.put_cost_eur      : (h.call_income_eur != null ? -h.call_income_eur : null);
-    const annualEur = sel === 'put_buy'  ? h.annual_put_cost_eur : (h.annual_call_income_eur != null ? -h.annual_call_income_eur : null);
-    const costPct  = sel === 'put_buy'   ? h.cost_pct           : h.call_sell_cost_pct;
-
-    const recBadge = recommend === sel
-      ? '<span style="font-size:9px;background:rgba(190,24,93,.15);color:#BE185D;padding:1px 5px;border-radius:3px;margin-left:4px;font-weight:700">Rec</span>'
-      : '';
-
-    const putActive  = sel === 'put_buy';
-    const sellActive = sel === 'call_sell';
-    const putBtnStyle  = putActive  ? 'background:#BE185D;color:#fff;border:1px solid #BE185D;' : 'background:transparent;color:#64748b;border:1px solid rgba(0,0,0,.15);';
-    const sellBtnStyle = sellActive ? 'background:#BE185D;color:#fff;border:1px solid #BE185D;' : 'background:transparent;color:#64748b;border:1px solid rgba(0,0,0,.15);';
-
-    const sigEurStr = h.sigma_eur != null ? `<span style="color:#94a3b8;font-size:10px">&nbsp;(${_fmtEur(h.sigma_eur)})</span>` : '';
-    const posEurStr = hasEur ? `<br><span style="font-size:11px;color:#94a3b8;font-family:var(--fm)">${_fmtEur(h.position_eur)}</span>` : '';
-
-    const monthlyCostStr = hasEur && costEur != null
-      ? `${costPct.toFixed(2)}%&nbsp;<span style="color:#94a3b8">${_fmtEur(Math.abs(costEur))}/mo</span>`
-      : `${costPct.toFixed(2)}%/mo`;
-    const annualCostStr = hasEur && annualEur != null
-      ? `<span style="font-size:10px;color:#94a3b8">${_fmtEur(Math.abs(annualEur))}/yr</span>`
-      : '';
+    const hd      = hedgeMap[h.instrument_id];
+    const sigMove = hd ? '±' + (hd.ann_vol_pct * Math.sqrt(tMonths / 12)).toFixed(1) + '%' : '—';
+    const checked = _state.hedgeChecked.has(h.instrument_id);
 
     return `<tr style="border-bottom:1px solid rgba(0,0,0,.05)">
-      <td style="padding:10px 10px">
+      <td style="padding:9px 10px">
         <span style="font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:13px">${h.instrument_id}</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t2);margin-left:6px">${h.weight}%</span>
-        ${posEurStr}
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t2);margin-left:5px">${h.allocation_pct}%</span>
+        ${hd ? `<br><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#94a3b8">${_fmtEur(hd.position_eur)}</span>` : ''}
       </td>
-      <td style="padding:10px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#64748b;white-space:nowrap">
-        ±${sigMove}%${sigEurStr}
+      <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:${retColor};white-space:nowrap">${retStr}</td>
+      <td style="padding:9px 10px">${_riskDots(risk)}</td>
+      <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#64748b;white-space:nowrap">${sigMove}</td>
+      <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#dc2626;white-space:nowrap">${hd ? '−' + _fmtEur(hd.var_95_eur) : '—'}</td>
+      <td style="padding:9px 10px;text-align:center">
+        ${hd ? '<span style="font-size:11px;font-weight:700;background:rgba(22,163,74,.12);color:#16a34a;padding:2px 7px;border-radius:100px;font-family:var(--fm)">95%</span>' : '—'}
       </td>
-      <td style="padding:10px 10px">
-        <div style="display:flex;gap:4px;align-items:center">
-          <button onclick="phPickStrategy('${h.instrument_id}','put_buy')"
-                  style="padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);${putBtnStyle}">
-            Put Buy${recommend === 'put_buy' ? recBadge : ''}
-          </button>
-          <button onclick="phPickStrategy('${h.instrument_id}','call_sell')"
-                  style="padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);${sellBtnStyle}">
-            Sell Call${recommend === 'call_sell' ? recBadge : ''}
-          </button>
-        </div>
-      </td>
-      <td style="padding:10px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px">
-        <div>${monthlyCostStr}</div>
-        <div>${annualCostStr}</div>
+      <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;white-space:nowrap">${hd ? _fmtEur(hd.put_cost_eur) : '—'}</td>
+      <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#16a34a;white-space:nowrap">${hd && hd.var_95_eur != null && hd.put_cost_eur != null ? _fmtEur(hd.var_95_eur - hd.put_cost_eur) : '—'}</td>
+      <td style="padding:9px 14px;text-align:center">
+        ${hd ? `<input type="checkbox" ${checked ? 'checked' : ''} onchange="phToggleHedge('${h.instrument_id}')" style="width:16px;height:16px;cursor:pointer;accent-color:#BE185D">` : ''}
       </td>
     </tr>`;
   }).join('');
+
+  // Totals row
+  const hedged = _state.holdings.filter(h => hedgeMap[h.instrument_id]);
+  if (hedged.length) {
+    const totalDrop    = hedged.reduce((s, h) => s + (hedgeMap[h.instrument_id].var_95_eur ?? 0), 0);
+    const totalCost    = hedged.reduce((s, h) => s + (hedgeMap[h.instrument_id].put_cost_eur ?? 0), 0);
+    const totalSaving  = totalDrop - totalCost;
+    const hasEur = hedged.some(h => hedgeMap[h.instrument_id].position_eur != null);
+    if (hasEur) {
+      tbody.innerHTML += `<tr style="border-top:2px solid rgba(0,0,0,.1);background:rgba(100,116,139,.04)">
+        <td style="padding:9px 10px;font-size:11px;font-weight:700;color:var(--t2);font-family:var(--fm);text-transform:uppercase;letter-spacing:.04em">Portfolio total</td>
+        <td colspan="4" style="padding:9px 10px"></td>
+        <td style="padding:9px 10px;text-align:center"><span style="font-size:11px;font-weight:700;background:rgba(22,163,74,.12);color:#16a34a;padding:2px 7px;border-radius:100px;font-family:var(--fm)">95%</span></td>
+        <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;white-space:nowrap">${_fmtEur(totalCost)}</td>
+        <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#16a34a;white-space:nowrap">${_fmtEur(totalSaving)}</td>
+        <td></td>
+      </tr>`;
+    }
+  }
 }
 
 // ── Allocation tab ────────────────────────────────────────────────────────────
@@ -541,10 +515,9 @@ function _renderHedge() {
 // ── API fetch ─────────────────────────────────────────────────────────────────
 async function _fetchHedge(token) {
   try {
-    return await apiFetch(
-      `/api/v1/experience/fno/portfolio-hedge?coverage=${_state.coverage}&duration=${_state.duration}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    let url = `/api/v1/experience/fno/portfolio-hedge?coverage=${_state.coverage}&duration=${_state.duration}`;
+    if (_state.totalValueEur != null) url += `&total_value_eur=${_state.totalValueEur}`;
+    return await apiFetch(url, { headers: { Authorization: `Bearer ${token}` } });
   } catch (_) {
     return null;
   }
@@ -581,6 +554,7 @@ export async function loadPortfolioHedge() {
 
     _state.holdings       = portfolio.holdings;
     _state._portfolioName = portfolio.name || '';
+    _state.totalValueEur  = portfolio.total_value_eur ?? null;
     _state.instruments    = {};
 
     if (geo && geo.regions) {
@@ -592,12 +566,22 @@ export async function loadPortfolioHedge() {
     }
 
     // Reset wizard
-    _state.tab      = 'discover';
-    _state.duration = '1y';
-    _state.coverage = 50;
-    _state.apiHedge = null;
-    _state.selections = {};
-    _state.reached  = new Set(['discover']);
+    _state.tab          = 'discover';
+    _state.duration     = '1y';
+    _state.coverage     = 50;
+    _state.apiHedge     = null;
+    _state.selections   = {};
+    _state.hedgeChecked = new Set();
+    _state.reached      = new Set(_TAB_ORDER);
+
+    // Fetch hedge data eagerly so Discover tab is fully populated on load
+    const hedgeData = await _fetchHedge(token);
+    _state.apiHedge = hedgeData;
+    if (hedgeData?.holdings) {
+      for (const h of hedgeData.holdings) {
+        _state.selections[h.instrument_id] = (h.risk_score ?? 2) >= 3 ? 'put_buy' : 'call_sell';
+      }
+    }
 
     _show('ph-content');
     _goToTab('discover');
@@ -615,36 +599,18 @@ export async function loadPortfolioHedge() {
 export function phSetDuration(d) {
   _state.duration = d;
   _renderDiscover();
+  const token = sessionStorage.getItem('auth_token');
+  if (token) {
+    _fetchHedge(token).then(data => {
+      if (data) { _state.apiHedge = data; _renderDiscover(); }
+    });
+  }
 }
 
 export function phGoNext() {
   const idx = _TAB_ORDER.indexOf(_state.tab);
   if (idx < 0 || idx >= _TAB_ORDER.length - 1) return;
-
-  if (_state.tab === 'discover') {
-    const token   = sessionStorage.getItem('auth_token');
-    const nextBtn = document.getElementById('ph-discover-next');
-    if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = 'Loading…'; }
-    _fetchHedge(token).then(data => {
-      if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = 'Next — choose strategy →'; }
-      _state.apiHedge = data;
-      if (data && data.holdings) {
-        for (const h of data.holdings) {
-          if (!_state.selections[h.instrument_id]) {
-            _state.selections[h.instrument_id] = (h.risk_score ?? 2) >= 3 ? 'put_buy' : 'call_sell';
-          }
-        }
-      }
-      const next = _TAB_ORDER[idx + 1];
-      _state.reached.add(next);
-      _goToTab(next);
-    });
-    return;
-  }
-
-  const next = _TAB_ORDER[idx + 1];
-  _state.reached.add(next);
-  _goToTab(next);
+  _goToTab(_TAB_ORDER[idx + 1]);
 }
 
 export function phGoBack() {
@@ -659,7 +625,19 @@ export function phGoToTab(tab) {
 
 export function phPickStrategy(id, strategy) {
   _state.selections[id] = strategy;
-  _renderSelection();
+}
+
+export function phSetTotalEur(val) {
+  const v = parseFloat(val);
+  _state.totalValueEur = isNaN(v) || v <= 0 ? null : v;
+}
+
+export function phToggleHedge(id) {
+  if (_state.hedgeChecked.has(id)) {
+    _state.hedgeChecked.delete(id);
+  } else {
+    _state.hedgeChecked.add(id);
+  }
 }
 
 export function phSetCoverage(val) {

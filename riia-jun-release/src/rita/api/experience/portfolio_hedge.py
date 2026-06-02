@@ -51,11 +51,8 @@ class HedgeHolding(BaseModel):
     duration: str             # '1m' | '3m' | '1y'
     # EUR-denominated fields (None when portfolio has no total_value_eur stored)
     position_eur: float | None = None        # allocation_pct/100 * total_value_eur
-    put_cost_eur: float | None = None        # monthly put premium in EUR
-    call_income_eur: float | None = None     # monthly call income in EUR
-    annual_put_cost_eur: float | None = None
-    annual_call_income_eur: float | None = None
-    sigma_eur: float | None = None           # 1σ downside EUR over chosen duration
+    put_cost_eur: float | None = None        # full-duration put premium in EUR
+    var_95_eur: float | None = None          # 2σ downside EUR = 95% VaR
 
 
 class HedgeAggregate(BaseModel):
@@ -181,6 +178,7 @@ def _coverage_params(
 def get_portfolio_hedge(
     coverage: int = Query(default=50, ge=0, le=100, description="Coverage level 0–100 %"),
     duration: str = Query(default="1y", pattern="^(1m|3m|1y)$", description="Option tenor: 1m | 3m | 1y"),
+    total_value_eur: float | None = Query(default=None, description="Portfolio total EUR value override (frontend-supplied)"),
     current_user: UserModel = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> PortfolioHedgeResponse:
@@ -206,7 +204,7 @@ def get_portfolio_hedge(
     if not holdings_raw:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Portfolio has no holdings")
 
-    total_eur: float | None = portfolio.total_value_eur
+    total_eur: float | None = total_value_eur if total_value_eur is not None else portfolio.total_value_eur
 
     all_records = MarketDataCacheRepository(db).read_all()
     from collections import defaultdict
@@ -254,17 +252,14 @@ def get_portfolio_hedge(
 
         pos_eur: float | None = None
         put_cost_eur: float | None = None
-        call_income_eur: float | None = None
-        annual_put_cost_eur: float | None = None
-        annual_call_income_eur: float | None = None
-        sigma_eur: float | None = None
+        var_95_eur: float | None = None
         if total_eur is not None:
             pos_eur = round(total_eur * alloc / 100.0, 2)
-            put_cost_eur = round(pos_eur * cost_pct / 100.0, 2)
-            call_income_eur = round(pos_eur * call_sell_cost_pct / 100.0, 2)
-            annual_put_cost_eur = round(put_cost_eur * 12.0, 2)
-            annual_call_income_eur = round(call_income_eur * 12.0, 2)
-            sigma_eur = round(pos_eur * vol / 100.0 * (t_months / 12.0) ** 0.5, 2)
+            # ATM put (strike = 0% OTM): max loss = premium only — clean story for non-savvy users
+            atm_cost_pct = _bs_put_pct(vol, 0.0, t_months=t_months)
+            put_cost_eur = round(pos_eur * atm_cost_pct / 100.0, 2)
+            sigma_eur = pos_eur * vol / 100.0 * (t_months / 12.0) ** 0.5
+            var_95_eur = round(2.0 * sigma_eur, 2)
 
         result_holdings.append(HedgeHolding(
             instrument_id=inst_id,
@@ -282,10 +277,7 @@ def get_portfolio_hedge(
             duration=duration,
             position_eur=pos_eur,
             put_cost_eur=put_cost_eur,
-            call_income_eur=call_income_eur,
-            annual_put_cost_eur=annual_put_cost_eur,
-            annual_call_income_eur=annual_call_income_eur,
-            sigma_eur=sigma_eur,
+            var_95_eur=var_95_eur,
         ))
 
     total_weight = sum(h.weight for h in result_holdings) or 1.0

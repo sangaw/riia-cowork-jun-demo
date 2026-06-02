@@ -1,5 +1,17 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-02 — Feature 28 Phase 3 complete (bug fix + UX polish + specs).
+**Last updated:** 2026-06-02 — F28 Hedge Selection redesign + Portfolio Builder EUR value complete.
+
+**Session work (2026-06-02, session 2) — F28 Portfolio Hedge Discover/Selection redesign:**
+- **`total_value_eur` full stack:** Alembic migration `20260602_add_total_value_eur`; `UserPortfolioModel` column; `UserPortfolioCreate/Out` schemas; `UserPortfolioService.save()` + workflow router pass-through.
+- **Portfolio Builder (RITA):** "Portfolio value (€)" input added to basket summary card (`rita.html` + `portfolio-builder.js`); saved on POST; 0% allocation filter bug fixed; exception handler Pydantic v2 ValueError serialization fix (`exception_handlers.py`).
+- **ATM put calculation:** `portfolio_hedge.py` switched EUR `put_cost_eur` to ATM put (strike=0%) so "Max Loss Hedged = premium" story is correct; `var_95_eur` (2σ VaR in EUR) added; `total_value_eur` query param override added to endpoint.
+- **Discover tab merge:** Selection tab merged into Discover — single 9-column table (Instrument+€, 1Y Return, Risk, 1σ Down, Could Drop €, 95% badge, Put Cost €, Reduce Loss By, Hedge? checkbox) + totals row; hedge data loaded eagerly on page load; 3-tab wizard (Discover → Allocation → Hedge).
+
+**Next session checklist:**
+1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
+2. Deploy today's changes to prod (git push → GitHub Actions)
+3. Verify Portfolio Builder EUR save + FnO Discover tab end-to-end on prod
+4. `/agent-performance-improvements` if alerts fire
 
 **Session work (2026-06-02) — Feature 28 Phase 3 completion:**
 - **Bug fix:** `portfolio_hedge.py` — `AttributeError: 'dict' object has no attribute 'instrument_id'` fixed; `sa.JSON` holdings now parsed via `HoldingItem(**h)` before attribute access. Commit `13dc6bb`.
@@ -7,11 +19,6 @@
 - **RITA fixes (leftover Phase 2):** `portfolio-builder.js` auth redirect (error msg → Google login); `main.js` cache-bust bump; `rita.py` ruff reformat.
 - **Specs:** `Spec_HTML_Code.md` — full Portfolio Hedge wizard section added; `Spec_Python_Code.md` — `portfolio_hedge.py` row added to Experience Layer table.
 - **Feature 28 PLAN_STATUS:** all 3A–3G sub-tasks marked `[x]`, overall status Complete.
-
-**Next session checklist:**
-1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. Verify Portfolio Hedge wizard end-to-end on prod (Discover → Selection → Allocation → Hedge)
-3. `/agent-performance-improvements` if alerts fire
 
 **Session work (2026-05-30 session 4) — Feature 27 + Invest Game v2:**
 - **Invest Game v2 nav link** added to RITA sidebar Study section (`rita.html`) — links to `investgame_v2.html`. `MOCK_MODE` was already `false`.
