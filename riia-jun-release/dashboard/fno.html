@@ -1319,10 +1319,14 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 
         <!-- Hedge table -->
         <div class="card" style="padding:0;overflow:hidden;margin-bottom:16px">
-          <div style="overflow-x:auto">
+          <div class="card-hdr">
+            <span class="card-title">Holdings hedge plan</span>
+            <span class="card-sub">Auto-assigned strategy per instrument</span>
+          </div>
+          <div class="tbl-wrap" style="max-height:230px;overflow-x:auto">
             <table style="width:100%;border-collapse:collapse;font-size:13px">
-              <thead>
-                <tr style="font-size:11px;color:#64748b;border-bottom:2px solid rgba(0,0,0,.1);text-transform:uppercase;letter-spacing:.04em;background:rgba(0,0,0,.02)">
+              <thead style="position:sticky;top:0;z-index:1;background:var(--surface)">
+                <tr style="font-size:11px;color:#64748b;border-bottom:2px solid rgba(0,0,0,.1);text-transform:uppercase;letter-spacing:.04em">
                   <th style="padding:10px 10px;text-align:left;font-weight:700">Ticker</th>
                   <th style="padding:10px 10px;text-align:right;font-weight:700">Weight</th>
                   <th style="padding:10px 10px;text-align:right;font-weight:700">Return</th>
