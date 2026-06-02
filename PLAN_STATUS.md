@@ -1,5 +1,45 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-02 — F28 Hedge Selection redesign + Portfolio Builder EUR value complete.
+**Last updated:** 2026-06-03 — F28 Hedge wizard UX redesign: 2-tab flow, auth fix, NVIDIA proxy bug fix.
+
+**Next session checklist:**
+1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
+2. Deploy today's changes to prod (git push → GitHub Actions)
+3. Test Portfolio Hedge end-to-end on local: sign in → Portfolio Builder (save portfolio with EUR value) → FnO → Portfolio Hedge → Discover tab shows holdings + EUR amounts → Confirm hedge → Hedge tab shows real API values (not client-side fallback)
+4. Verify NVIDIA shows "NDX put proxy" (not NIFTY) in Hedge tab
+5. `/agent-performance-improvements` if alerts fire
+
+**Session work (2026-06-03) — F28 Hedge wizard UX redesign + bug fixes:**
+
+**Tab structure: 3 tabs → 2 tabs**
+- Removed "Allocation" tab entirely — merged content into Discover, then removed scenario matrix too
+- Final flow: **Discover** (holdings table + summary KPIs + Confirm) → **Hedge** (coverage dial + payoff simulator)
+- `_TAB_ORDER` → `['discover', 'hedge']`; `_renderAllocation()` still exists (populates summary strip KPIs) but no longer has its own panel
+
+**Discover tab changes (`fno.html` + `portfolio-hedge.js`)**
+- Removed "Hedge Horizon" duration picker card — duration locked to 1Y
+- Removed σ scenario matrix card + "Reading the σ scenario matrix" concept block
+- Removed duration button styling code from `_renderDiscover()`
+- "Reduce Loss By" column: `#16a34a` green → `#2563eb` blue (loss reduction, not profit)
+- Portfolio total row "Reduce Loss By": same green → blue change
+- "Next — see scenarios →" button renamed → "Confirm hedge →"
+
+**Auth fix — local dev Google redirect loop (`portfolio-hedge.js`)**
+- Root cause: `ensureDevToken()` skips refresh when a token already exists, even if stale from a server restart; stale token → 401 → previous fix nuked `auth_token` from sessionStorage → other sections (no localhost guard) redirected to `/auth/google/login`
+- Fix: `loadPortfolioHedge()` now force-clears + remints dev token at entry on localhost (`isLocalDev()` + `ensureDevToken()` imported from `../shared/dev-auth.js`)
+- Removed the aggressive `sessionStorage.removeItem('auth_token')` from the null-portfolio error handler
+
+**NVIDIA hedge type bug (`portfolio_hedge.py`)**
+- Root cause: instrument renamed `NVDA → NVIDIA` (6 chars) in DB; backend heuristic `len(inst_id) <= 5` silently failed → NVIDIA classified as `nifty_proxy` instead of `ndx_proxy`
+- Fix: added `_US_INTL_TICKERS` frozenset (`NVIDIA`, `TRU`, `DJI`, `IXIC`) checked before the character-count fallback
+- Client-side `_hedgeType()`: added `region === 'EU'` so ASML/EU stocks also get `ndx_proxy` (not `nifty_proxy`)
+- Any future long-name US/EU tickers: add to `_US_INTL_TICKERS` in `portfolio_hedge.py`
+
+**Mobile Ops page (uncommitted, separate work)**
+- `riia-jun-release/mobileapp/ops.html` — new 781-line mobile ops dashboard
+- `gateway.html` — Ops card updated to link `/mobileapp/ops.html` (was desktop link)
+- `tests/unit/test_mobile_gateway.py` — test updated to match new Ops card
+
+---
 
 **Session work (2026-06-02, session 2) — F28 Portfolio Hedge Discover/Selection redesign:**
 - **`total_value_eur` full stack:** Alembic migration `20260602_add_total_value_eur`; `UserPortfolioModel` column; `UserPortfolioCreate/Out` schemas; `UserPortfolioService.save()` + workflow router pass-through.

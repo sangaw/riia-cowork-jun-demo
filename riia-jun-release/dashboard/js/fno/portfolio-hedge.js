@@ -1,12 +1,13 @@
 // ── Portfolio Hedge Wizard — Feature 28 Phase 3 ────────────────────────────────
-// 4-tab flow: Discover → Selection → Allocation → Hedge
+// 2-tab flow: Discover (holdings + σ scenarios) → Hedge (coverage dial + payoff simulator)
 // Hedge tab restores the original hedge table + coverage dial + payoff simulator.
 // API: GET /api/v1/experience/fno/portfolio-hedge?coverage=N&duration=D  (JWT)
 
 import { apiFetch } from './api.js';
+import { isLocalDev, ensureDevToken } from '../shared/dev-auth.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-const _TAB_ORDER = ['discover', 'allocation', 'hedge'];
+const _TAB_ORDER = ['discover', 'hedge'];
 
 const _DURATION_MONTHS = { '1m': 1, '3m': 3, '1y': 12 };
 const _DURATION_LABEL  = { '1m': 'Immediate (1M)', '3m': 'Near Term (3M)', '1y': 'Short Term (1Y)' };
@@ -62,7 +63,6 @@ function _goToTab(tab) {
     if (panel) panel.style.display = t === tab ? '' : 'none';
   });
   if (tab === 'discover')   _renderDiscover();
-  if (tab === 'allocation') _renderAllocation();
   if (tab === 'hedge')      _renderHedge();
 }
 
@@ -87,15 +87,6 @@ function _fmtEur(v) {
 }
 
 function _renderDiscover() {
-  ['1m', '3m', '1y'].forEach(d => {
-    const btn = document.getElementById(`ph-dur-${d}`);
-    if (!btn) return;
-    const active = d === _state.duration;
-    btn.style.background = active ? '#BE185D' : 'transparent';
-    btn.style.color      = active ? '#fff' : '#64748b';
-    btn.style.border     = active ? '1px solid #BE185D' : '1px solid rgba(0,0,0,.15)';
-  });
-
   _setText('ph-discover-portfolio-name', _state._portfolioName || '—');
   const eurInput = document.getElementById('ph-total-eur');
   if (eurInput && _state.totalValueEur != null) eurInput.value = _state.totalValueEur;
@@ -139,7 +130,7 @@ function _renderDiscover() {
         ${hd ? '<span style="font-size:11px;font-weight:700;background:rgba(22,163,74,.12);color:#16a34a;padding:2px 7px;border-radius:100px;font-family:var(--fm)">95%</span>' : '—'}
       </td>
       <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;white-space:nowrap">${hd ? _fmtEur(hd.put_cost_eur) : '—'}</td>
-      <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#16a34a;white-space:nowrap">${hd && hd.var_95_eur != null && hd.put_cost_eur != null ? _fmtEur(hd.var_95_eur - hd.put_cost_eur) : '—'}</td>
+      <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#2563eb;white-space:nowrap">${hd && hd.var_95_eur != null && hd.put_cost_eur != null ? _fmtEur(hd.var_95_eur - hd.put_cost_eur) : '—'}</td>
       <td style="padding:9px 14px;text-align:center">
         ${hd ? `<input type="checkbox" ${checked ? 'checked' : ''} onchange="phToggleHedge('${h.instrument_id}')" style="width:16px;height:16px;cursor:pointer;accent-color:#BE185D">` : ''}
       </td>
@@ -159,11 +150,13 @@ function _renderDiscover() {
         <td colspan="4" style="padding:9px 10px"></td>
         <td style="padding:9px 10px;text-align:center"><span style="font-size:11px;font-weight:700;background:rgba(22,163,74,.12);color:#16a34a;padding:2px 7px;border-radius:100px;font-family:var(--fm)">95%</span></td>
         <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;white-space:nowrap">${_fmtEur(totalCost)}</td>
-        <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#16a34a;white-space:nowrap">${_fmtEur(totalSaving)}</td>
+        <td style="padding:9px 10px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;color:#2563eb;white-space:nowrap">${_fmtEur(totalSaving)}</td>
         <td></td>
       </tr>`;
     }
   }
+
+  _renderAllocation();
 }
 
 // ── Allocation tab ────────────────────────────────────────────────────────────
@@ -240,7 +233,7 @@ function _estRisk(daily_return_pct) {
 
 function _hedgeType(id, region, alloc_pct) {
   if (_FNO_ELIGIBLE.has(id)) return alloc_pct >= 20 ? 'put_spread' : 'protective_put';
-  if (region === 'US') return 'ndx_proxy';
+  if (region === 'US' || region === 'EU') return 'ndx_proxy';
   return 'nifty_proxy';
 }
 
@@ -530,6 +523,13 @@ export async function loadPortfolioHedge() {
   _hide('ph-empty');
   _hide('ph-content');
 
+  // On localhost always remint the dev token — ensureDevToken skips refresh when a
+  // token already exists, so a stale token from a server restart would never clear.
+  if (isLocalDev()) {
+    sessionStorage.removeItem('auth_token');
+    await ensureDevToken();
+  }
+
   const token = sessionStorage.getItem('auth_token');
   if (!token) {
     _hide('ph-loading');
@@ -546,7 +546,13 @@ export async function loadPortfolioHedge() {
 
     _hide('ph-loading');
 
-    if (!portfolio || !portfolio.holdings || !portfolio.holdings.length) {
+    if (!portfolio) {
+      _show('ph-empty');
+      _setText('ph-empty-msg', 'Could not load portfolio — check the server is running and try again.');
+      return;
+    }
+
+    if (!portfolio.holdings || !portfolio.holdings.length) {
       _show('ph-empty');
       _setText('ph-empty-msg', 'No portfolio saved yet. Build one in the RITA Portfolio Builder.');
       return;

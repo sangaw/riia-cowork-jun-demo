@@ -32,6 +32,12 @@ _FNO_ELIGIBLE: frozenset[str] = frozenset({
     "HCLTECH", "LT", "ONGC", "NTPC", "POWERGRID", "BPCL",
 })
 
+# US / international tickers whose instrument_id exceeds the 5-char heuristic below.
+# "NVIDIA" was renamed from "NVDA" in the DB, breaking the len≤5 guard.
+_US_INTL_TICKERS: frozenset[str] = frozenset({
+    "NVIDIA", "TRU", "DJI", "IXIC",
+})
+
 _DURATION_MONTHS: dict[str, float] = {"1m": 1.0, "3m": 3.0, "1y": 12.0}
 
 # ── Pydantic schemas ───────────────────────────────────────────────────────────
@@ -238,12 +244,12 @@ def get_portfolio_hedge(
             hedge_type = "put_spread" if alloc >= 20 else "protective_put"
         elif h.instrument_id.endswith(".NS") or inst_id in {"NIFTY", "BANKNIFTY"}:
             hedge_type = "nifty_proxy"
+        elif inst_id in _US_INTL_TICKERS or (
+            len(inst_id) <= 5 and inst_id.isalpha() and inst_id not in _FNO_ELIGIBLE
+        ):
+            hedge_type = "ndx_proxy"
         else:
-            hedge_type = (
-                "ndx_proxy"
-                if len(inst_id) <= 5 and inst_id.isalpha() and inst_id not in _FNO_ELIGIBLE
-                else "nifty_proxy"
-            )
+            hedge_type = "nifty_proxy"
 
         vol, return_1y, rs = _vol_and_return(inst_id)
         strike_pct, strike_label, cost_pct, protected_pct, call_sell_cost_pct = _coverage_params(
