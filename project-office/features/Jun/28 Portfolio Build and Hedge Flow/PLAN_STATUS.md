@@ -1,7 +1,7 @@
 # Feature 28 — Portfolio Build & Hedge Flow: Plan Status
 
 **Last updated:** 2026-06-01 (hedge design finalised)
-**Overall status:** `[~] In progress — Phase 3 ready to implement`
+**Overall status:** `[x] Complete — all phases shipped`
 **Requirements:** `project-office/features/Jun/28 Portfolio Build and Hedge Flow/REQUIREMENTS.md`
 **Design source:** Claude Design bundle `portfolio-build-and-hedge` → `Portfolio Final Flow.html`
 
@@ -73,7 +73,7 @@ Each 🔴 backend item has an agreed v1 disposition and a drafted contract befor
 
 ## Phase 3 — Page 2 — Hedging Wizard (4-tab flow)
 
-**Status:** `[ ] Ready to implement` — design finalised 2026-06-01
+**Status:** `[x] Complete` — committed 435f648 (wizard) + 2026-06-02 (bug fix + UX polish)
 **Agent:** Engineer (backend 3A first, then frontend 3B–3F)
 **Effort estimate:** 8 hours
 **Design decisions:** existing saved portfolio is the instrument source; duration 1M/3M/1Y (1Y default); Put Buy vs Sell Call per instrument; σ-anchored scenarios; Hedge tab is summary-only; explicit Next→/←Back buttons.
@@ -82,13 +82,13 @@ Each 🔴 backend item has an agreed v1 disposition and a drafted contract befor
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 3A | Backend: add `duration` param, `ann_vol_pct`, `call_sell_cost_pct` to `portfolio_hedge.py` | `[ ]` | `duration=1m/3m/1y`; `_bs_call_pct()` helper; update `HedgeHolding` Pydantic schema |
-| 3B | Tab state machine + HTML restructure | `[ ]` | 4 `div[id="ph-panel-*"]` in `fno.html`; JS `_state` object; tab-bar buttons wired; forward-only progression |
-| 3C | Discover tab | `[ ]` | Duration picker (3 pills, 1Y default) + holdings summary list + Next→ fetches API |
-| 3D | Selection tab | `[ ]` | Per-row Put Buy vs Sell Call columns with BS prices + auto-recommend radio + store to `_state.selections` |
-| 3E | Allocation tab | `[ ]` | σ-anchored scenario matrix (−2σ/−1σ/Flat/+1σ) per instrument + aggregate row + coverage slider + summary strip |
-| 3F | Hedge tab (final) | `[ ]` | Confirmed strategy summary table + payoff chart (strategy-aware) + aggregate strip + Place hedge orders CTA |
-| 3G | Spec updates | `[ ]` | `Spec_HTML_Code.md`, `Spec_JS_Code.md`, `Spec_RITA_App.md`, `Spec_Python_Code.md` |
+| 3A | Backend: add `duration` param, `ann_vol_pct`, `call_sell_cost_pct` to `portfolio_hedge.py` | `[x]` | Done in 435f648. Bug fix (dict→HoldingItem parse) applied 2026-06-02. |
+| 3B | Tab state machine + HTML restructure | `[x]` | Done in 435f648. |
+| 3C | Discover tab | `[x]` | UX polish 2026-06-02: `.card-hdr`, `<table>/<tbody>`, `.tbl-wrap` 230px scroll, concept block. |
+| 3D | Selection tab | `[x]` | UX polish 2026-06-02: `.card-hdr`, `.tbl-wrap` 230px scroll, concept block. |
+| 3E | Allocation tab | `[x]` | UX polish 2026-06-02: `.card-hdr`, `.tbl-wrap` 240px scroll, concept block. |
+| 3F | Hedge tab (final) | `[x]` | Done in 435f648. |
+| 3G | Spec updates | `[x]` | `Spec_HTML_Code.md` + `Spec_Python_Code.md` updated 2026-06-02. `Spec_JS_Code.md` + `Spec_RITA_App.md` updated in 435f648. |
 
 ### Acceptance Gate
 End-to-end wizard flow works: Discover → Selection → Allocation → Hedge. API returns `ann_vol_pct` and `call_sell_cost_pct`. Scenario table uses real σ values. Final tab shows only confirmed selections. Back navigation preserves state.
@@ -103,6 +103,7 @@ End-to-end wizard flow works: Discover → Selection → Allocation → Hedge. A
 | 2026-05-31 | Phase 1+2 | Portfolio Builder shipped in RITA (region buckets, scatter map, sortable table, guided basket). Backend: 1Y return, risk score, sector. Commit `3a99af2`. |
 | 2026-06-01 | Phase 1 polish | Short Term auto-selected on load; Total alloc moved to Selected widget; 4-row scroll cap; new instruments default 15%; Continue button removed; Allocate gated at 100%; investment_horizons.py config + 5Y/15Y CAGR + horizons[] field. Commit `7e90c34`. Spec updates this session. Phase 3 parked. |
 | 2026-06-01 | Phase 3 design | Gap analysis of current hedge page vs desired 4-tab wizard. Design decisions locked: saved portfolio as instrument source; 1M/3M/1Y duration; Put Buy vs Sell Call per instrument with auto-recommend; σ-anchored scenario matrix; Hedge tab summary-only; Next→/←Back navigation. REQUIREMENTS.md Phase 3 fully rewritten; PLAN_STATUS.md updated. |
+| 2026-06-02 | Phase 3 bug fix + UX | Fixed AttributeError (dict vs object) in `portfolio_hedge.py` — HoldingItem parse added. UX alignment: Discover/Selection/Allocation tabs now use `.card-hdr`/`.tbl-wrap` matching FnO design system; each table scrolls after 5 rows (max-height 230–240px, sticky thead); concept explanation blocks added below each table. Spec_HTML_Code.md + Spec_Python_Code.md updated. Feature PLAN_STATUS marked Complete. |
 
 ---
 

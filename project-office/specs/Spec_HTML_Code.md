@@ -111,6 +111,13 @@ Reads `riia_agent_history` from localStorage. Three sub-tabs. Driven by `ai-comp
   - **Margin Tracker**: Estimates SPAN and exposure margins for active baskets.
   - **Risk & Greeks**: Aggregates Delta, Theta, and Vega across the portfolio. Stress scenarios (P&L at different underlying levels).
   - **Risk-Reward & Hedge History**: Tools for scenario planning and tracking anchor positions and reactive hedges.
+  - **My Portfolio** (`#sec-my-portfolio`): JWT-gated view of saved portfolio holdings for the FnO user.
+  - **Portfolio Hedge** (`#page-portfolio-hedge`): 4-tab wizard (Feature 28 Phase 3). Tab bar buttons: `ph-tab-btn-{discover|selection|allocation|hedge}`. Panels: `ph-panel-{discover|selection|allocation|hedge}`.
+    - **Discover** tab: Duration pills (`ph-dur-1m/3m/1y`). Holdings table — `<tbody id="ph-discover-holdings">` inside `.tbl-wrap` (max-height 230px, sticky thead). Concept block below explains hedging + horizon choice.
+    - **Selection** tab: `<tbody id="ph-selection-body">` inside `.tbl-wrap` (max-height 230px, sticky thead). Put Buy / Sell Call buttons per row; `Rec` badge auto-assigned (risk ≥ 3 → Put Buy). Concept block below explains the two strategies.
+    - **Allocation** tab: `<tbody id="ph-alloc-body">` + `<tr id="ph-alloc-agg-row">` (tfoot aggregate) inside `.tbl-wrap` (max-height 240px, sticky thead). σ columns: −2σ / −1σ / Flat / +1σ. Summary strip: `ph-alloc-cost` + `ph-alloc-dd`. Concept block explains σ and table reading.
+    - **Hedge** tab: confirmed strategy table (`ph-table-body`), coverage dial (`ph-coverage-slider`), payoff chart (`ph-payoff-chart`), scenario table (`ph-scenario-body`). Strategy tabs: `ph-tab-{pp|ps|collar}`.
+    - State banners: `ph-loading`, `ph-error` / `ph-error-msg`, `ph-empty` / `ph-empty-msg`. Content wrapper: `ph-content` (hidden until loaded).
 
 ### 4. `ops.html` (Operations Portal)
 - **Purpose**: Used by the platform engineers and DevOps to ensure the health of the RIIA system.

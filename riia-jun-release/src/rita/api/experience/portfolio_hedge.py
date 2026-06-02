@@ -22,6 +22,7 @@ from rita.models.user import UserModel
 from rita.repositories.market_data import MarketDataCacheRepository
 from rita.repositories.user_portfolio import UserPortfolioRepo
 from rita.repositories.user_portfolio_key import UserPortfolioKeyRepo
+from rita.schemas.user_portfolio import HoldingItem
 
 router = APIRouter(prefix="/api/v1/experience/fno", tags=["experience:portfolio-hedge"])
 
@@ -191,7 +192,10 @@ def get_portfolio_hedge(
     if portfolio is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active portfolio found")
 
-    holdings_raw = portfolio.holdings or []
+    holdings_raw: list[HoldingItem] = [
+        HoldingItem(**h) if isinstance(h, dict) else h
+        for h in (portfolio.holdings or [])
+    ]
     if not holdings_raw:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Portfolio has no holdings")
 

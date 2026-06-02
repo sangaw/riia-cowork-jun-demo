@@ -93,30 +93,26 @@ function _renderDiscover() {
 
   _setText('ph-discover-portfolio-name', _state._portfolioName || '—');
 
-  const el = document.getElementById('ph-discover-holdings');
-  if (!el) return;
+  const tbody = document.getElementById('ph-discover-holdings');
+  if (!tbody) return;
 
   if (!_state.holdings.length) {
-    el.innerHTML = '<p style="color:var(--t3);font-size:13px;font-family:var(--fm)">No portfolio holdings found.</p>';
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px;text-align:center;color:#94a3b8;font-size:12px">No portfolio holdings found.</td></tr>';
     return;
   }
 
-  el.innerHTML = _state.holdings.map(h => {
+  tbody.innerHTML = _state.holdings.map(h => {
     const inst     = _state.instruments[h.instrument_id] || {};
     const ret      = inst.return_1y_pct ?? inst.daily_return_pct;
     const risk     = inst.risk_score ?? 2;
     const retStr   = ret != null ? ((ret >= 0 ? '+' : '') + ret.toFixed(1) + '%') : '—';
     const retColor = (ret || 0) > 0 ? '#16a34a' : (ret || 0) < 0 ? '#dc2626' : '#64748b';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.05)">
-      <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:13px;min-width:90px">${h.instrument_id}</span>
-        <span style="font-size:12px;color:var(--t2);font-family:var(--fm)">${h.allocation_pct}%</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:16px">
-        <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:${retColor}">${retStr}</span>
-        <span>${_riskDots(risk)}</span>
-      </div>
-    </div>`;
+    return `<tr style="border-bottom:1px solid rgba(0,0,0,.05)">
+      <td style="padding:9px 12px;font-weight:700;font-family:'IBM Plex Mono',monospace;font-size:13px">${h.instrument_id}</td>
+      <td style="padding:9px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px">${h.allocation_pct}%</td>
+      <td style="padding:9px 10px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;color:${retColor}">${retStr}</td>
+      <td style="padding:9px 12px">${_riskDots(risk)}</td>
+    </tr>`;
   }).join('');
 }
 

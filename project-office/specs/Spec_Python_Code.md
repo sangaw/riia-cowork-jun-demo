@@ -73,6 +73,7 @@ Read-only aggregation — **no writes, no side effects, no DB commits**.
 |---|---|---|
 | `dashboard.py` | `/api/experience` | `GET /rita` (DashboardPayload), `GET /fno` (FnoPayload), `GET /ops` (OpsPayload) — legacy |
 | `fno.py` | `/api/experience/fno` | `GET /` → FnO aggregated payload (snapshots + portfolio + manoeuvres) |
+| `portfolio_hedge.py` | `/api/v1/experience/fno` | `GET /portfolio-hedge?coverage=0-100&duration=1m\|3m\|1y` — per-holding Black-Scholes put + call pricing. Returns `PortfolioHedgeResponse`: `holdings[]` with `ann_vol_pct`, `cost_pct` (put premium), `call_sell_cost_pct` (call income), `strike_pct`, `strike_label`, `protected_pct`, `risk_score`, `duration`; plus `aggregate` (monthly_cost_pct, max_dd_protected_pct, max_dd_unhedged_pct) and `coverage`. JWT-required. `HoldingItem` dicts from `sa.JSON` column are parsed via `HoldingItem(**h) if isinstance(h, dict)` before attribute access. |
 | `ops.py` | `/api/experience/ops` | `GET /` (OpsPayload), `GET /metrics/summary`, `GET /step-log`, `GET /users`, `POST /users`, `DELETE /users/{id}` |
 | `rita.py` | `/api/v1` | See Section 6 below |
 | `pipeline_wizard.py` | `/api/v1` | `POST /goal`, `POST /market`, `POST /strategy` |
