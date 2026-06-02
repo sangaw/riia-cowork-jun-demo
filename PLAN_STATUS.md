@@ -1,19 +1,16 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-01 — Feature 28 Phase 3 hedge wizard design finalised.
+**Last updated:** 2026-06-02 — Feature 28 Phase 3 complete (bug fix + UX polish + specs).
 
-**Session work (2026-06-01) — Feature 28 Phase 3 design:**
-- Gap analysis of current Portfolio Hedge page vs desired 4-tab wizard flow.
-- Design decisions locked: saved portfolio as instrument source (no extra Guided Basket needed); duration 1M/3M/1Y (1Y default); Put Buy vs Sell Call per instrument with auto-recommend; σ-anchored scenario matrix (−2σ/−1σ/Flat/+1σ); Hedge tab is summary-only; explicit Next→/←Back navigation.
-- `project-office/features/Jun/28 Portfolio Build and Hedge Flow/REQUIREMENTS.md` Phase 3 fully rewritten with 6 sub-phases (3A backend through 3F final tab + 3G spec updates).
-- `project-office/features/Jun/28 Portfolio Build and Hedge Flow/PLAN_STATUS.md` updated — Phase 3 status set to Ready.
+**Session work (2026-06-02) — Feature 28 Phase 3 completion:**
+- **Bug fix:** `portfolio_hedge.py` — `AttributeError: 'dict' object has no attribute 'instrument_id'` fixed; `sa.JSON` holdings now parsed via `HoldingItem(**h)` before attribute access. Commit `13dc6bb`.
+- **UX alignment (Discover/Selection/Allocation tabs):** `.card-hdr`/`.card-title`/`.card-sub` headers on all cards; Discover holdings converted from flex divs to `<table>`/`<tbody>`; `.tbl-wrap` (max-height 230–240px) + sticky `<thead>` gives 5-row scroll on all 3 tabs; concept explanation blocks added below each table.
+- **RITA fixes (leftover Phase 2):** `portfolio-builder.js` auth redirect (error msg → Google login); `main.js` cache-bust bump; `rita.py` ruff reformat.
+- **Specs:** `Spec_HTML_Code.md` — full Portfolio Hedge wizard section added; `Spec_Python_Code.md` — `portfolio_hedge.py` row added to Experience Layer table.
+- **Feature 28 PLAN_STATUS:** all 3A–3G sub-tasks marked `[x]`, overall status Complete.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. **Feature 28 Phase 3 — Hedging Wizard implementation** (start with `/add-fno-feature` or `/engineer-task`):
-   - 3A: Backend — `portfolio_hedge.py` extend with `duration` param + `ann_vol_pct` + `call_sell_cost_pct`
-   - 3B: HTML + JS tab state machine (4 panels, forward-only, Next→/←Back)
-   - 3C–3F: Discover / Selection / Allocation / Hedge tab content
-   - 3G: Spec updates
+2. Verify Portfolio Hedge wizard end-to-end on prod (Discover → Selection → Allocation → Hedge)
 3. `/agent-performance-improvements` if alerts fire
 
 **Session work (2026-05-30 session 4) — Feature 27 + Invest Game v2:**
