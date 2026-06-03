@@ -1,21 +1,19 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-03 — F29 Phase 0 merged (b822859: duration=1y hardcoded, phSetDuration removed). F29 Phase 1 branch ready (worktree-agent-a122342e7c180a479, commit f1fcefa): user_hedge_plans ORM + migration + UserHedgePlanRepo + HedgePlanCreate/Out schemas + GET/PUT /api/v1/experience/fno/hedge-plan. QA/TechWriter/merge deferred — resume next session.
+**Last updated:** 2026-06-03 — F29 Phase 2 merged (d96dd4c): portfolio-hedge.js wires to saved plan — GET restores hedged_ids/coverage/scenario_tab on load; PUT debounced 400ms on change. Bug fixed: hedgeChecked no longer overwritten by _fetchHedge loop. 4 new QA tests (13 total). 54 commits ahead of origin/master — deploy pending.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. Deploy F28 + F29 Phase 0 changes to prod (git push → GitHub Actions)
-3. Merge F29 Phase 1 branch: `git merge --no-ff worktree-agent-a122342e7c180a479`
-4. Apply migration after merge: `cd riia-jun-release && python -m alembic upgrade head`
-5. Run QA for Phase 1: `/enhance fno "F29 Phase 1 continuation — QA + merge"` (or run tests manually: `pytest tests/unit/test_hedge_plan.py -v`)
-6. Then start Phase 2: `/enhance fno "F29 Phase 2 — Portfolio Hedge wires to saved plan"`
-7. `/agent-performance-improvements` — 2 alerts fired (FC-HTML-CSS, CSAT 2.67)
+2. Deploy all accumulated changes to prod: `git push origin master` → GitHub Actions
+3. Apply migration on prod: Alembic migration `20260603_add_user_hedge_plans` runs via Dockerfile CMD on container restart
+4. Start F29 Phase 3: `/enhance fno "F29 Phase 3 — FnO Overview redesign"`
+5. `/agent-performance-improvements` — 2 alerts fired (FC-HTML-CSS, CSAT 2.67)
 
 **Active feature:**
 - **F29 — FnO Linked Data & Overview Redesign** → `project-office/features/Jun/29 FnO Linked Data and Overview Redesign/`
-  - Phase 0: Duration cleanup (lock to 1y) — READY
-  - Phase 1: `user_hedge_plans` table + GET/PUT endpoints — READY
-  - Phase 2: Portfolio Hedge wires to saved plan — READY after Phase 1
-  - Phase 3: Overview redesign — READY after Phase 1
+  - Phase 0: Duration cleanup (lock to 1y) — ✅ COMPLETE (b8a712e)
+  - Phase 1: `user_hedge_plans` table + GET/PUT endpoints — ✅ COMPLETE (e839dda, f731e1f)
+  - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
+  - Phase 3: Overview redesign — READY
 
 **Session work (2026-06-03) — F28 Hedge wizard UX redesign + bug fixes:**
 
