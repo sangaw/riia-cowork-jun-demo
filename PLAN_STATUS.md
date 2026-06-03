@@ -1,12 +1,14 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-03 — F29 created: FnO Linked Data & Overview Redesign (user_hedge_plans, duration=1y, Overview redesign). F28 UX fixes: layout reorder, Position € column, BANKNIFTY row compactness, portfolio builder EUR save fix.
+**Last updated:** 2026-06-03 — F29 Phase 0 merged (b822859: duration=1y hardcoded, phSetDuration removed). F29 Phase 1 branch ready (worktree-agent-a122342e7c180a479, commit f1fcefa): user_hedge_plans ORM + migration + UserHedgePlanRepo + HedgePlanCreate/Out schemas + GET/PUT /api/v1/experience/fno/hedge-plan. QA/TechWriter/merge deferred — resume next session.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. Deploy today's F28 UX changes to prod (git push → GitHub Actions)
-3. Test Portfolio Hedge on prod: layout order correct, Position (€) column visible, BANKNIFTY row single-height, EUR saves when portfolio rebuilt with EUR value
-4. Start F29 with `/enhance` — begin Phase 0 (duration cleanup) then Phase 1 (user_hedge_plans)
-5. `/agent-performance-improvements` if alerts fire
+2. Deploy F28 + F29 Phase 0 changes to prod (git push → GitHub Actions)
+3. Merge F29 Phase 1 branch: `git merge --no-ff worktree-agent-a122342e7c180a479`
+4. Apply migration after merge: `cd riia-jun-release && python -m alembic upgrade head`
+5. Run QA for Phase 1: `/enhance fno "F29 Phase 1 continuation — QA + merge"` (or run tests manually: `pytest tests/unit/test_hedge_plan.py -v`)
+6. Then start Phase 2: `/enhance fno "F29 Phase 2 — Portfolio Hedge wires to saved plan"`
+7. `/agent-performance-improvements` — 2 alerts fired (FC-HTML-CSS, CSAT 2.67)
 
 **Active feature:**
 - **F29 — FnO Linked Data & Overview Redesign** → `project-office/features/Jun/29 FnO Linked Data and Overview Redesign/`

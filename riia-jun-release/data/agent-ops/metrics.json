@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-02T19:30:40",
+  "generated_at": "2026-06-03T16:39:19",
   "total_runs": 66,
   "per_role": {
     "pm": {
@@ -817,40 +817,40 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 6410,
+    "total_calls": 6652,
     "unique_endpoints": 155,
-    "overall_error_rate_pct": 6.93,
-    "error_rate_5xx_pct": 0.37,
+    "overall_error_rate_pct": 7.01,
+    "error_rate_5xx_pct": 0.36,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 779,
+        "count": 781,
         "p50_ms": 5.8,
-        "p95_ms": 450.1,
+        "p95_ms": 448.6,
         "error_count": 0
       },
       {
         "path": "/api/v1/experience/rita/geography-overview",
         "method": "GET",
-        "count": 533,
-        "p50_ms": 109.9,
-        "p95_ms": 743.6,
+        "count": 559,
+        "p50_ms": 148.2,
+        "p95_ms": 754.8,
         "error_count": 0
       },
       {
         "path": "/api/v1/commentary",
         "method": "POST",
-        "count": 449,
-        "p50_ms": 172.3,
-        "p95_ms": 3259.1,
+        "count": 452,
+        "p50_ms": 176.6,
+        "p95_ms": 3441.2,
         "error_count": 48
       },
       {
         "path": "/api/v1/market-signals",
         "method": "GET",
-        "count": 384,
-        "p50_ms": 304.0,
+        "count": 387,
+        "p50_ms": 305.1,
         "p95_ms": 914.7,
         "error_count": 0
       },
@@ -863,6 +863,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-06-02T17:30:40.292592+00:00"
+    "generated_at": "2026-06-03T14:39:19.357714+00:00"
   }
 }
