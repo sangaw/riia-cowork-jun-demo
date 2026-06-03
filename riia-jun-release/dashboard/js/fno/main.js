@@ -97,6 +97,19 @@ window.phToggleHedge      = phToggleHedge;
 window.phPickStrategy     = phPickStrategy;
 window.phSetScenarioTab   = phSetScenarioTab;
 
+// My Portfolio CTA — navigates to portfolio-hedge section from Overview
+window.fnoMpGoHedge = function () {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+  const navItem = document.querySelector('.nav-item[data-section="portfolio-hedge"]');
+  if (navItem) navItem.classList.add('active');
+  const section = document.getElementById('page-portfolio-hedge');
+  if (section) section.classList.add('active');
+  if (typeof _sectionLoaders['portfolio-hedge'] === 'function') {
+    _sectionLoaders['portfolio-hedge']();
+  }
+};
+
 // ── Boot ──────────────────────────────────────────────────────────────────────
 initI18n(); applyTranslations();
 window.addEventListener('load', async () => {
