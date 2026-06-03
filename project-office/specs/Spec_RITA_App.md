@@ -122,6 +122,14 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 |---|---|---|---|
 | `GET` | `/api/v1/experience/users/traffic` | Returns aggregated login KPIs and 30-day daily breakdown — no PII. `UserTrafficResponse` with `summary` (total_users, active_today, active_this_week, active_this_month, total_logins_all_time) and `daily` list (date, unique_users, total_logins, new_registrations) | JWT |
 
+### FnO Experience Endpoints (`/api/v1/experience/fno`)
+
+| Method | Path | Description | Auth |
+|---|---|---|---|
+| `GET` | `/api/v1/experience/fno/portfolio-hedge` | Compute hedge parameters for saved portfolio at given coverage level. Query: `coverage` (0–100), `total_value_eur`. Returns `PortfolioHedgeResponse` with `holdings`, `aggregate`, `coverage`, `duration`. JWT required. | JWT |
+| `GET` | `/api/v1/experience/fno/hedge-plan` | Return the saved hedge plan for the authenticated user. Returns `HedgePlanOut` (key_id, hedged_ids, coverage, scenario_tab, duration, updated_at). Returns 404 if no plan exists — does NOT auto-create a default row. | JWT |
+| `PUT` | `/api/v1/experience/fno/hedge-plan` | Upsert the hedge plan for the authenticated user. Body: `HedgePlanCreate` (hedged_ids, coverage, scenario_tab, duration). `duration` is always overwritten to `"1y"` (business rule). Returns `HedgePlanOut` confirming persisted state. | JWT |
+
 ### Instrument Workflow Endpoints (`/api/v1/instrument` via `workflow/instrument_onboard.py`)
 
 | Method | Path | Query params | Request body | Response | Description |

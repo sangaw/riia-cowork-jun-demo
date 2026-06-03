@@ -69,6 +69,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `hedge.js` | Hedge Radar section | `loadHedge()` |
 | `manoeuvre.js` | Manoeuvre section | `loadManoeuvre()` |
 | `equity_hedge.js` | ASML Equity Hedge Scenarios page | `loadEquityHedge(forceRefresh)`, `renderEquityHedge(data)` |
+| `portfolio-hedge.js` | Portfolio Hedge wizard — Discover / Selection / Allocation tabs. **Phase 2 (F29) consumer:** will call `GET /api/v1/experience/fno/hedge-plan` on load to restore saved plan, and `PUT /api/v1/experience/fno/hedge-plan` on user changes (debounced) to persist selections. Backend endpoints available as of F29 Phase 1. | `loadPortfolioHedge()` |
 | `utils.js` | fno-specific formatters: fmt (en-IN locale), fmtPnl (INR prefix), pnlClass | `fmt(v, d?)`, `fmtPnl(v)`, `pnlClass(v)` |
 
 ---
