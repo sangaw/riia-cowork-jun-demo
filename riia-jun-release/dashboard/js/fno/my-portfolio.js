@@ -200,7 +200,7 @@ export async function loadFnoMyPortfolio() {
   // ── 3-source parallel fetch ───────────────────────────────────────────────
   const [portfolioRes, geoRes, hedgeRes] = await Promise.allSettled([
     apiFetch('/api/v1/experience/user-portfolio',       { headers: authHeaders }),
-    apiFetch('/api/experience/rita/geography-overview', {}),
+    apiFetch('/api/v1/experience/rita/geography-overview', {}),
     apiFetch('/api/v1/experience/fno/hedge-plan',       { headers: authHeaders })
   ]);
 
