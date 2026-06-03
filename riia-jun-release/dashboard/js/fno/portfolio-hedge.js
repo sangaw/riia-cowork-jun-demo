@@ -1,16 +1,13 @@
 // ── Portfolio Hedge Wizard — Feature 28 Phase 3 ────────────────────────────────
 // 2-tab flow: Discover (holdings + σ scenarios) → Hedge (coverage dial + payoff simulator)
 // Hedge tab restores the original hedge table + coverage dial + payoff simulator.
-// API: GET /api/v1/experience/fno/portfolio-hedge?coverage=N&duration=D  (JWT)
+// API: GET /api/v1/experience/fno/portfolio-hedge?coverage=N  (JWT) — tenor hardcoded 1y
 
 import { apiFetch } from './api.js';
 import { isLocalDev, ensureDevToken } from '../shared/dev-auth.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const _TAB_ORDER = ['discover', 'hedge'];
-
-const _DURATION_MONTHS = { '1m': 1, '3m': 3, '1y': 12 };
-const _DURATION_LABEL  = { '1m': 'Immediate (1M)', '3m': 'Near Term (3M)', '1y': 'Short Term (1Y)' };
 
 // F&O eligibility — mirrors backend, used for client-side fallback
 const _FNO_ELIGIBLE = new Set([
@@ -22,7 +19,6 @@ const _FNO_ELIGIBLE = new Set([
 // ── State ─────────────────────────────────────────────────────────────────────
 const _state = {
   tab:          'discover',
-  duration:     '1y',
   coverage:     50,
   holdings:     [],    // [{instrument_id, allocation_pct}] from user-portfolio
   instruments:  {},    // id → {return_1y_pct, risk_score, daily_return_pct, region}
@@ -99,7 +95,7 @@ function _renderDiscover() {
     return;
   }
 
-  const tMonths  = _DURATION_MONTHS[_state.duration];
+  const tMonths  = 12;
   const hedgeMap = {};
   if (_state.apiHedge?.holdings) {
     for (const hh of _state.apiHedge.holdings) hedgeMap[hh.instrument_id] = hh;
@@ -163,7 +159,7 @@ function _renderDiscover() {
 function _renderAllocation() {
   if (!_state.apiHedge) return;
 
-  const tMonths = _DURATION_MONTHS[_state.duration];
+  const tMonths = 12;
   const SIGMAS  = [-2, -1, 0, 1];
 
   const rows = _state.apiHedge.holdings.map(h => {
@@ -508,7 +504,7 @@ function _renderHedge() {
 // ── API fetch ─────────────────────────────────────────────────────────────────
 async function _fetchHedge(token) {
   try {
-    let url = `/api/v1/experience/fno/portfolio-hedge?coverage=${_state.coverage}&duration=${_state.duration}`;
+    let url = `/api/v1/experience/fno/portfolio-hedge?coverage=${_state.coverage}`;
     if (_state.totalValueEur != null) url += `&total_value_eur=${_state.totalValueEur}`;
     return await apiFetch(url, { headers: { Authorization: `Bearer ${token}` } });
   } catch (_) {
@@ -573,7 +569,6 @@ export async function loadPortfolioHedge() {
 
     // Reset wizard
     _state.tab          = 'discover';
-    _state.duration     = '1y';
     _state.coverage     = 50;
     _state.apiHedge     = null;
     _state.selections   = {};
@@ -601,17 +596,6 @@ export async function loadPortfolioHedge() {
 }
 
 // ── Window-exposed actions ────────────────────────────────────────────────────
-
-export function phSetDuration(d) {
-  _state.duration = d;
-  _renderDiscover();
-  const token = sessionStorage.getItem('auth_token');
-  if (token) {
-    _fetchHedge(token).then(data => {
-      if (data) { _state.apiHedge = data; _renderDiscover(); }
-    });
-  }
-}
 
 export function phGoNext() {
   const idx = _TAB_ORDER.indexOf(_state.tab);
