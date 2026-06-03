@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-03 — F29 Phase 3 merged (64099e3): FnO Overview redesign — 5-card KPI strip, region-allocation doughnut chart, hedge status card, 6-column holdings table with "(indicative)" labels, 3-source Promise.allSettled fetch (portfolio + geography-overview + hedge-plan), window.fnoMpGoHedge CTA. 10 QA tests pass. Confluence Engineering v44.
+**Last updated:** 2026-06-03 — F29 Phase 3 merged (64099e3) + path fix (8e0c7ee): FnO Overview redesign complete. 5-card KPI strip, region-allocation doughnut chart, hedge status card, 6-column holdings table with "(indicative)" labels, 3-source Promise.allSettled fetch, window.fnoMpGoHedge CTA. Bug fix: geography-overview missing /v1/ prefix. 10 QA tests pass. Confluence Engineering v44. Verified working locally.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
@@ -15,6 +15,16 @@
   - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
   - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
   - Phase 4: Spec updates — READY
+
+**Session work (2026-06-03, session 2) — F29 Phase 3 FnO Overview redesign:**
+- **FnO Overview redesign COMPLETE.** `my-portfolio.js` full replacement: 3-source `Promise.allSettled` (portfolio + geography-overview + hedge-plan), explicit instMap nested loop propagating `reg.region`, `_renderKpis` (5-card KPI strip with "(indicative)" subtitles on Wtd 1Y Return/Avg Risk/Hedge Coverage), `_renderAllocChart` (Chart.js doughnut by region), `_renderHedgeCard` (plan details or "No hedge configured"), `_renderHoldingsTable` (6 columns: Instrument · Alloc% · Position€ · 1Y Return (ind.) · Risk (ind.) · Hedged?), CTA `window.fnoMpGoHedge` → navigates to portfolio-hedge section.
+- **`fno.html`** My Portfolio block replaced: meta strip, empty/error placeholders, 5-card KPI grid, 2-col row (alloc chart canvas + hedge card div), 6-col holdings table, CTA button.
+- **`main.js`** `window.fnoMpGoHedge` binding added.
+- **Spec updates:** `Spec_JS_Code.md` + `Spec_HTML_Code.md` updated with Phase 3 notes and all 13 DOM IDs.
+- **Bug fix (8e0c7ee):** geography-overview path missing `/v1/` prefix — fixed post-merge on user report.
+- **10 QA tests** in `test_fno_overview_phase3.py` — static analysis, all pass. 595 pre-existing tests unaffected.
+- **Design Review:** 1 retry (instMap region propagation gap fixed by Architect before Engineer). Code Review: PASS.
+- Commits: `64099e3` (merge), `8e0c7ee` (path fix).
 
 **Session work (2026-06-03) — F28 Hedge wizard UX redesign + bug fixes:**
 
