@@ -3,7 +3,7 @@
 // payoff chart + scenario table — all reactive to checkbox selection.
 // API: GET /api/v1/experience/fno/portfolio-hedge?coverage=N&duration=D  (JWT)
 
-import { apiFetch } from './api.js';
+import { api, apiFetch } from './api.js';
 import { isLocalDev, ensureDevToken } from '../shared/dev-auth.js';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -30,6 +30,10 @@ const _state = {
 
 let _scenarioTab = 'pp';
 let _payoffChart = null;
+
+// ── Hedge-plan persistence state ──────────────────────────────────────────────
+let _savePlanTimer = null;
+const _SAVE_DEBOUNCE_MS = 400;
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────
 function _show(id) { const el = document.getElementById(id); if (el) el.style.display = ''; }
@@ -425,6 +429,36 @@ function _renderHedgeWidgets() {
   _highlightScenarioTab();
 }
 
+// ── Hedge-plan persistence helpers ───────────────────────────────────────────
+
+async function loadHedgePlan() {
+  try {
+    const plan = await api('/api/v1/experience/fno/hedge-plan');
+    _state.coverage     = plan.coverage;
+    _state.hedgeChecked = new Set(plan.hedged_ids);
+    _scenarioTab        = plan.scenario_tab;
+  } catch (e) {
+    console.warn('[PH] loadHedgePlan: no saved plan or error — using defaults', e);
+  }
+}
+
+async function saveHedgePlan() {
+  try {
+    await api('/api/v1/experience/fno/hedge-plan', 'PUT', {
+      hedged_ids:   [..._state.hedgeChecked],
+      coverage:     _state.coverage,
+      scenario_tab: _scenarioTab,
+    });
+  } catch (e) {
+    console.warn('[PH] saveHedgePlan: failed to persist plan', e);
+  }
+}
+
+function _debouncedSave() {
+  clearTimeout(_savePlanTimer);
+  _savePlanTimer = setTimeout(saveHedgePlan, _SAVE_DEBOUNCE_MS);
+}
+
 // ── API fetch ─────────────────────────────────────────────────────────────────
 async function _fetchHedge(token) {
   try {
@@ -495,6 +529,8 @@ export async function loadPortfolioHedge() {
     _state.selections   = {};
     _state.hedgeChecked = new Set();
 
+    await loadHedgePlan();
+
     const hedgeData = await _fetchHedge(token);
     _state.apiHedge = hedgeData;
 
@@ -540,6 +576,7 @@ export function phToggleHedge(id) {
   } else {
     _state.hedgeChecked.add(id);
   }
+  _debouncedSave();
   _renderDiscoverTotals();
   _renderHedgeWidgets();
 }
@@ -550,6 +587,7 @@ export function phPickStrategy(id, strategy) {
 
 export function phSetCoverage(val) {
   _state.coverage = parseInt(val, 10);
+  _debouncedSave();
   _renderHedgeWidgets();
 
   const token = sessionStorage.getItem('auth_token');
@@ -569,6 +607,7 @@ export function phSetCoverage(val) {
 
 export function phSetScenarioTab(tab) {
   _scenarioTab = tab;
+  _debouncedSave();
   _highlightScenarioTab();
   _renderPayoffChart();
   _renderScenarioTable();
