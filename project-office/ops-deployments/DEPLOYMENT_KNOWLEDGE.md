@@ -190,6 +190,7 @@
 | 2026-05-31 | `8d83c9e` | Dashboard UX — Invest Game embedded in RITA shell (inline section, sidebar+topbar stay visible, --game/--ok CSS vars added); DS nav: Ops+Monitor merged into "Ops & Monitor"; MCP Calls + Model MCP merged into single page (KPIs + 3 charts + detailed table). Actions green. |
 | 2026-05-31 | `7340475` | DS MCP Calls — three bar charts in single row (card-row-3); User Traffic — Daily Login Activity and Daily Breakdown side by side, table scrolls after 6 rows. Actions pending at EOD. |
 | 2026-06-01 | `949f7d4` | Feature 28 Portfolio Builder (RITA) + Portfolio Hedge (FnO) + auth/UX batch. `6530810` failed ruff lint (PATTERN-012); `bbf1391` fixed lint; `949f7d4` fixed Allocate→Google auth redirect. Health ok. |
+| 2026-06-02 | `2ef251b` | F28 Portfolio Hedge tab UX — Discover/Selection/Allocation/Hedge grid alignment + wizard polish; agent-ops metrics + run-20260602-1200.json. Actions green; health ok; UI verified. |
 
 ---
 

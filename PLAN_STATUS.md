@@ -1,12 +1,19 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-03 — F28 Hedge wizard UX redesign: 2-tab flow, auth fix, NVIDIA proxy bug fix.
+**Last updated:** 2026-06-03 — F29 created: FnO Linked Data & Overview Redesign (user_hedge_plans, duration=1y, Overview redesign). F28 UX fixes: layout reorder, Position € column, BANKNIFTY row compactness, portfolio builder EUR save fix.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. Deploy today's changes to prod (git push → GitHub Actions)
-3. Test Portfolio Hedge end-to-end on local: sign in → Portfolio Builder (save portfolio with EUR value) → FnO → Portfolio Hedge → Discover tab shows holdings + EUR amounts → Confirm hedge → Hedge tab shows real API values (not client-side fallback)
-4. Verify NVIDIA shows "NDX put proxy" (not NIFTY) in Hedge tab
+2. Deploy today's F28 UX changes to prod (git push → GitHub Actions)
+3. Test Portfolio Hedge on prod: layout order correct, Position (€) column visible, BANKNIFTY row single-height, EUR saves when portfolio rebuilt with EUR value
+4. Start F29 with `/enhance` — begin Phase 0 (duration cleanup) then Phase 1 (user_hedge_plans)
 5. `/agent-performance-improvements` if alerts fire
+
+**Active feature:**
+- **F29 — FnO Linked Data & Overview Redesign** → `project-office/features/Jun/29 FnO Linked Data and Overview Redesign/`
+  - Phase 0: Duration cleanup (lock to 1y) — READY
+  - Phase 1: `user_hedge_plans` table + GET/PUT endpoints — READY
+  - Phase 2: Portfolio Hedge wires to saved plan — READY after Phase 1
+  - Phase 3: Overview redesign — READY after Phase 1
 
 **Session work (2026-06-03) — F28 Hedge wizard UX redesign + bug fixes:**
 
