@@ -1,7 +1,7 @@
 // ── Portfolio Hedge — Feature 28 (single-page layout) ────────────────────────
 // 4-KPI top row + holdings table (risk-sorted, sticky totals) + coverage dial +
 // payoff chart + scenario table — all reactive to checkbox selection.
-// API: GET /api/v1/experience/fno/portfolio-hedge?coverage=N&duration=D  (JWT)
+// API: GET /api/v1/experience/fno/portfolio-hedge?coverage=N  (JWT)
 
 import { api, apiFetch } from './api.js';
 import { isLocalDev, ensureDevToken } from '../shared/dev-auth.js';
@@ -537,7 +537,13 @@ export async function loadPortfolioHedge() {
     if (hedgeData?.holdings) {
       for (const h of hedgeData.holdings) {
         _state.selections[h.instrument_id] = (h.risk_score ?? 2) >= 3 ? 'put_buy' : 'call_sell';
-        _state.hedgeChecked.add(h.instrument_id);
+      }
+      // If no saved plan was found (hedgeChecked still empty after loadHedgePlan),
+      // default to all instruments checked so first-time users see a fully populated view.
+      if (_state.hedgeChecked.size === 0) {
+        for (const h of hedgeData.holdings) {
+          _state.hedgeChecked.add(h.instrument_id);
+        }
       }
     }
 
