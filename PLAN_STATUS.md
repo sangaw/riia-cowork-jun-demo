@@ -1,11 +1,11 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-03 — F29 Phase 2 merged (d96dd4c): portfolio-hedge.js wires to saved plan — GET restores hedged_ids/coverage/scenario_tab on load; PUT debounced 400ms on change. Bug fixed: hedgeChecked no longer overwritten by _fetchHedge loop. 4 new QA tests (13 total). 54 commits ahead of origin/master — deploy pending.
+**Last updated:** 2026-06-03 — F29 Phase 3 merged (64099e3): FnO Overview redesign — 5-card KPI strip, region-allocation doughnut chart, hedge status card, 6-column holdings table with "(indicative)" labels, 3-source Promise.allSettled fetch (portfolio + geography-overview + hedge-plan), window.fnoMpGoHedge CTA. 10 QA tests pass. Confluence Engineering v44.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
 2. Deploy all accumulated changes to prod: `git push origin master` → GitHub Actions
 3. Apply migration on prod: Alembic migration `20260603_add_user_hedge_plans` runs via Dockerfile CMD on container restart
-4. Start F29 Phase 3: `/enhance fno "F29 Phase 3 — FnO Overview redesign"`
+4. Start F29 Phase 4: `/enhance fno "F29 Phase 4 — spec updates (Spec_DB, Spec_Python, Spec_RITA_App)"`
 5. `/agent-performance-improvements` — 2 alerts fired (FC-HTML-CSS, CSAT 2.67)
 
 **Active feature:**
@@ -13,7 +13,8 @@
   - Phase 0: Duration cleanup (lock to 1y) — ✅ COMPLETE (b8a712e)
   - Phase 1: `user_hedge_plans` table + GET/PUT endpoints — ✅ COMPLETE (e839dda, f731e1f)
   - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
-  - Phase 3: Overview redesign — READY
+  - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
+  - Phase 4: Spec updates — READY
 
 **Session work (2026-06-03) — F28 Hedge wizard UX redesign + bug fixes:**
 
