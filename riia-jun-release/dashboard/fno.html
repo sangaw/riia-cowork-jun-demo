@@ -466,6 +466,25 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
       <span class="phase-tag p01">Overview</span>
     </div>
 
+    <!-- Instrument selector pills — populated by renderOverviewFromState() -->
+    <div id="fno-overview-inst-selector" class="fno-inst-selector mb-3" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
+
+    <!-- Overview KPI strip — value/pnl/positions from analytics state -->
+    <div class="kpi-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="kpi kpi-sm card" style="flex:1;min-width:120px;padding:12px 16px">
+        <div class="kpi-label" style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Portfolio Value</div>
+        <div id="fno-overview-kpi-value" class="kpi-val">—</div>
+      </div>
+      <div class="kpi kpi-sm card" style="flex:1;min-width:120px;padding:12px 16px">
+        <div class="kpi-label" style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Total P&amp;L</div>
+        <div id="fno-overview-kpi-pnl" class="kpi-val">—</div>
+      </div>
+      <div class="kpi kpi-sm card" style="flex:1;min-width:120px;padding:12px 16px">
+        <div class="kpi-label" style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Active Positions</div>
+        <div id="fno-overview-kpi-positions" class="kpi-val">—</div>
+      </div>
+    </div>
+
     <!-- KPIs — updated by setUnderlying() -->
     <div class="kpi-row c5" id="dash-kpis"></div>
 
@@ -521,13 +540,6 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div class="page-sub" id="pos-page-sub">Loading...</div>
-      <div style="display:flex;align-items:center;gap:14px;">
-        <label class="paper-toggle" title="Toggle between paper (dummy) and live broker positions">
-          <input type="checkbox" id="paper-mode-chk" checked onchange="togglePaperMode(this.checked)">
-          <span class="paper-toggle-track"><span class="paper-toggle-thumb"></span></span>
-          <span id="paper-mode-label" class="paper-mode-label">Paper</span>
-        </label>
-      </div>
     </div>
 
     <div class="filter-row" id="pos-filter-row">
@@ -560,23 +572,23 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
       </div>
     </div>
 
-    <div class="section-divider">Closed Positions — APR 2026 &amp; Legacy</div>
-    <div class="info-note">Expired / closed trades. P&amp;L is realized and booked.</div>
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-title">Closed Positions</span>
-        <span class="card-sub" id="closed-card-sub">Realized P&amp;L: —</span>
-      </div>
-      <div class="card-body" style="padding:0">
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr><th>Instrument</th><th>Expiry</th><th>Type</th><th>Strike</th><th>Realized P&amp;L</th></tr></thead>
-            <tbody id="closed-tbody"></tbody>
-          </table>
-        </div>
-        <div class="tbl-footer">
-          <span class="lbl">Total Realized:</span><span class="val pos" id="closed-total">—</span>
-        </div>
+    <!-- Overview Positions Grid (F30 Phase 3 — filtered by instrument selector) -->
+    <div id="fno-overview-positions-grid" class="card mt-3" style="padding:0;overflow:hidden;margin-top:16px">
+      <div class="card-body p-2" style="padding:0">
+        <table class="table table-sm mb-0" style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead style="background:var(--surface)">
+            <tr style="font-size:11px;color:#64748b;border-bottom:2px solid rgba(0,0,0,.1);text-transform:uppercase;letter-spacing:.04em">
+              <th style="padding:8px 10px;text-align:left;font-weight:700">Instrument</th>
+              <th style="padding:8px 10px;text-align:left;font-weight:700">Type</th>
+              <th style="padding:8px 10px;text-align:left;font-weight:700">Side</th>
+              <th style="padding:8px 10px;text-align:right;font-weight:700">Qty</th>
+              <th style="padding:8px 10px;text-align:right;font-weight:700">Value EUR</th>
+              <th style="padding:8px 10px;text-align:right;font-weight:700">P&amp;L</th>
+              <th style="padding:8px 10px;text-align:right;font-weight:700">Ann Vol%</th>
+            </tr>
+          </thead>
+          <tbody id="fno-overview-positions-body"></tbody>
+        </table>
       </div>
     </div>
 
@@ -585,28 +597,6 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 
     <div class="card" id="margin-util-card"></div>
 
-    <!-- ASML Equity Hedge Margin -->
-    <div id="asml-margin-section">
-      <div class="und-section-hdr">
-        <span class="und-section-tag asml">ASML Equity Hedge</span>
-        <div class="line"></div>
-      </div>
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-title">ASML — Equity Hedge Options</span>
-          <span class="card-sub">Covered Call margin (est.) · Protective Put premium</span>
-        </div>
-        <div class="card-body" style="padding:0">
-          <div class="tbl-wrap">
-            <table>
-              <thead><tr><th>Instrument</th><th>Exp</th><th>Type</th><th>Side</th><th>Shares</th><th>SPAN (Est.)</th><th>Exposure (Est.)</th><th>Total (Est.)</th></tr></thead>
-              <tbody id="asml-margin-tbody"></tbody>
-            </table>
-          </div>
-          <div class="tbl-footer" id="asml-margin-footer"></div>
-        </div>
-      </div>
-    </div>
 
     <div class="card">
       <div class="card-hdr">
@@ -656,43 +646,6 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
       </div>
     </div>
 
-    <!-- 2-column row: allocation chart (left) + hedge card (right) -->
-    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
-      <div class="card" style="flex:1;min-width:220px;padding:16px">
-        <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Region Allocation</div>
-        <div class="chart-wrap" style="position:relative;height:180px">
-          <canvas id="fno-mp-alloc-chart"></canvas>
-        </div>
-      </div>
-      <div class="card" style="flex:1;min-width:220px;padding:16px" id="fno-mp-hedge-card">
-        <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Hedge Status</div>
-        <div style="font-size:13px;color:var(--t3)">Loading…</div>
-      </div>
-    </div>
-
-    <!-- Holdings table — 6 columns -->
-    <div class="card" style="padding:0;overflow:hidden">
-      <table class="data-table" style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead style="background:var(--surface)">
-          <tr style="font-size:11px;color:#64748b;border-bottom:2px solid rgba(0,0,0,.1);text-transform:uppercase;letter-spacing:.04em">
-            <th style="padding:9px 12px;text-align:left;font-weight:700">Instrument</th>
-            <th style="padding:9px 12px;text-align:right;font-weight:700">Alloc%</th>
-            <th style="padding:9px 12px;text-align:right;font-weight:700">Position €</th>
-            <th style="padding:9px 12px;text-align:right;font-weight:700">1Y Return (ind.)</th>
-            <th style="padding:9px 12px;text-align:right;font-weight:700">Risk (ind.)</th>
-            <th style="padding:9px 12px;text-align:center;font-weight:700">Hedged?</th>
-          </tr>
-        </thead>
-        <tbody id="fno-mp-holdings-body"></tbody>
-        <tfoot>
-          <tr style="border-top:2px solid rgba(0,0,0,.08);background:rgba(100,116,139,.04)">
-            <td colspan="5" style="padding:8px 12px;font-size:11px;font-weight:700;color:var(--t2);font-family:var(--fm);text-transform:uppercase;letter-spacing:.04em">Total Allocation</td>
-            <td id="fno-mp-total" style="padding:8px 12px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700">—</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-
     <!-- CTA -->
     <div style="margin-top:14px;text-align:right">
       <button class="btn" onclick="fnoMpGoHedge()">Go to Portfolio Hedge →</button>
@@ -729,6 +682,8 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
       </div>
       <div class="card-body">
         <div class="scenario-row" id="stress-row"></div>
+        <!-- Historical event scenarios (F30 Phase 3 — analytics state) -->
+        <div id="stress-events-row" class="mt-3" style="margin-top:16px"></div>
         <!-- Payoff charts: side-by-side (ALL), or single (NIFTY/BANKNIFTY) -->
         <div id="payoff-charts-grid" style="display:grid;gap:18px;margin-top:4px;">
           <div id="payoff-nifty-wrap">
