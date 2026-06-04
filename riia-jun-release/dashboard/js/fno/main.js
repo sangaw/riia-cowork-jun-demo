@@ -40,7 +40,7 @@ async function apiFetch(url, opts = {}) {
 }
 import { state } from './state.js';
 import { initNav, setUnderlying, setExpiry, _sectionLoaders } from './nav.js';
-import { loadFnoMyPortfolio } from './my-portfolio.js';
+import { loadFnoMyPortfolio, fnoSelectInstrument } from './my-portfolio.js';
 import { filterPos } from './positions.js';
 import {
   manSelectTile,
@@ -93,8 +93,9 @@ import { loadEquityHedge } from './equity_hedge.js';
 import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
 import { loadPortfolioHedge, phSetCoverage, phSetDuration, phToggleHedge, phPickStrategy, phSetScenarioTab } from './portfolio-hedge.js';
 
-window.setLanguage = setLanguage;
-window.loadEquityHedge = loadEquityHedge;
+window.setLanguage        = setLanguage;
+window.loadEquityHedge   = loadEquityHedge;
+window.fnoSelectInstrument = fnoSelectInstrument;
 
 // Portfolio Hedge wizard
 _sectionLoaders['portfolio-hedge'] = loadPortfolioHedge;

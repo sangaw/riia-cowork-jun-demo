@@ -11,8 +11,9 @@
 //   renderStressScenarios — fno/stress.js ✓
 //   renderPayoffChart — fno/payoff.js ✓
 //   saveToday, syncPriceHistory, renderScenarios — fno/rr.js ✓
-//   renderHedgeRadar — fno/hedge.js ✓
+//   renderPortfolioHedgeRadar — fno/hedge.js ✓
 //   initManoeuvre — fno/manoeuvre.js ✓
+//   renderOverviewFromState — fno/my-portfolio.js ✓
 
 import { apiBase, RITA_API_KEY } from './api.js';
 import { state } from './state.js';
@@ -32,8 +33,29 @@ import { renderGreeksCards, renderGreeksTable, updateRiskSections } from './gree
 import { renderStressScenarios } from './stress.js';
 import { renderPayoffChart } from './payoff.js';
 import { saveToday, syncPriceHistory, renderScenarios } from './rr.js';
-import { renderHedgeRadar } from './hedge.js';
+import { renderPortfolioHedgeRadar } from './hedge.js';
 import { initManoeuvre } from './manoeuvre.js';
+import { renderOverviewFromState } from './my-portfolio.js';
+
+// ── scenario_levels shape normalisation ──────────────────────────────────────
+// API may return {INST: {target, sl}} or {INST: {bull:{target,sl}, bear:{target,sl}}}.
+// Normalise everything to the bull/bear shape so consumers (rr.js) are consistent.
+function _normScenarioLevels(raw) {
+  const out = {};
+  for (const [key, val] of Object.entries(raw || {})) {
+    if (val && val.bull !== undefined) {
+      out[key] = val; // already normalised
+    } else if (val && val.target !== undefined && val.sl !== undefined) {
+      out[key] = {
+        bull: { target: val.target, sl: val.sl },
+        bear: { target: val.sl,    sl: val.target },
+      };
+    } else {
+      out[key] = val;
+    }
+  }
+  return out;
+}
 
 // window.RITA_API_BASE can be set by the host page to point at a non-origin
 // API server (e.g. staging). Defaults to '' = same origin.
@@ -103,7 +125,7 @@ export async function initApp(mode = 'mock') {
   state.greeksData       = data.greeks            || [];
   state.netGreeks        = data.net_greeks        || {};
   state.portDelta        = data.net_delta         || {};
-  state.scenarioLevels   = data.scenario_levels   || {};
+  state.scenarioLevels   = _normScenarioLevels(data.scenario_levels || {});
   state.payoffData       = data.payoff            || {};
   state.stressData       = data.stress            || [];
   state.hedgeQuality     = data.hedge_quality     || {};
@@ -126,6 +148,7 @@ export async function initApp(mode = 'mock') {
 }
 
 function _renderAll() {
+  renderOverviewFromState();
   renderDashboard();
   renderPositionsKpis();
   renderPositionsTable();
@@ -139,7 +162,7 @@ function _renderAll() {
   renderStressScenarios();
   renderScenarios();
   renderPayoffChart();
-  renderHedgeRadar();
+  renderPortfolioHedgeRadar();
   initManoeuvre();
 }
 
