@@ -67,6 +67,14 @@ window.togglePaperMode  = function(isPaper) {
   if (lbl) lbl.textContent = isPaper ? 'Paper' : 'Live';
   fetchPositions();
 };
+window.toggleAnalyticsMode = function(isReal) {
+  state.analyticsMode = isReal ? 'real' : 'mock';
+  const lbl = document.getElementById('analytics-mode-label');
+  if (lbl) lbl.textContent = isReal ? 'Real' : 'Mock';
+  const err = document.getElementById('analytics-mode-error');
+  if (err) { err.textContent = ''; err.style.display = 'none'; }
+  initApp(state.analyticsMode);
+};
 
 // Manoeuvre
 window.manSelectTile    = manSelectTile;

@@ -57,7 +57,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | File | Responsibility | Key exports |
 |---|---|---|
 | `api.js` | Thin re-export wrapper → `shared/api.js`; exports apiBase, api, apiFetch, RITA_API_KEY | `apiBase()`, `api(path, method?, body?)`, `apiFetch(url, options?)`, `RITA_API_KEY` |
-| `app-init.js` | fetchPositions, initApp, checkStatus — extracted from api.js god module | `fetchPositions()`, `initApp()`, `checkStatus()` |
+| `app-init.js` | Single-fetch init via `/api/v1/experience/fno/portfolio-analytics?mode=`. F30 Phase 2: `initApp(mode='mock')` replaces separate fetch chain; `fetchPositions()` is a backward-compat shim that calls `initApp(state.analyticsMode)`. | `fetchPositions()`, `initApp(mode?)`, `checkStatus()` |
 | `state.js` | Shared FnO state | `state` object (active group, instrument, etc.) |
 | `nav.js` | Section navigation | `show(section)`, `_sectionLoaders` map |
 | `main.js` | Entry point | Registers loaders, binds `window.*` |
