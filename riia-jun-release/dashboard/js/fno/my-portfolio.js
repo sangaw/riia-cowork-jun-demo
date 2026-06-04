@@ -274,9 +274,11 @@ export function renderOverviewFromState() {
   }
 
   try {
-    // Build instrument selector pills from unique und values in positions
+    // Build instrument selector pills: union of position und values + marketData keys
     const positions = st.positions || [];
-    const unds = [...new Set(positions.map(p => p.und).filter(Boolean))];
+    const posUnds  = positions.map(p => p.und).filter(Boolean);
+    const mktUnds  = Object.keys(st.marketData || {});
+    const unds = [...new Set([...posUnds, ...mktUnds])];
     if (!unds.includes(_selectedInstrument) && unds.length > 0) {
       _selectedInstrument = unds[0];
     }

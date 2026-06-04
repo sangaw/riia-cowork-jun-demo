@@ -27,7 +27,6 @@ import {
   renderMarginKpis,
   updateMarginSections,
   renderMarginTables,
-  renderClosedPositions,
 } from './margin.js';
 import { renderGreeksCards, renderGreeksTable, updateRiskSections } from './greeks.js';
 import { renderStressScenarios } from './stress.js';
@@ -152,7 +151,6 @@ function _renderAll() {
   renderDashboard();
   renderPositionsKpis();
   renderPositionsTable();
-  renderClosedPositions();
   renderMarginKpis();
   updateMarginSections();
   renderMarginTables();
