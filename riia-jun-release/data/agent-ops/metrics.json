@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-03T21:16:45",
+  "generated_at": "2026-06-04T17:54:14",
   "total_runs": 66,
   "per_role": {
     "pm": {
@@ -817,24 +817,24 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 7285,
-    "unique_endpoints": 158,
-    "overall_error_rate_pct": 7.59,
-    "error_rate_5xx_pct": 0.37,
+    "total_calls": 7444,
+    "unique_endpoints": 159,
+    "overall_error_rate_pct": 7.6,
+    "error_rate_5xx_pct": 0.36,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 782,
+        "count": 783,
         "p50_ms": 5.8,
-        "p95_ms": 450.1,
+        "p95_ms": 465.6,
         "error_count": 0
       },
       {
         "path": "/api/v1/experience/rita/geography-overview",
         "method": "GET",
-        "count": 633,
-        "p50_ms": 107.5,
+        "count": 652,
+        "p50_ms": 112.1,
         "p95_ms": 749.5,
         "error_count": 0
       },
@@ -863,6 +863,6 @@
         "error_count": 0
       }
     ],
-    "generated_at": "2026-06-03T19:16:45.893174+00:00"
+    "generated_at": "2026-06-04T15:54:14.659598+00:00"
   }
 }

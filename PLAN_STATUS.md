@@ -1,20 +1,29 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-03 — F29 Phase 3 merged (64099e3) + path fix (8e0c7ee): FnO Overview redesign complete. 5-card KPI strip, region-allocation doughnut chart, hedge status card, 6-column holdings table with "(indicative)" labels, 3-source Promise.allSettled fetch, window.fnoMpGoHedge CTA. Bug fix: geography-overview missing /v1/ prefix. 10 QA tests pass. Confluence Engineering v44. Verified working locally.
+**Last updated:** 2026-06-04 — F30 Phases 2 + 3 merged. Phase 2 (`7bfb90c`): state + initApp single-fetch refactor, Real/Mock toggle wired. Phase 3 (`559c65e`, hotfix `92bd2cf`): FnO Overview instrument selector (ASML default, all marketData keys), positions grid, removed paper toggle / closed positions / equity hedge grid / allocation panels; Risk/Scenarios/Hedge Radar/Manoeuvre pages now consuming portfolio-analytics state fields; `_normScenarioLevels` fix for scenario shape mismatch; `renderPortfolioHedgeRadar` + `renderOverviewFromState` added. 25/25 QA tests pass. Confluence Engineering v47.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
 2. Deploy all accumulated changes to prod: `git push origin master` → GitHub Actions
 3. Apply migration on prod: Alembic migration `20260603_add_user_hedge_plans` runs via Dockerfile CMD on container restart
-4. Start F29 Phase 4: `/enhance fno "F29 Phase 4 — spec updates (Spec_DB, Spec_Python, Spec_RITA_App)"`
-5. `/agent-performance-improvements` — 2 alerts fired (FC-HTML-CSS, CSAT 2.67)
+4. `/agent-performance-improvements` — 2 alerts active (FC-HTML-CSS from prior ops run; CSAT 2.67/5 recent)
+5. Follow-up: `fno-overview-kpi-delta` (net delta KPI) not yet implemented; `MAN_LOT` hardcoded lot sizes in `manoeuvre.js` — both deferred
 
 **Active feature:**
+- **F30 — FnO Portfolio-Aligned Analytics** → `project-office/features/Jun/30 FnO Portfolio-Aligned Analytics/`
+  - Phase 1: Backend analytics endpoint — ✅ COMPLETE (a3ba34a)
+  - Phase 2: State + initApp refactor — ✅ COMPLETE (7bfb90c)
+  - Phase 3: Overview redesign + analytics rendering wiring — ✅ COMPLETE (559c65e, hotfix 92bd2cf)
+  - Phase 4: Manoeuvre tab re-wire — ✅ COMPLETE (included in Phase 3)
+  - Phase 5: Stress/Scenarios updates — ✅ COMPLETE (included in Phase 3)
+  - Phase 6: Spec updates — ✅ COMPLETE (included in Phase 3)
+
+**Previous feature:**
 - **F29 — FnO Linked Data & Overview Redesign** → `project-office/features/Jun/29 FnO Linked Data and Overview Redesign/`
   - Phase 0: Duration cleanup (lock to 1y) — ✅ COMPLETE (b8a712e)
   - Phase 1: `user_hedge_plans` table + GET/PUT endpoints — ✅ COMPLETE (e839dda, f731e1f)
   - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
   - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
-  - Phase 4: Spec updates — READY
+  - Phase 4: Spec updates — ⚠️ PENDING (do before F30 Phase 1)
 
 **Session work (2026-06-03, session 2) — F29 Phase 3 FnO Overview redesign:**
 - **FnO Overview redesign COMPLETE.** `my-portfolio.js` full replacement: 3-source `Promise.allSettled` (portfolio + geography-overview + hedge-plan), explicit instMap nested loop propagating `reg.region`, `_renderKpis` (5-card KPI strip with "(indicative)" subtitles on Wtd 1Y Return/Avg Risk/Hedge Coverage), `_renderAllocChart` (Chart.js doughnut by region), `_renderHedgeCard` (plan details or "No hedge configured"), `_renderHoldingsTable` (6 columns: Instrument · Alloc% · Position€ · 1Y Return (ind.) · Risk (ind.) · Hedged?), CTA `window.fnoMpGoHedge` → navigates to portfolio-hedge section.
