@@ -4,6 +4,8 @@
 // Cross-module consumers import `state` and read from it directly.
 
 export const state = {
+  portfolioMeta: null,
+  analyticsMode: 'mock',
   marketData: {},
   positions: [],
   greeksData: [],
