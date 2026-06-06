@@ -1,21 +1,18 @@
 // ── FnO Dashboard — Entry Point ───────────────────────────────────────────────
 
-// migrate legacy rita_token → auth_token (one-time, silent)
-(function() {
-  const legacy = sessionStorage.getItem('rita_token');
-  if (legacy && !sessionStorage.getItem('auth_token')) {
-    sessionStorage.setItem('auth_token', legacy);
-    sessionStorage.removeItem('rita_token');
-  }
-})();
-
-// ingest ?token= from OAuth callback
+// ingest ?token= from OAuth callback; migrate legacy localStorage key on first load
 (function() {
   const p = new URLSearchParams(window.location.search);
   const t = p.get('token');
   if (t) {
     sessionStorage.setItem('auth_token', t);
     history.replaceState({}, '', window.location.pathname);
+  } else {
+    const legacy = localStorage.getItem('rita_token');
+    if (legacy && !sessionStorage.getItem('auth_token')) {
+      sessionStorage.setItem('auth_token', legacy);
+      localStorage.removeItem('rita_token');
+    }
   }
 })();
 
@@ -58,6 +55,12 @@ import {
 
 // ── Window bindings for inline onclick= attributes ────────────────────────────
 // Navigation / filter
+window.toggleAnalyticsMode = function(mode) {
+  state.analyticsMode = mode;
+  const errEl = document.getElementById('analytics-mode-error');
+  if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+  initApp(state.analyticsMode);
+};
 window.setUnderlying    = setUnderlying;
 window.setExpiry        = setExpiry;
 window.filterPos        = filterPos;
@@ -67,15 +70,6 @@ window.togglePaperMode  = function(isPaper) {
   if (lbl) lbl.textContent = isPaper ? 'Paper' : 'Live';
   fetchPositions();
 };
-window.toggleAnalyticsMode = function(isReal) {
-  state.analyticsMode = isReal ? 'real' : 'mock';
-  const lbl = document.getElementById('analytics-mode-label');
-  if (lbl) lbl.textContent = isReal ? 'Real' : 'Mock';
-  const err = document.getElementById('analytics-mode-error');
-  if (err) { err.textContent = ''; err.style.display = 'none'; }
-  initApp(state.analyticsMode);
-};
-
 // Manoeuvre
 window.manSelectTile    = manSelectTile;
 window.manSwitchTab     = manSwitchTab;
@@ -124,9 +118,9 @@ initI18n(); applyTranslations();
 window.addEventListener('load', async () => {
   await ensureDevToken();
   initNav();
-  initApp();
+  initApp('real');
   checkStatus();
-  loadFnoMyPortfolio(); // populate My Portfolio card in Overview
+  loadPortfolioHedge();
   // Poll API status every 30s
   setInterval(checkStatus, 30000);
 });

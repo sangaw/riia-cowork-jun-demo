@@ -1,13 +1,55 @@
-// ── ASML Equity Hedge Scenarios ────────────────────────────────────────────────
+// ── Equity Hedge Scenarios ────────────────────────────────────────────────────
 import { state } from './state.js';
 import { apiBase } from './api.js';
+import { renderGreeksCards, renderGreeksTable } from './greeks.js';
+import { renderStressScenarios } from './stress.js';
 
 const RITA_API_KEY = '';
 
 let _portfolioChart = null;
 let _payoffChart = null;
 
+// Instrument + shares used for the last fetch — read by injectAsmlToState + renderEquityHedge
+let _ehInstrument = 'ASML';
+let _ehNShares    = 10;
+
 const _MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+function _activeInstrument() {
+  const und = state.currentUnd;
+  if (und && und !== 'ALL') return und;
+  const eu = (state.portfolioGeoInstruments || []).find(i => i.region === 'EU');
+  return eu ? eu.id : 'ASML';
+}
+
+function _rollingDateRange() {
+  const end   = new Date();
+  const start = new Date();
+  start.setFullYear(start.getFullYear() - 1);
+  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+}
+
+// Whole-number shares from portfolio builder, or fall back to floor(alloc / price)
+function _computeNShares(instrument) {
+  const geoInsts = state.portfolioGeoInstruments || [];
+  const inst     = geoInsts.find(i => i.id === instrument);
+  // Prefer pre-computed integer shares stored by the portfolio builder
+  if (inst?.shares != null && inst.shares > 0) return inst.shares;
+  // Fall back: derive from allocation % + total value + market price
+  const total    = parseFloat(state.portfolioMeta?.total_value_eur || 0);
+  const allocPct = parseFloat(inst?.allocation_pct || 0);
+  if (!total || !allocPct) return 10;
+  const allocEur = total * allocPct / 100;
+  const price    = parseFloat(state.marketData[instrument]?.close || inst?.close || 0);
+  if (!price) return 10;
+  return Math.floor(allocEur / price) || 1;
+}
+
+function _fmtRange(start, end) {
+  const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmt = d => mo[+d.slice(5, 7) - 1] + ' ' + d.slice(0, 4);
+  return (start && end) ? fmt(start) + ' – ' + fmt(end) : '—';
+}
 
 function _fmtEur(v) {
   return '€' + Number(v).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -28,9 +70,9 @@ export function injectAsmlToState() {
   const mb = hs.mild_bearish;
   const sb = hs.strong_bearish;
 
-  const instrument = (document.getElementById('eh-instrument')?.value || 'ASML').trim().toUpperCase();
-  const nShares    = parseInt(document.getElementById('eh-n-shares')?.value || '10', 10);
-  const endDate    = document.getElementById('eh-end-date')?.value || '2025-01-31';
+  const instrument = _ehInstrument;
+  const nShares    = _ehNShares;
+  const endDate    = _rollingDateRange().end;
   const expLabel   = _MONTHS[new Date(endDate + 'T00:00:00').getMonth()] || 'EXP';
 
   // Remove stale entries from a prior inject
@@ -93,26 +135,36 @@ export function injectAsmlToState() {
 }
 
 export async function loadEquityHedge(forceRefresh = false) {
-  if (state.equityHedgeData && !forceRefresh) {
+  const instrument = _activeInstrument();
+  if (state.equityHedgeData && !forceRefresh && _ehInstrument === instrument) {
     renderEquityHedge(state.equityHedgeData);
+    state.riskSelectedInstrument = instrument;
+    renderGreeksCards();
+    renderGreeksTable();
+    renderStressScenarios();
     return;
   }
+  _ehInstrument = instrument;
+  _ehNShares    = _computeNShares(instrument);
+  const { start: startDate, end: endDate } = _rollingDateRange();
+
   const loadEl = document.getElementById('eh-loading');
   const resEl  = document.getElementById('eh-results');
-  if (loadEl) { loadEl.textContent = 'Loading…'; loadEl.style.display = 'flex'; }
+  if (loadEl) { loadEl.textContent = `Loading ${instrument}…`; loadEl.style.display = 'flex'; }
   if (resEl)  resEl.style.display = 'none';
 
-  const instrument = (document.getElementById('eh-instrument')?.value || 'ASML').trim().toUpperCase();
-  const nShares    = parseInt(document.getElementById('eh-n-shares')?.value || '10', 10);
-  const startDate  = document.getElementById('eh-start-date')?.value || '2025-01-01';
-  const endDate    = document.getElementById('eh-end-date')?.value   || '2025-01-31';
-
   try {
+    // Use same ann_vol_pct source as the stress/std-dev table (analytics endpoint)
+    const volPos   = (state.positions || []).find(p => p.und === instrument && p.ann_vol_pct != null);
+    const annVolPct = volPos ? parseFloat(volPos.ann_vol_pct) : null;
+
     const headers = { 'Content-Type': 'application/json', ...(RITA_API_KEY ? { 'X-API-Key': RITA_API_KEY } : {}) };
+    const body    = { instrument, n_shares: _ehNShares, start_date: startDate, end_date: endDate };
+    if (annVolPct != null) body.ann_vol_pct = annVolPct;
     const resp = await fetch(apiBase() + '/api/v1/portfolio/equity-hedge-scenarios', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ instrument, n_shares: nShares, start_date: startDate, end_date: endDate }),
+      body: JSON.stringify(body),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
@@ -124,6 +176,11 @@ export async function loadEquityHedge(forceRefresh = false) {
     if (resEl)  resEl.style.display = 'block';
     renderEquityHedge(data);
     injectAsmlToState();
+    // Filter Greeks/Stress to the active instrument and render into eh-risk-panels
+    state.riskSelectedInstrument = instrument;
+    renderGreeksCards();
+    renderGreeksTable();
+    renderStressScenarios();
   } catch (e) {
     if (loadEl) { loadEl.textContent = 'Error: ' + e.message; loadEl.style.display = 'flex'; }
     if (resEl)  resEl.style.display = 'none';
@@ -145,9 +202,13 @@ export function renderEquityHedge(data) {
   const hedgeClass   = hedgeRetPct >= 0 ? 'pos' : 'neg';
   const netClass     = netRetPct   >= 0 ? 'pos' : 'neg';
   const setKpi = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-  setKpi('eh-kpi-start-price',  `<div class="kpi-value">${_fmtEur(p.start_price)}</div>`);
-  setKpi('eh-kpi-end-price',    `<div class="kpi-value">${_fmtEur(p.end_price)}</div>`);
-  setKpi('eh-kpi-vol',          `<div class="kpi-value">${p.vol_30d_pct.toFixed(1)}%</div>`);
+  const startD = p.daily?.[0]?.date || '';
+  const endD   = p.daily?.[p.daily.length - 1]?.date || '';
+  setKpi('eh-kpi-date-range',   `<div class="kpi-value" style="font-size:12px">${_fmtRange(startD, endD)}</div><div class="kpi-sub">${p.daily?.length || 0} trading days</div>`);
+  setKpi('eh-kpi-start-price',  `<div class="kpi-value">${_fmtEur(p.start_price)}</div><div class="kpi-sub">${startD}</div>`);
+  setKpi('eh-kpi-end-price',    `<div class="kpi-value">${_fmtEur(p.end_price)}</div><div class="kpi-sub">${endD}</div>`);
+  setKpi('eh-kpi-shares',       `<div class="kpi-value">${p.n_shares.toFixed(2)}</div><div class="kpi-sub">${_fmtEur(p.end_price * p.n_shares)} position</div>`);
+  setKpi('eh-kpi-vol',          `<div class="kpi-value">${p.vol_30d_pct.toFixed(1)}%</div><div class="kpi-sub">annualised 30d</div>`);
   setKpi('eh-kpi-return',       `<div class="kpi-value ${retClass}">${p.return_pct >= 0 ? '+' : ''}${p.return_pct.toFixed(2)}%</div>`);
   setKpi('eh-kpi-hedge-return', `<div class="kpi-value ${hedgeClass}">+${hedgeRetPct.toFixed(2)}%</div><div class="kpi-sub">${_fmtEur(mb.total_premium_eur)} premium</div>`);
   setKpi('eh-kpi-net-return',   `<div class="kpi-value ${netClass}">${netRetPct >= 0 ? '+' : ''}${netRetPct.toFixed(2)}%</div>`);
@@ -177,7 +238,7 @@ export function renderEquityHedge(data) {
         data: {
           labels: p.daily.map(d => d.date),
           datasets: [{
-            label: `${(document.getElementById('eh-instrument')?.value || 'ASML')} × ${(document.getElementById('eh-n-shares')?.value || '10')} shares`,
+            label: `${_ehInstrument} × ${_ehNShares} shares`,
             data: p.daily.map(d => d.value),
             borderColor: 'var(--p04)', backgroundColor: 'rgba(107,47,160,0.08)',
             borderWidth: 2, pointRadius: 2, tension: 0.3, fill: true,
@@ -200,7 +261,7 @@ export function renderEquityHedge(data) {
   const payCtx = document.getElementById('eh-payoff-chart');
   if (payCtx) {
     requestAnimationFrame(() => {
-      const instrument = (document.getElementById('eh-instrument')?.value || 'ASML').trim().toUpperCase();
+      const instrument = _ehInstrument;
       const xLabels = pc.price_range.map(v => _fmtEur(v));
       _payoffChart = new Chart(payCtx, {
         type: 'line',

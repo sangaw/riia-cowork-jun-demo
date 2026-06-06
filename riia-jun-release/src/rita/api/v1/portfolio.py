@@ -56,18 +56,16 @@ class PortfolioBacktestRequest(BaseModel):
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
 @router.get("/overview")
-def get_portfolio_overview() -> dict[str, Any]:
+def get_portfolio_overview(instruments: str | None = None) -> dict[str, Any]:
     """Return cross-instrument overview: normalised prices + return correlation.
 
-    Loads all 4 instruments (NIFTY, BANKNIFTY, ASML, NVIDIA), aligns to their
-    common date intersection, and returns:
-    - Per-instrument metadata (rows, date range, currency)
-    - Normalised Close price series (down-sampled to ≤ 500 points)
-    - Pearson correlation matrix of daily returns
+    Pass ?instruments=SBIN,TCS,HDFCBANK to restrict to specific instruments.
+    Defaults to ALL_INSTRUMENTS if omitted.
     """
     from rita.core.portfolio_engine import portfolio_overview
+    ids = [i.strip() for i in instruments.split(",")] if instruments else None
     try:
-        return portfolio_overview()
+        return portfolio_overview(instruments=ids)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
@@ -475,9 +473,13 @@ class _DailySnapshotRequest(BaseModel):
 
 class EquityHedgeRequest(BaseModel):
     instrument: str = Field(default="ASML", description="Instrument ticker (e.g. ASML).")
-    n_shares: int = Field(default=10, ge=1, description="Number of shares held.")
+    n_shares: float = Field(default=1.0, ge=0.001, description="Number of shares held (fractional supported).")
     start_date: str = Field(description="Period start date, YYYY-MM-DD.")
     end_date: str = Field(description="Period end date, YYYY-MM-DD.")
+    ann_vol_pct: float | None = Field(
+        default=None, ge=0, le=500,
+        description="Annualised volatility % (e.g. 31.0 for 31%). If supplied, the engine skips CSV recomputation and uses this value — same source as the stress/std-dev table.",
+    )
 
 
 @router.post("/man-daily-snapshot")
@@ -513,6 +515,7 @@ def equity_hedge_scenarios_endpoint(
             n_shares=req.n_shares,
             start_date=req.start_date,
             end_date=req.end_date,
+            ann_vol_pct=req.ann_vol_pct,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

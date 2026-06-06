@@ -52,6 +52,11 @@ INSTRUMENT_CCY: dict[str, str] = {
     "BANKNIFTY": "INR",
     "ASML":      "EUR",
     "NVIDIA":    "USD",
+    "SBIN":      "INR",
+    "RELIANCE":  "INR",
+    "TCS":       "INR",
+    "HDFCBANK":  "INR",
+    "INFY":      "INR",
 }
 
 INSTRUMENT_NAMES: dict[str, str] = {
@@ -59,6 +64,11 @@ INSTRUMENT_NAMES: dict[str, str] = {
     "BANKNIFTY": "BANKNIFTY",
     "ASML":      "ASML",
     "NVIDIA":    "NVIDIA",
+    "SBIN":      "SBI",
+    "RELIANCE":  "Reliance",
+    "TCS":       "TCS",
+    "HDFCBANK":  "HDFC Bank",
+    "INFY":      "Infosys",
 }
 
 ALL_INSTRUMENTS = list(INSTRUMENT_CCY.keys())
@@ -110,13 +120,13 @@ def _adjust_for_cash(port_values: list[float], invested_frac: float) -> list[flo
 
 # ── Portfolio Overview ─────────────────────────────────────────────────────────
 
-def portfolio_overview() -> dict[str, Any]:
+def portfolio_overview(instruments: list[str] | None = None) -> dict[str, Any]:
     """Cross-instrument overview: normalised prices + daily return correlation.
 
-    Loads all 4 instruments, aligns to their common date intersection, then
-    computes normalised Close prices and a Pearson correlation matrix of daily
-    returns.  The normalised price series is down-sampled to ≤ 500 points to
-    keep the JSON payload small.
+    Loads the requested instruments (defaults to ALL_INSTRUMENTS if none given),
+    aligns to their common date intersection, then computes normalised Close
+    prices and a Pearson correlation matrix of daily returns.  The normalised
+    price series is down-sampled to ≤ 500 points to keep the JSON payload small.
 
     Returns:
         instruments: per-instrument metadata (rows, date range, currency)
@@ -125,17 +135,19 @@ def portfolio_overview() -> dict[str, Any]:
         normalized_returns: [{date, nifty, banknifty, asml, nvidia}, ...]
         correlation_matrix: {nifty: {banknifty: 0.42, ...}, ...}
     """
+    ids_to_load = [i.upper() for i in instruments] if instruments else ALL_INSTRUMENTS
+
     dfs: dict[str, pd.DataFrame] = {}
     instrument_meta: list[dict] = []
 
-    for iid in ALL_INSTRUMENTS:
+    for iid in ids_to_load:
         try:
             df = _load_with_indicators(iid)
             dfs[iid] = df
             instrument_meta.append({
                 "id":        iid.lower(),
-                "name":      INSTRUMENT_NAMES[iid],
-                "currency":  INSTRUMENT_CCY[iid],
+                "name":      INSTRUMENT_NAMES.get(iid, iid),
+                "currency":  INSTRUMENT_CCY.get(iid, "INR"),
                 "rows":      len(df),
                 "date_from": str(df.index.min().date()),
                 "date_to":   str(df.index.max().date()),
@@ -178,6 +190,9 @@ def portfolio_overview() -> dict[str, Any]:
         for k, row in corr.to_dict().items()
     }
 
+    # Starting absolute prices (first common date) — used by frontend for absolute Y-axis
+    start_prices = {k.lower(): round(float(aligned_df.iloc[0][k]), 4) for k in aligned_df.columns}
+
     # Down-sample normalised series to ≤ 500 rows
     step = max(1, len(norm_df) // 500)
     sampled = norm_df.iloc[::step]
@@ -191,6 +206,7 @@ def portfolio_overview() -> dict[str, Any]:
         "common_days":        len(aligned_df),
         "date_from":          str(aligned_df.index.min().date()),
         "date_to":            str(aligned_df.index.max().date()),
+        "start_prices":       start_prices,
         "normalized_returns": normalized_returns,
         "correlation_matrix": correlation_matrix,
     }
@@ -371,9 +387,10 @@ def portfolio_backtest(
 
 def equity_hedge_scenarios(
     instrument: str,
-    n_shares: int,
+    n_shares: float,
     start_date: str,
     end_date: str,
+    ann_vol_pct: float | None = None,
 ) -> dict[str, Any]:
     """Compute equity portfolio performance + Black-Scholes hedge scenarios.
 
@@ -394,22 +411,39 @@ def equity_hedge_scenarios(
     end_price   = float(df_f["Close"].iloc[-1])
     return_pct  = round((end_price - start_price) / start_price * 100, 4) if start_price else 0.0
 
-    # 30-day annualised volatility
-    n_vol = min(30, len(df_f))
-    close_series = df_f["Close"].iloc[-n_vol:]
-    vol_30d = float(
-        np.log(close_series / close_series.shift(1)).dropna().std() * math.sqrt(252)
-    )
-    if not math.isfinite(vol_30d) or vol_30d == 0:
-        vol_30d = 0.25
+    # 30-day annualised volatility — prefer caller-supplied value (same source as stress table)
+    if ann_vol_pct is not None and ann_vol_pct > 0:
+        vol_30d = ann_vol_pct / 100.0
+    else:
+        n_vol = min(30, len(df_f))
+        close_series = df_f["Close"].iloc[-n_vol:]
+        vol_30d = float(
+            np.log(close_series / close_series.shift(1)).dropna().std() * math.sqrt(252)
+        )
+        if not math.isfinite(vol_30d) or vol_30d == 0:
+            vol_30d = 0.25
 
-    # Black-Scholes params
+    # Black-Scholes params — strikes derived from 1σ move over option horizon
     S       = end_price
-    K_call  = round(S * 1.05, 2)   # covered call strike (5% OTM)
-    K_put   = round(S, 2)          # protective put strike (at-the-money)
-    T       = 30 / 252             # 30 calendar days to expiry
+    T       = 30 / 252             # 30 calendar days to expiry (~1 month)
     r       = 0.03
     sigma   = vol_30d
+
+    def _round_strike(k: float) -> float:
+        """Round to the nearest standard exchange strike interval."""
+        if k < 50:
+            interval = 1.0
+        elif k < 200:
+            interval = 5.0
+        elif k < 1000:
+            interval = 10.0
+        else:
+            interval = 25.0
+        return round(round(k / interval) * interval, 2)
+
+    sigma_move = S * sigma * math.sqrt(T)   # 1σ EUR move over option horizon
+    K_call     = _round_strike(S + sigma_move)   # covered call: 1σ above spot
+    K_put      = _round_strike(S - sigma_move)   # protective put: 1σ below spot
 
     def _bs_call(s: float, k: float, t: float, rv: float, rate: float) -> float:
         if rv <= 0 or t <= 0 or k <= 0:
@@ -487,8 +521,9 @@ def equity_hedge_scenarios(
                 "max_value_eur":    round(K_call * n_shares + total_premium_call, 2),
                 "breakeven_price":  round(S - premium_call_per_share, 2),
                 "description": (
-                    f"Sell {n_shares}× {instrument.upper()} calls @ €{K_call:.2f} "
-                    f"(5% OTM). Collect €{total_premium_call:.2f} premium. "
+                    f"Sell {n_shares:.4g}× {instrument.upper()} calls @ €{K_call:.2f} "
+                    f"(+1σ OTM, {sigma_move:.2f} above spot). "
+                    f"Collect €{total_premium_call:.2f} premium. "
                     f"Upside capped at €{K_call:.2f}/share."
                 ),
             },
@@ -500,7 +535,8 @@ def equity_hedge_scenarios(
                 "floor_value_eur":  round(K_put * n_shares - total_premium_put, 2),
                 "breakeven_price":  round(S + premium_put_per_share, 2),
                 "description": (
-                    f"Buy {n_shares}× {instrument.upper()} puts @ €{K_put:.2f} (ATM). "
+                    f"Buy {n_shares:.4g}× {instrument.upper()} puts @ €{K_put:.2f} "
+                    f"(−1σ OTM, {sigma_move:.2f} below spot). "
                     f"Pay €{total_premium_put:.2f} premium. "
                     f"Portfolio floor at €{round(K_put * n_shares - total_premium_put, 2):.2f}."
                 ),

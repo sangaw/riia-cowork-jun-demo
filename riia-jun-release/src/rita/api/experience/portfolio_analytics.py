@@ -71,7 +71,6 @@ _INSTRUMENT_META: dict[str, dict] = {
     "BANKNIFTY": {"full": "Bank Nifty Index",             "currency": "INR", "region": "India"},
     "ASML":      {"full": "ASML Holding N.V.",            "currency": "EUR", "region": "EU"},
     "NVIDIA":    {"full": "NVIDIA Corporation",           "currency": "USD", "region": "US"},
-    "TRU":       {"full": "TrustUs Groep B.V.",           "currency": "EUR", "region": "EU"},
     "RELIANCE":  {"full": "Reliance Industries",          "currency": "INR", "region": "India"},
     "HDFCBANK":  {"full": "HDFC Bank",                    "currency": "INR", "region": "India"},
     "TCS":       {"full": "Tata Consultancy Services",    "currency": "INR", "region": "India"},
@@ -124,11 +123,6 @@ MOCK_PORTFOLIO: dict = {
             "prevClose": 128.0, "chgFromOpen": 2.1, "chgFromPrev": 3.4,
             "date": "2026-01-01", "shares": "—", "turnover": 0.0, "currency": "USD",
         },
-        "TRU": {
-            "close": 18.2, "open": 18.1, "high": 18.5, "low": 17.9,
-            "prevClose": 17.8, "chgFromOpen": 0.4, "chgFromPrev": 2.2,
-            "date": "2026-01-01", "shares": "—", "turnover": 0.0, "currency": "EUR",
-        },
     },
     "positions": [
         {
@@ -155,16 +149,16 @@ MOCK_PORTFOLIO: dict = {
         {
             "und": "NVIDIA", "full": "NVIDIA Corporation", "exp": "EQUITY",
             "type": "EQ", "side": "Long", "qty": 1,
-            "allocation_pct": 20.0, "position_eur": 10000.0,
+            "allocation_pct": 25.0, "position_eur": 12500.0,
             "avg": 132.4, "ltp": 132.4, "chg": 3.4, "pnl": 0.0,
             "currency": "USD", "ann_vol_pct": 44.5, "region": "US",
         },
         {
-            "und": "TRU", "full": "TrustUs Groep B.V.", "exp": "EQUITY",
+            "und": "TRU", "full": "Tata Resources Unlisted", "exp": "EQUITY",
             "type": "EQ", "side": "Long", "qty": 1,
-            "allocation_pct": 10.0, "position_eur": 5000.0,
-            "avg": 18.2, "ltp": 18.2, "chg": 2.2, "pnl": 0.0,
-            "currency": "EUR", "ann_vol_pct": 27.3, "region": "EU",
+            "allocation_pct": 5.0, "position_eur": 2500.0,
+            "avg": 410.0, "ltp": 410.0, "chg": 0.8, "pnl": 0.0,
+            "currency": "INR", "ann_vol_pct": 28.0, "region": "India",
         },
     ],
     "greeks": [
@@ -192,28 +186,20 @@ MOCK_PORTFOLIO: dict = {
         {
             "und": "NVIDIA", "exp": "EQUITY", "hedge_type": "ndx_proxy",
             "delta": 1.0, "gamma": 0.0, "theta": 0.0, "vega": 0.0,
-            "allocation_pct": 20.0, "ann_vol_pct": 44.5,
-            "sigma_eur": 4450.0, "net_theta_eur_day": 0.0,
-            "put_cost_eur": None, "call_income_eur": None,
-        },
-        {
-            "und": "TRU", "exp": "EQUITY", "hedge_type": "ndx_proxy",
-            "delta": 1.0, "gamma": 0.0, "theta": 0.0, "vega": 0.0,
-            "allocation_pct": 10.0, "ann_vol_pct": 27.3,
-            "sigma_eur": 1365.0, "net_theta_eur_day": 0.0,
+            "allocation_pct": 25.0, "ann_vol_pct": 44.5,
+            "sigma_eur": 5562.5, "net_theta_eur_day": 0.0,
             "put_cost_eur": None, "call_income_eur": None,
         },
     ],
     "net_greeks": {"delta": 0.81, "theta": -22.1, "vega": 14.3},
     "net_delta": {
-        "NIFTY": 0.52, "BANKNIFTY": 0.55, "ASML": 1.0, "NVIDIA": 1.0, "TRU": 1.0,
+        "NIFTY": 0.52, "BANKNIFTY": 0.55, "ASML": 1.0, "NVIDIA": 1.0,
     },
     "scenario_levels": {
         "NIFTY":     {"target": 26649.0, "sl": 15503.0},
         "BANKNIFTY": {"target": 57632.0, "sl": 33344.0},
         "ASML":      {"target": 1167.0,  "sl": 508.0},
         "NVIDIA":    {"target": 191.3,   "sl": 47.6},
-        "TRU":       {"target": 23.2,    "sl": 9.7},
     },
     "payoff": {
         "portfolio": {
@@ -242,7 +228,6 @@ MOCK_PORTFOLIO: dict = {
             {"instrument": "BANKNIFTY", "hqs": 75, "hqs_tier": "green",  "hedged": True,  "strategy": "protective_put", "coverage_pct": 50, "note": None},
             {"instrument": "ASML",      "hqs": 5,  "hqs_tier": "red",    "hedged": False, "strategy": None,             "coverage_pct": None, "note": "No hedge assigned"},
             {"instrument": "NVIDIA",    "hqs": 5,  "hqs_tier": "red",    "hedged": False, "strategy": None,             "coverage_pct": None, "note": "No hedge assigned"},
-            {"instrument": "TRU",       "hqs": 5,  "hqs_tier": "red",    "hedged": False, "strategy": None,             "coverage_pct": None, "note": "No hedge assigned"},
         ],
     },
     "closed_positions": [],

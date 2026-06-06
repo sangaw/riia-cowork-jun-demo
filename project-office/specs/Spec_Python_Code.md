@@ -201,6 +201,7 @@ All schemas are Pydantic 2.x models. Each ORM model has a corresponding schema.
 | `alerts.py` | `Alert` |
 | `model_registry.py` | `ModelRegistry` |
 | `geography.py` | `GeoInstrument` (close, daily_return_pct, signal, return_1y_pct, return_5y_pct, return_15y_pct, risk_score, sector, horizons[]), `GeoRegion`, `GeographyOverviewResponse` |
+| `user_portfolio.py` | `HoldingItem` (`instrument_id`, `allocation_pct` [required, >0], `shares: int\|None` [optional — whole-share count], `cash_eur: float\|None` [optional — leftover cash after buying whole shares]); `UserPortfolioCreate` (`name`, `holdings: list[HoldingItem]`, `total_value_eur?`); `UserPortfolioOut` (adds `portfolio_id`, `key_id`, `created_at`, `updated_at`, `is_active`). `shares` and `cash_eur` stored in the `sa.JSON` holdings column alongside `allocation_pct` — no migration needed. |
 
 ---
 

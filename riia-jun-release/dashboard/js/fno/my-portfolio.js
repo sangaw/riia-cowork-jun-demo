@@ -257,95 +257,13 @@ export async function loadFnoMyPortfolio() {
 window.loadFnoMyPortfolio = loadFnoMyPortfolio;
 
 // ── Analytics-state Overview (F30 Phase 3) ────────────────────────────────────
-let _selectedInstrument = 'ASML';
-
 export function renderOverviewFromState() {
-  const st = state;
-  if (!st?.portfolioMeta) {
-    const selEl = document.getElementById('fno-overview-inst-selector');
-    if (selEl) selEl.innerHTML = '<span style="font-size:12px;color:var(--t3);font-family:var(--fm)">No portfolio data loaded</span>';
-    ['fno-overview-kpi-value', 'fno-overview-kpi-pnl', 'fno-overview-kpi-positions'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = '—';
-    });
-    const tbody = document.getElementById('fno-overview-positions-body');
-    if (tbody) tbody.innerHTML = '';
-    return;
-  }
-
-  try {
-    // Build instrument selector pills: union of position und values + marketData keys
-    const positions = st.positions || [];
-    const posUnds  = positions.map(p => p.und).filter(Boolean);
-    const mktUnds  = Object.keys(st.marketData || {});
-    const unds = [...new Set([...posUnds, ...mktUnds])];
-    if (!unds.includes(_selectedInstrument) && unds.length > 0) {
-      _selectedInstrument = unds[0];
-    }
-    const selEl = document.getElementById('fno-overview-inst-selector');
-    if (selEl) {
-      selEl.innerHTML = unds.map(und => {
-        const active = und === _selectedInstrument ? ' style="background:var(--p01);color:#fff;"' : '';
-        return `<button class="filter-btn${und === _selectedInstrument ? ' active' : ''}"${active} onclick="fnoSelectInstrument('${und}')">${und}</button>`;
-      }).join('');
-    }
-
-    // Merged KPI strip
-    const totalValue = st.portfolioMeta.total_value_eur;
-    const totalPnl   = positions.reduce((s, p) => s + (p.pnl || 0), 0);
-    const activeCnt  = positions.filter(p => p.qty > 0).length;
-
-    const valEl = document.getElementById('fno-overview-kpi-value');
-    if (valEl) valEl.textContent = totalValue != null
-      ? '€' + parseFloat(totalValue).toLocaleString('en-EU', { maximumFractionDigits: 0 })
-      : '—';
-
-    const pnlEl = document.getElementById('fno-overview-kpi-pnl');
-    if (pnlEl) {
-      const sign = totalPnl >= 0 ? '+' : '';
-      pnlEl.textContent = sign + totalPnl.toLocaleString('en-EU', { maximumFractionDigits: 0 });
-      pnlEl.className = totalPnl >= 0 ? 'pos' : 'neg';
-    }
-
-    const posEl = document.getElementById('fno-overview-kpi-positions');
-    if (posEl) posEl.textContent = activeCnt;
-
-    // Positions grid filtered to selected instrument
-    const filtered = positions.filter(p => p.und === _selectedInstrument);
-    const tbody = document.getElementById('fno-overview-positions-body');
-    if (tbody) {
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--t3);font-family:var(--fm);font-size:12px">No positions for ${_selectedInstrument}</td></tr>`;
-      } else {
-        tbody.innerHTML = filtered.map(p => {
-          const pnlCls = (p.pnl || 0) >= 0 ? 'pos' : 'neg';
-          const pnlStr = (p.pnl || 0) >= 0 ? '+' + (p.pnl || 0).toLocaleString() : (p.pnl || 0).toLocaleString();
-          const volStr = p.ann_vol_pct != null ? parseFloat(p.ann_vol_pct).toFixed(1) + '%' : '—';
-          const valStr = p.position_eur != null
-            ? '€' + parseFloat(p.position_eur).toLocaleString('en-EU', { maximumFractionDigits: 0 })
-            : '—';
-          return `<tr>
-            <td style="padding:6px 10px;font-size:12px">${p.full ?? p.und ?? '—'}</td>
-            <td style="padding:6px 10px;font-size:12px">${p.type ?? '—'}</td>
-            <td style="padding:6px 10px;font-size:12px">${p.side ?? '—'}</td>
-            <td style="padding:6px 10px;font-size:12px;font-family:'IBM Plex Mono',monospace">${p.qty ?? '—'}</td>
-            <td style="padding:6px 10px;font-size:12px;font-family:'IBM Plex Mono',monospace">${valStr}</td>
-            <td class="${pnlCls}" style="padding:6px 10px;font-size:12px;font-family:'IBM Plex Mono',monospace">${pnlStr}</td>
-            <td style="padding:6px 10px;font-size:12px;font-family:'IBM Plex Mono',monospace">${volStr}</td>
-          </tr>`;
-        }).join('');
-      }
-    }
-  } catch (e) {
-    console.error('renderOverviewFromState error:', e);
-    ['fno-overview-kpi-value', 'fno-overview-kpi-pnl', 'fno-overview-kpi-positions'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = '—';
-    });
-  }
+  // renderGeoOverview() in dashboard.js handles the instrument view.
+  // renderDashKpis() handles the merged KPI row.
+  // Nothing left to do here for the overview from state.
 }
 
 export function fnoSelectInstrument(id) {
-  _selectedInstrument = id;
-  renderOverviewFromState();
+  // Delegate to setUnderlying so the geo-overview highlight and positions table both update.
+  if (typeof window.setUnderlying === 'function') window.setUnderlying(id);
 }
