@@ -1,12 +1,12 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-04 — F30 Phases 2 + 3 merged. Phase 2 (`7bfb90c`): state + initApp single-fetch refactor, Real/Mock toggle wired. Phase 3 (`559c65e`, hotfix `92bd2cf`): FnO Overview instrument selector (ASML default, all marketData keys), positions grid, removed paper toggle / closed positions / equity hedge grid / allocation panels; Risk/Scenarios/Hedge Radar/Manoeuvre pages now consuming portfolio-analytics state fields; `_normScenarioLevels` fix for scenario shape mismatch; `renderPortfolioHedgeRadar` + `renderOverviewFromState` added. 25/25 QA tests pass. Confluence Engineering v47.
+**Last updated:** 2026-06-06 — DS Lab CRISP-DM Concepts page shipped (`58767cb`); TD Loss chart fixed to read from persisted DB (`761e8ba`); Ops Risk page restructured (`1ee6105`). Deployed to prod as `e767e10`.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. Deploy all accumulated changes to prod: `git push origin master` → GitHub Actions
-3. Apply migration on prod: Alembic migration `20260603_add_user_hedge_plans` runs via Dockerfile CMD on container restart
-4. `/agent-performance-improvements` — 2 alerts active (FC-HTML-CSS from prior ops run; CSAT 2.67/5 recent)
-5. Follow-up: `fno-overview-kpi-delta` (net delta KPI) not yet implemented; `MAN_LOT` hardcoded lot sizes in `manoeuvre.js` — both deferred
+2. F30 Phase 6 spec updates — ⚠️ PENDING (Spec_JS_Code.md, Spec_HTML_Code.md, Spec_Python_Code.md, Spec_RITA_App.md)
+3. F29 Phase 4 spec updates — ⚠️ PENDING (user_hedge_plans: Spec_DB.md, Spec_Python_Code.md, Spec_RITA_App.md, Spec_HTML_Code.md, Spec_JS_Code.md)
+4. Investigate untracked `dashboard/js/fno/risk_chart.js` — commit or discard
+5. `/agent-performance-improvements` if alerts fire
 
 **Active feature:**
 - **F30 — FnO Portfolio-Aligned Analytics** → `project-office/features/Jun/30 FnO Portfolio-Aligned Analytics/`
@@ -15,7 +15,7 @@
   - Phase 3: Overview redesign + analytics rendering wiring — ✅ COMPLETE (559c65e, hotfix 92bd2cf)
   - Phase 4: Manoeuvre tab re-wire — ✅ COMPLETE (included in Phase 3)
   - Phase 5: Stress/Scenarios updates — ✅ COMPLETE (included in Phase 3)
-  - Phase 6: Spec updates — ✅ COMPLETE (included in Phase 3)
+  - Phase 6: Spec updates — ⚠️ PENDING
 
 **Previous feature:**
 - **F29 — FnO Linked Data & Overview Redesign** → `project-office/features/Jun/29 FnO Linked Data and Overview Redesign/`
@@ -24,6 +24,19 @@
   - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
   - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
   - Phase 4: Spec updates — ⚠️ PENDING (do before F30 Phase 1)
+
+**Session work (2026-06-06) — DS Lab CRISP-DM Concepts page + TD Loss fix:**
+- **CRISP-DM Concepts page COMPLETE.** `dashboard/js/ds/concepts.js` (new, 582 lines): 6 phases × 3 charts = 18 Chart.js charts per the CRISP-DM methodology. Each phase: description → key fact pills → 3-chart grid. Phase 4 SHAP fix: correct field is `"Overall"` (capital O). Phase 6 deployment trend: backtest return % + Sharpe dual-axis across training rounds.
+- **`ds.html`** updated: full-width `concept-tab-bar`, 3-chart `concept-chart-grid` per phase, DS auth bypass (localhost early-return, matches FnO pattern). `dashboard/js/ds/main.js` wired `loadConcepts` / `switchConceptTab`.
+- **TD Loss fix** (`761e8ba`): `GET /api/v1/training-metrics?instrument=` added to `training_runs.py` — serves per-episode loss + reward from `training_metrics` table. `concepts.js` fall-back order: live `_live_progress` → persisted metrics → Sharpe-per-round from history. Duration field is `duration_secs` (not `duration_s`).
+- **Also included in `58767cb`:** accumulated FnO F30 + portfolio engine changes (portfolio_overview instruments filter, absolute Y-axis price data, stddev column reorder, risk nav above equity hedge).
+- **Specs updated** (`58767cb`): `Spec_JS_Code.md`, `Spec_Python_Code.md`, `Spec_RITA_App.md` updated for CRISP-DM + training-metrics endpoint.
+- **Deployed to prod** as `e767e10`. Health check passed.
+
+**Session work (2026-06-05) — Ops Risk page restructure:**
+- **Daily Ops → Risk rename COMPLETE.** `dashboard/js/ops/risk.js` (new, 139 lines): portfolio risk KPI strip (net delta, theta, vega, unrealised P&L), live positions table, stress scenarios table, hedge quality chips — all rendered above the Manoeuvre section for a risk-first flow.
+- **`ops.html`** updated: Risk section inserted above Manoeuvre with divider. `nav.js` label updated "Daily Ops" → "Risk". `main.js` loader wired.
+- Commits: `1ee6105`.
 
 **Session work (2026-06-03, session 2) — F29 Phase 3 FnO Overview redesign:**
 - **FnO Overview redesign COMPLETE.** `my-portfolio.js` full replacement: 3-source `Promise.allSettled` (portfolio + geography-overview + hedge-plan), explicit instMap nested loop propagating `reg.region`, `_renderKpis` (5-card KPI strip with "(indicative)" subtitles on Wtd 1Y Return/Avg Risk/Hedge Coverage), `_renderAllocChart` (Chart.js doughnut by region), `_renderHedgeCard` (plan details or "No hedge configured"), `_renderHoldingsTable` (6 columns: Instrument · Alloc% · Position€ · 1Y Return (ind.) · Risk (ind.) · Hedged?), CTA `window.fnoMpGoHedge` → navigates to portfolio-hedge section.

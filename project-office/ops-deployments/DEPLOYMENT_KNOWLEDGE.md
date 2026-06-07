@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-06-06 (15e3780 deployed — FnO Risk charts SBIN fix + absolute Y-axis + stddev reorder + equity hedge layout; health ok)
+**Last updated:** 2026-06-06 (e767e10 deployed — DS Lab CRISP-DM Concepts page: 6-phase layout, 3 charts/phase, SHAP fix, auth bypass)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
