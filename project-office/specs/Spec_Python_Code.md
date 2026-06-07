@@ -48,7 +48,7 @@ Pure CRUD — **one repository per router, zero business logic, no cross-table r
 | `config_overrides.py` | `/api/v1/config-overrides` | CRUD |
 | `instruments.py` | `/api/v1/instruments` | GET list, GET/{id}, PUT/{id} — instrument registry |
 | `market_signals.py` | `/api/v1/market-signals` | `GET ?timeframe=daily\|weekly\|monthly&periods=N&instrument=X` — computes RSI/MACD/BB/ATR/EMA from `market_data_cache` |
-| `training_runs.py` | `/api/v1/training-history`, `/api/v1/split-dates`, `/api/v1/backtest-status/{id}` | Training run records + split date computation |
+| `training_runs.py` | `/api/v1/training-history`, `/api/v1/split-dates`, `/api/v1/backtest-status/{id}`, `/api/v1/training-metrics?instrument=` | Training run records + split date computation. `/api/v1/training-metrics` returns per-episode TD loss + reward for the latest training run from the `training_metrics` DB table (added `761e8ba`). |
 | `drift.py` | `/api/v1/drift` | `GET` → `DriftDetector.run()` → `{summary, checks}` |
 | `data_prep.py` | `/api/v1/data-prep/status`, `/api/v1/test-results`, `/api/v1/shap-values`, `/api/v1/data-understanding` | File system checks, JUnit XML parsing, SHAP values |
 
@@ -74,6 +74,7 @@ Read-only aggregation — **no writes, no side effects, no DB commits**.
 | `dashboard.py` | `/api/experience` | `GET /rita` (DashboardPayload), `GET /fno` (FnoPayload), `GET /ops` (OpsPayload) — legacy |
 | `fno.py` | `/api/experience/fno` | `GET /` → FnO aggregated payload (snapshots + portfolio + manoeuvres) |
 | `portfolio_hedge.py` | `/api/v1/experience/fno` | `GET /portfolio-hedge?coverage=0-100&duration=1m\|3m\|1y` — per-holding Black-Scholes put + call pricing. Returns `PortfolioHedgeResponse`: `holdings[]` with `ann_vol_pct`, `cost_pct` (put premium), `call_sell_cost_pct` (call income), `strike_pct`, `strike_label`, `protected_pct`, `risk_score`, `duration`; plus `aggregate` (monthly_cost_pct, max_dd_protected_pct, max_dd_unhedged_pct) and `coverage`. JWT-required. `HoldingItem` dicts from `sa.JSON` column are parsed via `HoldingItem(**h) if isinstance(h, dict)` before attribute access. |
+| `hedge_plan.py` | `/api/v1/experience/fno` | `GET /hedge-plan` — returns `HedgePlanOut` for authenticated user (404 if no plan). `PUT /hedge-plan` — upsert body `{hedged_ids: list[str], coverage: int, scenario_tab: str}`; `duration` always written as `"1y"`. Both JWT-required. Uses `UserHedgePlanRepo`. Added F29 Phase 1. |
 | `portfolio_analytics.py` | `/api/v1/experience/fno` | `GET /portfolio-analytics?mode=real\|mock` — unified FnO dashboard analytics payload. Returns `PortfolioAnalyticsResponse` with: `portfolio_meta`, `market` (per-instrument OHLCV), `positions[]`, `greeks[]` (per-holding BS greeks), `net_greeks`, `net_delta`, `scenario_levels` (σ-anchored target/sl), `payoff` (21-pt portfolio+hedged grid), `stress[]` (5 hardcoded events), `hedge_quality` (HQS per instrument), `closed_positions=[]`, `realized_pnl=0`, `margin={}`. mode=mock: no auth, returns MOCK_PORTFOLIO constant. mode=real: JWT required via `get_optional_user()`; 401 without token, 404 if no portfolio. Greeks reuse BS formulas from portfolio_hedge.py. Added F30 Phase 1. |
 | `ops.py` | `/api/experience/ops` | `GET /` (OpsPayload), `GET /metrics/summary`, `GET /step-log`, `GET /users`, `POST /users`, `DELETE /users/{id}` |
 | `rita.py` | `/api/v1` | See Section 6 below |

@@ -131,6 +131,7 @@ Reads `riia_agent_history` from localStorage. Three sub-tabs. Driven by `ai-comp
     - Failures: `#test-failures` — scrollable table of failing test cases, or "All tests passing" banner.
   - **Deployments**: Details on the FastAPI and Streamlit environments, environment variables, and ports.
   - **Observability & Chat Analytics**: Model drift monitoring and query volume logs for the chat-based RITA assistant.
+  - **Risk** (`#sec-risk`, formerly "Daily Ops" — renamed `1ee6105`): Portfolio risk overview rendered above the Manoeuvre section (risk-first layout). Driven by `ops/risk.js`. Components: (1) KPI strip — net delta, theta, vega, unrealised P&L; (2) open positions table; (3) stress scenarios table; (4) hedge quality score chips. Below a divider: Manoeuvre section (snapshots, action log, history).
 
 ### 5. `ds.html` (Data Scientist Lab)
 - **Purpose**: The advanced view for model developers to tweak the reinforcement learning model, re-train hyperparameters, and iterate on features.

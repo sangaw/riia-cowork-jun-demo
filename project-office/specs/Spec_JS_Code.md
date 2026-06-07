@@ -91,6 +91,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `monitoring.js` | API metrics, alerts, functional KPIs, step log — embeds `loadApiMetrics()` at end of load | `loadMonitoring()` |
 | `observability.js` | Drift detection, data freshness, Sharpe trend, source availability, MCP call log | `loadObservability()` |
 | `test-results.js` | Test results grid | `loadTestResults()` |
+| `risk.js` | Portfolio Risk overview for Ops Risk page — KPI strip (net delta, theta, vega, unrealised P&L), open positions table, stress scenarios table, hedge quality score chips. Rendered above Manoeuvre section (risk-first layout). Added `1ee6105`. | `loadRisk()` |
 | `daily-ops.js` | Daily operations panel | `loadDailyOps()`, `loadInstruments()`, `toggleInstrument()`, `saveInstruments()`, `triggerSnapshot()`, `searchInstrument()`, `onboardInstrument()` |
 | `deploy.js` | Deployment management | `loadDeploy()` |
 | `chat.js` | Ops chat | `sendOpsChat()` |
@@ -161,8 +162,9 @@ Script loading: Chart.js + annotation plugin loaded via CDN (kept). Nav-collapse
 | `ds/model-observability.js` | `data-s="model-observability"` — `loadModelObservability` |
 | `ds/model-mcp.js` | `data-s="model-mcp"` — `loadModelMcp` |
 | `ds/model-audit.js` | `data-s="model-audit"` — `loadModelAudit` |
+| `ds/concepts.js` | `data-s="concepts"` — `loadConcepts`, `switchConceptTab(phase, el)`. CRISP-DM methodology page: 6 phases × 3 Chart.js charts = 18 charts total. Each phase: full-width description → key fact pills → 3-chart grid. Phase 4 SHAP field is `"Overall"` (capital O). TD Loss chart (cp4-c1) fall-back order: live `_live_progress` → persisted `GET /api/v1/training-metrics` → Sharpe-per-round from history. Duration field in step-log is `duration_secs` (not `duration_s`). Canvas IDs follow pattern `cp{1-6}-c{1-3}`. Auth bypass for localhost (early-return matching FnO pattern). Added `58767cb`. |
 
-### ds.html Section Inventory (all 19 sections extracted)
+### ds.html Section Inventory (all 20 sections extracted)
 
 | Section key (`data-s`) | Page title | Module | Status |
 |---|---|---|---|
@@ -185,6 +187,7 @@ Script loading: Chart.js + annotation plugin loaded via CDN (kept). Nav-collapse
 | `model-observability` | Model Observability | `ds/model-observability.js` | Extracted |
 | `model-mcp` | Model MCP Calls | `ds/model-mcp.js` | Extracted |
 | `model-audit` | Model Audit | `ds/model-audit.js` | Extracted |
+| `concepts` | CRISP-DM Concepts | `ds/concepts.js` | Extracted — added `58767cb` |
 
 ---
 

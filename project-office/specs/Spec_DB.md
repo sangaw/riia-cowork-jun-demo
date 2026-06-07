@@ -102,8 +102,9 @@ cp rita_output/rita.db rita_output/rita.db.bak-$(date +%Y%m%d-%H%M)
 |---|---|---|---|
 | `user_portfolio_keys` | `models/user_portfolio_key.py` | `key_id` (UUID String) | One row per user — stable indirection key; FK→`users.id` |
 | `user_portfolios` | `models/user_portfolio.py` | `portfolio_id` (UUID String) | Versioned portfolio snapshots — `key_id` FK, `name`, `holdings` (JSON array of `{instrument_id, allocation_pct}`), `created_at`, `updated_at`, `is_active` (soft-replace pattern) |
+| `user_hedge_plans` | `models/user_hedge_plan.py` | `plan_id` (UUID String) | One row per user (unique constraint on `key_id` FK) — `key_id` FK→`user_portfolio_keys.key_id`, `coverage` (int 0–100), `duration` (str, always `"1y"`), `hedged_ids` (JSON list[str] — instrument IDs the user has checked), `scenario_tab` (str — last active scenario tab key), `updated_at` (datetime). Upsert pattern: `PUT /hedge-plan` finds existing row and updates, or inserts on first save. Added F29 Phase 1. |
 
-Key design: `user_portfolio_keys` decouples user identity from portfolio history. Each `save()` call deactivates prior rows (`is_active=False`) and inserts a new active row, keeping a full audit trail without deletes.
+Key design: `user_portfolio_keys` decouples user identity from portfolio history. Each `save()` call deactivates prior rows (`is_active=False`) and inserts a new active row, keeping a full audit trail without deletes. `user_hedge_plans` uses a simpler single-row upsert (no history) — only the latest plan is kept.
 
 ---
 

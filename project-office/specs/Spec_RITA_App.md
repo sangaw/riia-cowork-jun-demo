@@ -61,7 +61,7 @@ Tier 3: Experience     src/rita/api/experience/        UI-shaped read-only aggre
 | `system/config_overrides.py` | `/api/v1/config-overrides` | `config_overrides` |
 | `system/instruments.py` | `/api/v1/instruments` | `instruments` |
 | `system/market_signals.py` | `/api/v1/market-signals` | `market_data_cache` (computes indicators) |
-| `system/training_runs.py` | `/api/v1/training-history`, `/api/v1/risk-timeline` (legacy), `/api/v1/split-dates`, `/api/v1/backtest-status/{id}` | `training_runs`, `backtest_runs`, `backtest_results` |
+| `system/training_runs.py` | `/api/v1/training-history`, `/api/v1/risk-timeline` (legacy), `/api/v1/split-dates`, `/api/v1/backtest-status/{id}`, `GET /api/v1/training-metrics?instrument=` | `training_runs`, `backtest_runs`, `backtest_results`. `/api/v1/training-metrics` returns per-episode TD loss + reward from `training_metrics` table — added `761e8ba` for DS Concepts page. |
 | `system/drift.py` | `/api/v1/drift` | DB-backed DriftDetector |
 | `system/data_prep.py` | `/api/v1/data-prep/*`, `/api/v1/test-results`, `/api/v1/shap-values`, `/api/v1/data-understanding` | File system |
 | `system/client_error.py` | `POST /api/v1/client-error` | No auth; accepts JS error payload (type, message, stack, url, trace_id); returns 204; writes to `logs/client-errors.jsonl` |
