@@ -5,7 +5,7 @@
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
 2. F30 Phase 6 spec updates — ✅ COMPLETE (e983a0d)
 3. F29 Phase 4 spec updates — ✅ COMPLETE (e983a0d)
-4. Investigate untracked `dashboard/js/fno/risk_chart.js` — commit or discard
+4. `dashboard/js/fno/risk_chart.js` — ✅ committed (e4eb428); was a missing import causing FnO load failure
 5. `/agent-performance-improvements` if alerts fire
 
 **Active feature:**
