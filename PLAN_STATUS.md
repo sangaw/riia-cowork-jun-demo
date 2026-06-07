@@ -3,8 +3,8 @@
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. F30 Phase 6 spec updates — ⚠️ PENDING (Spec_JS_Code.md, Spec_HTML_Code.md, Spec_Python_Code.md, Spec_RITA_App.md)
-3. F29 Phase 4 spec updates — ⚠️ PENDING (user_hedge_plans: Spec_DB.md, Spec_Python_Code.md, Spec_RITA_App.md, Spec_HTML_Code.md, Spec_JS_Code.md)
+2. F30 Phase 6 spec updates — ✅ COMPLETE (e983a0d)
+3. F29 Phase 4 spec updates — ✅ COMPLETE (e983a0d)
 4. Investigate untracked `dashboard/js/fno/risk_chart.js` — commit or discard
 5. `/agent-performance-improvements` if alerts fire
 
@@ -15,7 +15,7 @@
   - Phase 3: Overview redesign + analytics rendering wiring — ✅ COMPLETE (559c65e, hotfix 92bd2cf)
   - Phase 4: Manoeuvre tab re-wire — ✅ COMPLETE (included in Phase 3)
   - Phase 5: Stress/Scenarios updates — ✅ COMPLETE (included in Phase 3)
-  - Phase 6: Spec updates — ⚠️ PENDING
+  - Phase 6: Spec updates — ✅ COMPLETE (e983a0d)
 
 **Previous feature:**
 - **F29 — FnO Linked Data & Overview Redesign** → `project-office/features/Jun/29 FnO Linked Data and Overview Redesign/`
@@ -23,7 +23,7 @@
   - Phase 1: `user_hedge_plans` table + GET/PUT endpoints — ✅ COMPLETE (e839dda, f731e1f)
   - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
   - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
-  - Phase 4: Spec updates — ⚠️ PENDING (do before F30 Phase 1)
+  - Phase 4: Spec updates — ✅ COMPLETE (e983a0d)
 
 **Session work (2026-06-06) — DS Lab CRISP-DM Concepts page + TD Loss fix:**
 - **CRISP-DM Concepts page COMPLETE.** `dashboard/js/ds/concepts.js` (new, 582 lines): 6 phases × 3 charts = 18 Chart.js charts per the CRISP-DM methodology. Each phase: description → key fact pills → 3-chart grid. Phase 4 SHAP fix: correct field is `"Overall"` (capital O). Phase 6 deployment trend: backtest return % + Sharpe dual-axis across training rounds.
