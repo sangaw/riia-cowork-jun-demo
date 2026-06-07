@@ -1,12 +1,10 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-06 — DS Lab CRISP-DM Concepts page shipped (`58767cb`); TD Loss chart fixed to read from persisted DB (`761e8ba`); Ops Risk page restructured (`1ee6105`). Deployed to prod as `e767e10`.
+**Last updated:** 2026-06-07 — Documentation catch-up session: PLAN_STATUS + DEPLOYMENT_KNOWLEDGE updated for 3 missing sessions; F29 Phase 4 + F30 Phase 6 spec updates across 5 files; `risk_chart.js` committed (was untracked, causing FnO import failure). All pushed to origin/master (`fba0c94`).
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. F30 Phase 6 spec updates — ✅ COMPLETE (e983a0d)
-3. F29 Phase 4 spec updates — ✅ COMPLETE (e983a0d)
-4. `dashboard/js/fno/risk_chart.js` — ✅ committed (e4eb428); was a missing import causing FnO load failure
-5. `/agent-performance-improvements` if alerts fire
+2. `/agent-performance-improvements` if alerts fire
+3. Plan next feature
 
 **Active feature:**
 - **F30 — FnO Portfolio-Aligned Analytics** → `project-office/features/Jun/30 FnO Portfolio-Aligned Analytics/`
@@ -24,6 +22,13 @@
   - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
   - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
   - Phase 4: Spec updates — ✅ COMPLETE (e983a0d)
+
+**Session work (2026-06-07) — Documentation catch-up + risk_chart.js fix:**
+- **PLAN_STATUS.md + DEPLOYMENT_KNOWLEDGE.md** backfilled for 2026-06-05 (Ops Risk page) and 2026-06-06 (CRISP-DM Concepts + TD Loss fix) sessions. Last-updated header corrected. Committed `4c2b392`.
+- **F29 Phase 4 spec updates COMPLETE** (`e983a0d`): `Spec_DB.md` — `user_hedge_plans` table added; `Spec_Python_Code.md` — `hedge_plan.py` Experience Layer row added; `Spec_RITA_App.md` — `/api/v1/training-metrics` added to system tier; `Spec_JS_Code.md` — ops `risk.js` + `ds/concepts.js` added; `Spec_HTML_Code.md` — Ops Risk section documented.
+- **F30 Phase 6 spec updates COMPLETE** (same commit): F30 Phase 6 status corrected from falsely-marked COMPLETE → verified and completed.
+- **`risk_chart.js` committed** (`e4eb428`): file was untracked but already imported by `app-init.js` — FnO dashboard was broken without it. Two Chart.js charts: per-instrument absolute price lines + weighted portfolio EUR composite. `highlightRiskChart()` for filter interactions. Added to Spec_JS_Code.md.
+- **Pushed to origin/master** — all 5 commits (`4c2b392..fba0c94`). Ready for next machine.
 
 **Session work (2026-06-06) — DS Lab CRISP-DM Concepts page + TD Loss fix:**
 - **CRISP-DM Concepts page COMPLETE.** `dashboard/js/ds/concepts.js` (new, 582 lines): 6 phases × 3 charts = 18 Chart.js charts per the CRISP-DM methodology. Each phase: description → key fact pills → 3-chart grid. Phase 4 SHAP fix: correct field is `"Overall"` (capital O). Phase 6 deployment trend: backtest return % + Sharpe dual-axis across training rounds.

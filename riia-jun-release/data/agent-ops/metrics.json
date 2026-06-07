@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-04T17:54:14",
+  "generated_at": "2026-06-07T17:46:04",
   "total_runs": 66,
   "per_role": {
     "pm": {
@@ -817,52 +817,52 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 7444,
-    "unique_endpoints": 159,
-    "overall_error_rate_pct": 7.6,
+    "total_calls": 9926,
+    "unique_endpoints": 160,
+    "overall_error_rate_pct": 7.95,
     "error_rate_5xx_pct": 0.36,
     "top_5_by_calls": [
       {
-        "path": "/progress",
+        "path": "/api/v1/experience/rita/geography-overview",
         "method": "GET",
-        "count": 783,
-        "p50_ms": 5.8,
-        "p95_ms": 465.6,
+        "count": 964,
+        "p50_ms": 110.8,
+        "p95_ms": 736.0,
         "error_count": 0
       },
       {
-        "path": "/api/v1/experience/rita/geography-overview",
+        "path": "/progress",
         "method": "GET",
-        "count": 652,
-        "p50_ms": 112.1,
-        "p95_ms": 749.5,
+        "count": 940,
+        "p50_ms": 5.6,
+        "p95_ms": 447.1,
         "error_count": 0
       },
       {
         "path": "/api/v1/commentary",
         "method": "POST",
-        "count": 478,
-        "p50_ms": 150.5,
-        "p95_ms": 3341.2,
-        "error_count": 54
+        "count": 573,
+        "p50_ms": 128.7,
+        "p95_ms": 3259.1,
+        "error_count": 72
       },
       {
         "path": "/api/v1/market-signals",
         "method": "GET",
-        "count": 406,
-        "p50_ms": 284.1,
-        "p95_ms": 905.6,
+        "count": 479,
+        "p50_ms": 187.2,
+        "p95_ms": 898.8,
         "error_count": 0
       },
       {
         "path": "/api/v1/experience/rita/strategy-comparison",
         "method": "GET",
-        "count": 352,
-        "p50_ms": 6.5,
-        "p95_ms": 46.3,
+        "count": 429,
+        "p50_ms": 6.7,
+        "p95_ms": 37.0,
         "error_count": 0
       }
     ],
-    "generated_at": "2026-06-04T15:54:14.659598+00:00"
+    "generated_at": "2026-06-07T15:46:04.392609+00:00"
   }
 }
