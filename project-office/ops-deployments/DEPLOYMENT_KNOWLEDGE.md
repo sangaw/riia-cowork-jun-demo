@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-06-06 (e767e10 deployed — DS Lab CRISP-DM Concepts page: 6-phase layout, 3 charts/phase, SHAP fix, auth bypass)
+**Last updated:** 2026-06-09 (c4a4be7 deployed — DS Lab mobile-ready; gateway test card-ds → /mobileapp/ds.html)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -197,6 +197,8 @@
 | 2026-06-05 | `b8a8d25` | FnO Equity Hedge — 1σ strike pricing (K_call/K_put from historical vol move, rounded to standard intervals); fractional shares from portfolio allocation/price; 8 KPIs in single row; Date Range + Shares Held tiles added. Actions pending. |
 | 2026-06-06 | `15e3780` | FnO Risk page charts — SBIN line fix (portfolio_overview now accepts instruments list; frontend passes portfolio IDs); absolute Y-axis (start_prices in API); stddev table −3σ→+3σ column order; Risk nav above Equity Hedge; Payoff moved to Equity Hedge; equity hedge layout restructure. First push `c63db6a` failed unit test (window.location.hostname in shared/api.js — see PATTERN-013); fixed in `15e3780`. Actions green; health ok. |
 | 2026-06-09 | `4b62711` | Equity hedge scenarios, portfolio builder/hedge, FnO risk charts, mobile FnO/Ops, i18n locales, alembic migrations. Prod repo was 47 commits behind on Windows machine; reconciled with `git merge -s ours`. Log files removed from git tracking (.gitignore updated). Gateway test fixed (FnO now mobile-ready → /mobileapp/fno.html). Actions green; health ok. |
+| 2026-06-09 | `c4a4be7` | DS Lab mobile-ready — gateway test updated (card-ds → /mobileapp/ds.html); data_refresh CSV path fix (PATTERN-014 code fix). 742/742 unit tests passing. Actions green; health ok. |
+| 2026-06-09 | `bd8a2f7` | Invest Game — Jul 2025 ASML earnings shock as volatile preset (-11.37% Day 2); price row % move indicator (▲/▼ per day); equity-scenarios.html + fno.html updates. Actions green; health ok. |
 
 ---
 

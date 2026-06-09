@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-07 — Documentation catch-up session: PLAN_STATUS + DEPLOYMENT_KNOWLEDGE updated for 3 missing sessions; F29 Phase 4 + F30 Phase 6 spec updates across 5 files; `risk_chart.js` committed (was untracked, causing FnO import failure). All pushed to origin/master (`fba0c94`).
+**Last updated:** 2026-06-09 — Invest Game: Jul 2025 ASML earnings shock as volatile preset (−11.37% Day 2); ▲/▼ % move indicator on price row per game day. Deployed to prod (`bd8a2f7`). Health ok.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
@@ -22,6 +22,11 @@
   - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
   - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
   - Phase 4: Spec updates — ✅ COMPLETE (e983a0d)
+
+**Session work (2026-06-09) — Invest Game improvements + prod deploy:**
+- **ASML volatile preset updated** to Jul 2025 earnings shock window: warmup Jul 11–14, game days Jul 15–24. Day 2 (Jul 16) is −11.37% earnings miss; AI flags compliance on that day. `dashboard/js/invest-game/api.js` updated.
+- **Price row % move indicator** added to all game day columns (Days 3–10). Shows ▲/▼ arrow + % change from previous close in green/red. `dashboard/js/invest-game/main.js` — `populateActiveRowData()` updated. Works in both Volatile and regular modes.
+- **Deployed to prod** (`bd8a2f7`) — equity-scenarios.html + fno.html pre-existing updates also included. GitHub Actions green; health ok.
 
 **Session work (2026-06-07) — Documentation catch-up + risk_chart.js fix:**
 - **PLAN_STATUS.md + DEPLOYMENT_KNOWLEDGE.md** backfilled for 2026-06-05 (Ops Risk page) and 2026-06-06 (CRISP-DM Concepts + TD Loss fix) sessions. Last-updated header corrected. Committed `4c2b392`.
