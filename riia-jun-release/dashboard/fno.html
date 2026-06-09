@@ -397,8 +397,9 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 .trailing-pill{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--p04);background:var(--p04-bg);border:1px solid var(--p04-bd);border-radius:3px;padding:1px 5px;font-weight:600;font-family:var(--fm);}
 /* detail row */
 .sc-detail-row{display:none;}
-.sc-detail-row td{padding:0;border-bottom:1px solid var(--border);}
-.sc-detail-panel{padding:14px 16px 14px 36px;background:var(--surface2);}
+.sc-detail-row.open{display:table-row;}
+.sc-detail-row td{padding:0;}
+.sc-detail-panel{padding:14px 16px 14px 36px;background:var(--surface2);border-top:2px solid var(--border2);border-bottom:2px solid var(--border2);}
 .sc-detail-pos{margin-bottom:12px;}
 .sc-detail-meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
 /* 9-dot position indicator */
