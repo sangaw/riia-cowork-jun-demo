@@ -79,6 +79,16 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 ---
 
+### 3a. Module Structure — `dashboard/js/scenarios/` (Standalone FnO-Adjacent Pages)
+
+Standalone pages that navigate from within the FnO app but are not mounted as sections inside `fno.html`. These are self-contained ES modules with no imports from `fno/` or `shared/`.
+
+| File | Responsibility | Key exports |
+|---|---|---|
+| `scenarios/equity-scenarios.js` | Equity SL/Target scenario tracker. Fetches `alerts.json`, `portfolio.json`, `tradebook.json` from `dashboard/data/scenarios/` via bare `fetch()` (not `api()` — static files, no auth). Renders urgency-sorted instrument cards with coloured range bars, P&L metrics, trade chips, and recommendation text. Local helpers: `setEl()`, `INR()`, `PCT()`. `init()` called at module bottom — no export. | None (standalone, not imported) |
+
+---
+
 ## 4. Module Structure — `dashboard/js/ops/`
 
 | File | Responsibility | Key exports |

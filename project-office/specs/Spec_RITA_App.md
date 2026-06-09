@@ -180,6 +180,12 @@ Two UIs exist for the same backend. Both use `MOCK_MODE` flag to bypass the real
 **To activate v2 live backend:** set `MOCK_MODE = false` in `investgame_v2.html` line ~373.
 **Nav link:** no link to v2 from main dashboard yet — access directly at `/dashboard/investgame_v2.html`.
 
+### 6. `equity-scenarios.html` (Equity Scenarios — Standalone FnO-Adjacent Page)
+- **Purpose**: Stop-loss and target tracker for equity holdings. Shows urgency-sorted instrument cards with price range bars, P&L metrics, trade analysis chips, and action recommendations. Navigated to from `fno.html` sidebar.
+- **Data layer**: Static JSON files — `dashboard/data/scenarios/alerts.json`, `dashboard/data/scenarios/portfolio.json`, `dashboard/data/scenarios/tradebook.json`. No backend REST endpoint (future migration: Portfolio-tier endpoint merging the 3 JSON shapes).
+- **JS module**: `dashboard/js/scenarios/equity-scenarios.js` — standalone self-contained module; no imports from fno/ or shared/.
+- **Key DOM elements**: `kpi-invested`, `kpi-value`, `kpi-pnl`, `kpi-pnl-pct`, `kpi-status`, `kpi-status-sub`, `alert-strip`, `scenarios-grid`, `triggered-grid`, `last-updated`
+
 ### Portfolio Tier — No auth, heavy computation
 
 | Endpoint | Method | Description |
