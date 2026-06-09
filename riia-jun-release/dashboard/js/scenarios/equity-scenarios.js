@@ -223,7 +223,7 @@ function renderDetailRow(holding, alert, tradeInfo, idx) {
   const daysIn = firstDate ? daysAgo(firstDate) : '—';
 
   return `
-  <tr class="sc-detail-row" id="detail-${idx}">
+  <tr class="sc-detail-row" id="detail-${idx}" style="display:none">
     <td></td>
     <td colspan="5">
       <div class="sc-detail-panel">
@@ -316,8 +316,8 @@ export async function init() {
       if (!row) return;
       const detailRow = document.getElementById(row.dataset.detail);
       if (!detailRow) return;
-      const isOpen = detailRow.style.display !== 'none';
-      detailRow.style.display = isOpen ? 'none' : '';
+      const isOpen = detailRow.style.display === 'table-row';
+      detailRow.style.display = isOpen ? 'none' : 'table-row';
       const chevron = row.querySelector('.sc-chevron');
       if (chevron) chevron.classList.toggle('open', !isOpen);
     });
