@@ -87,48 +87,34 @@ function buildRecommendation(status, ltp, sl, target, dayChg, avgCost) {
   }
 }
 
-// ── 9-dot position indicator ─────────────────────────────────────────────────
-// 3 red (loss) · 3 amber (control) · 3 green (profit), filled left→right
+// ── 9-dot position indicator helpers ─────────────────────────────────────────
 
-function renderDots(sl, target, ltp, avg) {
-  let filled = 0;
-  let statLine = '';
-
-  if (!sl && !target) {
-    filled = 0;
-    statLine = 'No alerts configured';
-  } else if (!sl && target) {
-    const pct = Math.max(0, Math.min(1, ltp / target));
-    filled = Math.round(pct * 9);
-    statLine = `LTP ${INR(ltp)} · Target ${INR(target)} · ${((target - ltp) / target * 100).toFixed(1)}% to target`;
-  } else if (sl && !target) {
-    const bufPct = (ltp - sl) / sl;
-    filled = bufPct < 0 ? 0 : Math.min(6, Math.round(bufPct / 0.05));
-    statLine = `LTP ${INR(ltp)} · SL ${INR(sl)} · ${((ltp - sl) / sl * 100).toFixed(1)}% buffer · no target`;
-  } else {
-    const range      = target - sl;
-    const rawPct     = (ltp - sl) / range;
-    const isTrailing = avg < sl;
-    filled = rawPct < 0 ? 0 : Math.min(9, Math.round(rawPct * 9));
-    const trailingNote = isTrailing ? ` · trailing stop (locked ${INR(sl - avg)}/sh)` : '';
-    statLine = `SL ${INR(sl)} · LTP ${INR(ltp)} · TGT ${INR(target)}${trailingNote}`;
+function calcFilled(sl, target, ltp, avg) {
+  if (!sl && !target) return 0;
+  if (!sl && target)  return Math.round(Math.max(0, Math.min(1, ltp / target)) * 9);
+  if (sl && !target) {
+    const buf = (ltp - sl) / sl;
+    return buf < 0 ? 0 : Math.min(6, Math.round(buf / 0.05));
   }
+  const rawPct = (ltp - sl) / (target - sl);
+  return rawPct < 0 ? 0 : Math.min(9, Math.round(rawPct * 9));
+}
 
+function buildDotHtml(filled) {
   const zones = ['loss','loss','loss','ctrl','ctrl','ctrl','gain','gain','gain'];
-  const dotHtml = zones.map((z, i) => {
-    const lit = i < filled;
+  return zones.map((z, i) => {
     const sep = (i === 2 || i === 5) ? '<span class="dot-sep"></span>' : '';
-    return `<span class="dot dot-${z}${lit ? ' dot-lit' : ''}"></span>${sep}`;
+    return `<span class="dot dot-${z}${i < filled ? ' dot-lit' : ''}"></span>${sep}`;
   }).join('');
+}
 
-  return `
-    <div class="pos-dots">${dotHtml}</div>
-    <div class="pos-dots-zones">
-      <span class="pdz loss">Loss</span>
-      <span class="pdz ctrl">In Control</span>
-      <span class="pdz gain">Profit</span>
-    </div>
-    <div class="pos-dots-stat">${statLine}</div>`;
+function dotStatLine(sl, target, ltp, avg) {
+  if (!sl && !target) return 'No alerts configured';
+  if (!sl && target)  return `LTP ${INR(ltp)} · TGT ${INR(target)} · ${((target - ltp) / target * 100).toFixed(1)}% to target`;
+  if (sl && !target)  return `LTP ${INR(ltp)} · SL ${INR(sl)} · ${((ltp - sl) / sl * 100).toFixed(1)}% buffer · no target`;
+  const isTrailing = avg < sl;
+  const t = isTrailing ? ` · trailing stop (locked ${INR(sl - avg)}/sh)` : '';
+  return `SL ${INR(sl)} · LTP ${INR(ltp)} · TGT ${INR(target)}${t}`;
 }
 
 // ── Trade analysis ────────────────────────────────────────────────────────────
@@ -185,10 +171,10 @@ function renderRow(holding, alert, tradeInfo, idx) {
   const dayArrow   = day_chg_pct > 0.05 ? '▲'   : day_chg_pct < -0.05 ? '▼'   : '—';
   const pnlCls     = pnl >= 0 ? 'pos' : 'neg';
   const isTrailing = sl != null && avg_cost < sl;
+  const filled     = calcFilled(sl, target, ltp, avg_cost);
 
   return `
   <tr class="sc-row ${rowCls}" data-detail="detail-${idx}">
-    <td class="sc-expand-col"><span class="sc-chevron">›</span></td>
     <td>
       <div class="sc-sym">${symbol}${isTrailing ? '<span class="trailing-pill">T</span>' : ''}</div>
       <div class="sc-sym-name">${name}</div>
@@ -205,6 +191,7 @@ function renderRow(holding, alert, tradeInfo, idx) {
       <div class="sc-pnl ${pnlCls}">${INR(pnl)}</div>
       <div class="sc-sub ${pnlCls}">${KPCT(net_chg_pct)}</div>
     </td>
+    <td class="sc-pos-cell"><div class="pos-dots">${buildDotHtml(filled)}</div></td>
     <td>
       <div class="sc-val">${INR(invested)}</div>
       <span class="badge badge-${status.cls}">${status.label}</span>
@@ -224,10 +211,9 @@ function renderDetailRow(holding, alert, tradeInfo, idx) {
 
   return `
   <tr class="sc-detail-row" id="detail-${idx}">
-    <td></td>
-    <td colspan="5">
+    <td colspan="6">
       <div class="sc-detail-panel">
-        <div class="sc-detail-pos">${renderDots(sl, target, ltp, avg_cost)}</div>
+        <div class="pos-dots-stat" style="margin-bottom:8px">${dotStatLine(sl, target, ltp, avg_cost)}</div>
         <div class="sc-detail-meta">
           <span class="trade-chip">${nEntries} ${nEntries === 1 ? 'entry' : 'entries'}</span>
           ${firstDate ? `<span class="trade-chip">First buy <strong>${firstDate}</strong> · ${daysIn}</span>` : ''}
