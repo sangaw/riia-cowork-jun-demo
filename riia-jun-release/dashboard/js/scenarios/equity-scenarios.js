@@ -176,33 +176,22 @@ function renderRow(holding, alert, tradeInfo, idx) {
   return `
   <tr class="sc-row ${rowCls}" data-detail="detail-${idx}">
     <td>
-      <div class="sc-sym">${symbol}${isTrailing ? '<span class="trailing-pill">T</span>' : ''}</div>
-      <div class="sc-sym-name">${name}</div>
+      <span class="sc-sym">${symbol}${isTrailing ? '<span class="trailing-pill">T</span>' : ''}</span>
+      <span class="badge badge-${status.cls} sc-inline-badge">${status.label}</span>
     </td>
-    <td>
-      <div class="sc-val">${INR(avg_cost)}</div>
-      <div class="sc-sub">${qty} sh</div>
-    </td>
-    <td>
-      <div class="sc-val">${INR(ltp)}</div>
-      <div class="sc-sub ${dayDir}">${dayArrow} ${PCT(day_chg_pct)}</div>
-    </td>
-    <td>
-      <div class="sc-pnl ${pnlCls}">${INR(pnl)}</div>
-      <div class="sc-sub ${pnlCls}">${KPCT(net_chg_pct)}</div>
-    </td>
-    <td>
-      <div class="sc-val">${INR(invested)}</div>
-      <span class="badge badge-${status.cls}">${status.label}</span>
-    </td>
+    <td class="sc-val">${INR(avg_cost)}</td>
+    <td><span class="sc-val">${INR(ltp)}</span> <span class="sc-day ${dayDir}">${dayArrow} ${PCT(day_chg_pct)}</span></td>
+    <td><span class="sc-pnl ${pnlCls}">${INR(pnl)}</span> <span class="sc-day ${pnlCls}">(${KPCT(net_chg_pct)})</span></td>
+    <td class="sc-val">${INR(invested)}</td>
     <td class="sc-pos-cell"><div class="pos-dots">${buildDotHtml(filled)}</div></td>
   </tr>`;
 }
 
 function renderDetailRow(holding, alert, tradeInfo, idx) {
-  const { symbol, avg_cost, ltp, invested, pnl, day_chg_pct } = holding;
+  const { qty, avg_cost, ltp, invested, day_chg_pct } = holding;
   const sl     = alert?.sl     ?? null;
   const target = alert?.target ?? null;
+  const name   = alert?.name   ?? holding.symbol;
 
   const status = computeStatus(ltp, sl, target, day_chg_pct);
   const rec    = buildRecommendation(status, ltp, sl, target, day_chg_pct, avg_cost);
@@ -213,11 +202,14 @@ function renderDetailRow(holding, alert, tradeInfo, idx) {
   <tr class="sc-detail-row" id="detail-${idx}">
     <td colspan="6">
       <div class="sc-detail-panel">
+        <div class="sc-detail-top">
+          <span class="sc-detail-name">${name}</span>
+          <span class="pos-dots-stat">${qty} shares · ${daysIn} · ${strategy}</span>
+        </div>
         <div class="pos-dots-stat" style="margin-bottom:8px">${dotStatLine(sl, target, ltp, avg_cost)}</div>
         <div class="sc-detail-meta">
           <span class="trade-chip">${nEntries} ${nEntries === 1 ? 'entry' : 'entries'}</span>
-          ${firstDate ? `<span class="trade-chip">First buy <strong>${firstDate}</strong> · ${daysIn}</span>` : ''}
-          <span class="trade-chip">${strategy}</span>
+          ${firstDate ? `<span class="trade-chip">First buy <strong>${firstDate}</strong></span>` : ''}
           <span class="trade-chip">Invested <strong>${INR(invested)}</strong></span>
         </div>
         <div class="rec rec-${rec.cls}">${rec.text}</div>
