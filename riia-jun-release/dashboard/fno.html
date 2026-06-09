@@ -359,6 +359,68 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
 .man-csv-btn:hover{background:var(--surface);color:var(--text);}
 @media(max-width:1100px){.man-group-layout{grid-template-columns:1fr;} .man-spark-panel{min-height:120px;}}
 @media(max-width:800px){.man-month-grid{grid-template-columns:repeat(3,1fr);} .man-tab-strip{flex-wrap:wrap;}}
+/* ── Equity Scenarios section ──────────────────────────────────────────── */
+/* Alias equity-scenarios colour tokens → fno palette, scoped to section  */
+#page-equity-scenarios{--run:var(--p01);--run-bg:var(--p01-bg);--run-bd:var(--p01-bd);--warn:var(--p03);--warn-bg:var(--p03-bg);--warn-bd:var(--p03-bd);--danger:var(--neg);--danger-bg:var(--neg-bg);--danger-bd:var(--neg-bd);--build:var(--p02);--build-bg:var(--p02-bg);--build-bd:var(--p02-bd);--ds:var(--p04);--ds-bg:var(--p04-bg);--ds-bd:var(--p04-bd);}
+.es-page-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.es-page-hdr-title{font-family:var(--fm);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);}
+.es-page-hdr-sub{font-size:11px;color:var(--t4);font-family:var(--fm);}
+.es-kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;}
+.es-kpi-tile{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
+.kpi-val{font-family:var(--fm);font-size:20px;font-weight:500;line-height:1.2;color:var(--text);}
+.kpi-val.pos{color:var(--p01);}.kpi-val.neg{color:var(--neg);}.kpi-val.warn-col{color:var(--p03);}
+.es-alert-strip{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:10px 16px;display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap;box-shadow:var(--sh);}
+.badge{display:inline-block;padding:2px 9px;border-radius:3px;font-size:10px;font-weight:700;font-family:var(--fm);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+.badge-err{background:var(--neg-bg);color:var(--neg);border:1px solid var(--neg-bd);}
+.badge-warn{background:var(--p03-bg);color:var(--p03);border:1px solid var(--p03-bd);}
+.badge-ok{background:var(--p01-bg);color:var(--p01);border:1px solid var(--p01-bd);}
+.badge-neu{background:var(--surface2);color:var(--t3);border:1px solid var(--border2);}
+.scenarios-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.sc-card{background:var(--surface);border:1.5px solid var(--border);border-left:4px solid var(--border2);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;transition:box-shadow .15s;}
+.sc-card:hover{box-shadow:var(--shm);}
+.card-border-danger{border-left-color:var(--neg);}.card-border-warn{border-left-color:var(--p03);}.card-border-ok{border-left-color:var(--p01);}.card-border-neu{border-left-color:var(--border2);}
+.sc-hdr{display:flex;justify-content:space-between;align-items:flex-start;padding:16px 18px 0;margin-bottom:14px;gap:12px;}
+.sc-symbol{font-size:15px;font-weight:700;letter-spacing:-.2px;font-family:var(--fm);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sc-name{font-size:12px;color:var(--t3);margin-top:3px;}.sc-meta{font-size:11px;color:var(--t4);margin-top:2px;font-family:var(--fm);}
+.sc-hdr-right{text-align:right;flex-shrink:0;}
+.day-chg{font-size:12px;font-weight:600;margin-top:6px;font-family:var(--fm);}
+.day-chg.pos{color:var(--p01);}.day-chg.neg{color:var(--neg);}.day-chg.neu{color:var(--t3);}
+.trailing-pill{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--p04);background:var(--p04-bg);border:1px solid var(--p04-bd);border-radius:3px;padding:1px 6px;font-weight:600;font-family:var(--fm);}
+.sc-pnl-row{display:flex;margin:0 18px 14px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.sc-pnl-item{flex:1;padding:0 8px;border-right:1px solid var(--border);}
+.sc-pnl-item:first-child{padding-left:0;}.sc-pnl-item:last-child{border-right:none;padding-right:0;}
+.pnl-label{font-size:9px;text-transform:uppercase;color:var(--t4);letter-spacing:.06em;margin-bottom:4px;font-family:var(--fm);}
+.pnl-val{font-size:13px;font-weight:500;color:var(--text);font-family:var(--fm);}
+.pnl-val.pos{color:var(--p01);}.pnl-val.neg{color:var(--neg);}
+.range-section{margin:0 18px 12px;}
+.bar-legend{display:flex;justify-content:space-between;align-items:center;font-family:var(--fm);margin-bottom:8px;}
+.bar-leg-left{font-size:10px;font-weight:600;color:var(--neg);}.bar-leg-mid{font-size:10px;color:var(--t4);background:var(--surface2);padding:1px 7px;border-radius:3px;border:1px solid var(--border);}.bar-leg-right{font-size:10px;font-weight:600;color:var(--p01);}
+.bar-wrap{position:relative;height:30px;margin-bottom:8px;}
+.bar-track{position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);height:8px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);overflow:hidden;}
+.bar-fill{position:absolute;top:0;left:0;bottom:0;border-radius:4px;transition:width .5s ease;}
+.bar-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px rgba(0,0,0,.12);z-index:2;transition:left .5s ease;}
+.bar-avg-dot{position:absolute;top:50%;transform:translate(-50%,-50%);width:8px;height:8px;border-radius:50%;background:var(--t4);border:1px solid var(--surface);z-index:1;}
+.bar-ltp-label{position:absolute;bottom:0;transform:translateX(-50%);font-size:10px;font-weight:700;font-family:var(--fm);white-space:nowrap;color:var(--text);}
+.bar-stat{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);font-family:var(--fm);margin-top:2px;}
+.bar-stat-avg{font-size:10px;color:var(--t4);margin-top:3px;font-family:var(--fm);}
+.trailing-note{font-size:10px;color:var(--p04);margin-top:4px;font-family:var(--fm);}
+.trade-row{display:flex;flex-wrap:wrap;gap:6px;margin:0 18px 12px;}
+.trade-chip{font-size:11px;color:var(--t3);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-family:var(--fm);}
+.trade-chip strong{color:var(--t2);font-weight:500;}
+.rec{padding:10px 18px;font-size:12px;line-height:1.5;border-top:1px solid var(--border);border-left:3px solid transparent;margin-top:2px;}
+.rec-urgent{background:var(--neg-bg);border-left-color:var(--neg);color:var(--neg);}
+.rec-watch{background:var(--p03-bg);border-left-color:var(--p03);color:var(--p03);}
+.rec-good{background:var(--p01-bg);border-left-color:var(--p01);color:var(--p01);}
+.rec-info{background:var(--p02-bg);border-left-color:var(--p02);color:var(--t2);}
+.es-section-block{margin-top:32px;}
+.es-section-title{font-family:var(--fm);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t4);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+.triggered-row{display:flex;flex-wrap:wrap;gap:8px;}
+.triggered-chip{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:6px 12px;font-size:12px;color:var(--t3);display:flex;gap:8px;align-items:center;font-family:var(--fm);}
+.triggered-chip strong{color:var(--text);font-weight:600;}
+.tc-price{font-family:var(--fm);font-size:11px;color:var(--t4);}
+.es-loading{padding:60px;text-align:center;color:var(--t3);grid-column:1/-1;}
+.load-err{padding:24px;color:var(--neg);background:var(--neg-bg);border:1.5px solid var(--neg-bd);border-radius:var(--r);grid-column:1/-1;font-family:var(--fm);font-size:12px;}
+@media(max-width:860px){.scenarios-grid{grid-template-columns:1fr;}.es-kpi-strip{grid-template-columns:1fr 1fr;}}
 </style>
 <link rel="stylesheet" href="css/responsive.css">
 </head>
@@ -426,6 +488,9 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
     </div>
     <div class="nav-item p01" data-page="scenarios">
       <span class="nav-icon">↔</span> <span data-i18n="nav.scenarios">Risk-Reward</span>
+    </div>
+    <div class="nav-item p01" data-page="equity-scenarios">
+      <span class="nav-icon">◎</span> Equity Scenarios
     </div>
     <div class="nav-item p03" data-page="hedge" id="nav-hedge">
       <span class="nav-icon">⚠</span> <span data-i18n="nav.hedge">Hedge Radar &amp; History</span>
@@ -1071,6 +1136,50 @@ td.neg{color:var(--neg);font-family:var(--fm);font-weight:500;}
        PORTFOLIO HEDGE (Feature 28 Phase 3)
   ════════════════════════════════════════════════ -->
   <div class="section" id="page-portfolio-hedge"></div>
+
+  <!-- ═══════════════════════════════════════════════
+       EQUITY SCENARIOS (Feature 27)
+  ════════════════════════════════════════════════ -->
+  <div class="section" id="page-equity-scenarios">
+    <div class="es-page-hdr">
+      <span class="es-page-hdr-title">Portfolio Summary</span>
+      <span class="es-page-hdr-sub" id="last-updated"></span>
+    </div>
+    <div class="es-kpi-strip">
+      <div class="es-kpi-tile">
+        <div class="kpi-label">Total Invested</div>
+        <div class="kpi-val" id="kpi-invested">—</div>
+      </div>
+      <div class="es-kpi-tile">
+        <div class="kpi-label">Current Value</div>
+        <div class="kpi-val" id="kpi-value">—</div>
+      </div>
+      <div class="es-kpi-tile">
+        <div class="kpi-label">Total P&amp;L</div>
+        <div class="kpi-val" id="kpi-pnl">—</div>
+        <div class="kpi-sub" id="kpi-pnl-pct">—</div>
+      </div>
+      <div class="es-kpi-tile">
+        <div class="kpi-label">Alert Status</div>
+        <div class="kpi-val" id="kpi-status">—</div>
+        <div class="kpi-sub" id="kpi-status-sub">—</div>
+      </div>
+    </div>
+    <div class="es-alert-strip" id="alert-strip">
+      <span style="color:var(--t4);font-size:12px">Loading…</span>
+    </div>
+    <div class="es-page-hdr">
+      <span class="es-page-hdr-title">Active Positions</span>
+      <span class="es-page-hdr-sub">sorted by urgency · lowest buffer first</span>
+    </div>
+    <div class="scenarios-grid" id="scenarios-grid">
+      <div class="es-loading">Loading positions…</div>
+    </div>
+    <div class="es-section-block">
+      <div class="es-section-title">Triggered Alerts — Historical</div>
+      <div class="triggered-row" id="triggered-grid"></div>
+    </div>
+  </div>
 
 </div><!-- /main -->
 </div><!-- /shell -->

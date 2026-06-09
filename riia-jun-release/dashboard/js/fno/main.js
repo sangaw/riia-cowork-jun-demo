@@ -84,11 +84,13 @@ window.manSaveCsv       = manSaveCsv;
 window.manSaveSnapshot  = manSaveSnapshot;
 
 import { loadEquityHedge } from './equity_hedge.js';
+import { init as loadEquityScenarios } from '../scenarios/equity-scenarios.js';
 import { initI18n, setLanguage, applyTranslations } from '../shared/i18n.js';
 import { loadPortfolioHedge, phSetCoverage, phSetDuration, phToggleHedge, phPickStrategy, phSetScenarioTab } from './portfolio-hedge.js';
 
 window.setLanguage        = setLanguage;
-window.loadEquityHedge   = loadEquityHedge;
+window.loadEquityHedge      = loadEquityHedge;
+_sectionLoaders['equity-scenarios'] = loadEquityScenarios;
 window.fnoSelectInstrument = fnoSelectInstrument;
 
 // Portfolio Hedge wizard

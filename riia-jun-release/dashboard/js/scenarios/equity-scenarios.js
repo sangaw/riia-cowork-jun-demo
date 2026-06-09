@@ -289,7 +289,7 @@ function renderCard(holding, alert, tradeInfo) {
 
 // ── Page init ─────────────────────────────────────────────────────────────────
 
-async function init() {
+export async function init() {
   try {
     const [alertsData, portfolioData, tradebookData] = await Promise.all([
       loadJSON('alerts.json'),
@@ -381,4 +381,4 @@ function setEl(id, html) {
   if (el) el.innerHTML = html;
 }
 
-init();
+// init() is called by fno/main.js via _sectionLoaders when the section is activated
