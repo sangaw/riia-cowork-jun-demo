@@ -87,86 +87,48 @@ function buildRecommendation(status, ltp, sl, target, dayChg, avgCost) {
   }
 }
 
-// ── Position slider (detail panel) ───────────────────────────────────────────
+// ── 9-dot position indicator ─────────────────────────────────────────────────
+// 3 red (loss) · 3 amber (control) · 3 green (profit), filled left→right
 
-function renderBar(sl, target, ltp, avg) {
-  if (!sl && target) {
-    const pctToTgt = ((target - ltp) / target * 100).toFixed(1);
-    return `
-      <div class="bar-legend">
-        <span class="bar-leg-left">Current</span>
-        <span class="bar-leg-right" style="color:var(--run)">Target ${INR(target)}</span>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar-track">
-          <div class="bar-fill" style="width:${Math.max(0, Math.min(100, (ltp / target) * 100)).toFixed(1)}%;background:var(--build)"></div>
-        </div>
-        <div class="bar-dot" style="left:${Math.max(0, Math.min(100, (ltp / target) * 100)).toFixed(1)}%;background:var(--build)"></div>
-      </div>
-      <div class="bar-stat">
-        <span style="color:var(--t2)">${INR(ltp)} current</span>
-        <span>${pctToTgt}% to target</span>
-      </div>`;
+function renderDots(sl, target, ltp, avg) {
+  let filled = 0;
+  let statLine = '';
+
+  if (!sl && !target) {
+    filled = 0;
+    statLine = 'No alerts configured';
+  } else if (!sl && target) {
+    const pct = Math.max(0, Math.min(1, ltp / target));
+    filled = Math.round(pct * 9);
+    statLine = `LTP ${INR(ltp)} · Target ${INR(target)} · ${((target - ltp) / target * 100).toFixed(1)}% to target`;
+  } else if (sl && !target) {
+    const bufPct = (ltp - sl) / sl;
+    filled = bufPct < 0 ? 0 : Math.min(6, Math.round(bufPct / 0.05));
+    statLine = `LTP ${INR(ltp)} · SL ${INR(sl)} · ${((ltp - sl) / sl * 100).toFixed(1)}% buffer · no target`;
+  } else {
+    const range      = target - sl;
+    const rawPct     = (ltp - sl) / range;
+    const isTrailing = avg < sl;
+    filled = rawPct < 0 ? 0 : Math.min(9, Math.round(rawPct * 9));
+    const trailingNote = isTrailing ? ` · trailing stop (locked ${INR(sl - avg)}/sh)` : '';
+    statLine = `SL ${INR(sl)} · LTP ${INR(ltp)} · TGT ${INR(target)}${trailingNote}`;
   }
 
-  if (sl && !target) {
-    const bufPct = ((ltp - sl) / sl * 100).toFixed(1);
-    const cls    = ltp < sl ? 'danger' : ltp - sl < sl * 0.02 ? 'warn' : 'build';
-    return `
-      <div class="bar-legend">
-        <span class="bar-leg-left" style="color:var(--danger)">SL ${INR(sl)}</span>
-        <span class="bar-leg-right" style="color:var(--t3)">No target set</span>
-      </div>
-      <div class="bar-wrap">
-        <div class="bar-track"></div>
-        <div class="bar-dot" style="left:30%;background:var(--${cls})"></div>
-      </div>
-      <div class="bar-stat">
-        <span style="color:var(--t2)">${INR(ltp)} current</span>
-        <span>${bufPct}% above SL</span>
-      </div>`;
-  }
-
-  const range      = target - sl;
-  const rawPct     = (ltp - sl) / range * 100;
-  const ltpPct     = Math.max(0, Math.min(100, rawPct)).toFixed(1);
-  const isTrailing = avg < sl;
-
-  const fillColor = rawPct < 15 ? 'var(--danger)'
-                  : rawPct < 30 ? 'var(--warn)'
-                  : 'var(--run)';
-
-  const avgPct = isTrailing
-    ? null
-    : Math.max(0, Math.min(100, (avg - sl) / range * 100)).toFixed(1);
-
-  const avgMarker = avgPct != null
-    ? `<div class="bar-avg-dot" style="left:${avgPct}%" title="Avg cost ${INR(avg)}"></div>`
-    : '';
-
-  const trailingNote = isTrailing
-    ? `<div class="trailing-note">Avg cost ${INR(avg)} — trailing stop · ${INR(sl - avg)} locked gain/sh protected</div>`
-    : `<div class="bar-stat-avg">Avg ${INR(avg)}</div>`;
+  const zones = ['loss','loss','loss','ctrl','ctrl','ctrl','gain','gain','gain'];
+  const dotHtml = zones.map((z, i) => {
+    const lit = i < filled;
+    const sep = (i === 2 || i === 5) ? '<span class="dot-sep"></span>' : '';
+    return `<span class="dot dot-${z}${lit ? ' dot-lit' : ''}"></span>${sep}`;
+  }).join('');
 
   return `
-    <div class="bar-legend">
-      <span class="bar-leg-left" style="color:var(--danger)">SL ${INR(sl)}</span>
-      <span class="bar-leg-mid">${parseFloat(ltpPct).toFixed(0)}% in range</span>
-      <span class="bar-leg-right" style="color:var(--run)">TGT ${INR(target)}</span>
+    <div class="pos-dots">${dotHtml}</div>
+    <div class="pos-dots-zones">
+      <span class="pdz loss">Loss</span>
+      <span class="pdz ctrl">In Control</span>
+      <span class="pdz gain">Profit</span>
     </div>
-    <div class="bar-wrap">
-      <div class="bar-track">
-        <div class="bar-fill" style="width:${ltpPct}%;background:${fillColor}"></div>
-      </div>
-      ${avgMarker}
-      <div class="bar-dot" style="left:${ltpPct}%;background:${fillColor};border-color:var(--bg)"></div>
-      <div class="bar-ltp-label" style="left:${ltpPct}%">${INR(ltp)}</div>
-    </div>
-    <div class="bar-stat">
-      <span>${INR(ltp - sl)} above SL</span>
-      <span>${INR(target - ltp)} to target</span>
-    </div>
-    ${trailingNote}`;
+    <div class="pos-dots-stat">${statLine}</div>`;
 }
 
 // ── Trade analysis ────────────────────────────────────────────────────────────
@@ -265,7 +227,7 @@ function renderDetailRow(holding, alert, tradeInfo, idx) {
     <td></td>
     <td colspan="5">
       <div class="sc-detail-panel">
-        <div class="sc-detail-bar">${renderBar(sl, target, ltp, avg_cost)}</div>
+        <div class="sc-detail-pos">${renderDots(sl, target, ltp, avg_cost)}</div>
         <div class="sc-detail-meta">
           <span class="trade-chip">${nEntries} ${nEntries === 1 ? 'entry' : 'entries'}</span>
           ${firstDate ? `<span class="trade-chip">First buy <strong>${firstDate}</strong> · ${daysIn}</span>` : ''}
