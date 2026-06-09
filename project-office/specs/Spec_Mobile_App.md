@@ -365,3 +365,50 @@ All 10 integration steps are complete:
 6. **SVG sparklines** — use `pricesToPolyline()` helper, not Chart.js (too heavy for mobile).
 7. **Factor bars** — use the threshold mapping in Section 8 exactly; do not invent new signal logic.
 8. **No timestamps on signals** — display signal type labels only (e.g. "Momentum · Trend").
+
+---
+
+## 18. FnO Mobile App (`mobileapp/fno.html`)
+
+**Added:** 2026-06-09
+
+Single-file mobile PWA for the FnO portfolio tracker. Follows the same carousel + tab-bar pattern as `ops.html`.
+
+### Route
+
+Served statically from `/mobileapp/fno.html` via the existing `app.mount("/mobileapp", ...)` static mount. No new route required.
+
+### Accent Colour
+
+`--fno: #6B2FA0` (purple) — same as `--mon` in gateway.html token set.
+
+### 5 Screens
+
+| ID | Tab | Content |
+|---|---|---|
+| s0 | Overview | Unrealized P&L hero, Realized P&L + Open Positions + Margin KPIs, market prices grid, Real/Mock mode toggle |
+| s1 | Positions | Per-underlying P&L KPI strip, position cards (instrument, FUT/CE/PE badge, Long/Short badge, P&L, expiry, qty, LTP) |
+| s2 | Risk | Net Greeks per underlying (Δ Delta, Γ Gamma, Θ Theta/day, V Vega) as stat rows; Margin SPAN + Exposure + Total + utilization progress bar |
+| s3 | Scenarios | R/R scenario levels per instrument (Bull Target/SL, Bear Target/SL); Stress test table (−4% to +4%, computed client-side from Greeks × spot) |
+| s4 | Hedge | Position hedge quality scores with progress bars; Realized P&L summary + last 5 closed positions |
+
+### API
+
+Single call at init and on Refresh / mode change:
+
+```
+GET /api/v1/experience/fno/portfolio-analytics?mode={real|mock}
+```
+
+Auth: `sessionStorage.getItem('auth_token')` → `Authorization: Bearer` header (falls back to `localStorage.getItem('rita_token')`).
+
+On 401 → redirects to `/`. On any other error → shows inline error messages; app does not crash.
+
+### Agent Directives
+
+1. Single file — all changes go into `fno.html`. No external JS or CSS files.
+2. All rendering functions receive the full API response object (`data`) — no global state variable.
+3. Stress scenarios are computed client-side: `Σ(delta × spot × move)` across all Greeks rows.
+4. Scenario levels arrive pre-normalised as `{bull: {target, sl}, bear: {target, sl}}` — do not re-normalise.
+5. Margin `summary['ALL']` is the all-instruments aggregate; `ledger` defaults to `3500000` when absent.
+6. `gateway.html` card `#card-fno` now points to `/mobileapp/fno.html` — do not revert to `?desktop=1` link.

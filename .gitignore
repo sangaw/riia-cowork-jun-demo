@@ -1,5 +1,6 @@
 # ── Secrets and credentials ──────────────────────────────────────────────────
 confluence-api-key.txt
+aws-creds.txt
 *.key
 *.pem
 *.pfx

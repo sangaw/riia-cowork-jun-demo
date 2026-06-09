@@ -196,8 +196,25 @@
 | 2026-06-05 | `ce67495` | FnO Equity Hedge — removed Portfolio Builder form; instrument from state.currentUnd, rolling 12-month date window, widgets always reflect selected geo tile. Actions green; health ok. |
 | 2026-06-05 | `b8a8d25` | FnO Equity Hedge — 1σ strike pricing (K_call/K_put from historical vol move, rounded to standard intervals); fractional shares from portfolio allocation/price; 8 KPIs in single row; Date Range + Shares Held tiles added. Actions pending. |
 | 2026-06-06 | `15e3780` | FnO Risk page charts — SBIN line fix (portfolio_overview now accepts instruments list; frontend passes portfolio IDs); absolute Y-axis (start_prices in API); stddev table −3σ→+3σ column order; Risk nav above Equity Hedge; Payoff moved to Equity Hedge; equity hedge layout restructure. First push `c63db6a` failed unit test (window.location.hostname in shared/api.js — see PATTERN-013); fixed in `15e3780`. Actions green; health ok. |
+| 2026-06-09 | `4b62711` | Equity hedge scenarios, portfolio builder/hedge, FnO risk charts, mobile FnO/Ops, i18n locales, alembic migrations. Prod repo was 47 commits behind on Windows machine; reconciled with `git merge -s ours`. Log files removed from git tracking (.gitignore updated). Gateway test fixed (FnO now mobile-ready → /mobileapp/fno.html). Actions green; health ok. |
 
 ---
+
+---
+
+### PATTERN-014 — refresh-all inserts 0 rows for instruments with large historical CSV (ASML, NVIDIA)
+
+- **Symptom:** `POST /api/v1/instrument/refresh-all` returns `status: ok` but `db_rows_inserted: 0` for ASML or NVIDIA; DB latest date stays stale despite gap_days > 0; second call returns `status: error` with `error: "'date'"`
+- **Root cause:** `find_instrument_csv()` picks the **largest CSV by file size** as the primary source. For ASML (`asml_2001-2026.csv`, 276K) and NVIDIA (`nvda_daily_25yr_rounded.csv`, 258K), the large historical file wins over the small yfinance delta file (`asml_daily.csv`, `nvidia_daily.csv`). `fetch_and_write_raw()` always writes to `{instrument_lower}_daily.csv` — never the historical file — so `rebuild_input()` reads the stale historical file and sees no new dates. On first refresh: 0 inserts. On second refresh: pandas merge sets `index.name = None` on write, so `load_ohlcv_csv()` fails with `KeyError: 'date'`
+- **Fix (EC2 immediate, no redeploy):**
+  1. SSH into EC2 and exec into the container: `docker exec rita python3 -c "..."`
+  2. Merge `asml_daily.csv` into `asml_2001-2026.csv` with dedup; set `index.name = 'date'` before writing
+  3. Merge `nvidia_daily.csv` into `nvda_daily_25yr_rounded.csv`; same index.name fix
+  4. Call `POST /api/v1/instrument/refresh-all` — now picks the updated large file, rebuilds input, inserts rows
+- **Fix (code):** `fetch_and_write_raw()` now detects the primary file (largest existing CSV) and appends to it instead of always using `{instrument_lower}_daily.csv`. Always sets `combined.index.name = 'date'` before `combined.to_csv()`. Deployed in `e8b273c`
+- **Prevention:** When adding a new instrument with a large historical CSV, ensure `fetch_and_write_raw()` appends to that file, not a new delta file
+- **Date first seen:** 2026-06-09
+- **Recurrences:** 0
 
 ---
 
