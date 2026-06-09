@@ -191,11 +191,11 @@ function renderRow(holding, alert, tradeInfo, idx) {
       <div class="sc-pnl ${pnlCls}">${INR(pnl)}</div>
       <div class="sc-sub ${pnlCls}">${KPCT(net_chg_pct)}</div>
     </td>
-    <td class="sc-pos-cell"><div class="pos-dots">${buildDotHtml(filled)}</div></td>
     <td>
       <div class="sc-val">${INR(invested)}</div>
       <span class="badge badge-${status.cls}">${status.label}</span>
     </td>
+    <td class="sc-pos-cell"><div class="pos-dots">${buildDotHtml(filled)}</div></td>
   </tr>`;
 }
 
