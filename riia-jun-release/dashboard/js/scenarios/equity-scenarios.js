@@ -31,15 +31,14 @@ function computeStatus(ltp, sl, target, dayChg) {
   if (!sl)            return { code: 'no-sl',        label: 'No SL',        cls: 'warn' };
 
   if (!target) {
-    // SL-only watch
     const buf = (ltp - sl) / sl * 100;
     if (buf < 0)   return { code: 'sl-breach', label: 'Below SL',  cls: 'err' };
     if (buf < 2)   return { code: 'near-sl',   label: 'Near SL',   cls: dayChg < 0 ? 'err' : 'warn' };
     return               { code: 'watch',      label: 'Watch',      cls: 'warn' };
   }
 
-  const range    = target - sl;
-  const pctInR   = (ltp - sl) / range;
+  const range  = target - sl;
+  const pctInR = (ltp - sl) / range;
 
   if (pctInR < 0)    return { code: 'sl-breach',      label: 'Below SL',      cls: 'err' };
   if (pctInR < 0.15) return { code: dayChg < 0 ? 'urgent' : 'near-sl',
@@ -88,10 +87,9 @@ function buildRecommendation(status, ltp, sl, target, dayChg, avgCost) {
   }
 }
 
-// ── Range bar ─────────────────────────────────────────────────────────────────
+// ── Position slider (detail panel) ───────────────────────────────────────────
 
 function renderBar(sl, target, ltp, avg) {
-  // No-SL only, show distance to target
   if (!sl && target) {
     const pctToTgt = ((target - ltp) / target * 100).toFixed(1);
     return `
@@ -111,7 +109,6 @@ function renderBar(sl, target, ltp, avg) {
       </div>`;
   }
 
-  // SL-only, no target
   if (sl && !target) {
     const bufPct = ((ltp - sl) / sl * 100).toFixed(1);
     const cls    = ltp < sl ? 'danger' : ltp - sl < sl * 0.02 ? 'warn' : 'build';
@@ -130,16 +127,14 @@ function renderBar(sl, target, ltp, avg) {
       </div>`;
   }
 
-  // Full SL + Target bar
   const range      = target - sl;
   const rawPct     = (ltp - sl) / range * 100;
   const ltpPct     = Math.max(0, Math.min(100, rawPct)).toFixed(1);
   const isTrailing = avg < sl;
 
-  const fillColor  = rawPct < 15 ? 'var(--danger)'
-                   : rawPct < 30 ? 'var(--warn)'
-                   : 'var(--run)';
-  const dotColor   = fillColor;
+  const fillColor = rawPct < 15 ? 'var(--danger)'
+                  : rawPct < 30 ? 'var(--warn)'
+                  : 'var(--run)';
 
   const avgPct = isTrailing
     ? null
@@ -148,9 +143,6 @@ function renderBar(sl, target, ltp, avg) {
   const avgMarker = avgPct != null
     ? `<div class="bar-avg-dot" style="left:${avgPct}%" title="Avg cost ${INR(avg)}"></div>`
     : '';
-
-  const aboveSl  = ltp - sl;
-  const toTarget = target - ltp;
 
   const trailingNote = isTrailing
     ? `<div class="trailing-note">Avg cost ${INR(avg)} — trailing stop · ${INR(sl - avg)} locked gain/sh protected</div>`
@@ -167,12 +159,12 @@ function renderBar(sl, target, ltp, avg) {
         <div class="bar-fill" style="width:${ltpPct}%;background:${fillColor}"></div>
       </div>
       ${avgMarker}
-      <div class="bar-dot" style="left:${ltpPct}%;background:${dotColor};border-color:var(--bg)"></div>
+      <div class="bar-dot" style="left:${ltpPct}%;background:${fillColor};border-color:var(--bg)"></div>
       <div class="bar-ltp-label" style="left:${ltpPct}%">${INR(ltp)}</div>
     </div>
     <div class="bar-stat">
-      <span>${INR(aboveSl)} above SL</span>
-      <span>${INR(toTarget)} to target</span>
+      <span>${INR(ltp - sl)} above SL</span>
+      <span>${INR(target - ltp)} to target</span>
     </div>
     ${trailingNote}`;
 }
@@ -181,8 +173,8 @@ function renderBar(sl, target, ltp, avg) {
 
 function analyseeTrades(trades) {
   if (!trades.length) return { nEntries: 0, firstDate: null, strategy: 'No trades' };
-  const prices   = trades.map(t => t.price);
-  const firstDt  = trades[0].trade_time.split('T')[0];
+  const prices  = trades.map(t => t.price);
+  const firstDt = trades[0].trade_time.split('T')[0];
   let strategy;
   if (trades.length === 1) {
     strategy = 'Single entry';
@@ -196,7 +188,7 @@ function analyseeTrades(trades) {
   return { nEntries: trades.length, firstDate: firstDt, strategy };
 }
 
-// ── Card renderer ─────────────────────────────────────────────────────────────
+// ── Urgency sort ──────────────────────────────────────────────────────────────
 
 function urgencyScore(holding, alert) {
   if (!alert) return 99;
@@ -206,85 +198,84 @@ function urgencyScore(holding, alert) {
   if (!sl)            return 5;
   if (!target) return (ltp - sl) / sl < 0.02 ? 1 : 3;
   const pct = (ltp - sl) / (target - sl);
-  if (pct < 0)                      return 0;
+  if (pct < 0)                        return 0;
   if (pct < 0.15 && day_chg_pct < 0) return 1;
-  if (pct < 0.15)                   return 2;
-  if (pct < 0.3)                    return 3;
-  if (pct > 0.85)                   return 6;
+  if (pct < 0.15)                     return 2;
+  if (pct < 0.3)                      return 3;
+  if (pct > 0.85)                     return 6;
   return 7;
 }
 
-function renderCard(holding, alert, tradeInfo) {
+// ── Table row renderer ────────────────────────────────────────────────────────
+
+function renderRow(holding, alert, tradeInfo, idx) {
   const { symbol, qty, avg_cost, ltp, invested, pnl, net_chg_pct, day_chg_pct } = holding;
   const sl     = alert?.sl     ?? null;
   const target = alert?.target ?? null;
   const name   = alert?.name   ?? symbol;
 
+  const status     = computeStatus(ltp, sl, target, day_chg_pct);
+  const rowCls     = status.cls === 'err'  ? 'row-danger'
+                   : status.cls === 'warn' ? 'row-warn'
+                   : status.cls === 'ok'   ? 'row-ok'
+                   : 'row-neu';
+  const dayDir     = day_chg_pct > 0.05 ? 'pos' : day_chg_pct < -0.05 ? 'neg' : 'neu';
+  const dayArrow   = day_chg_pct > 0.05 ? '▲'   : day_chg_pct < -0.05 ? '▼'   : '—';
+  const pnlCls     = pnl >= 0 ? 'pos' : 'neg';
+  const isTrailing = sl != null && avg_cost < sl;
+
+  return `
+  <tr class="sc-row ${rowCls}" data-detail="detail-${idx}">
+    <td class="sc-expand-col"><span class="sc-chevron">›</span></td>
+    <td>
+      <div class="sc-sym">${symbol}${isTrailing ? '<span class="trailing-pill">T</span>' : ''}</div>
+      <div class="sc-sym-name">${name}</div>
+    </td>
+    <td>
+      <div class="sc-val">${INR(avg_cost)}</div>
+      <div class="sc-sub">${qty} sh</div>
+    </td>
+    <td>
+      <div class="sc-val">${INR(ltp)}</div>
+      <div class="sc-sub ${dayDir}">${dayArrow} ${PCT(day_chg_pct)}</div>
+    </td>
+    <td>
+      <div class="sc-pnl ${pnlCls}">${INR(pnl)}</div>
+      <div class="sc-sub ${pnlCls}">${KPCT(net_chg_pct)}</div>
+    </td>
+    <td>
+      <div class="sc-val">${INR(invested)}</div>
+      <span class="badge badge-${status.cls}">${status.label}</span>
+    </td>
+  </tr>`;
+}
+
+function renderDetailRow(holding, alert, tradeInfo, idx) {
+  const { symbol, avg_cost, ltp, invested, pnl, day_chg_pct } = holding;
+  const sl     = alert?.sl     ?? null;
+  const target = alert?.target ?? null;
+
   const status = computeStatus(ltp, sl, target, day_chg_pct);
   const rec    = buildRecommendation(status, ltp, sl, target, day_chg_pct, avg_cost);
-
-  const isTrailing = sl != null && avg_cost < sl;
-  const cardBorder = status.cls === 'err'  ? 'card-border-danger'
-                   : status.cls === 'warn' ? 'card-border-warn'
-                   : status.cls === 'ok'   ? 'card-border-ok'
-                   : 'card-border-neu';
-
-  const dayDir   = day_chg_pct > 0.05 ? 'pos' : day_chg_pct < -0.05 ? 'neg' : 'neu';
-  const dayArrow = day_chg_pct > 0.05 ? '▲' : day_chg_pct < -0.05 ? '▼' : '—';
-  const pnlCls   = pnl >= 0 ? 'pos' : 'neg';
-
   const { nEntries, firstDate, strategy } = tradeInfo;
   const daysIn = firstDate ? daysAgo(firstDate) : '—';
 
   return `
-  <div class="sc-card ${cardBorder}">
-    <div class="sc-hdr">
-      <div class="sc-hdr-left">
-        <div class="sc-symbol">
-          ${symbol}
-          ${isTrailing ? '<span class="trailing-pill">Trailing Stop</span>' : ''}
+  <tr class="sc-detail-row" id="detail-${idx}">
+    <td></td>
+    <td colspan="5">
+      <div class="sc-detail-panel">
+        <div class="sc-detail-bar">${renderBar(sl, target, ltp, avg_cost)}</div>
+        <div class="sc-detail-meta">
+          <span class="trade-chip">${nEntries} ${nEntries === 1 ? 'entry' : 'entries'}</span>
+          ${firstDate ? `<span class="trade-chip">First buy <strong>${firstDate}</strong> · ${daysIn}</span>` : ''}
+          <span class="trade-chip">${strategy}</span>
+          <span class="trade-chip">Invested <strong>${INR(invested)}</strong></span>
         </div>
-        <div class="sc-name">${name}</div>
-        <div class="sc-meta">${qty} shares · first buy ${daysIn}</div>
+        <div class="rec rec-${rec.cls}">${rec.text}</div>
       </div>
-      <div class="sc-hdr-right">
-        <span class="badge badge-${status.cls}">${status.label}</span>
-        <div class="day-chg ${dayDir}">${dayArrow} ${PCT(day_chg_pct)} today</div>
-      </div>
-    </div>
-
-    <div class="sc-pnl-row">
-      <div class="sc-pnl-item">
-        <div class="pnl-label">Avg Cost</div>
-        <div class="pnl-val">${INR(avg_cost)}</div>
-      </div>
-      <div class="sc-pnl-item">
-        <div class="pnl-label">LTP</div>
-        <div class="pnl-val">${INR(ltp)}</div>
-      </div>
-      <div class="sc-pnl-item">
-        <div class="pnl-label">P&amp;L</div>
-        <div class="pnl-val ${pnlCls}">${INR(pnl)}</div>
-      </div>
-      <div class="sc-pnl-item">
-        <div class="pnl-label">Returns</div>
-        <div class="pnl-val ${pnlCls}">${KPCT(net_chg_pct)}</div>
-      </div>
-    </div>
-
-    <div class="range-section">
-      ${renderBar(sl, target, ltp, avg_cost)}
-    </div>
-
-    <div class="trade-row">
-      <span class="trade-chip">${nEntries} ${nEntries === 1 ? 'entry' : 'entries'}</span>
-      ${firstDate ? `<span class="trade-chip">First buy <strong>${firstDate}</strong></span>` : ''}
-      <span class="trade-chip">${strategy}</span>
-      <span class="trade-chip">Invested <strong>${INR(invested)}</strong></span>
-    </div>
-
-    <div class="rec rec-${rec.cls}">${rec.text}</div>
-  </div>`;
+    </td>
+  </tr>`;
 }
 
 // ── Page init ─────────────────────────────────────────────────────────────────
@@ -321,11 +312,10 @@ export async function init() {
       const a = alerts.find(x => x.symbol === h.symbol);
       return computeStatus(h.ltp, a?.sl ?? null, a?.target ?? null, h.day_chg_pct);
     });
-    const urgentCnt  = statuses.filter(s => ['urgent','sl-breach'].includes(s.code)).length;
-    const watchCnt   = statuses.filter(s => ['near-sl','watch','in-range-lower'].includes(s.code)).length;
-    const noSlCnt    = statuses.filter(s => s.code === 'no-sl').length;
+    const urgentCnt = statuses.filter(s => ['urgent','sl-breach'].includes(s.code)).length;
+    const watchCnt  = statuses.filter(s => ['near-sl','watch','in-range-lower'].includes(s.code)).length;
+    const noSlCnt   = statuses.filter(s => s.code === 'no-sl').length;
 
-    // Alert strip
     const strip = document.getElementById('alert-strip');
     strip.innerHTML = `
       <span class="badge badge-${urgentCnt > 0 ? 'err' : 'neu'}">${urgentCnt} urgent</span>
@@ -334,7 +324,6 @@ export async function init() {
       <span class="strip-spacer"></span>
       <span class="strip-info">${holdings.length} active positions · ${alerts.length} alert configs</span>`;
 
-    // Summary status KPI
     const statusLabel = urgentCnt > 0 ? `${urgentCnt} Urgent` : watchCnt > 0 ? `${watchCnt} Watch` : 'All Clear';
     const statusCls   = urgentCnt > 0 ? 'neg' : watchCnt > 0 ? 'warn-col' : 'pos';
     setEl('kpi-status', statusLabel);
@@ -348,16 +337,28 @@ export async function init() {
       return urgencyScore(a, aa) - urgencyScore(b, ba);
     });
 
-    // ── Render cards
-    const grid = document.getElementById('scenarios-grid');
-    grid.innerHTML = sorted.map(h => {
-      const alert     = alerts.find(a => a.symbol === h.symbol);
+    // ── Render table rows
+    const tbody = document.getElementById('scenarios-grid');
+    tbody.innerHTML = sorted.map((h, idx) => {
+      const alert      = alerts.find(a => a.symbol === h.symbol);
       const instTrades = trades
         .filter(t => t.symbol === h.symbol)
         .sort((a, b) => a.trade_time.localeCompare(b.trade_time));
-      const tradeInfo = analyseeTrades(instTrades);
-      return renderCard(h, alert, tradeInfo);
+      const tradeInfo  = analyseeTrades(instTrades);
+      return renderRow(h, alert, tradeInfo, idx) + renderDetailRow(h, alert, tradeInfo, idx);
     }).join('');
+
+    // ── Row expand / collapse
+    tbody.addEventListener('click', e => {
+      const row = e.target.closest('.sc-row');
+      if (!row) return;
+      const detailRow = document.getElementById(row.dataset.detail);
+      if (!detailRow) return;
+      const isOpen = detailRow.style.display !== 'none';
+      detailRow.style.display = isOpen ? 'none' : '';
+      const chevron = row.querySelector('.sc-chevron');
+      if (chevron) chevron.classList.toggle('open', !isOpen);
+    });
 
     // ── Triggered chips
     const tGrid = document.getElementById('triggered-grid');
@@ -372,7 +373,7 @@ export async function init() {
   } catch (err) {
     console.error('[equity-scenarios]', err);
     document.getElementById('scenarios-grid').innerHTML =
-      `<div class="load-err">Failed to load data: ${err.message}</div>`;
+      `<tr><td colspan="6" class="load-err">Failed to load data: ${err.message}</td></tr>`;
   }
 }
 
