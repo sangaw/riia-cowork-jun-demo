@@ -118,6 +118,8 @@ Reads `riia_agent_history` from localStorage. Three sub-tabs. Driven by `ai-comp
     - **Allocation** tab: `<tbody id="ph-alloc-body">` + `<tr id="ph-alloc-agg-row">` (tfoot aggregate) inside `.tbl-wrap` (max-height 240px, sticky thead). σ columns: −2σ / −1σ / Flat / +1σ. Summary strip: `ph-alloc-cost` + `ph-alloc-dd`. Concept block explains σ and table reading.
     - **Hedge** tab: confirmed strategy table (`ph-table-body`), coverage dial (`ph-coverage-slider`), payoff chart (`ph-payoff-chart`), scenario table (`ph-scenario-body`). Strategy tabs: `ph-tab-{pp|ps|collar}`.
     - State banners: `ph-loading`, `ph-error` / `ph-error-msg`, `ph-empty` / `ph-empty-msg`. Content wrapper: `ph-content` (hidden until loaded).
+  - **Equity Scenarios** (`#page-equity-scenarios`, nav item `data-page="equity-scenarios"` — integrated as a native FnO section `538cd1b`, 2026-06): Equity SL/Target scenario tracker rendered by `js/scenarios/equity-scenarios.js` via `_sectionLoaders['equity-scenarios']`. Expandable table layout — one line per instrument, 9-dot SL→Target position indicator column, Position column at the end; clicking a row toggles a detail row (P&L metrics, trade chips, recommendation). Colour tokens aliased to the fno palette via CSS custom properties scoped to `#page-equity-scenarios`. Data: static JSONs at `dashboard/data/scenarios/{alerts,portfolio,tradebook}.json` (committed in repo — required in prod).
+  - A standalone wrapper page `dashboard/equity-scenarios.html` also exists, importing the same `init` from `js/scenarios/equity-scenarios.js`.
 
 ### 4. `ops.html` (Operations Portal)
 - **Purpose**: Used by the platform engineers and DevOps to ensure the health of the RIIA system.

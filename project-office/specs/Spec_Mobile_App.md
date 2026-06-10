@@ -148,11 +148,13 @@ A standalone HTML-only entry page served at `GET /mobile`. Acts as a universal h
 | DOM ID | Destination | Type | Colour accent |
 |---|---|---|---|
 | `card-rita` | `/mobileapp` | Mobile Ready | Green |
-| `card-invest` | `/onboarding` | Mobile Ready | Green |
-| `card-fno` | `/dashboard/fno.html?desktop=1` | Desktop Only | Amber |
-| `card-ops` | `/dashboard/ops.html?desktop=1` | Desktop Only | Amber |
-| `card-ds` | `/dashboard/ds.html?desktop=1` | Desktop Only | Amber |
+| `card-onboarding` | `/onboarding` | Mobile Ready | Green |
+| `card-ops` | `/mobileapp/ops.html` | Mobile Ready (Section 19) | — |
+| `card-fno` | `/mobileapp/fno.html` | Mobile Ready (Section 18) | — |
+| `card-ds` | `/mobileapp/ds.html` | Mobile Ready (Section 20) | — |
 | `footer-desktop-link` | `/dashboard` | Footer escape-hatch | — |
+
+> Updated 2026-06: the fno/ops/ds cards originally linked to the desktop dashboards with `?desktop=1` ("Desktop Only", amber). All three now have dedicated mobile PWAs and link to them directly. Do not revert to `?desktop=1` links.
 
 ### Design Rules
 
@@ -412,3 +414,57 @@ On 401 → redirects to `/`. On any other error → shows inline error messages;
 4. Scenario levels arrive pre-normalised as `{bull: {target, sl}, bear: {target, sl}}` — do not re-normalise.
 5. Margin `summary['ALL']` is the all-instruments aggregate; `ledger` defaults to `3500000` when absent.
 6. `gateway.html` card `#card-fno` now points to `/mobileapp/fno.html` — do not revert to `?desktop=1` link.
+
+---
+
+## 19. Ops Mobile App (`mobileapp/ops.html`)
+
+**Added:** 2026-06-03 (~684 lines)
+
+Single-file mobile PWA for the Operations portal. Carousel + tab-bar pattern (5 screens `s0`–`s4`, `goTo(idx)` switcher) — this is the pattern the FnO and DS mobile apps follow. Accent: `--ops: #0E7490` (teal). Client-side errors are reported via `POST /api/v1/client-error`.
+
+### Route
+
+Served statically from `/mobileapp/ops.html` via the existing `app.mount("/mobileapp", ...)` static mount. Linked from `gateway.html` card `#card-ops`.
+
+### 5 Screens
+
+| ID | Tab | Content |
+|---|---|---|
+| s0 | Overview | System health summary — API metrics summary + recent MCP calls |
+| s1 | Monitoring | API latency / error-rate metrics from `/api/experience/ops/metrics/summary` |
+| s2 | Deploy | GitHub deploy runs from `/api/experience/ops/github-deploys` |
+| s3 | Agents | Agent build runs from `/api/experience/ops/agent-builds` |
+| s4 | Activity | Pipeline progress + step log (`/progress` + `/api/experience/ops/step-log`) |
+
+### Agent Directives
+
+1. Single file — all changes go into `ops.html`. No external JS or CSS files.
+2. Reuse the existing `apiFetch()` helper for all API calls.
+
+---
+
+## 20. DS Lab Mobile App (`mobileapp/ds.html`)
+
+**Added:** 2026-06-08 (`c84b3dd`, ~947 lines)
+
+Single-file mobile PWA for the Data Scientist Lab. Same carousel + tab-bar pattern as `ops.html` (5 screens, `goTo(idx)`). Accent: `--ds: #0E7490` (teal). Client-side errors are reported via `POST /api/v1/client-error`.
+
+### Route
+
+Served statically from `/mobileapp/ds.html`. Linked from `gateway.html` card `#card-ds`.
+
+### 5 Screens
+
+| ID | Tab | Content |
+|---|---|---|
+| s0 | Overview | Last build KPIs from `/api/v1/performance-summary` + backtest daily + training history |
+| s1 | Perf | Performance charts/tables from `/api/v1/experience/rita/backtest-daily` + training history |
+| s2 | Trades | Trade journal from `/api/v1/trade-events` |
+| s3 | Model | Round-by-round training history from `/api/v1/experience/rita/training-history` |
+| s4 | Risk | Risk timeline + trade risk from `/api/v1/experience/rita/risk-timeline` + `/api/v1/trade-events` |
+
+### Agent Directives
+
+1. Single file — all changes go into `ds.html`. No external JS or CSS files.
+2. Reuse the existing `apiFetch()` helper for all API calls.

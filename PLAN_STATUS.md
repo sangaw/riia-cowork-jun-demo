@@ -1,27 +1,34 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-09 — Invest Game: Jul 2025 ASML earnings shock as volatile preset (−11.37% Day 2); ▲/▼ % move indicator on price row per game day. Deployed to prod (`bd8a2f7`). Health ok.
+**Last updated:** 2026-06-10 — June release documentation sweep: F29 + F30 feature PLAN_STATUS closed; specs refreshed (equity-scenarios, mobile PWAs); untracked `dashboard/data/scenarios/*.json` committed (prod-breaking gap); empty duplicate feature folders 31/32 removed; junk `1.0` pip-output file deleted.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. `/agent-performance-improvements` if alerts fire
-3. Plan next feature
+2. Deploy docs/data commit to prod (push → GitHub Actions) — `dashboard/data/scenarios/*.json` must reach prod or the FnO Equity Scenarios section 404s
+3. `/agent-performance-improvements` if alerts fire
+4. Plan next feature
 
-**Active feature:**
-- **F30 — FnO Portfolio-Aligned Analytics** → `project-office/features/Jun/30 FnO Portfolio-Aligned Analytics/`
-  - Phase 1: Backend analytics endpoint — ✅ COMPLETE (a3ba34a)
-  - Phase 2: State + initApp refactor — ✅ COMPLETE (7bfb90c)
-  - Phase 3: Overview redesign + analytics rendering wiring — ✅ COMPLETE (559c65e, hotfix 92bd2cf)
-  - Phase 4: Manoeuvre tab re-wire — ✅ COMPLETE (included in Phase 3)
-  - Phase 5: Stress/Scenarios updates — ✅ COMPLETE (included in Phase 3)
-  - Phase 6: Spec updates — ✅ COMPLETE (e983a0d)
+**June release — feature closure summary (as of 2026-06-10):**
 
-**Previous feature:**
-- **F29 — FnO Linked Data & Overview Redesign** → `project-office/features/Jun/29 FnO Linked Data and Overview Redesign/`
-  - Phase 0: Duration cleanup (lock to 1y) — ✅ COMPLETE (b8a712e)
-  - Phase 1: `user_hedge_plans` table + GET/PUT endpoints — ✅ COMPLETE (e839dda, f731e1f)
-  - Phase 2: Portfolio Hedge wires to saved plan — ✅ COMPLETE (d96dd4c)
-  - Phase 3: Overview redesign — ✅ COMPLETE (64099e3)
-  - Phase 4: Spec updates — ✅ COMPLETE (e983a0d)
+| Feature | Status | Where |
+|---|---|---|
+| F28 — Portfolio Build & Hedge Flow | ✅ Complete | `features/Jun/28 .../PLAN_STATUS.md` |
+| F29 — FnO Linked Data & Overview Redesign | ✅ Complete (closed 2026-06-10) | `features/Jun/29 .../PLAN_STATUS.md` |
+| F30 — FnO Portfolio-Aligned Analytics | ✅ Complete (closed 2026-06-10) | `features/Jun/30 .../PLAN_STATUS.md` |
+| Ops Risk page (Daily Ops → Risk) | ✅ Complete | `1ee6105` |
+| DS Lab CRISP-DM Concepts page + TD Loss fix | ✅ Complete | `58767cb`, `761e8ba` |
+| Equity Scenarios — native FnO section + table redesign | ✅ Complete | `538cd1b`, `3101655` |
+| Mobile PWAs — Ops / DS Lab / FnO (`mobileapp/{ops,ds,fno}.html`) | ✅ Complete | `7948556`, `c84b3dd` |
+| Invest Game — Jul 2025 ASML earnings-shock preset + % move indicator | ✅ Complete, deployed | `3101655` → prod `bd8a2f7` |
+
+Feature folders `Jun/31` and `Jun/32` were empty `/enhance` templates duplicating F30 Phases 2–3 — removed 2026-06-10.
+
+**Session work (2026-06-10) — June release documentation sweep:**
+- **F29 + F30 feature PLAN_STATUS closed** — headers, phase summaries (with merge commits), per-phase statuses, task checkboxes, and session logs brought to final state.
+- **`dashboard/data/scenarios/{alerts,portfolio,tradebook}.json` committed** — fetched by `js/scenarios/equity-scenarios.js` but untracked (same failure class as the risk_chart.js incident); FnO Equity Scenarios section would break on any fresh clone/prod deploy without them.
+- **Spec_JS_Code.md** — equity-scenarios row rewritten: module now exports `init`, is imported by `fno/main.js` (`_sectionLoaders['equity-scenarios']`), expandable-table layout with 9-dot SL→Target indicator (was described as standalone card layout).
+- **Spec_HTML_Code.md** — Equity Scenarios documented as native fno.html section (`#page-equity-scenarios`) + standalone wrapper page.
+- **Spec_Mobile_App.md** — §7 gateway card table corrected (fno/ops/ds cards now link to mobile PWAs, not `?desktop=1` desktop pages); new §19 Ops Mobile App and §20 DS Lab Mobile App sections (5-screen carousel pattern, APIs, agent directives).
+- **Cleanup:** feature folders `Jun/31` + `Jun/32` (unfilled templates) removed; accidental `riia-jun-release/1.0` pip-output file deleted.
 
 **Session work (2026-06-09) — Invest Game improvements + prod deploy:**
 - **ASML volatile preset updated** to Jul 2025 earnings shock window: warmup Jul 11–14, game days Jul 15–24. Day 2 (Jul 16) is −11.37% earnings miss; AI flags compliance on that day. `dashboard/js/invest-game/api.js` updated.
@@ -221,7 +228,7 @@
 - ~~**Feature 26 Phase 3 (RITA frontend My Portfolio):**~~ ✅ COMPLETE — merged `3dd19a5` (2026-05-30). **Prod push `9700171` in progress — verify GitHub Actions + alembic at next session start.**
 - ~~**Feature 26 Phase 4 (FnO auth gate + My Portfolio):**~~ ✅ COMPLETE — deployed `ebf01f7` (2026-05-30).
 - ~~**Feature 26 UI Update (RITA + FnO Portfolio):**~~ ✅ COMPLETE — kpi-sm allocation tiles, portfolio-performance endpoint, 2025 Chart.js line chart, Phase 05 nav, Utilities removed. Deployed `485c89d`, `b28602f`, `584e807` (2026-05-30).
-- Invest Game v2 — arcade layout in progress
+- ~~Invest Game v2 — arcade layout:~~ ✅ COMPLETE — committed `5e1580e`, nav link added + `MOCK_MODE=false` (2026-05-30); ASML earnings-shock preset + % move indicator deployed to prod `bd8a2f7` (2026-06-09)
 - Feature 17 follow-up: ~~update GitHub secret `RITA_BASE_URL`~~ ✅ ~~update Google OAuth redirect URI~~ ✅ ~~update `production.yaml` cors_origins~~ ✅ — all done
 - Feature 18 (User Traffic Dashboard): COMPLETE — all phases merged and verified in prod
 

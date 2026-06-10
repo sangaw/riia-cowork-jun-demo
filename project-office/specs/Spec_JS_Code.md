@@ -79,13 +79,13 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 
 ---
 
-### 3a. Module Structure — `dashboard/js/scenarios/` (Standalone FnO-Adjacent Pages)
+### 3a. Module Structure — `dashboard/js/scenarios/` (Shared FnO Scenario Modules)
 
-Standalone pages that navigate from within the FnO app but are not mounted as sections inside `fno.html`. These are self-contained ES modules with no imports from `fno/` or `shared/`.
+Modules consumed both by the standalone `dashboard/equity-scenarios.html` page and by the FnO app as a native section (`#page-equity-scenarios` in `fno.html`, wired via `_sectionLoaders['equity-scenarios']` in `fno/main.js`). Self-contained ES modules with no imports from `fno/` or `shared/`.
 
 | File | Responsibility | Key exports |
 |---|---|---|
-| `scenarios/equity-scenarios.js` | Equity SL/Target scenario tracker. Fetches `alerts.json`, `portfolio.json`, `tradebook.json` from `dashboard/data/scenarios/` via bare `fetch()` (not `api()` — static files, no auth). Renders urgency-sorted instrument cards with coloured range bars, P&L metrics, trade chips, and recommendation text. Local helpers: `setEl()`, `INR()`, `PCT()`. `init()` called at module bottom — no export. | None (standalone, not imported) |
+| `scenarios/equity-scenarios.js` | Equity SL/Target scenario tracker. Fetches `alerts.json`, `portfolio.json`, `tradebook.json` from `dashboard/data/scenarios/` via bare `fetch()` (not `api()` — static files, no auth; the JSONs are committed under `dashboard/data/scenarios/`). Renders an urgency-sorted expandable table — one line per instrument (`renderRow`) with a 9-dot SL→Target position indicator column (`calcFilled`/`buildDotHtml`) and Position column at the end; clicking a row class-toggles a detail row (`renderDetailRow`) with P&L metrics, trade chips, and recommendation text (`buildRecommendation`, `computeStatus`). Local helpers: `setEl()`, `INR()`, `PCT()`. | `init` (imported by `fno/main.js` and `equity-scenarios.html`) |
 
 ---
 
