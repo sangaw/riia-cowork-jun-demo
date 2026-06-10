@@ -30,7 +30,8 @@ Data Science Project - RIIA
 │   │   └── App Operations   76611617   current startup/config/monitoring runbook
 │   └── Quality and Testing  65404959   test strategy, coverage reports
 └── Release Notes            65208341
-    └── RITA v1.0 Release Notes  71794689
+    ├── RITA v1.0 Release Notes  71794689
+    └── RITA June 2026 — Release Notes  92274695
 ```
 
 ## Section Parent IDs

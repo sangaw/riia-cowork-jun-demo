@@ -1,5 +1,5 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-10 — June release documentation sweep: F29 + F30 feature PLAN_STATUS closed; specs refreshed (equity-scenarios, mobile PWAs); untracked `dashboard/data/scenarios/*.json` committed (prod-breaking gap); empty duplicate feature folders 31/32 removed; junk `1.0` pip-output file deleted.
+**Last updated:** 2026-06-10 — June release documentation sweep: F29 + F30 feature PLAN_STATUS closed; specs refreshed (equity-scenarios, mobile PWAs); untracked `dashboard/data/scenarios/*.json` committed (prod-breaking gap); empty duplicate feature folders 31/32 removed; junk `1.0` pip-output file deleted. **June 2026 Release Notes published to Confluence** (page 92274695, under Release Notes) — required a fresh Atlassian API token (old one expired; key file is per-machine).
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
