@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-06-11 (d6de57c deployed — Demo/Live auth toggle + shared demo user; PATTERN-015 logged)
+**Last updated:** 2026-06-11 (ca427ea deployed — Dockerfile chmod -R a+rX /app/models; PATTERN-016 durable fix verified 0644 in fresh image)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -200,6 +200,7 @@
 | 2026-06-09 | `c4a4be7` | DS Lab mobile-ready — gateway test updated (card-ds → /mobileapp/ds.html); data_refresh CSV path fix (PATTERN-014 code fix). 742/742 unit tests passing. Actions green; health ok. |
 | 2026-06-09 | `bd8a2f7` | Invest Game — Jul 2025 ASML earnings shock as volatile preset (-11.37% Day 2); price row % move indicator (▲/▼ per day); equity-scenarios.html + fno.html updates. Actions green; health ok. |
 | 2026-06-11 | `d6de57c` | Demo/Live auth toggle (index.html) + shared demo user `webmaster@ravionics.nl` (all access flags) seeded via migration `20260611_seed_demo_user`; `/auth/token` now records login activity. Two CI failures fixed en route (PATTERN-015): migration `no such table: users` on fresh DB → table-exists guard; integration test 500 on `/auth/token` → best-effort try/except. Actions green; health ok; index.html CF-Cache DYNAMIC; live demo login returns 200. |
+| 2026-06-11 | `ca427ea` | PATTERN-016 durable fix — `RUN chmod -R a+rX /app/models` baked into Dockerfile so embed `model.safetensors` (written 0600 by newer safetensors umask) is readable by runtime user `rita`. Replaces the ephemeral live chmod hot-fix. Actions green; verified: `/health` 200, `/api/v1/chat` 200 with classifier response, `model.safetensors` perms `0644` in fresh image, CF-Cache api.js BYPASS. |
 
 ---
 
@@ -249,7 +250,7 @@
 - **Prevention:** Any file baked into the image and read at runtime by the `rita` user must be world-readable (`a+rX`). Never assume a library's `save()`/`download()` writes 0644. When a "file not found" error names a file that demonstrably exists, check **permissions and owning user vs. the container's runtime UID** before assuming it's missing.
 - **Date first seen:** 2026-06-11
 - **Recurrences:** 0
-- **Commit fix:** hot fix `chmod` applied live to prod container 2026-06-11; durable Dockerfile `chmod -R a+rX /app/models` pending next deploy.
+- **Commit fix:** hot fix `chmod` applied live to prod container 2026-06-11; durable Dockerfile `chmod -R a+rX /app/models` **deployed in `ca427ea` (2026-06-11)** — verified `model.safetensors` is `0644` in the fresh image and `/api/v1/chat` returns 200. Self-healing across future image pulls; no longer dependent on the ephemeral live chmod.
 
 ---
 
