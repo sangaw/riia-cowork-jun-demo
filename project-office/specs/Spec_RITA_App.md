@@ -220,6 +220,8 @@ Two UIs exist for the same backend. Both use `MOCK_MODE` flag to bypass the real
 
 **Local dev auth bypass:** `shared/dev-auth.js:ensureDevToken()` auto-mints a JWT on localhost via `POST /auth/token {username:'rita-dev', password:'rita-dev'}` — no Google OAuth needed. Called at boot by RITA `main.js` and FnO `main.js`; also called by `portfolio-builder.js` and `my-portfolio.js` before any write. Production is unaffected (hostname check).
 
+**Demo / Live auth toggle (dashboard home, `index.html`):** the home-page switch selects **Live** (default, `checked`) or **Demo**. The tile-click handler on `.protected-route` tiles routes as follows: on **localhost** it navigates directly (destination page mints its own dev token); in **Live** mode it requires an `auth_token` and otherwise redirects to `/auth/google/login`; in **Demo** mode it mints a JWT for the shared demo account via `POST /auth/token {username:'webmaster@ravionics.nl', password:'rita-dev'}`, stores it, then navigates. The demo user is seeded in the `users` table (migration `20260611_seed_demo_user`) with all access flags (`can_assist_research`, `can_create_portfolio`, `can_review_portfolio`, `can_access_ops`) = True, so Demo mode exercises every function — including the Ops console — and is a shared account (all demo visitors read/write the same portfolio). Its email is a frontend config constant only; no identity is hardcoded server-side.
+
 ---
 
 ## 4. Key Request Flows

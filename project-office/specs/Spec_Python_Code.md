@@ -86,7 +86,7 @@ Read-only aggregation — **no writes, no side effects, no DB commits**.
 
 | File | Endpoints |
 |---|---|
-| `auth.py` | `POST /auth/token` — issues JWT (rate-limited 10/min) |
+| `auth.py` | `POST /auth/token` — issues JWT (rate-limited 10/min). When the `username` matches an existing `users` row (e.g. the shared demo account `webmaster@ravionics.nl`), it also records login activity: updates `last_login_date`/`first_login_date` and inserts a `LoginEventModel`, mirroring the Google OAuth callback. Unknown subjects (e.g. `rita-dev`) still receive a token but are not persisted. |
 | `users.py` | `GET /api/v1/users`, `POST /api/v1/users` |
 | `portfolio.py` | See Section 7 below |
 
