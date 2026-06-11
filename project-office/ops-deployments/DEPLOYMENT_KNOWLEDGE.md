@@ -239,6 +239,20 @@
 
 ---
 
+### PATTERN-016 — Chat endpoint 500: embed model `model.safetensors` baked as `0600 root`, unreadable by runtime user
+
+- **Symptom:** RITA Market Analysis chat (`POST /api/v1/chat`) returns HTTP 500 with `{"detail":"Classification error: No such file or directory: /app/models/embed_model/model.safetensors"}`. Frontend shows "Could not reach RITA API" (`chat.js` catch-all). `/health` is `200` — only chat is affected. The file **does** exist and is full-size (~90 MB).
+- **Root cause:** A **file-permission** problem, not a missing/corrupt file. `ls -la /app/models/embed_model/` shows `model.safetensors` as `-rw------- root root` (0600) while every sibling (`config.json`, `tokenizer.json`, …) is `0644`. The container runs as non-root user `rita` (uid 1000, set in Dockerfile), which cannot read the 0600 root-owned weights file. The safetensors/HuggingFace loader surfaces the EACCES as the misleading "No such file or directory". Triggered by the unpinned `sentence-transformers>=2.7` dep: a rebuild resolved a newer `huggingface_hub`/`safetensors` that writes the weights file with a restrictive umask (0600) during `SentenceTransformer.save()`, whereas older versions wrote 0644.
+- **Diagnosis (safe on a 1 GB t3.micro):** SSH in and run a single `docker exec rita ls -la /app/models/embed_model/` — trivial memory, no OOM risk. **Do NOT** `docker exec` a model download/regen inside the live container as a first move — a second torch process can breach the 900m cgroup cap and OOM-kill the running container.
+- **Hot fix (ephemeral, no restart):** `ssh … "docker exec -u 0 rita chmod 0644 /app/models/embed_model/model.safetensors"`. The classifier loads lazily (`_model` is still `None` after the failure), so the next chat request reads the now-readable file — no container restart needed. Verify: `curl -X POST https://riia.ravionics.nl/api/v1/chat -H 'Content-Type: application/json' -d '{"query":"market sentiment?","instrument":"NIFTY"}'` → expect `200`. **This lives only in the container's writable layer — the next deploy pulls a fresh image and reintroduces the bug.**
+- **Durable fix:** add `RUN chmod -R a+rX /app/models` to the Dockerfile immediately after the `m.save('/app/models/embed_model')` step, so every future image has world-readable model files regardless of the saver's umask. Optionally also pin `sentence-transformers==<resolved>` to stop dep drift.
+- **Prevention:** Any file baked into the image and read at runtime by the `rita` user must be world-readable (`a+rX`). Never assume a library's `save()`/`download()` writes 0644. When a "file not found" error names a file that demonstrably exists, check **permissions and owning user vs. the container's runtime UID** before assuming it's missing.
+- **Date first seen:** 2026-06-11
+- **Recurrences:** 0
+- **Commit fix:** hot fix `chmod` applied live to prod container 2026-06-11; durable Dockerfile `chmod -R a+rX /app/models` pending next deploy.
+
+---
+
 ## Known Model Build Failure Patterns
 
 Model build failures are diagnosed via `/debug-model-build`. See `project-office/skills/skill-model-build-debug.md` for the full diagnostic skill.
