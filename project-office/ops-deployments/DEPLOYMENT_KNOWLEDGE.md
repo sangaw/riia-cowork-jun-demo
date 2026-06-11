@@ -231,9 +231,10 @@
   ```
   Applied to both `upgrade()` and `downgrade()`. In production the DB is persistent and already has `users`, so the seed still runs there. Validated locally by moving the populated DB aside and running `alembic upgrade head` on a fresh DB (EXIT=0).
 - **Prevention:** Any migration that reads or writes `users`, `login_events`, or any other create_all-managed table must guard on `get_table_names()` (or `try/except`) so the CI migration check passes on a fresh DB. Always validate a new migration against a fresh DB, not just the populated local one.
+- **Second manifestation (same root cause):** After the migration guard fixed step 5, the `test` job then failed at step 7 **Run integration tests** — `tests/integration/test_security.py::test_login_returns_token` got HTTP 500 because the new `/auth/token` login-tracking code ran `db.query(UserModel)` and the integration tests run against the **same migration-only DB with no `users` table**. The TestClient does not call `create_all()`. **Fix:** wrap the login-tracking lookup/insert in `try/except` with `db.rollback()` so token issuance is never blocked by a tracking failure (missing table or otherwise). Validated by rebuilding a migration-only DB locally (`mv rita.db aside; alembic upgrade head`) and running the security tests — 5 passed with `users` absent. **Rule:** any new DB access added to a previously DB-free endpoint must be tested against a migration-only DB, since CI integration tests do not run `create_all()`.
 - **Date first seen:** 2026-06-11
 - **Recurrences:** 0
-- **Commit fix:** `54bdd3a` (prod repo)
+- **Commit fix:** `54bdd3a` (migration guard) + endpoint try/except (next prod push)
 
 ---
 
