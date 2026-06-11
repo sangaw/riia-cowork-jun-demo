@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-06-09 (c4a4be7 deployed — DS Lab mobile-ready; gateway test card-ds → /mobileapp/ds.html)
+**Last updated:** 2026-06-11 (d6de57c deployed — Demo/Live auth toggle + shared demo user; PATTERN-015 logged)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -199,6 +199,7 @@
 | 2026-06-09 | `4b62711` | Equity hedge scenarios, portfolio builder/hedge, FnO risk charts, mobile FnO/Ops, i18n locales, alembic migrations. Prod repo was 47 commits behind on Windows machine; reconciled with `git merge -s ours`. Log files removed from git tracking (.gitignore updated). Gateway test fixed (FnO now mobile-ready → /mobileapp/fno.html). Actions green; health ok. |
 | 2026-06-09 | `c4a4be7` | DS Lab mobile-ready — gateway test updated (card-ds → /mobileapp/ds.html); data_refresh CSV path fix (PATTERN-014 code fix). 742/742 unit tests passing. Actions green; health ok. |
 | 2026-06-09 | `bd8a2f7` | Invest Game — Jul 2025 ASML earnings shock as volatile preset (-11.37% Day 2); price row % move indicator (▲/▼ per day); equity-scenarios.html + fno.html updates. Actions green; health ok. |
+| 2026-06-11 | `d6de57c` | Demo/Live auth toggle (index.html) + shared demo user `webmaster@ravionics.nl` (all access flags) seeded via migration `20260611_seed_demo_user`; `/auth/token` now records login activity. Two CI failures fixed en route (PATTERN-015): migration `no such table: users` on fresh DB → table-exists guard; integration test 500 on `/auth/token` → best-effort try/except. Actions green; health ok; index.html CF-Cache DYNAMIC; live demo login returns 200. |
 
 ---
 
@@ -234,7 +235,7 @@
 - **Second manifestation (same root cause):** After the migration guard fixed step 5, the `test` job then failed at step 7 **Run integration tests** — `tests/integration/test_security.py::test_login_returns_token` got HTTP 500 because the new `/auth/token` login-tracking code ran `db.query(UserModel)` and the integration tests run against the **same migration-only DB with no `users` table**. The TestClient does not call `create_all()`. **Fix:** wrap the login-tracking lookup/insert in `try/except` with `db.rollback()` so token issuance is never blocked by a tracking failure (missing table or otherwise). Validated by rebuilding a migration-only DB locally (`mv rita.db aside; alembic upgrade head`) and running the security tests — 5 passed with `users` absent. **Rule:** any new DB access added to a previously DB-free endpoint must be tested against a migration-only DB, since CI integration tests do not run `create_all()`.
 - **Date first seen:** 2026-06-11
 - **Recurrences:** 0
-- **Commit fix:** `54bdd3a` (migration guard) + endpoint try/except (next prod push)
+- **Commit fix:** `54bdd3a` (migration guard) + `d6de57c` (endpoint try/except)
 
 ---
 
