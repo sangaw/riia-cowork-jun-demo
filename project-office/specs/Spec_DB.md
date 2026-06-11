@@ -93,7 +93,7 @@ cp rita_output/rita.db rita_output/rita.db.bak-$(date +%Y%m%d-%H%M)
 | `config_overrides` | `models/config_overrides.py` | Runtime config key/value overrides — including `active_instrument_id` |
 | `audit_log` | `models/audit.py` | API call audit trail |
 | `alerts` | `models/alerts.py` | Chat/query confidence log |
-| `users` | `models/user.py` | User accounts: `user_id, username, email, hashed_password, is_active, is_admin, created_at` |
+| `users` | `models/user.py` | User accounts: `user_id, username, email, hashed_password, is_active, is_admin, created_at` + RBAC flags: `can_assist_research`, `can_create_portfolio` (default True), `can_review_portfolio`, `can_access_ops`. Shared demo user `webmaster@ravionics.nl` seeded with all flags=True by migration `20260611_seed_demo_user` (create_all-only table — migration guards against absent table in CI). |
 | `model_registry` | `models/model_registry.py` | Model version tracking |
 
 ### User Portfolio Store (user-owned, not recoverable)

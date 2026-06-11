@@ -24,7 +24,8 @@ This document outlines the architecture, design constraints, and purposes of the
 - **Purpose**: The entry point of the frontend application. It acts as a router/landing page that directs the user to different personas or apps within RITA.
 - **Key Sections**:
   - Hero banner with system readiness status.
-  - Four primary navigation tiles:
+  - **Demo / Live auth toggle** (`#auth-toggle-switch`, default: Live / checked): controls how tile navigation is authenticated. On **localhost** tiles navigate directly regardless of toggle. In **Live** mode, tiles check `auth_token` and redirect to `/auth/google/login` if absent. In **Demo** mode, tiles call `POST /auth/token {username:'webmaster@ravionics.nl', password:'rita-dev'}` to mint a JWT for the shared demo account, store it, then navigate — no Google OAuth needed. Demo mode exercises every function including Ops (all access flags are True on the demo user).
+  - Four primary navigation tiles (`.protected-route`):
     1. **Research (Data Scientist Lab)** -> routes to `ds.html`
     2. **Portfolio Builder (RITA core)** -> routes to `rita.html`
     3. **Portfolio Review (FnO Tracker)** -> routes to `fno.html`

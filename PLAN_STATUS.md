@@ -1,11 +1,19 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-10 — June release documentation sweep: F29 + F30 feature PLAN_STATUS closed; specs refreshed (equity-scenarios, mobile PWAs); untracked `dashboard/data/scenarios/*.json` committed (prod-breaking gap); empty duplicate feature folders 31/32 removed; junk `1.0` pip-output file deleted. **June 2026 Release Notes published to Confluence** (page 92274695, under Release Notes) — required a fresh Atlassian API token (old one expired; key file is per-machine).
+**Last updated:** 2026-06-11 — Demo/Live auth toggle + shared demo user + login tracking (PATTERN-015). Feature deployed to prod as `d6de57c`.
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. Deploy docs/data commit to prod (push → GitHub Actions) — `dashboard/data/scenarios/*.json` must reach prod or the FnO Equity Scenarios section 404s
-3. `/agent-performance-improvements` if alerts fire
-4. Plan next feature
+2. `/agent-performance-improvements` if alerts fire
+3. Plan next feature
+
+**Session work (2026-06-11) — Demo/Live auth toggle + shared demo user + login tracking:**
+- **Demo/Live toggle added to `index.html`** — home-page switch (Live default). Demo mode mints a JWT for `webmaster@ravionics.nl` via `/auth/token`; Live mode requires Google OAuth; localhost always navigates directly (unchanged local dev workflow).
+- **Shared demo user seeded** — migration `20260611_seed_demo_user` inserts `webmaster@ravionics.nl` with all RBAC access flags True (can_assist_research, can_create_portfolio, can_review_portfolio, can_access_ops). Guards against absent `users` table in CI (create_all-only). Idempotent.
+- **`/auth/token` login tracking** — records `last_login_date`/`first_login_date` and inserts a `LoginEventModel` for any username that resolves to a real `users` row (demo account treated like any other); unknown subjects (e.g. `rita-dev`) still receive a token but are not persisted.
+- **Specs updated** (in `ba1313e`): `Spec_Python_Code.md` — `/auth/token` login tracking behaviour; `Spec_RITA_App.md` — Demo/Live toggle routing logic.
+- **DEPLOYMENT_KNOWLEDGE.md** — PATTERN-015 logged across commits `ba1313e` → `f66982f` → `2eabf64` → `3205d83`.
+- **Deployed to prod** as `d6de57c`; health check passed.
+- Commits: `ba1313e` (feat), `2eabf64` (migration guard fix), `f66982f` (best-effort login tracking fix), `3205d83` (deploy log).
 
 **June release — feature closure summary (as of 2026-06-10):**
 
@@ -19,6 +27,7 @@
 | Equity Scenarios — native FnO section + table redesign | ✅ Complete | `538cd1b`, `3101655` |
 | Mobile PWAs — Ops / DS Lab / FnO (`mobileapp/{ops,ds,fno}.html`) | ✅ Complete | `7948556`, `c84b3dd` |
 | Invest Game — Jul 2025 ASML earnings-shock preset + % move indicator | ✅ Complete, deployed | `3101655` → prod `bd8a2f7` |
+| Demo/Live auth toggle + shared demo user + login tracking | ✅ Complete, deployed | `ba1313e` → prod `d6de57c` |
 
 Feature folders `Jun/31` and `Jun/32` were empty `/enhance` templates duplicating F30 Phases 2–3 — removed 2026-06-10.
 
