@@ -220,6 +220,23 @@
 
 ---
 
+### PATTERN-015 — Data/seed migration fails in CI: `no such table: users` (create_all-only table)
+
+- **Symptom:** `test` job fails at **Run database migrations** (`alembic upgrade head`) with `sqlite3.OperationalError: no such table: users`; `build-and-push` and `deploy` jobs skipped. Passes locally.
+- **Root cause:** The `users` and `login_events` tables are **not** created by any migration — they exist only because `Base.metadata.create_all()` runs at app startup. The initial migration (`11a27794a41e_initial_15_tables`) creates 16 tables but not these. CI runs the migration chain against a **fresh DB with no `create_all()`**, so `users` is absent. A new seed migration that hard-queried `users` (`SELECT id FROM users`) without a guard was the first to fail; it worked locally only because the local dev DB already had `users` from prior app runs. Every other user-touching migration (e.g. `20260521_add_login_events`) survives CI because it wraps its ops in `try/except`.
+- **Fix:** Guard the migration to no-op when the table is absent:
+  ```python
+  if "users" not in sa.inspect(op.get_bind()).get_table_names():
+      return
+  ```
+  Applied to both `upgrade()` and `downgrade()`. In production the DB is persistent and already has `users`, so the seed still runs there. Validated locally by moving the populated DB aside and running `alembic upgrade head` on a fresh DB (EXIT=0).
+- **Prevention:** Any migration that reads or writes `users`, `login_events`, or any other create_all-managed table must guard on `get_table_names()` (or `try/except`) so the CI migration check passes on a fresh DB. Always validate a new migration against a fresh DB, not just the populated local one.
+- **Date first seen:** 2026-06-11
+- **Recurrences:** 0
+- **Commit fix:** `54bdd3a` (prod repo)
+
+---
+
 ## Known Model Build Failure Patterns
 
 Model build failures are diagnosed via `/debug-model-build`. See `project-office/skills/skill-model-build-debug.md` for the full diagnostic skill.
