@@ -1,10 +1,18 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-11 — Demo/Live auth toggle + shared demo user + login tracking (PATTERN-015). Feature deployed to prod as `d6de57c`.
+**Last updated:** 2026-06-14 — NSE live equity hedge deployed; hedge-plan 404 console noise fixed; ASML model restored (active instrument reset).
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
-2. `/agent-performance-improvements` if alerts fire
-3. Plan next feature
+2. Fix M&M lot size: `NSE_LOT_SIZE.get("M&M.NS")` returns None — need `.NS` strip normalization in `equity_hedge_scenarios`
+3. Fix `setUnderlying()` clobbering global `active_instrument_id` (FnO equity hedge should not call `instrument/select`)
+4. Investigate equity hedge page visual changes still not rendering for user
+
+**Session work (2026-06-14) — NSE live equity hedge deploy + hedge-plan fixes:**
+- **NSE live equity hedge deployed** — inner prod repo commits `9c49e77`→`3d32226` synced and deployed. Features: NSE live option chain for INR instruments (real strikes + LTP via jugaad-data), M&M (MM) onboarded with 5y OHLCV, currency-aware formatting (₹/€/$), lot size KPI, source badges (NSE Live / BSM Est.), BS fallback retained. GitHub Actions green (`3d32226`).
+- **hedge-plan 404 console noise fixed** — `loadHedgePlan()` switched from `api()` (throws on non-200) to `apiFetch()` (returns null silently); GET `/hedge-plan` endpoint changed to return `200 null` instead of `404` when no plan saved — "no plan yet" is a normal first-visit state, not an error. Tests in `test_hedge_plan.py` + `test_hedge_plan_phase2.py` updated. Deployed `e7b2e66` → `602c390` → `d16efe8` → `63216aa`.
+- **ASML model restored** — model was NOT wiped; `active_instrument_id` in config_overrides had been switched to `M&M.NS` when M&M was selected in equity hedge geo tile (`setUnderlying()` calls `POST /api/v1/instrument/select`). Reset directly in prod DB via `docker exec` — no deploy needed.
+- **Outer repo synced** — `fc583ed` (NSE equity hedge sync) + `cf5792e` (hedge-plan fix sync).
+- **Open bugs deferred:** M&M lot size missing (instrument stored as `"M&M.NS"` in portfolio, `NSE_LOT_SIZE` keyed to `"MM"`); equity hedge page visual changes not rendering (user-reported, root cause unclear).
 
 **Session work (2026-06-11) — Demo/Live auth toggle + shared demo user + login tracking:**
 - **Demo/Live toggle added to `index.html`** — home-page switch (Live default). Demo mode mints a JWT for `webmaster@ravionics.nl` via `/auth/token`; Live mode requires Google OAuth; localhost always navigates directly (unchanged local dev workflow).
