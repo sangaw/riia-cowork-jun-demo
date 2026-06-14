@@ -203,6 +203,7 @@
 | 2026-06-11 | `ca427ea` | PATTERN-016 durable fix — `RUN chmod -R a+rX /app/models` baked into Dockerfile so embed `model.safetensors` (written 0600 by newer safetensors umask) is readable by runtime user `rita`. Replaces the ephemeral live chmod hot-fix. Actions green; verified: `/health` 200, `/api/v1/chat` 200 with classifier response, `model.safetensors` perms `0644` in fresh image, CF-Cache api.js BYPASS. |
 | 2026-06-14 | `598173f` | PATTERN-017 dep pinning cascade — fastapi<0.137 pins CI back to fastapi-0.136.3 + starlette-1.3.1 (compatible with prometheus-fastapi-instrumentator 8.0.0). 5 consecutive CI failures resolved. Health ok. |
 | 2026-06-13 | `1a5613f` | DS Lab CRISP-DM tab content rewrite — Business Understanding line breaks + RIIA rename + sensitive infra details removed; Data Understanding 3-paragraph structure; Data Preparation 5-sentence summary + Trend Score/ATR%/EMA charts replacing 80/20 split plots; Modeling rewritten with technical bullets; Deployment paragraph break. Actions green; health ok. |
+| 2026-06-14 | `3d32226` | FnO Equity Hedge — NSE live option chain via nse client (real strikes + LTP for INR instruments, BSM fallback); M&M (MM) onboarded with 5y OHLCV data; NSE Live / BSM Est. source badges; lot size (NSE_LOT_SIZE table, 18 instruments) in hedge overview KPI row + Hedge Overview card banner; activate-env-mac.sh restored. First push failed unit test (hedge_scenarios keys assertion didn't include new `data_source` field); fixed in `3d32226`. Actions green; health ok. |
 
 ---
 
