@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-06-11 (ca427ea deployed — Dockerfile chmod -R a+rX /app/models; PATTERN-016 durable fix verified 0644 in fresh image)
+**Last updated:** 2026-06-14 (598173f deployed — PATTERN-017 dep pinning cascade; fastapi<0.137 resolves all CI failures)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -201,6 +201,8 @@
 | 2026-06-09 | `bd8a2f7` | Invest Game — Jul 2025 ASML earnings shock as volatile preset (-11.37% Day 2); price row % move indicator (▲/▼ per day); equity-scenarios.html + fno.html updates. Actions green; health ok. |
 | 2026-06-11 | `d6de57c` | Demo/Live auth toggle (index.html) + shared demo user `webmaster@ravionics.nl` (all access flags) seeded via migration `20260611_seed_demo_user`; `/auth/token` now records login activity. Two CI failures fixed en route (PATTERN-015): migration `no such table: users` on fresh DB → table-exists guard; integration test 500 on `/auth/token` → best-effort try/except. Actions green; health ok; index.html CF-Cache DYNAMIC; live demo login returns 200. |
 | 2026-06-11 | `ca427ea` | PATTERN-016 durable fix — `RUN chmod -R a+rX /app/models` baked into Dockerfile so embed `model.safetensors` (written 0600 by newer safetensors umask) is readable by runtime user `rita`. Replaces the ephemeral live chmod hot-fix. Actions green; verified: `/health` 200, `/api/v1/chat` 200 with classifier response, `model.safetensors` perms `0644` in fresh image, CF-Cache api.js BYPASS. |
+| 2026-06-14 | `598173f` | PATTERN-017 dep pinning cascade — fastapi<0.137 pins CI back to fastapi-0.136.3 + starlette-1.3.1 (compatible with prometheus-fastapi-instrumentator 8.0.0). 5 consecutive CI failures resolved. Health ok. |
+| 2026-06-13 | `1a5613f` | DS Lab CRISP-DM tab content rewrite — Business Understanding line breaks + RIIA rename + sensitive infra details removed; Data Understanding 3-paragraph structure; Data Preparation 5-sentence summary + Trend Score/ATR%/EMA charts replacing 80/20 split plots; Modeling rewritten with technical bullets; Deployment paragraph break. Actions green; health ok. |
 
 ---
 
@@ -465,6 +467,22 @@ Model build failures are diagnosed via `/debug-model-build`. See `project-office
 - **Prevention:** When editing `shared/api.js`, never introduce a new `window.*` reference. The four permitted ones are: `window.RITA_API_BASE`, `window.SESSION_TRACE_ID`, `window.location.href`, `window.location.hostname` is NOT permitted — use `location.hostname` instead. Run `python3 -m pytest tests/unit/test_shared_js_layer.py` locally before pushing
 - **Date first seen:** 2026-06-06
 - **Recurrences:** 0
+
+---
+
+### PATTERN-017 — Dep pinning cascade: FastAPI major release breaks prometheus-fastapi-instrumentator → CI fails with 422 / 500
+
+- **Symptom:** All integration tests return `422 Unprocessable Entity` on `POST /auth/token` (body not parsed), or all unit tests return `500 Internal Server Error` with `AttributeError: '_IncludedRouter' object has no attribute 'path'` in prometheus middleware
+- **Root cause:** `prometheus-fastapi-instrumentator` uses the private FastAPI internal `_IncludedRouter`. When FastAPI releases a new major version, `_IncludedRouter` is renamed or removed, causing runtime `AttributeError` on every request. A secondary failure path: incorrect attempts to fix this by pinning `fastapi<0.116` downgrade FastAPI from 0.136.x → 0.115.x, which pulls in starlette 0.46.x; `BaseHTTPMiddleware.call_next()` in starlette 0.46.x consumes the request body before FastAPI can parse it → all body-parsing routes return 422.
+- **Fix:**
+  1. Check which FastAPI version was installed in the last successful CI run (get job log from prod Actions)
+  2. Pin `fastapi` to `<X.YYY` where `X.YYY` is the version that broke things: `"fastapi>=0.111,<0.137"` (update ceiling each time)
+  3. Do NOT also pin prometheus or downgrade starlette — pin FastAPI only
+  4. `git -C riia-jun-release add pyproject.toml && git -C riia-jun-release commit && git -C riia-jun-release push origin master`
+- **Prevention:** When CI integration tests suddenly fail with 422 on auth routes (previously green), check `prometheus-fastapi-instrumentator` compatibility first by getting the install log from the last good CI run vs the first bad run and diffing FastAPI versions. Do not downgrade FastAPI below 0.130+ or starlette below 1.x.
+- **Date first seen:** 2026-06-14
+- **Recurrences:** 0
+- **Commit fix:** `598173f`
 
 ---
 
