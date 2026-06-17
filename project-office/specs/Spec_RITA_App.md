@@ -461,6 +461,8 @@ Endpoints:
 
 **Note:** `sec-market-signals` is the landing section (has `active` class on load). `_currentSection` default in `nav.js` is `'market-signals'`. `loadMarketSignals()` fires on `window.load`. Instrument selector tabs (`.inst-tab`) live inside `sec-market-signals`.
 
+**Learnings / Concepts section (`sec-learnings`, `data-s="learnings"`, loader `loadLearnings`):** accordion concept cards + a live Market Trends card (Card 6, charts `chart-learn-price`/`chart-learn-rsi`). **Feature 31 (2026-06-17) — Investment Workflow & Agents:** appended after Card 6, a tabbed block explaining how professional investment firms invest — a narrative intro ("How Professional Investment Firms Invest"), an 8-step workflow table (Step / Purpose-Role / Scope), the retail-trader-gap paragraph, the RIIA two-pillar (Data Science + Agentic AI) explanation with the four ML-capability bullets, then a `concept-tab-bar` of 8 agent tabs (`switchAgentTab('a1'…'a8', this)`) and 8 `concept-panel` divs (`aw-a1`…`aw-a8`) each with `concept-desc` copy and a `concept-chart-grid` (canvases `aw-a1-c1`…`aw-a8-c1`, plus `aw-a4-c2` MACD; status span `aw-status`). Follows the DS Lab CRISP-DM tab pattern (`ds/concepts.js`). **No new endpoint** — charts reuse existing endpoints: `performance-summary`, `market-signals`, `experience/rita/backtest-daily`, `shap`, `experience/rita/training-history`. Concept CSS (`.concept-tab-bar`/`.concept-tab`/`.concept-panel`/`.concept-desc`/`.concept-chart-grid`) ported into `rita.html` `<style>` (active-tab accent uses `--run`).
+
 ### Element ID Formats
 
 | Panel | Element ID | Format | Notes |

@@ -45,7 +45,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | **`agent-panel.js`** | **LangGraph 6-agent simulation** | `loadAgentPanel()`, `agentPanelStep()`, `approveAgentProposal()`, `rejectAgentProposal()`, `resetAgentPanel()` |
 | **`ai-compliance.js`** | **AI Compliance panel (reads agent history)** | `loadAiCompliance()`, `switchAcTab(tabId, viewId)` |
 | `technical-analysis.js` | Technical Analysis section — commentary + PV/ATR/RSI charts | `loadTechnicalAnalysis()` |
-| `learnings.js` | Learnings section — accordion cards + live market-trend charts | `loadLearnings()`, `toggleLearnCard(id)` |
+| `learnings.js` | Learnings / Concepts section — accordion cards + live market-trend charts, plus the **Investment Workflow & Agents** tabbed block (Feature 31): narrative on how professional investment firms invest, 8-step workflow table, RIIA two-pillar (Data Science + Agentic AI) copy, and 8 agent tabs (`aw-a1`…`aw-a8`) each linking a chart. Follows the DS Lab CRISP-DM tab pattern. Reuses existing endpoints only (no new path): `performance-summary`, `market-signals`, `experience/rita/backtest-daily`, `shap`, `experience/rita/training-history`. | `loadLearnings()`, `toggleLearnCard(id)`, `switchAgentTab(agentKey, el)` |
 | `strategy-comparison.js` | Strategy Comparison card (Card 5 in Learnings) — 5-strategy OHLCV dashboard; 7 Chart.js panels; instrument pills; year toggle; commentary | `loadStrategyComparison()`, `scSelectInstrument(id)`, `scSelectYear(year)` |
 | `my-portfolio.js` | Portfolio allocation builder (Phase 05 nav) — `kpi kpi-sm` tiles (one per instrument, editable % input), 100% enforcer + progress bar, save to `POST /api/v1/user-portfolio/`, pre-fill from saved portfolio. Post-save: allocation chips + Chart.js 2025 line chart via `portfolio-performance` endpoint (base 100). **Auth:** calls `ensureDevToken()` before save — on localhost auto-mints a JWT via `/auth/token`; on production redirects to Google OAuth. | `loadMyPortfolio()`, `savePortfolio()` |
 | `portfolio-builder.js` | Portfolio Builder page (Feature 28) — three region buckets ranked by 1Y return with select-all and sticky Selected basket (chip grid, 4-row scroll, 15% default on add, 100% Allocate gate); Chart.js scatter map (return vs risk); sortable instrument table; guided basket (Short Term auto-selected on load, goal presets, ranked draft, toggle on/off). Data from `geography-overview` (return_1y_pct, risk_score, sector, horizons[]). Module cache-busted via `?v=` in main.js import. **Shares + cash (post-F28):** when Portfolio value (€) input is set, each basket chip shows whole-share count (`floor(allocEur / close)`) and cash remainder in green/grey; `pbSetAlloc` updates the chip live without re-render. `pbBuildPortfolio()` enriches each holding with `shares` (int) and `cash_eur` (float) before POSTing. Helpers: `_priceForId(id)` reads `close` from geoCache; `_sharesAndCash(totalEur, allocPct, price)` returns `{allocEur, shares, actual, cash}`. Basket summary panel shows total cash balance row. **Auth:** calls `ensureDevToken()` on localhost, falls back to Google OAuth on production. | `loadPortfolioBuilder()`, `pbToggleInstrument(id)`, `pbSelectAllRegion(key)`, `pbClearAllRegion(key)`, `pbSortTable(col)`, `pbApplyGoalPreset(key)`, `pbToggleDraftItem(id)`, `pbBuildFromDraft()`, `pbClearBasket()`, `pbBuildPortfolio()`, `pbSetAlloc(id, pct)` |
@@ -335,7 +335,7 @@ All three dashboards (`dashboard/js/rita/main.js`, `dashboard/js/fno/main.js`, `
 ## 9. API Endpoints → JS Consumers
 
 ### `GET /api/v1/market-signals?timeframe=&periods=&instrument=`
-**Consumer:** `market-signals.js` → `loadMarketSignals()`, `loadGoalHint()`
+**Consumer:** `market-signals.js` → `loadMarketSignals()`, `loadGoalHint()`; also `learnings.js` → `loadLearnings()` (Card 4 trend charts + Investment Workflow agent tabs a2/a3/a4/a5: reads `date`, `Close`, `rsi_14`, `macd`, `trend_score`, `ema_5/13/26/50`)
 **Response fields (per row):**
 ```
 date, Close, Volume,
@@ -345,6 +345,14 @@ atr_14, ema_5, ema_13, ema_26, ema_50, trend_score
 ```
 **DOM targets:** `ms-rsi-val/sig`, `ms-macd-val/sig`, `ms-bb-val/sig`, `ms-ema5/13/26-val/sig`, `ms-atr-val/sig`, `ms-trend-val/sig`, `ms-data-range`, `ms-last-updated` (date + time, format: `Last updated: D MMM YYYY HH:MM`; `—` on null/error), `ms-alerts`
 **Charts:** `chart-ms-pv`, `chart-ms-rsi`, `chart-ms-macd`, `chart-ms-bb`, `chart-ms-ema`, `chart-ms-atr`, `chart-ms-trend`
+
+### Investment Workflow & Agents (Feature 31) — `learnings.js` → `loadLearnings()` → `loadAgentWorkflow()`
+Reuses existing endpoints only (no new path); all loaded via `Promise.allSettled`, one tab's failure renders `_noData(canvasId)` without breaking the page. `switchAgentTab(agentKey, el)` toggles `.concept-tab`/`.concept-panel` (panel id prefix `aw-`).
+- `GET /api/v1/performance-summary` → tab a1 (`aw-a1-c1`): `performance.sharpe_ratio`/`sharpe`, `max_drawdown_pct`/`max_drawdown`, `win_rate_pct`/`win_rate`, `portfolio_total_return_pct`/`total_return_pct`.
+- `GET /api/v1/market-signals?...` → tabs a2 (`aw-a2-c1` Close), a3 (`aw-a3-c1` `trend_score`), a4 (`aw-a4-c1` `rsi_14`, `aw-a4-c2` `macd`), a5 (`aw-a5-c1` `Close`+`ema_5/13/26/50`).
+- `GET /api/v1/experience/rita/backtest-daily?instrument=NIFTY` → tab a6 (`aw-a6-c1`): `date`, `strategy_value`, `bh_value`.
+- `GET /api/v1/shap` → tab a7 (`aw-a7-c1`): array of `{feature, Overall}` (capital-O `Overall`).
+- `GET /api/v1/experience/rita/training-history?instrument=NIFTY` → tab a8 (`aw-a8-c1`): `round`, `backtest_return_pct`, `backtest_sharpe`.
 
 ### `POST /api/v1/market`
 **Consumer:** `export.js` → `runMarket()` → `pipeline.js` → `renderMarketResult()`
