@@ -1,10 +1,17 @@
 ﻿# RITA Production Refactor — Daily Status
-**Last updated:** 2026-06-11 — Demo/Live auth toggle + shared demo user + login tracking (PATTERN-015). Feature deployed to prod as `d6de57c`.
+**Last updated:** 2026-06-20 — Invest Game v2 updates + instrument data refresh deployed to prod as `88b1aa6`. GHCR_PAT rotated (PATTERN-003 recurrence).
 
 **Next session checklist:**
 1. Health check — https://riia.ravionics.nl/health → `{"status": "ok"}`
 2. `/agent-performance-improvements` if alerts fire
 3. Plan next feature
+
+**Session work (2026-06-20) — Production deploy: Invest Game v2 + data refresh:**
+- **Invest Game v2 updates deployed** — `investgame.html`, `invest-game/api.js`, `invest-game/main.js`, `invest_game.py` changes pushed to prod.
+- **Instrument data refresh** — 11 CSV files updated (AEX, ASML, ASRNL, ATO, BANKNIFTY, DJI, IXIC, NIFTY, NVIDIA, RELIANCE, SBIN) + `metrics.json` + `training_history.csv`.
+- **GHCR_PAT rotated** — Classic PAT had expired; first push `23af176` failed at "Pull image on EC2" (`denied: denied`). Updated `GHCR_PAT` GitHub Secret via API + prod remote URL. Retrigger `88b1aa6` green; health ok.
+- **DEPLOYMENT_KNOWLEDGE.md updated** — deploy logged; PATTERN-003 recurrence incremented with prevention note (rotate GHCR_PAT when rotating Classic PAT).
+- Commits (prod): `23af176` (feat), `88b1aa6` (retrigger).
 
 **Session work (2026-06-11) — Demo/Live auth toggle + shared demo user + login tracking:**
 - **Demo/Live toggle added to `index.html`** — home-page switch (Live default). Demo mode mints a JWT for `webmaster@ravionics.nl` via `/auth/token`; Live mode requires Google OAuth; localhost always navigates directly (unchanged local dev workflow).

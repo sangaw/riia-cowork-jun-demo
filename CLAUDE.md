@@ -57,6 +57,7 @@ All specs: `project-office/specs/` — read spec first, source file second.
 | `Spec_HTML_Code.md` | Any HTML in `dashboard/` |
 | `Spec_Chat_Feature.md` | Chat pipeline, classifier, `/api/v1/chat` |
 | `Spec-Agent-Workflow.md` | Agent intent coverage, agentic AI architecture |
+| `Spec_Invest_Game.md` | Invest Game standalone page — `investgame.html`, agent chain, mock data |
 | `Spec_Mobile_App.md` | PWA at `riia-jun-release/mobileapp/index.html` — served at `/mobileapp` |
 | `Spec_MCP_Server.md` | MCP server, mcp_logger, `/api/v1/mcp-calls`, Claude Desktop config |
 | `SPEC_Prod_Deploy.md` | Production deployment — two-repo setup, EC2, Docker, secrets, common failures |
