@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-06-11 (ca427ea deployed — Dockerfile chmod -R a+rX /app/models; PATTERN-016 durable fix verified 0644 in fresh image)
+**Last updated:** 2026-06-20 (88b1aa6 deployed — Invest Game v2 + data refresh; GHCR_PAT rotated after PATTERN-003 recurrence)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -48,9 +48,10 @@
 - **Fix:**
   1. Add `GHCR_PAT` secret to the prod repo (GitHub PAT for `san-work-ravionics` with `read:packages` scope)
   2. Add this step to `deploy.yaml` before `docker pull`: `echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u san-work-ravionics --password-stdin`
-- **Prevention:** Any time the prod repo is recreated or repo visibility changes, verify `GHCR_PAT` secret is present and the login step is in `deploy.yaml`
+- **Prevention:** Any time the prod repo is recreated or repo visibility changes, verify `GHCR_PAT` secret is present and the login step is in `deploy.yaml`. When rotating the Classic PAT, also update the `GHCR_PAT` secret — they use the same token.
 - **Date first seen:** 2026-05-20
-- **Recurrences:** 0
+- **Recurrences:** 1
+  - 2026-06-20: Classic PAT expired; `docker login` returned `denied: denied`. Rotated `GHCR_PAT` secret + prod remote URL to new Classic PAT. Retrigger green.
 
 ---
 
@@ -201,6 +202,7 @@
 | 2026-06-09 | `bd8a2f7` | Invest Game — Jul 2025 ASML earnings shock as volatile preset (-11.37% Day 2); price row % move indicator (▲/▼ per day); equity-scenarios.html + fno.html updates. Actions green; health ok. |
 | 2026-06-11 | `d6de57c` | Demo/Live auth toggle (index.html) + shared demo user `webmaster@ravionics.nl` (all access flags) seeded via migration `20260611_seed_demo_user`; `/auth/token` now records login activity. Two CI failures fixed en route (PATTERN-015): migration `no such table: users` on fresh DB → table-exists guard; integration test 500 on `/auth/token` → best-effort try/except. Actions green; health ok; index.html CF-Cache DYNAMIC; live demo login returns 200. |
 | 2026-06-11 | `ca427ea` | PATTERN-016 durable fix — `RUN chmod -R a+rX /app/models` baked into Dockerfile so embed `model.safetensors` (written 0600 by newer safetensors umask) is readable by runtime user `rita`. Replaces the ephemeral live chmod hot-fix. Actions green; verified: `/health` 200, `/api/v1/chat` 200 with classifier response, `model.safetensors` perms `0644` in fresh image, CF-Cache api.js BYPASS. |
+| 2026-06-20 | `88b1aa6` | Invest Game v2 updates + instrument data refresh (11 CSVs). First push `23af176` failed deploy — GHCR_PAT expired (PATTERN-003 recurrence); rotated PAT in GitHub Secret + prod remote URL; retrigger `88b1aa6` green; health ok. |
 
 ---
 
