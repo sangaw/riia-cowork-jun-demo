@@ -1,6 +1,6 @@
 # RITA Deployment Knowledge Base
 
-**Last updated:** 2026-06-14 (598173f deployed — PATTERN-017 dep pinning cascade; fastapi<0.137 resolves all CI failures)
+**Last updated:** 2026-06-20 (88b1aa6 deployed — Invest Game v2 + data refresh; GHCR_PAT rotated after PATTERN-003 recurrence)
 **Maintainer:** Ops Engineer skill (`project-office/skills/skill-ops-engineer.md`)
 
 > Read the **Active Gotchas** section before every deploy. Write a new **Known Failure Pattern** entry after every incident. This document is the institutional memory for all RITA production deployments.
@@ -48,9 +48,10 @@
 - **Fix:**
   1. Add `GHCR_PAT` secret to the prod repo (GitHub PAT for `san-work-ravionics` with `read:packages` scope)
   2. Add this step to `deploy.yaml` before `docker pull`: `echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u san-work-ravionics --password-stdin`
-- **Prevention:** Any time the prod repo is recreated or repo visibility changes, verify `GHCR_PAT` secret is present and the login step is in `deploy.yaml`
+- **Prevention:** Any time the prod repo is recreated or repo visibility changes, verify `GHCR_PAT` secret is present and the login step is in `deploy.yaml`. When rotating the Classic PAT, also update the `GHCR_PAT` secret — they use the same token.
 - **Date first seen:** 2026-05-20
-- **Recurrences:** 0
+- **Recurrences:** 1
+  - 2026-06-20: Classic PAT expired; `docker login` returned `denied: denied`. Rotated `GHCR_PAT` secret + prod remote URL to new Classic PAT. Retrigger green.
 
 ---
 
@@ -204,6 +205,7 @@
 | 2026-06-14 | `598173f` | PATTERN-017 dep pinning cascade — fastapi<0.137 pins CI back to fastapi-0.136.3 + starlette-1.3.1 (compatible with prometheus-fastapi-instrumentator 8.0.0). 5 consecutive CI failures resolved. Health ok. |
 | 2026-06-13 | `1a5613f` | DS Lab CRISP-DM tab content rewrite — Business Understanding line breaks + RIIA rename + sensitive infra details removed; Data Understanding 3-paragraph structure; Data Preparation 5-sentence summary + Trend Score/ATR%/EMA charts replacing 80/20 split plots; Modeling rewritten with technical bullets; Deployment paragraph break. Actions green; health ok. |
 | 2026-06-14 | `3d32226` | FnO Equity Hedge — NSE live option chain via nse client (real strikes + LTP for INR instruments, BSM fallback); M&M (MM) onboarded with 5y OHLCV data; NSE Live / BSM Est. source badges; lot size (NSE_LOT_SIZE table, 18 instruments) in hedge overview KPI row + Hedge Overview card banner; activate-env-mac.sh restored. First push failed unit test (hedge_scenarios keys assertion didn't include new `data_source` field); fixed in `3d32226`. Actions green; health ok. |
+| 2026-06-20 | `88b1aa6` | Invest Game v2 updates + instrument data refresh (11 CSVs). First push `23af176` failed deploy — GHCR_PAT expired (PATTERN-003 recurrence); rotated PAT in GitHub Secret + prod remote URL; retrigger `88b1aa6` green; health ok. |
 
 ---
 
