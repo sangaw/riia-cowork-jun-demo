@@ -1,6 +1,8 @@
 # ── Secrets and credentials ──────────────────────────────────────────────────
 confluence-api-key.txt
 aws-creds.txt
+git-key.txt
+*git-key*
 *.key
 *.pem
 *.pfx

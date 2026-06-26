@@ -1,41 +1,55 @@
 {
-  "generated_at": "2026-06-20T11:45:26",
-  "total_runs": 70,
+  "generated_at": "2026-06-21T18:25:15",
+  "total_runs": 72,
   "per_role": {
     "pm": {
-      "run_count": 28,
+      "run_count": 30,
       "avg_adherence_score": 1.0,
       "first_pass_rate": 1.0,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 11412
+      "avg_token_cost": 12118
     },
     "architect": {
-      "run_count": 28,
-      "avg_adherence_score": 0.991,
-      "first_pass_rate": 0.964,
+      "run_count": 30,
+      "avg_adherence_score": 0.992,
+      "first_pass_rate": 0.967,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 11807
+      "avg_token_cost": 12487
     },
     "engineer": {
-      "run_count": 30,
-      "avg_adherence_score": 0.919,
-      "first_pass_rate": 0.7,
-      "recent_first_pass_rate": 0.8,
-      "avg_token_cost": 30704
+      "run_count": 32,
+      "avg_adherence_score": 0.924,
+      "first_pass_rate": 0.719,
+      "recent_first_pass_rate": 1.0,
+      "avg_token_cost": 32222
     },
     "qa": {
-      "run_count": 28,
-      "avg_adherence_score": 0.991,
-      "first_pass_rate": 0.929,
+      "run_count": 30,
+      "avg_adherence_score": 0.992,
+      "first_pass_rate": 0.933,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 31268
+      "avg_token_cost": 33517
     },
     "techwriter": {
-      "run_count": 28,
-      "avg_adherence_score": 0.941,
-      "first_pass_rate": 0.893,
+      "run_count": 30,
+      "avg_adherence_score": 0.945,
+      "first_pass_rate": 0.9,
       "recent_first_pass_rate": 1.0,
-      "avg_token_cost": 17547
+      "avg_token_cost": 18910
+    },
+    "design_reviewer": {
+      "run_count": 2,
+      "avg_adherence_score": 1.0,
+      "first_pass_rate": 1.0,
+      "recent_first_pass_rate": 1.0,
+      "avg_token_cost": 11500
+    },
+    "code_reviewer": {
+      "run_count": 2,
+      "avg_adherence_score": 0.95,
+      "first_pass_rate": 0.0,
+      "recent_first_pass_rate": 0.0,
+      "avg_token_cost": 13500
     }
   },
   "per_app": {
@@ -70,8 +84,8 @@
       "fail": 0
     },
     "fno": {
-      "run_count": 2,
-      "pass": 2,
+      "run_count": 4,
+      "pass": 4,
       "pass_with_warnings": 0,
       "fail": 0
     },
@@ -292,6 +306,20 @@
       "grounding_score": 0.4,
       "checks_passed": 2,
       "checks_total": 5
+    },
+    {
+      "run_id": "20260621-1229",
+      "app": "fno",
+      "grounding_score": 1.0,
+      "checks_passed": 28,
+      "checks_total": 28
+    },
+    {
+      "run_id": "20260621-1736",
+      "app": "fno",
+      "grounding_score": 1.0,
+      "checks_passed": 29,
+      "checks_total": 29
     }
   ],
   "failure_modes": {
@@ -369,7 +397,7 @@
     },
     "FC-HTML-CSS: generated non-existent CSS classes in ops.html (kpi-row, kpi-card, data-table); missing api-metrics from nav.js SECTIONS; inline style:display:none on new section": {
       "total": 1,
-      "recent_fires": 1,
+      "recent_fires": 0,
       "by_role": {
         "engineer": 1
       }
@@ -379,6 +407,20 @@
       "recent_fires": 1,
       "by_role": {
         "engineer": 1
+      }
+    },
+    "n_shares field missing from response schema (advisory, non-blocking)": {
+      "total": 1,
+      "recent_fires": 1,
+      "by_role": {
+        "code_reviewer": 1
+      }
+    },
+    "3 advisory: hardcoded fallback list, data_source unused, ha-indicative-label missing": {
+      "total": 1,
+      "recent_fires": 1,
+      "by_role": {
+        "code_reviewer": 1
       }
     }
   },
@@ -770,9 +812,9 @@
     }
   ],
   "task_completion": {
-    "tsr": 0.857,
-    "first_attempt_success_rate": 0.857,
-    "partial_completion_rate": 0.129,
+    "tsr": 0.861,
+    "first_attempt_success_rate": 0.861,
+    "partial_completion_rate": 0.125,
     "abandonment_rate": 0.0
   },
   "quality": {
@@ -783,10 +825,10 @@
     "csat_count": 18,
     "planning_accuracy_rate": 0.833,
     "recent_planning_accuracy_rate": 1.0,
-    "grounding_pass_rate": 0.874
+    "grounding_pass_rate": 0.88
   },
   "token_forecasting": {
-    "avg_forecast_error_pct": 16.2,
+    "avg_forecast_error_pct": 15.7,
     "by_complexity": {
       "small": {
         "avg_actual": 8673,
@@ -813,8 +855,8 @@
         "modifier": 0.6
       },
       "fno": {
-        "run_count": 2,
-        "avg_tokens": 35289,
+        "run_count": 4,
+        "avg_tokens": 136575,
         "modifier": 0.8
       },
       "invest-game": {
@@ -826,12 +868,12 @@
   },
   "efficiency": {
     "avg_duration_minutes": 27,
-    "avg_tokens_per_run": 44435,
+    "avg_tokens_per_run": 49808,
     "avg_retry_count": 0.03,
     "avg_time_saved_hours": 7.6
   },
   "reliability": {
-    "error_recovery_rate": 0.81,
+    "error_recovery_rate": 0.826,
     "graceful_degradation_rate": 0.9,
     "loop_event_total": 0
   },
@@ -847,15 +889,15 @@
   },
   "api_metrics": {
     "available": true,
-    "total_calls": 3367,
-    "unique_endpoints": 161,
-    "overall_error_rate_pct": 10.07,
-    "error_rate_5xx_pct": 0.3,
+    "total_calls": 3400,
+    "unique_endpoints": 162,
+    "overall_error_rate_pct": 10.06,
+    "error_rate_5xx_pct": 0.29,
     "top_5_by_calls": [
       {
         "path": "/progress",
         "method": "GET",
-        "count": 392,
+        "count": 393,
         "p50_ms": 16.0,
         "p95_ms": 735.0,
         "error_count": 0
@@ -863,7 +905,7 @@
       {
         "path": "/api/v1/experience/rita/geography-overview",
         "method": "GET",
-        "count": 375,
+        "count": 378,
         "p50_ms": 141.0,
         "p95_ms": 1110.0,
         "error_count": 0
@@ -879,7 +921,7 @@
       {
         "path": "/api/v1/market-signals",
         "method": "GET",
-        "count": 244,
+        "count": 247,
         "p50_ms": 203.0,
         "p95_ms": 1344.0,
         "error_count": 0
@@ -887,12 +929,12 @@
       {
         "path": "/api/v1/commentary",
         "method": "POST",
-        "count": 237,
+        "count": 238,
         "p50_ms": 516.0,
-        "p95_ms": 8828.0,
+        "p95_ms": 8844.0,
         "error_count": 18
       }
     ],
-    "generated_at": "2026-06-20T09:45:26.582025+00:00"
+    "generated_at": "2026-06-21T16:25:15.271517+00:00"
   }
 }
