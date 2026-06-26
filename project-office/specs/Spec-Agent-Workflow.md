@@ -155,3 +155,38 @@
   Panel C (metric trend lines: TSR, grounding, CSAT, context adherence), and Panel D (run table with FC badge
   column). The pre-run token estimate widget (Estimate Token Budget) calls GET /api/experience/ops/token-forecast
   to project token cost before a run begins, using historical run data segmented by feature_type and complexity.
+
+  ---
+  Feature 32 — Investment-Workflow Agent Performance Instrumentation (Phases 1+2)
+
+  NOTE: This is DISTINCT from the Ops "Agent Builds" feedback loop above. That loop measures the /enhance
+  DEV pipeline (PM/Architect/Engineer/QA agents) via the agent_builds tables. Feature 32 measures the 7
+  TRADING-DECISION agents listed in this document (the chat/investment-workflow agents) via a new
+  agent_performance table — a different concern with a different data source.
+
+  Instrumentation (Phase 1): the chat classifier (core/classifier.py) records one agent_performance row per
+  resolved investment-workflow agent intent. After classify() + dispatch() build the chat response, the chat
+  route (api/v1/workflow/chat.py) calls classifier.record_agent_performance(result) — a fire-and-forget hook:
+    - Wrapped in a broad try/except that swallows everything and logs at debug via structlog (never raises).
+    - Only fires when the resolved intent maps to one of the 7 agents (INTENT_TO_AGENT.get → None → skip silently).
+    - The DB write runs off the request's critical path on a daemon background thread that opens its OWN
+      SessionLocal() and closes it in finally (the request's Session is never shared across threads), so no
+      latency is added to the chat response and the response content is never mutated.
+    - Only fires for non-low-confidence results.
+
+  Canonical intent → agent_name mapping (module constant INTENT_TO_AGENT in core/classifier.py). The 7
+  agent_name values (CANONICAL_AGENTS) are reused verbatim by the Phase 2 endpoint so the dashboard always
+  shows all 7 agents even with zero rows:
+    - Financial Goal    ← return_1m, return_3m, return_6m, return_1y, return_3y, return_5y
+    - Sentiment Analyst ← market_sentiment
+    - Technical Analyst ← trend_direction, rsi_reading, volatility_check
+    - Strategy Analyst  ← allocation_level, conservative_strategy, aggressive_strategy, portfolio_compare
+    - Scenario Analyst  ← stress_crash_10, stress_crash_20, stress_rally_10, stress_flat
+    - Execution Analyst ← invest_now, explain_decision
+    - Outcome Analyst   ← backtest_performance, backtest_1y_return
+
+  Dashboard (Phase 2): GET /api/v1/experience/rita/agent-performance (Experience tier, read-only) returns a
+  per-agent KPI summary (invocation_count_30d, gap_status, outcome_match_rate, trend_vs_prior_30d) for all 7
+  agents, rendered in the rita.html sec-agent-performance section by dashboard/js/rita/agent-performance.js.
+  outcome_status is always NULL in Phases 1+2 (backfillable later, Phase 3+), so outcome_match_rate is None and
+  the UI renders an em-dash rather than a misleading 0%.
