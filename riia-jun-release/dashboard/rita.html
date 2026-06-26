@@ -477,6 +477,9 @@ tr:hover td{background:var(--surface2);}
     <div class="nav-item p00" data-s="strategy-compare" onclick="show('strategy-compare',this)">
       <span class="nav-icon">⊞</span> Strategy Compare
     </div>
+    <div class="nav-item p00" data-s="agent-performance" onclick="show('agent-performance',this)">
+      <span class="nav-icon">▤</span> Agent Performance
+    </div>
     <div class="nav-item p00" data-s="agent-panel" onclick="show('agent-panel',this)">
       <span class="nav-icon">◈</span> Agent Panel
     </div>
@@ -1559,6 +1562,38 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
+</section>
+
+
+<!-- ── Agent Performance (Feature 32) ────────────────────── -->
+<section class="section" id="sec-agent-performance">
+  <div class="page-hdr">
+    <div>
+      <div class="page-title">Agent Performance</div>
+      <div class="page-sub">Per-agent KPIs for the 7 investment-workflow agents (trading-decision pipeline)</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:11px;color:var(--t3)">Updated: <span id="agent-perf-updated">—</span></span>
+      <button class="btn" onclick="loadAgentPerformance()">Refresh</button>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div id="agent-perf-cards" class="kpi-row" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">—</div>
+
+  <!-- Per-agent table -->
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Agent</th>
+        <th>Gap Status</th>
+        <th>Invocations (30d)</th>
+        <th>Outcome Match Rate</th>
+        <th>Trend vs Prior 30d</th>
+      </tr>
+    </thead>
+    <tbody id="agent-perf-table">—</tbody>
+  </table>
 </section>
 
 

@@ -49,6 +49,7 @@ High-density reference for AI agents working on the `dashboard/js/` ES-module co
 | `strategy-comparison.js` | Strategy Comparison card (Card 5 in Learnings) — 5-strategy OHLCV dashboard; 7 Chart.js panels; instrument pills; year toggle; commentary | `loadStrategyComparison()`, `scSelectInstrument(id)`, `scSelectYear(year)` |
 | `my-portfolio.js` | Portfolio allocation builder (Phase 05 nav) — `kpi kpi-sm` tiles (one per instrument, editable % input), 100% enforcer + progress bar, save to `POST /api/v1/user-portfolio/`, pre-fill from saved portfolio. Post-save: allocation chips + Chart.js 2025 line chart via `portfolio-performance` endpoint (base 100). **Auth:** calls `ensureDevToken()` before save — on localhost auto-mints a JWT via `/auth/token`; on production redirects to Google OAuth. | `loadMyPortfolio()`, `savePortfolio()` |
 | `portfolio-builder.js` | Portfolio Builder page (Feature 28) — three region buckets ranked by 1Y return with select-all and sticky Selected basket (chip grid, 4-row scroll, 15% default on add, 100% Allocate gate); Chart.js scatter map (return vs risk); sortable instrument table; guided basket (Short Term auto-selected on load, goal presets, ranked draft, toggle on/off). Data from `geography-overview` (return_1y_pct, risk_score, sector, horizons[]). Module cache-busted via `?v=` in main.js import. **Shares + cash (post-F28):** when Portfolio value (€) input is set, each basket chip shows whole-share count (`floor(allocEur / close)`) and cash remainder in green/grey; `pbSetAlloc` updates the chip live without re-render. `pbBuildPortfolio()` enriches each holding with `shares` (int) and `cash_eur` (float) before POSTing. Helpers: `_priceForId(id)` reads `close` from geoCache; `_sharesAndCash(totalEur, allocPct, price)` returns `{allocEur, shares, actual, cash}`. Basket summary panel shows total cash balance row. **Auth:** calls `ensureDevToken()` on localhost, falls back to Google OAuth on production. | `loadPortfolioBuilder()`, `pbToggleInstrument(id)`, `pbSelectAllRegion(key)`, `pbClearAllRegion(key)`, `pbSortTable(col)`, `pbApplyGoalPreset(key)`, `pbToggleDraftItem(id)`, `pbBuildFromDraft()`, `pbClearBasket()`, `pbBuildPortfolio()`, `pbSetAlloc(id, pct)` |
+| `agent-performance.js` | Agent Performance page (Feature 32) — per-agent KPI cards (`#agent-perf-cards`) + 7-row table (`#agent-perf-table`) for the 7 investment-workflow agents. Reads `GET /api/v1/experience/rita/agent-performance`. Imports `api` (api.js) and `setEl, badge, fmtPct` (utils.js). Helpers: `fmtRate(rate)` (0–1 fraction → `fmtPct(rate*100)`, `—` when null), `fmtTrend(trend)` (signed percent, `—` when null). try/catch sets both containers to `—` on error. Distinct from the Ops Agent Builds page. | `loadAgentPerformance()` |
 
 ---
 
@@ -404,6 +405,11 @@ backtest_trades, backtest_constraints_met
 **Consumer:** `health.js` → `loadPerfSummary()`, `scenarios.js` → `loadScenarios()`
 **Key fields:** `portfolio_total_return_pct`, `benchmark_total_return_pct`, `portfolio_cagr_pct`, `sharpe_ratio`, `max_drawdown_pct`, `win_rate_pct`, `total_days`
 **Stale-check fields:** `_run_instrument_id`, `_active_instrument_id`
+
+### `GET /api/v1/experience/rita/agent-performance`
+**Consumer:** `agent-performance.js` → `loadAgentPerformance()`
+**Shape:** `{ agents: [ { agent_name, gap_status, invocation_count_30d, outcome_match_rate, trend_vs_prior_30d } ] }` — always 7 agents
+**Key fields:** `agent_name`, `gap_status`, `invocation_count_30d`, `outcome_match_rate` (null until backfill → renders `—`), `trend_vs_prior_30d` (null when prior window empty → renders `—`)
 
 ### `GET /api/v1/metrics/summary`
 **Consumer:** `health.js` → `loadMetrics()`, `observability.js`

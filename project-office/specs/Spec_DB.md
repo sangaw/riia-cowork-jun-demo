@@ -95,6 +95,7 @@ cp rita_output/rita.db rita_output/rita.db.bak-$(date +%Y%m%d-%H%M)
 | `alerts` | `models/alerts.py` | Chat/query confidence log |
 | `users` | `models/user.py` | User accounts: `user_id, username, email, hashed_password, is_active, is_admin, created_at` + RBAC flags: `can_assist_research`, `can_create_portfolio` (default True), `can_review_portfolio`, `can_access_ops`. Shared demo user `webmaster@ravionics.nl` seeded with all flags=True by migration `20260611_seed_demo_user` (create_all-only table — migration guards against absent table in CI). |
 | `model_registry` | `models/model_registry.py` | Model version tracking |
+| `agent_performance` | `models/agent_performance.py` | Feature 32 — one row per resolved investment-workflow agent intent from the chat classifier (`perf_id` PK UUID, `agent_name` [one of 7 canonical agents], `intent`, `recommendation`, `outcome_status` [nullable, backfillable], `training_run_id` [nullable link], `created_at` server-default). Composite index `(agent_name, created_at)`. Written fire-and-forget on a background thread by `core/classifier.py:record_agent_performance()`; read by `GET /experience/rita/agent-performance`. Distinct from `agent_builds` (the /enhance dev pipeline). Never seeded. |
 
 ### User Portfolio Store (user-owned, not recoverable)
 
