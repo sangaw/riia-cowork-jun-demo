@@ -12,6 +12,7 @@
 > Short-lived warnings — remove when resolved.
 
 - **Current EC2 IP:** `13.206.230.76` (ap-south-1 Mumbai) — update GitHub Secret `AWS_EC2_IP` and Google OAuth redirect URI if this changes after a `terraform apply`
+- **Prod push auth:** the valid `san-work-ravionics` PAT is in repo-root **`git-key.txt`** — push with the inline `x-access-token` helper (see PATTERN-018). Do NOT let osxkeychain fall back to `sangaw` (→ `403 denied`), and do NOT ask the user to paste a token.
 
 ---
 
@@ -206,6 +207,7 @@
 | 2026-06-13 | `1a5613f` | DS Lab CRISP-DM tab content rewrite — Business Understanding line breaks + RIIA rename + sensitive infra details removed; Data Understanding 3-paragraph structure; Data Preparation 5-sentence summary + Trend Score/ATR%/EMA charts replacing 80/20 split plots; Modeling rewritten with technical bullets; Deployment paragraph break. Actions green; health ok. |
 | 2026-06-14 | `3d32226` | FnO Equity Hedge — NSE live option chain via nse client (real strikes + LTP for INR instruments, BSM fallback); M&M (MM) onboarded with 5y OHLCV data; NSE Live / BSM Est. source badges; lot size (NSE_LOT_SIZE table, 18 instruments) in hedge overview KPI row + Hedge Overview card banner; activate-env-mac.sh restored. First push failed unit test (hedge_scenarios keys assertion didn't include new `data_source` field); fixed in `3d32226`. Actions green; health ok. |
 | 2026-06-20 | `88b1aa6` | Invest Game v2 updates + instrument data refresh (11 CSVs). First push `23af176` failed deploy — GHCR_PAT expired (PATTERN-003 recurrence); rotated PAT in GitHub Secret + prod remote URL; retrigger `88b1aa6` green; health ok. |
+| 2026-06-27 | `0178a44` | **Feature 32 Phases 1+2 — agent performance instrumentation + dashboard.** New `agent_performance` table (idempotent Alembic `993fec6a43bd`, ran clean on prod DB), fire-and-forget classifier hook (daemon thread, own session, off chat path), read-only `/api/v1/experience/rita/agent-performance` endpoint, and RITA Agent Performance page (per-agent scorecards on 4 RL params + vertical invocations chart + detail table, demo data until Phases 3–5). Push initially blocked by PATTERN-018 (osxkeychain `403 denied to sangaw`) — resolved via `git-key.txt` + inline x-access-token helper. Actions green; `/health` 200; `/api/v1/experience/rita/agent-performance` 200 with 7 agents. **Marked the June-release golden version.** |
 
 ---
 
@@ -256,6 +258,28 @@
 - **Date first seen:** 2026-06-11
 - **Recurrences:** 0
 - **Commit fix:** hot fix `chmod` applied live to prod container 2026-06-11; durable Dockerfile `chmod -R a+rX /app/models` **deployed in `ca427ea` (2026-06-11)** — verified `model.safetensors` is `0644` in the fresh image and `/api/v1/chat` returns 200. Self-healing across future image pulls; no longer dependent on the ephemeral live chmod.
+
+---
+
+### PATTERN-018 — Prod push `403 denied to sangaw` — osxkeychain hijacks the prod credential
+
+- **Symptom:** `git -C riia-jun-release push origin master` fails with `remote: Permission to san-work-ravionics/riia-jun-release-prod.git denied to sangaw.` / `403`. The prod remote is the plain `https://github.com/...` URL with no embedded token.
+- **Root cause:** The prod repo belongs to org `san-work-ravionics`; the local user `sangaw` is not a collaborator. The global `credential.helper=osxkeychain` answers the github.com challenge **first** with the cached `sangaw` credential, so the push authenticates as the wrong identity. The correct prod PAT is NOT in the keychain.
+- **Where the real token lives:** repo-root **`git-key.txt`** (`…/riia-cowork-jun-demo/git-key.txt`, gitignored, 40-char `ghp_` classic PAT, owned by `san-work-ravionics`). The user refreshes this file on each rotation. **Read it from here — never ask the user to paste a token.**
+- **Do NOT trust tokens echoed in old `git remote -v` output in past Claude transcripts** — those are stale/expired. On 2026-06-27 a transcript token `…kTq2` was expired (API 401) while `git-key.txt` `…Iz8v` was valid (API 200). Verify any token with: `curl -s -o /dev/null -w "%{http_code}" -H "Authorization: token <PAT>" https://api.github.com/user` → `200`.
+- **Fix (verified 2026-06-27, pushed `0178a44`):**
+  ```bash
+  cd riia-jun-release
+  export GIT_KEY=$(tr -d ' \r\n' < ../git-key.txt)
+  GIT_TERMINAL_PROMPT=0 git \
+    -c credential.helper= \
+    -c credential.helper='!f() { echo username=x-access-token; echo "password=$GIT_KEY"; }; f' \
+    push origin master
+  ```
+  The **first empty `-c credential.helper=` is the key** — it clears the helper list so osxkeychain can't answer with `sangaw` before the inline `x-access-token` helper runs. Keeps the token out of `.git/config` (remote stays the plain URL).
+- **Prevention:** Same PAT backs the `GHCR_PAT` secret (PATTERN-003) — rotate both together. This mechanism is recorded in the auto-memory `reference-prod-push-token`.
+- **Date first seen:** 2026-06-27
+- **Recurrences:** 0
 
 ---
 
